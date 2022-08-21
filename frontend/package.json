@@ -8,7 +8,9 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "lint": "eslint --cache --fix --ext .tsx,.ts src/",
-    "format": "prettier --write \"src/**/*.+(js|json|yml|ts|tsx)\""
+    "format": "prettier --write \"src/**/*.+(js|json|yml|ts|tsx)\"",
+    "test": "jest --config ./jest.config.json",
+    "test:watch": "npm run test -- --watch"
   },
   "dependencies": {
     "react": "^18.2.0",
