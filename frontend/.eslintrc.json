@@ -11,6 +11,17 @@
         "prettier"
     ],
     "overrides": [
+        {
+            "files":[
+                "**/__tests__/**/*.+(ts|tsx|js)",
+                "**/?(*.)+(spec|test).+(ts|tsx|js)"
+            ],
+            "extends":[
+                "plugin:jest/recommended",
+                "plugin:jest-dom/recommended",
+                "plugin:testing-library/react"
+            ]
+        }
     ],
     "parserOptions": {
         "ecmaVersion": "latest",
@@ -19,7 +30,10 @@
     },
     "plugins": [
         "react",
-        "react-hooks"
+        "react-hooks",
+        "jest",
+        "jest-dom",
+        "testing-library"
     ],
     "rules": {
         "react/jsx-uses-react": "off",
