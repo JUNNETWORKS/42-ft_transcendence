@@ -10,5 +10,8 @@
     "^.+\\.(ts|tsx)$": "ts-jest"
   },
   "testEnvironment": "jsdom",
-  "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"]
+  "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
+  "collectCoverageFrom": [
+    "src/**/*.{ts,tsx}"
+  ]
 }
