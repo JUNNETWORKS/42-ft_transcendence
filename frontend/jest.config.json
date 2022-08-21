@@ -9,5 +9,6 @@
   "transform": {
     "^.+\\.(ts|tsx)$": "ts-jest"
   },
-  "testEnvironment": "jsdom"
+  "testEnvironment": "jsdom",
+  "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"]
 }
