@@ -5,7 +5,13 @@
         "es2021": true
     },
     "ignorePatterns":[ "jest.setup.ts" ],
+    "settings": {
+        "react": {
+            "version": "detect"
+        }
+    },
     "extends": [
+        "eslint:recommended",
         "plugin:react/recommended",
         "plugin:react-hooks/recommended",
         "standard-with-typescript",
