@@ -10,11 +10,24 @@
     "project": "./tsconfig.json"
   },
   "plugins": [
-    "@typescript-eslint/eslint-plugin"
+    "@typescript-eslint",
+    "jest"
   ],
   "extends": [
+    "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "prettier"
+  ],
+  "overrides": [
+    {
+      "files":[
+        "**/__tests__/**/*.+(ts|tsx|js)",
+        "**/?(*.)+(spec|test).+(ts|tsx|js)"
+      ],
+      "extends":[
+        "plugin:jest/recommended"
+      ]
+    }
   ],
   "rules": {
     "@typescript-eslint/interface-name-prefix": "off",
