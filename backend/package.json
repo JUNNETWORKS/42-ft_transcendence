@@ -76,5 +76,8 @@
   "lint-staged": {
     "*.{js,ts,jsx,tsx}": "eslint --cache --fix",
     "*.{js,ts,jsx,tsx,css,md}": "prettier --write"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 }
