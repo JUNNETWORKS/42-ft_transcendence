@@ -1,4 +1,4 @@
-FROM node:18-buster AS build
+FROM node:18-buster
 
 # Create app directory
 WORKDIR /frontend
