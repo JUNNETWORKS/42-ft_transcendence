@@ -1,6 +1,7 @@
 version: '3'
 services:
   postgres:
+    container_name: postgres
     image: postgres:latest
     ports:
       - 5432:5432
@@ -13,6 +14,7 @@ services:
     restart: on-failure
 
   frontend:
+    container_name: frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -22,6 +24,7 @@ services:
       - "./frontend:/frontend"
 
   backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
