@@ -11,19 +11,37 @@ datasource db {
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  email       String     @unique
-  displayName String     @unique
-  ChatRoom    ChatRoom[]
-  Chat        Chat[]
+  id               Int                @id @default(autoincrement())
+  email            String             @unique
+  displayName      String             @unique
+  Chat             Chat[]
+  ChatUserRelation ChatUserRelation[]
 }
 
 model ChatRoom {
-  id       Int    @id @default(autoincrement())
-  roomName String @unique
-  member   User[]
-  Chat     Chat[]
+  id               Int                @id @default(autoincrement())
+  roomName         String             @unique
+  createdAt        DateTime           @default(now())
+  Chat             Chat[]
+  ChatUserRelation ChatUserRelation[]
+  // roomType
 }
+
+model ChatUserRelation {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoomId Int
+  // userType   UserType @default(MEMBER)
+
+  @@id([userId, chatRoomId])
+}
+
+// enum UserType {
+//   MEMBER
+//   ADMIN
+//   BLOCKED
+// }
 
 model Chat {
   id         Int      @id @default(autoincrement())
