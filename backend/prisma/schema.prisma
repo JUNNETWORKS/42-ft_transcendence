@@ -14,7 +14,7 @@ model User {
   id               Int                @id @default(autoincrement())
   email            String             @unique
   displayName      String             @unique
-  Chat             Chat[]
+  chatMessage      ChatMessage[]
   ChatUserRelation ChatUserRelation[]
 }
 
@@ -22,7 +22,7 @@ model ChatRoom {
   id               Int                @id @default(autoincrement())
   roomName         String             @unique
   createdAt        DateTime           @default(now())
-  Chat             Chat[]
+  chatMessage      ChatMessage[]
   ChatUserRelation ChatUserRelation[]
   // roomType
 }
@@ -43,12 +43,12 @@ model ChatUserRelation {
 //   BLOCKED
 // }
 
-model Chat {
+model ChatMessage {
   id         Int      @id @default(autoincrement())
   room       ChatRoom @relation(fields: [chatRoomId], references: [id])
   chatRoomId Int
   user       User     @relation(fields: [userId], references: [id])
   userId     Int
   createdAt  DateTime @default(now())
-  message    String
+  content    String
 }
