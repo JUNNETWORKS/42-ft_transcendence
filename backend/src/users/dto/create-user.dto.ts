@@ -16,5 +16,5 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MaxLength(20)
   @ApiProperty()
-  display_name!: string;
+  displayName!: string;
 }

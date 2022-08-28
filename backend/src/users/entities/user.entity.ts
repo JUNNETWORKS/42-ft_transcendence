@@ -9,5 +9,5 @@ export class UserEntity implements User {
   email!: string;
 
   @ApiProperty()
-  display_name!: string;
+  displayName!: string;
 }
