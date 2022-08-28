@@ -1,0 +1,40 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=prisma
+      - POSTGRES_PASSWORD=prismapass
+      - POSTGRES_DB=prismadb
+    volumes:
+      - "./.data/postgresql:/var/lib/postgresql"
+    restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - 5173:5173
+    volumes:
+      - "./frontend:/frontend"
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./backend:/backend"
+    depends_on:
+      - postgres
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/" ]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: on-failure
