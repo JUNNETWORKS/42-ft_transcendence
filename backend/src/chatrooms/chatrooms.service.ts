@@ -26,6 +26,13 @@ export class ChatroomsService {
     });
   }
 
+  join(id: number) {
+    const userId = 1; // temp、リクエストしたユーザー想定
+    return this.prisma.chatUserRelation.create({
+      data: { userId: userId, chatRoomId: id },
+    });
+  }
+
   remove(id: number) {
     return this.prisma.chatRoom.delete({ where: { id } });
   }

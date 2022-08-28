@@ -46,6 +46,12 @@ export class ChatroomsController {
     return this.chatroomsService.update(id, updateChatroomDto);
   }
 
+  @Patch(':id/join')
+  @ApiOkResponse({ type: ChatroomEntity })
+  join(@Param('id', ParseIntPipe) id: number) {
+    return this.chatroomsService.join(id);
+  }
+
   @Delete(':id')
   @ApiOkResponse({ type: ChatroomEntity })
   remove(@Param('id', ParseIntPipe) id: number) {
