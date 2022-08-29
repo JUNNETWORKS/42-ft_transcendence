@@ -1,4 +1,9 @@
-FROM node:18-buster
+FROM debian:buster
+
+RUN apt update && apt install curl -y
+
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
 
 # Create app directory
 WORKDIR /backend
@@ -8,9 +13,6 @@ COPY package*.json ./
 
 # Install app dependencies
 RUN npm install
-
-# Bundle app source
-COPY . .
 
 # Start the server using the production build
 CMD [ "npm", "run", "start:dev" ]
