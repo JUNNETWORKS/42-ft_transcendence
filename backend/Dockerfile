@@ -1,6 +1,6 @@
 FROM debian:buster
 
-RUN apt update && apt install curl -y
+RUN apt-get update && apt-get install -y curl gosu
 
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
 RUN apt-get install -y nodejs
@@ -14,5 +14,7 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-# Start the server using the production build
+COPY entrypoint.sh ./
+
+ENTRYPOINT  [ "bash", "./entrypoint.sh" ]
 CMD [ "npm", "run", "start:dev" ]
