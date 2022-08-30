@@ -11,8 +11,10 @@ import {
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { CreateChatUserRelationDto } from './dto/create-chatUserRelation.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
+import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -46,10 +48,10 @@ export class ChatroomsController {
     return this.chatroomsService.update(id, updateChatroomDto);
   }
 
-  @Patch(':id/join')
-  @ApiOkResponse({ type: ChatroomEntity })
-  join(@Param('id', ParseIntPipe) id: number) {
-    return this.chatroomsService.join(id);
+  @Patch('/join')
+  @ApiOkResponse({ type: chatUserRelationEntity })
+  join(@Body() createChatUserRelationDto: CreateChatUserRelationDto) {
+    return this.chatroomsService.join(createChatUserRelationDto);
   }
 
   @Delete(':id')
