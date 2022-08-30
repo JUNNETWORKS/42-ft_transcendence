@@ -1,4 +1,9 @@
-FROM node:18-buster
+FROM debian:buster
+
+RUN apt-get update && apt-get install -y curl gosu
+
+RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash -
+RUN apt-get install -y nodejs
 
 # Create app directory
 WORKDIR /frontend
@@ -9,7 +14,7 @@ COPY package*.json ./
 # Install app dependencies
 RUN npm install
 
-# Bundle app source
-COPY . .
+COPY entrypoint.sh ./
 
-CMD [ "npm", "run", "dev"]
+ENTRYPOINT  [ "bash", "./entrypoint.sh" ]
+CMD [ "npm", "run", "dev" ]
