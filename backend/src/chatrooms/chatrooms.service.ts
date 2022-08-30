@@ -33,6 +33,17 @@ export class ChatroomsService {
     });
   }
 
+  leave(chatUserRelationDto: ChatUserRelationDto) {
+    return this.prisma.chatUserRelation.delete({
+      where: {
+        userId_chatRoomId: {
+          userId: chatUserRelationDto.userId,
+          chatRoomId: chatUserRelationDto.chatRoomId,
+        },
+      },
+    });
+  }
+
   remove(id: number) {
     return this.prisma.chatRoom.delete({ where: { id } });
   }

@@ -54,6 +54,12 @@ export class ChatroomsController {
     return this.chatroomsService.join(chatUserRelationDto);
   }
 
+  @Delete('/leave')
+  @ApiOkResponse({ type: chatUserRelationEntity })
+  leave(@Body() chatUserRelationDto: ChatUserRelationDto) {
+    return this.chatroomsService.leave(chatUserRelationDto);
+  }
+
   @Delete(':id')
   @ApiOkResponse({ type: ChatroomEntity })
   remove(@Param('id', ParseIntPipe) id: number) {
