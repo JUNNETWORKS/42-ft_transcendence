@@ -39,6 +39,12 @@ export class ChatroomsController {
     return this.chatroomsService.findOne(id);
   }
 
+  @Patch('/join')
+  @ApiOkResponse({ type: chatUserRelationEntity })
+  join(@Body() chatUserRelationDto: ChatUserRelationDto) {
+    return this.chatroomsService.join(chatUserRelationDto);
+  }
+
   @Patch(':id')
   @ApiOkResponse({ type: ChatroomEntity })
   update(
@@ -46,12 +52,6 @@ export class ChatroomsController {
     @Body() updateChatroomDto: UpdateChatroomDto
   ) {
     return this.chatroomsService.update(id, updateChatroomDto);
-  }
-
-  @Patch('/join')
-  @ApiOkResponse({ type: chatUserRelationEntity })
-  join(@Body() chatUserRelationDto: ChatUserRelationDto) {
-    return this.chatroomsService.join(chatUserRelationDto);
   }
 
   @Delete('/leave')

@@ -12,6 +12,6 @@ export class ChatUserRelationDto {
   chatRoomId!: number;
 
   @IsNotEmpty()
-  @ApiProperty()
+  @ApiProperty({ name: 'userType', enum: UserType })
   userType?: UserType;
 }
