@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
-import { CreateChatUserRelationDto } from './dto/create-chatUserRelation.dto';
+import { ChatUserRelationDto } from './dto/chatUserRelation.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -27,9 +27,9 @@ export class ChatroomsService {
     });
   }
 
-  join(createChatUserRelationDto: CreateChatUserRelationDto) {
+  join(chatUserRelationDto: ChatUserRelationDto) {
     return this.prisma.chatUserRelation.create({
-      data: createChatUserRelationDto,
+      data: chatUserRelationDto,
     });
   }
 

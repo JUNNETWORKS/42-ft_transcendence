@@ -11,7 +11,7 @@ import {
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
-import { CreateChatUserRelationDto } from './dto/create-chatUserRelation.dto';
+import { ChatUserRelationDto } from './dto/chatUserRelation.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
@@ -50,8 +50,8 @@ export class ChatroomsController {
 
   @Patch('/join')
   @ApiOkResponse({ type: chatUserRelationEntity })
-  join(@Body() createChatUserRelationDto: CreateChatUserRelationDto) {
-    return this.chatroomsService.join(createChatUserRelationDto);
+  join(@Body() chatUserRelationDto: ChatUserRelationDto) {
+    return this.chatroomsService.join(chatUserRelationDto);
   }
 
   @Delete(':id')
