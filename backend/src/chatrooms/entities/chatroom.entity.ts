@@ -1,12 +1,16 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatRoom } from '@prisma/client';
+import { RoomType } from '@prisma/client';
 
-export class ChatroomEntity implements ChatRoom {
+// TODO: roomPasswordを含まずにimplements ChatRoomが使えるか調べる。
+export class ChatroomEntity {
   @ApiProperty()
   id!: number;
 
   @ApiProperty()
   roomName!: string;
+
+  @ApiProperty()
+  roomType!: RoomType;
 
   @ApiProperty()
   createdAt!: Date;
