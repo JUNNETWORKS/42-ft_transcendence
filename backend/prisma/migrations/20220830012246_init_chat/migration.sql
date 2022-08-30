@@ -1,7 +1,15 @@
+-- CreateEnum
+CREATE TYPE "RoomType" AS ENUM ('PUBLIC', 'PRIVATE', 'LOCKED');
+
+-- CreateEnum
+CREATE TYPE "UserType" AS ENUM ('MEMBER', 'ADMIN', 'OWNER', 'BANNED', 'MUTED');
+
 -- CreateTable
 CREATE TABLE "ChatRoom" (
     "id" SERIAL NOT NULL,
     "roomName" TEXT NOT NULL,
+    "roomType" "RoomType" NOT NULL DEFAULT 'PUBLIC',
+    "roomPassword" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ChatRoom_pkey" PRIMARY KEY ("id")
@@ -11,6 +19,8 @@ CREATE TABLE "ChatRoom" (
 CREATE TABLE "ChatUserRelation" (
     "userId" INTEGER NOT NULL,
     "chatRoomId" INTEGER NOT NULL,
+    "userType" "UserType" NOT NULL DEFAULT 'MEMBER',
+    "endAt" TIMESTAMP(3),
 
     CONSTRAINT "ChatUserRelation_pkey" PRIMARY KEY ("userId","chatRoomId")
 );

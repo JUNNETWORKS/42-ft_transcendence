@@ -15,33 +15,43 @@ model User {
   email            String             @unique
   displayName      String             @unique
   chatMessage      ChatMessage[]
-  ChatUserRelation ChatUserRelation[]
+  chatUserRelation ChatUserRelation[]
 }
 
 model ChatRoom {
   id               Int                @id @default(autoincrement())
   roomName         String             @unique
+  roomType         RoomType           @default(PUBLIC)
+  roomPassword     String?
   createdAt        DateTime           @default(now())
   chatMessage      ChatMessage[]
-  ChatUserRelation ChatUserRelation[]
-  // roomType
+  chatUserRelation ChatUserRelation[]
+}
+
+enum RoomType {
+  PUBLIC
+  PRIVATE
+  LOCKED
 }
 
 model ChatUserRelation {
-  user       User     @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id])
   userId     Int
-  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id])
+  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id])
   chatRoomId Int
-  // userType   UserType @default(MEMBER)
+  userType   UserType  @default(MEMBER)
+  endAt      DateTime? // userTypeがBANNED,MUTEDの時にのみ参照される。
 
   @@id([userId, chatRoomId])
 }
 
-// enum UserType {
-//   MEMBER
-//   ADMIN
-//   BLOCKED
-// }
+enum UserType {
+  MEMBER
+  ADMIN
+  OWNER
+  BANNED
+  MUTED
+}
 
 model ChatMessage {
   id         Int      @id @default(autoincrement())
