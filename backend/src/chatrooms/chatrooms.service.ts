@@ -8,7 +8,15 @@ export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
 
   create(createChatroomDto: CreateChatroomDto) {
-    return this.prisma.chatRoom.create({ data: createChatroomDto });
+    console.log(createChatroomDto.members);
+    return this.prisma.chatRoom.create({
+      data: {
+        ...createChatroomDto,
+        chatUserRelation: {
+          create: createChatroomDto.members,
+        },
+      },
+    });
   }
 
   findAll() {
