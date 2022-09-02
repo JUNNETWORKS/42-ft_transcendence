@@ -72,7 +72,7 @@ export class ChatroomsController {
     return this.chatroomsService.remove(roomId);
   }
 
-  @Get(':id/messages')
+  @Get(':roomId/messagesbycursor')
   getMessagesByCursor(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('take', ParseIntPipe) take: number,
@@ -81,7 +81,7 @@ export class ChatroomsController {
     return this.chatroomsService.getMessagesByCursor(roomId, take, cursor);
   }
 
-  @Get(':id/messages')
+  @Get(':roomId/messages')
   getMessages(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('take', ParseIntPipe) take: number

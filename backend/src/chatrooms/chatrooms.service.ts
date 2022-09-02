@@ -62,8 +62,8 @@ export class ChatroomsService {
     return this.prisma.chatRoom.delete({ where: { id } });
   }
 
-  getMessagesByCursor(roomId: number, take: number, cursor: number) {
-    return this.prisma.chatMessage.findMany({
+  async getMessagesByCursor(roomId: number, take: number, cursor: number) {
+    const result = await this.prisma.chatMessage.findMany({
       take,
       skip: 1,
       cursor: {
@@ -76,10 +76,11 @@ export class ChatroomsService {
         id: 'desc',
       },
     });
+    return result.reverse();
   }
 
-  getMessages(roomId: number, take: number) {
-    return this.prisma.chatMessage.findMany({
+  async getMessages(roomId: number, take: number) {
+    const result = await this.prisma.chatMessage.findMany({
       take,
       where: {
         chatRoomId: roomId,
@@ -88,5 +89,6 @@ export class ChatroomsService {
         id: 'desc',
       },
     });
+    return result.reverse();
   }
 }
