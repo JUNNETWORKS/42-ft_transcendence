@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 
 @Injectable()
@@ -90,5 +91,11 @@ export class ChatroomsService {
       },
     });
     return result.reverse();
+  }
+
+  postMessage(postMessageDto: PostMessageDto) {
+    return this.prisma.chatMessage.create({
+      data: postMessageDto,
+    });
   }
 }

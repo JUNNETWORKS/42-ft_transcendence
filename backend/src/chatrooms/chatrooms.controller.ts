@@ -12,6 +12,7 @@ import {
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
@@ -87,5 +88,10 @@ export class ChatroomsController {
     @Query('take', ParseIntPipe) take: number
   ) {
     return this.chatroomsService.getMessages(roomId, take);
+  }
+
+  @Post('/messages')
+  postMessage(@Body() postMessageDto: PostMessageDto) {
+    return this.chatroomsService.postMessage(postMessageDto);
   }
 }
