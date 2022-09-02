@@ -71,4 +71,21 @@ export class ChatroomsController {
   remove(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.remove(roomId);
   }
+
+  @Get(':id/messages')
+  getMessagesByCursor(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('take', ParseIntPipe) take: number,
+    @Query('cursor', ParseIntPipe) cursor: number
+  ) {
+    return this.chatroomsService.getMessagesByCursor(roomId, take, cursor);
+  }
+
+  @Get(':id/messages')
+  getMessages(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('take', ParseIntPipe) take: number
+  ) {
+    return this.chatroomsService.getMessages(roomId, take);
+  }
 }
