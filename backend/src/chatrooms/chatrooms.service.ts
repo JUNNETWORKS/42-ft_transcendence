@@ -37,6 +37,7 @@ export class ChatroomsService {
   }
 
   join(roomId: number, userId: number) {
+    // TODO: userTypeに応じた処理
     return this.prisma.chatUserRelation.create({
       data: {
         userId: userId,
