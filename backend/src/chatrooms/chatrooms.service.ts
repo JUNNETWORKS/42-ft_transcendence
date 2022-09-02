@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
-import { ChatUserRelationDto } from './dto/chatUserRelation.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -27,18 +26,22 @@ export class ChatroomsService {
     });
   }
 
-  join(chatUserRelationDto: ChatUserRelationDto) {
+  join(roomId: number, userId: number) {
     return this.prisma.chatUserRelation.create({
-      data: chatUserRelationDto,
+      data: {
+        userId: userId,
+        chatRoomId: roomId,
+      },
     });
   }
 
-  leave(chatUserRelationDto: ChatUserRelationDto) {
+  leave(roomId: number, userId: number) {
+    // TODO: userTypeに応じた処理
     return this.prisma.chatUserRelation.delete({
       where: {
         userId_chatRoomId: {
-          userId: chatUserRelationDto.userId,
-          chatRoomId: chatUserRelationDto.chatRoomId,
+          userId: userId,
+          chatRoomId: roomId,
         },
       },
     });

@@ -7,11 +7,11 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
-import { ChatUserRelationDto } from './dto/chatUserRelation.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
@@ -33,36 +33,42 @@ export class ChatroomsController {
     return this.chatroomsService.findAll();
   }
 
-  @Get(':id')
+  @Get(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.chatroomsService.findOne(id);
+  findOne(@Param('roomId', ParseIntPipe) roomId: number) {
+    return this.chatroomsService.findOne(roomId);
   }
 
-  @Patch('/join')
+  @Patch(':roomId/join')
   @ApiOkResponse({ type: chatUserRelationEntity })
-  join(@Body() chatUserRelationDto: ChatUserRelationDto) {
-    return this.chatroomsService.join(chatUserRelationDto);
+  join(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('userId', ParseIntPipe) userId: number
+  ) {
+    return this.chatroomsService.join(roomId, userId);
   }
 
-  @Patch(':id')
+  @Patch(':roomId/leave')
+  @ApiOkResponse({ type: chatUserRelationEntity })
+  leave(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Query('userId', ParseIntPipe) userId: number
+  ) {
+    return this.chatroomsService.leave(roomId, userId);
+  }
+
+  @Patch(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('roomId', ParseIntPipe) roomId: number,
     @Body() updateChatroomDto: UpdateChatroomDto
   ) {
-    return this.chatroomsService.update(id, updateChatroomDto);
+    return this.chatroomsService.update(roomId, updateChatroomDto);
   }
 
-  @Delete('/leave')
-  @ApiOkResponse({ type: chatUserRelationEntity })
-  leave(@Body() chatUserRelationDto: ChatUserRelationDto) {
-    return this.chatroomsService.leave(chatUserRelationDto);
-  }
-
-  @Delete(':id')
+  @Delete(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.chatroomsService.remove(id);
+  remove(@Param('roomId', ParseIntPipe) roomId: number) {
+    return this.chatroomsService.remove(roomId);
   }
 }
