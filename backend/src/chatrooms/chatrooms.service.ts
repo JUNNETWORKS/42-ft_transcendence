@@ -11,7 +11,9 @@ export class ChatroomsService {
     // TODO: members.userTypeにBANNED, MUTEDが入らないようにする。
     return this.prisma.chatRoom.create({
       data: {
-        ...createChatroomDto,
+        roomName: createChatroomDto.roomName,
+        roomType: createChatroomDto.roomType,
+        roomPassword: createChatroomDto.roomPassword,
         chatUserRelation: {
           create: createChatroomDto.members,
         },
