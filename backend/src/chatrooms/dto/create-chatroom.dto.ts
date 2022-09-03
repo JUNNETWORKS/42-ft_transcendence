@@ -25,8 +25,7 @@ export class CreateChatroomDto {
   @ApiProperty()
   roomPassword?: string;
 
-  @IsNotEmpty()
-  @ValidateNested()
+  @IsNotEmpty({ each: true })
   @ApiProperty({ type: [roomMemberDto] })
   members!: roomMemberDto[];
 }
