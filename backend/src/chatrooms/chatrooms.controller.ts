@@ -102,7 +102,7 @@ export class ChatroomsController {
   }
 
   @Get(':roomId/members')
-  @ApiOkResponse({ type: roomMemberEntity })
+  @ApiOkResponse({ type: chatUserRelationEntity })
   getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.getMembers(roomId);
   }

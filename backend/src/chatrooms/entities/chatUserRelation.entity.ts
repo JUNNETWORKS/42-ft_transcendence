@@ -8,7 +8,7 @@ export class chatUserRelationEntity implements ChatUserRelation {
   @ApiProperty()
   chatRoomId!: number;
 
-  @ApiProperty()
+  @ApiProperty({ name: 'userType', enum: UserType })
   userType!: UserType;
 
   @ApiProperty()
