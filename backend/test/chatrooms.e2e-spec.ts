@@ -23,7 +23,6 @@ describe('AppController (e2e)', () => {
     const body: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
-      roomPassword: 'string',
       members: [{ userId: 1, userType: 'OWNER' }],
     };
     const res = await request(app.getHttpServer())
@@ -39,7 +38,6 @@ describe('AppController (e2e)', () => {
     const body = {
       roomName: 'testroom' as any,
       roomType: 'PUBLIC',
-      roomPassword: 'string',
       members: [{ userId: 1, userType: 'OWNER' }],
     };
 
@@ -79,7 +77,6 @@ describe('AppController (e2e)', () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC' as any,
-      roomPassword: 'string',
       members: [{ userId: 1, userType: 'OWNER' }],
     };
 
@@ -117,19 +114,33 @@ describe('AppController (e2e)', () => {
       .send(body);
     expect(res.status).toEqual(400);
 
+    body.roomPassword = 'testpass';
+    body.roomType = 'PUBLIC';
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
     delete body.roomPassword;
     res = await request(app.getHttpServer())
       .post('/chatrooms')
       .set('Accept', 'application/json')
       .send(body);
     expect(res.status).toEqual(201);
+
+    body.roomType = 'LOCKED';
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
   });
 
   it('ルーム作成 members validation', async () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
-      roomPassword: 'string',
       members: [{ userId: 1, userType: 'OWNER' }] as any,
     };
 
@@ -159,6 +170,16 @@ describe('AppController (e2e)', () => {
     body.members = [
       { userId: 1, userType: 'OWNER' },
       { userId: 2, userType: 'NOSUCH' },
+    ];
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.members = [
+      { userId: 1, userType: 'OWNER' },
+      { userId: 2, userType: 'BANNED' },
     ];
     res = await request(app.getHttpServer())
       .post('/chatrooms')

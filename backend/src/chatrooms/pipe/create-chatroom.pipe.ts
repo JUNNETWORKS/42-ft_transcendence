@@ -24,7 +24,8 @@ export class CreateChatroomPipe implements PipeTransform {
         'roomPassword is needed when roomType is only "LOCKED"',
         400
       );
-    } else if (!('roomPassword' in value)) {
+    }
+    if (value.roomType === 'LOCKED' && !('roomPassword' in value)) {
       throw new HttpException(
         'roomPassword is needed with "LOCKED" roomType',
         400
