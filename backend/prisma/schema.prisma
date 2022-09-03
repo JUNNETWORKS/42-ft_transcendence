@@ -34,6 +34,7 @@ enum RoomType {
   LOCKED
 }
 
+// userはsetDefaultで"削除されたユーザー"的な動作出来るかも。
 model ChatUserRelation {
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
