@@ -1,8 +1,17 @@
 import { Injectable } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
+
+const chatroomExcludePass: Prisma.ChatRoomSelect = {
+  id: true,
+  roomName: true,
+  roomType: true,
+  roomPassword: false,
+  createdAt: true,
+};
 
 @Injectable()
 export class ChatroomsService {
@@ -18,21 +27,28 @@ export class ChatroomsService {
           create: createChatroomDto.members,
         },
       },
+      select: chatroomExcludePass,
     });
   }
 
   findAll() {
-    return this.prisma.chatRoom.findMany();
+    return this.prisma.chatRoom.findMany({
+      select: chatroomExcludePass,
+    });
   }
 
   findOne(id: number) {
-    return this.prisma.chatRoom.findUnique({ where: { id } });
+    return this.prisma.chatRoom.findUnique({
+      where: { id },
+      select: chatroomExcludePass,
+    });
   }
 
   update(id: number, updateChatroomDto: UpdateChatroomDto) {
     return this.prisma.chatRoom.update({
       where: { id },
       data: updateChatroomDto,
+      select: chatroomExcludePass,
     });
   }
 
@@ -59,7 +75,10 @@ export class ChatroomsService {
   }
 
   remove(id: number) {
-    return this.prisma.chatRoom.delete({ where: { id } });
+    return this.prisma.chatRoom.delete({
+      where: { id },
+      select: chatroomExcludePass,
+    });
   }
 
   async getMessagesByCursor(roomId: number, take: number, cursor: number) {
