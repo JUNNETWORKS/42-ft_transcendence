@@ -116,4 +116,15 @@ export class ChatroomsService {
       data: postMessageDto,
     });
   }
+
+  getMembers(roomId: number) {
+    return this.prisma.chatUserRelation.findMany({
+      where: {
+        chatRoomId: roomId,
+        userType: {
+          notIn: 'BANNED',
+        },
+      },
+    });
+  }
 }
