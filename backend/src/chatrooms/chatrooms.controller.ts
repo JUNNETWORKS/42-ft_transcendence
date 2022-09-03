@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  ValidationPipe,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
@@ -25,7 +26,10 @@ export class ChatroomsController {
 
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
-  create(@Body(new CreateChatroomPipe()) createChatroomDto: CreateChatroomDto) {
+  create(
+    @Body(ValidationPipe, new CreateChatroomPipe())
+    createChatroomDto: CreateChatroomDto
+  ) {
     return this.chatroomsService.create(createChatroomDto);
   }
 
