@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoomType } from '@prisma/client';
+import { Type } from 'class-transformer';
 import {
   IsEnum,
   IsNotEmpty,
@@ -7,6 +8,7 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { roomMemberDto } from './roomMember.dto';
 
@@ -28,7 +30,9 @@ export class CreateChatroomDto {
   @ApiProperty()
   roomPassword?: string;
 
-  @IsNotEmpty({ each: true })
+  @IsNotEmpty()
+  @ValidateNested({ each: true })
+  @Type(() => roomMemberDto)
   @ApiProperty({ type: [roomMemberDto] })
   members!: roomMemberDto[];
 }

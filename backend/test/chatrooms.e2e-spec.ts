@@ -99,4 +99,81 @@ describe('AppController (e2e)', () => {
       .send(body);
     expect(res.status).toEqual(400);
   });
+
+  it('ルーム作成 roomPassword validation', async () => {
+    const body = {
+      roomName: 'testroom',
+      roomType: 'PUBLIC',
+      roomPassword: 'string' as any,
+      members: [{ userId: 1, userType: 'OWNER' }],
+    };
+
+    let res;
+
+    body.roomPassword = 10;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    delete body.roomPassword;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(201);
+  });
+
+  it('ルーム作成 members validation', async () => {
+    const body = {
+      roomName: 'testroom',
+      roomType: 'PUBLIC',
+      roomPassword: 'string',
+      members: [{ userId: 1, userType: 'OWNER' }] as any,
+    };
+
+    let res;
+
+    body.members = [10];
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.members = [{ userId: 1, userType: 'OWNER' }, 10];
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    delete body.members;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.members = [
+      { userId: 1, userType: 'OWNER' },
+      { userId: 2, userType: 'NOSUCH' },
+    ];
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.members = [
+      { userId: 1, userType: 'OWNER' },
+      { userId: 2, userType: 'ADMIN' },
+    ];
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(201);
+  });
 });
