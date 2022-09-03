@@ -35,9 +35,9 @@ enum RoomType {
 }
 
 model ChatUserRelation {
-  user       User      @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id])
+  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
   userType   UserType  @default(MEMBER)
   endAt      DateTime? // userTypeがBANNED,MUTEDの時にのみ参照される。
@@ -55,9 +55,9 @@ enum UserType {
 
 model ChatMessage {
   id         Int      @id @default(autoincrement())
-  room       ChatRoom @relation(fields: [chatRoomId], references: [id])
+  room       ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
   createdAt  DateTime @default(now())
   content    String
