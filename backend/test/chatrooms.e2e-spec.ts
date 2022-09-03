@@ -35,7 +35,7 @@ describe('AppController (e2e)', () => {
     expect(res.body.roomName).toEqual(body.roomName);
   });
 
-  it('ルーム作成 ルーム名検証', async () => {
+  it('ルーム作成 roomName validation', async () => {
     const body = {
       roomName: 'testroom' as any,
       roomType: 'PUBLIC',
@@ -68,6 +68,31 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(400);
 
     delete body.roomName;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+  });
+
+  it('ルーム作成 roomType validation', async () => {
+    const body = {
+      roomName: 'testroom',
+      roomType: 'PUBLIC' as any,
+      roomPassword: 'string',
+      members: [{ userId: 1, userType: 'OWNER' }],
+    };
+
+    let res;
+
+    body.roomType = 'NO_SUCH_VAL';
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    delete body.roomType;
     res = await request(app.getHttpServer())
       .post('/chatrooms')
       .set('Accept', 'application/json')

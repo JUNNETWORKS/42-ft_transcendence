@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { RoomType } from '@prisma/client';
 import {
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -18,6 +19,7 @@ export class CreateChatroomDto {
   roomName!: string;
 
   @IsNotEmpty()
+  @IsEnum(RoomType)
   @ApiProperty({ name: 'roomType', enum: RoomType })
   roomType!: RoomType;
 
