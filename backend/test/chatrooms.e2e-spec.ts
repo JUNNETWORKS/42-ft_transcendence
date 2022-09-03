@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { resetTable } from '../src/prisma/testUtils';
@@ -15,6 +15,7 @@ describe('AppController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
   });
 
@@ -32,5 +33,45 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(201);
 
     expect(res.body.roomName).toEqual(body.roomName);
+  });
+
+  it('ルーム作成 ルーム名検証', async () => {
+    const body = {
+      roomName: 'testroom' as any,
+      roomType: 'PUBLIC',
+      roomPassword: 'string',
+      members: [{ userId: 1, userType: 'OWNER' }],
+    };
+
+    let res;
+
+    body.roomName = '';
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.roomName =
+      'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    body.roomName = 10;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+
+    delete body.roomName;
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
   });
 });
