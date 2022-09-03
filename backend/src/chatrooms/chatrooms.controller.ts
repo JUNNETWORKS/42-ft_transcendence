@@ -15,9 +15,9 @@ import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
+import { ChatMessageEntity } from './entities/chatMessage.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
-import { roomMemberEntity } from './entities/roomMember.entity';
 import { CreateChatroomPipe } from './pipe/createChatroom.pipe';
 
 @Controller('chatrooms')
@@ -80,6 +80,7 @@ export class ChatroomsController {
   }
 
   @Get(':roomId/messagesbycursor')
+  @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
   getMessagesByCursor(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('take', ParseIntPipe) take: number,
@@ -89,6 +90,7 @@ export class ChatroomsController {
   }
 
   @Get(':roomId/messages')
+  @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
   getMessages(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('take', ParseIntPipe) take: number
@@ -97,6 +99,7 @@ export class ChatroomsController {
   }
 
   @Post('/messages')
+  @ApiCreatedResponse({ type: ChatMessageEntity })
   postMessage(@Body() postMessageDto: PostMessageDto) {
     return this.chatroomsService.postMessage(postMessageDto);
   }
