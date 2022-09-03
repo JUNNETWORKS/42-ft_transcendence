@@ -14,7 +14,7 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
-import { UpdateChatroomDto } from './dto/update-chatroom.dto';
+import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
 import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';

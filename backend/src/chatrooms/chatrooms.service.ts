@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
-import { UpdateChatroomDto } from './dto/update-chatroom.dto';
+import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 
 @Injectable()
 export class ChatroomsService {
