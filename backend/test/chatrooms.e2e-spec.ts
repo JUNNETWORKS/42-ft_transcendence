@@ -3,7 +3,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { resetTable } from '../src/prisma/testUtils';
-import { CreateChatroomDto } from '../src/chatrooms/dto/create-chatroom.dto';
+import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;

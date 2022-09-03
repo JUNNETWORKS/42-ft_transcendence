@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
-import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/update-chatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
