@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
+import { UpdateRoomMemberDto } from './dto/updateAddMember.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
 import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
@@ -104,6 +105,23 @@ export class ChatroomsService {
       .update({
         where: { id },
         data: updateRoomNameDto,
+      })
+      .catch((err) => {
+        // TODO: errの種類拾う
+        throw new HttpException(`${err}`, 400);
+      });
+    return new ChatroomEntity(res);
+  }
+
+  async addMember(id: number, updateRoomMemberDto: UpdateRoomMemberDto) {
+    const res = await this.prisma.chatRoom
+      .update({
+        where: { id },
+        data: {
+          roomMember: {
+            create: updateRoomMemberDto.roomMember,
+          },
+        },
       })
       .catch((err) => {
         // TODO: errの種類拾う

@@ -10,7 +10,7 @@ export class roomMemberDto {
 
   @IsNotEmpty()
   @IsEnum(MemberType)
-  @ApiProperty({ name: 'userType', enum: MemberType })
+  @ApiProperty({ name: 'memberType', enum: MemberType })
   memberType?: MemberType;
 
   @IsOptional()

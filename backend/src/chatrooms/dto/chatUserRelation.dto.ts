@@ -15,6 +15,6 @@ export class ChatUserRelationDto {
 
   @IsNotEmpty()
   @ValidateNested()
-  @ApiProperty({ name: 'userType', enum: MemberType })
+  @ApiProperty({ name: 'memberType', enum: MemberType })
   memberType?: MemberType;
 }
