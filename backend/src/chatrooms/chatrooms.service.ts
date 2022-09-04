@@ -1,18 +1,9 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
-
-const chatroomExcludePass: Prisma.ChatRoomSelect = {
-  id: true,
-  roomName: true,
-  roomType: true,
-  roomPassword: false,
-  createdAt: true,
-};
 
 @Injectable()
 export class ChatroomsService {
@@ -86,7 +77,6 @@ export class ChatroomsService {
     const res = await this.prisma.chatRoom.update({
       where: { id },
       data: updateChatroomDto,
-      select: chatroomExcludePass,
     });
     return new ChatroomEntity(res);
   }
@@ -94,7 +84,6 @@ export class ChatroomsService {
   async remove(id: number) {
     const res = await this.prisma.chatRoom.delete({
       where: { id },
-      select: chatroomExcludePass,
     });
     return new ChatroomEntity(res);
   }

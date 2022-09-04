@@ -12,7 +12,6 @@ export class ChatroomEntity implements ChatRoom {
   @ApiProperty()
   roomType!: RoomType;
 
-  @ApiProperty()
   @Exclude()
   roomPassword!: string | null;
 
