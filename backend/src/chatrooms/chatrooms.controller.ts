@@ -20,7 +20,7 @@ import { ChatMessageEntity } from './entities/chatMessage.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
 import { memberTypeValidationPipe } from './pipe/memberTypeValidation.pipe';
-import { UpdateRoomTypePipe } from './pipe/updateRoomType.pipe';
+import { UpdateRoomTypePipe } from './pipe/roomTypeValidation.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
