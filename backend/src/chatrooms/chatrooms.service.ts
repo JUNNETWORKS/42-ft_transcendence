@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
+import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
 import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 
@@ -95,6 +96,19 @@ export class ChatroomsService {
         roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
       },
     });
+    return new ChatroomEntity(res);
+  }
+
+  async updateRoomName(id: number, updateRoomNameDto: UpdateRoomNameDto) {
+    const res = await this.prisma.chatRoom
+      .update({
+        where: { id },
+        data: updateRoomNameDto,
+      })
+      .catch((err) => {
+        // TODO: errの種類拾う
+        throw new HttpException(`${err}`, 400);
+      });
     return new ChatroomEntity(res);
   }
 

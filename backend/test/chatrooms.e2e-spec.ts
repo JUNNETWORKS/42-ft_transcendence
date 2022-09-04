@@ -317,4 +317,44 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(200);
     expect(res.body.roomPassword).toEqual(null);
   });
+
+  it('PATCH /chatrooms/roomName normal', async () => {
+    const body = {
+      roomName: 'new chatrooms name',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/2/roomName')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(200);
+    expect(res.body.roomName).toEqual('new chatrooms name');
+  });
+
+  it('PATCH /chatrooms/roomName 重複エラー', async () => {
+    const body = {
+      roomName: 'public room',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/2/roomName')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/roomName validationエラー', async () => {
+    const body = {
+      roomName: null,
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/2/roomName')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
 });
