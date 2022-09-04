@@ -6,19 +6,30 @@ import { resetTable } from '../src/prisma/testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
 import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
+import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
+  let prismaService: PrismaService;
 
-  beforeEach(async () => {
-    await resetTable(['ChatRoom']);
+  beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
     app = moduleFixture.createNestApplication();
+    prismaService = moduleFixture.get(PrismaService);
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
+  });
+
+  afterEach(async () => {
+    await prismaService.$disconnect();
+    await app.close();
+  });
+
+  beforeEach(async () => {
+    await resetTable(['ChatRoom']);
 
     // seeding some rooms
     let body: CreateChatroomDto;

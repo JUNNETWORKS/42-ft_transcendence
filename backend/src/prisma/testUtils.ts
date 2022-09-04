@@ -1,10 +1,11 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 
+const prisma = new PrismaClient();
+
 export const resetTable = async (
   modelNames: Prisma.ModelName[]
 ): Promise<void> => {
   const tablenames = modelNames.map((modelName) => ({ tablename: modelName }));
-  const prisma = new PrismaClient();
   for (const { tablename } of tablenames) {
     try {
       await prisma.$executeRawUnsafe(
@@ -14,5 +15,5 @@ export const resetTable = async (
       console.log({ error });
     }
   }
-  prisma.$disconnect();
+  // prisma.$disconnect();
 };
