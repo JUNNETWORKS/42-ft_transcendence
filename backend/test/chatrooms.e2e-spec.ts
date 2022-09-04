@@ -5,8 +5,9 @@ import { AppModule } from './../src/app.module';
 import { resetTable } from '../src/prisma/testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
+import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
 
-describe('AppController (e2e)', () => {
+describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
 
   beforeEach(async () => {
@@ -248,5 +249,61 @@ describe('AppController (e2e)', () => {
     response.forEach((chatRoom) => {
       expect(chatRoom.roomType).not.toEqual('PRIVATE');
     });
+  });
+
+  it('PATCH /chatrooms/roomType 不要なパスワードをエラーとして判定', async () => {
+    const body = {
+      roomType: 'PRIVATE',
+      roomPassword: 'testpass',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/roomType')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/roomType パスワードなしをエラーとして判定', async () => {
+    const body = {
+      roomType: 'LOCKED',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/roomType')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/roomType PUBLIC -> LOCKED', async () => {
+    const body: UpdateRoomTypeDto = {
+      roomType: 'LOCKED',
+      roomPassword: 'testpass',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/roomType')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(200);
+    expect(res.body.roomPassword).toEqual('testpass');
+  });
+
+  it('PATCH /chatrooms/roomType LOCKED -> PUBLIC', async () => {
+    const body = {
+      roomType: 'PUBLIC',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/2/roomType')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(200);
+    expect(res.body.roomPassword).toEqual(null);
   });
 });

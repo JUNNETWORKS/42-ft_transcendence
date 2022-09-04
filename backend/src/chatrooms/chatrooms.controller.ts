@@ -81,11 +81,12 @@ export class ChatroomsController {
     return this.chatroomsService.update(roomId, updateChatroomDto);
   }
 
-  @Patch(':roomId')
+  @Patch(':roomId/roomType')
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomType(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() updateRoomTypeDto: UpdateRoomTypeDto
+    @Body(ValidationPipe, new UpdateRoomTypePipe())
+    updateRoomTypeDto: UpdateRoomTypeDto
   ) {
     return this.chatroomsService.updateRoomType(roomId, updateRoomTypeDto);
   }

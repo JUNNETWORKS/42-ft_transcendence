@@ -87,9 +87,13 @@ export class ChatroomsService {
   }
 
   async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
+    const { roomType, roomPassword } = updateRoomTypeDto;
     const res = await this.prisma.chatRoom.update({
       where: { id },
-      data: updateRoomTypeDto,
+      data: {
+        roomType: roomType,
+        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
+      },
     });
     return new ChatroomEntity(res);
   }
