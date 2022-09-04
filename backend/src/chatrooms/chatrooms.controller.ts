@@ -20,6 +20,7 @@ import { ChatMessageEntity } from './entities/chatMessage.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
 import { CreateChatroomPipe } from './pipe/createChatroom.pipe';
+import { UpdateRoomTypePipe } from './pipe/updateRoomType.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -29,7 +30,7 @@ export class ChatroomsController {
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
   create(
-    @Body(ValidationPipe, new CreateChatroomPipe())
+    @Body(ValidationPipe, new CreateChatroomPipe(), new UpdateRoomTypePipe())
     createChatroomDto: CreateChatroomDto
   ) {
     return this.chatroomsService.create(createChatroomDto);

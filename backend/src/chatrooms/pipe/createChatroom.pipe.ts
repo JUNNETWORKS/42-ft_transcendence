@@ -22,19 +22,6 @@ export class CreateChatroomPipe implements PipeTransform {
         );
       }
     });
-    // roomTypeが"LOCKED"のときのみroomPasswordを許容する。
-    if (value.roomType !== 'LOCKED' && 'roomPassword' in value) {
-      throw new HttpException(
-        'roomPassword is needed when roomType is only "LOCKED"',
-        400
-      );
-    }
-    if (value.roomType === 'LOCKED' && !('roomPassword' in value)) {
-      throw new HttpException(
-        'roomPassword is needed with "LOCKED" roomType',
-        400
-      );
-    }
     return value;
   }
 }

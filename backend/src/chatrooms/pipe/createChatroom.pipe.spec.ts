@@ -31,46 +31,4 @@ describe('CreateChatroomPipe', () => {
       )
     );
   });
-
-  it('roomPasswordが必要のないタイプのルームのプロパティにある。', async () => {
-    const target: CreateChatroomPipe = new CreateChatroomPipe();
-    const metadata: ArgumentMetadata = {
-      type: 'body',
-      metatype: CreateChatroomDto,
-      data: '',
-    };
-    const dto: CreateChatroomDto = {
-      roomName: 'testroom',
-      roomType: 'PUBLIC',
-      roomPassword: 'testpassword',
-      roomMember: [{ userId: 1, memberType: 'ADMIN' }],
-    };
-    expect(() => {
-      target.transform(dto, metadata);
-    }).toThrow(
-      new HttpException(
-        'roomPassword is needed when roomType is only "LOCKED"',
-        400
-      )
-    );
-  });
-
-  it('roomType LOCKED にroomPasswordがない', async () => {
-    const target: CreateChatroomPipe = new CreateChatroomPipe();
-    const metadata: ArgumentMetadata = {
-      type: 'body',
-      metatype: CreateChatroomDto,
-      data: '',
-    };
-    const dto: CreateChatroomDto = {
-      roomName: 'testroom',
-      roomType: 'LOCKED',
-      roomMember: [{ userId: 1, memberType: 'ADMIN' }],
-    };
-    expect(() => {
-      target.transform(dto, metadata);
-    }).toThrow(
-      new HttpException('roomPassword is needed with "LOCKED" roomType', 400)
-    );
-  });
 });
