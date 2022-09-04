@@ -22,7 +22,13 @@ export class ChatroomsService {
   }
 
   async findAll() {
-    const res = await this.prisma.chatRoom.findMany();
+    const res = await this.prisma.chatRoom.findMany({
+      where: {
+        roomType: {
+          notIn: 'PRIVATE',
+        },
+      },
+    });
     return res.map((o) => new ChatroomEntity(o));
   }
 

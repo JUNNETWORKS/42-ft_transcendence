@@ -4,6 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { resetTable } from '../src/prisma/testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
+import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -17,9 +18,47 @@ describe('AppController (e2e)', () => {
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
     await app.init();
+
+    // seeding some rooms
+    let body: CreateChatroomDto;
+    let res;
+
+    body = {
+      roomName: 'public room',
+      roomType: 'PUBLIC',
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
+    };
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(201);
+
+    body = {
+      roomName: 'locked room',
+      roomType: 'LOCKED',
+      roomPassword: 'tetpass',
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
+    };
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(201);
+
+    body = {
+      roomName: 'private room',
+      roomType: 'PRIVATE',
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
+    };
+    res = await request(app.getHttpServer())
+      .post('/chatrooms')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(201);
   });
 
-  it('ルーム作成', async () => {
+  it('POST /chatrooms', async () => {
     const body: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
@@ -34,7 +73,7 @@ describe('AppController (e2e)', () => {
     expect(res.body.roomName).toEqual(body.roomName);
   });
 
-  it('ルーム作成 roomName validation', async () => {
+  it('POST /chatrooms roomName validation', async () => {
     const body = {
       roomName: 'testroom' as any,
       roomType: 'PUBLIC',
@@ -73,7 +112,7 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('ルーム作成 roomType validation', async () => {
+  it('POST /chatrooms roomType validation', async () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC' as any,
@@ -97,7 +136,7 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('ルーム作成 roomPassword validation', async () => {
+  it('POST /chatrooms roomPassword validation', async () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
@@ -137,7 +176,7 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('ルーム作成 roomMember validation', async () => {
+  it('POST /chatrooms roomMember validation', async () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
@@ -196,5 +235,18 @@ describe('AppController (e2e)', () => {
       .set('Accept', 'application/json')
       .send(body);
     expect(res.status).toEqual(201);
+  });
+
+  it('GET /chatrooms privateなチャットルームを取得しない', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    const response: ChatroomEntity[] = res.body;
+    expect(response.length).toEqual(2);
+    response.forEach((chatRoom) => {
+      expect(chatRoom.roomType).not.toEqual('PRIVATE');
+    });
   });
 });
