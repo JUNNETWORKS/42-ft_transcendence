@@ -119,6 +119,7 @@ export class ChatroomsService {
   }
 
   postMessage(postMessageDto: PostMessageDto) {
+    // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({
       data: postMessageDto,
     });
