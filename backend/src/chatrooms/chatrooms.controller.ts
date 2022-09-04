@@ -15,6 +15,7 @@ import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
+import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
 import { ChatMessageEntity } from './entities/chatMessage.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
@@ -77,6 +78,15 @@ export class ChatroomsController {
     @Body() updateChatroomDto: UpdateChatroomDto
   ) {
     return this.chatroomsService.update(roomId, updateChatroomDto);
+  }
+
+  @Patch(':roomId')
+  @ApiOkResponse({ type: ChatroomEntity })
+  updateRoomType(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Body() updateRoomTypeDto: UpdateRoomTypeDto
+  ) {
+    return this.chatroomsService.updateRoomType(roomId, updateRoomTypeDto);
   }
 
   @Delete(':roomId')
