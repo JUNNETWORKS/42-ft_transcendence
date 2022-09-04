@@ -64,6 +64,12 @@ export class ChatroomsController {
     return this.chatroomsService.leave(roomId, userId);
   }
 
+  @Get(':roomId/members')
+  @ApiOkResponse({ type: chatUserRelationEntity })
+  getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
+    return this.chatroomsService.getMembers(roomId);
+  }
+
   @Patch(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
   update(
@@ -102,11 +108,5 @@ export class ChatroomsController {
   @ApiCreatedResponse({ type: ChatMessageEntity })
   postMessage(@Body() postMessageDto: PostMessageDto) {
     return this.chatroomsService.postMessage(postMessageDto);
-  }
-
-  @Get(':roomId/members')
-  @ApiOkResponse({ type: chatUserRelationEntity })
-  getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
-    return this.chatroomsService.getMembers(roomId);
   }
 }

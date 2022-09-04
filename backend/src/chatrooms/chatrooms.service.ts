@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
+import { ChatroomEntity } from './entities/chatroom.entity';
 
 const chatroomExcludePass: Prisma.ChatRoomSelect = {
   id: true,
@@ -17,8 +18,8 @@ const chatroomExcludePass: Prisma.ChatRoomSelect = {
 export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
 
-  create(createChatroomDto: CreateChatroomDto) {
-    return this.prisma.chatRoom.create({
+  async create(createChatroomDto: CreateChatroomDto) {
+    const res = await this.prisma.chatRoom.create({
       data: {
         roomName: createChatroomDto.roomName,
         roomType: createChatroomDto.roomType,
@@ -27,29 +28,25 @@ export class ChatroomsService {
           create: createChatroomDto.members,
         },
       },
-      select: chatroomExcludePass,
     });
+    return new ChatroomEntity(res);
   }
 
-  findAll() {
-    return this.prisma.chatRoom.findMany({
-      select: chatroomExcludePass,
-    });
+  async findAll() {
+    const res = await this.prisma.chatRoom.findMany();
+    return res.map((o) => new ChatroomEntity(o));
   }
 
-  findOne(id: number) {
-    return this.prisma.chatRoom.findUnique({
-      where: { id },
-      select: chatroomExcludePass,
-    });
-  }
-
-  update(id: number, updateChatroomDto: UpdateChatroomDto) {
-    return this.prisma.chatRoom.update({
-      where: { id },
-      data: updateChatroomDto,
-      select: chatroomExcludePass,
-    });
+  async findOne(id: number) {
+    const res = await this.prisma.chatRoom
+      .findUniqueOrThrow({
+        where: { id },
+      })
+      .catch((err) => {
+        // TODO: errの種類拾う
+        throw new HttpException(`${err}`, 400);
+      });
+    return new ChatroomEntity(res);
   }
 
   join(roomId: number, userId: number) {
@@ -74,15 +71,36 @@ export class ChatroomsService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.chatRoom.delete({
-      where: { id },
-      select: chatroomExcludePass,
+  getMembers(roomId: number) {
+    return this.prisma.chatUserRelation.findMany({
+      where: {
+        chatRoomId: roomId,
+        userType: {
+          notIn: 'BANNED',
+        },
+      },
     });
   }
 
+  async update(id: number, updateChatroomDto: UpdateChatroomDto) {
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: updateChatroomDto,
+      select: chatroomExcludePass,
+    });
+    return new ChatroomEntity(res);
+  }
+
+  async remove(id: number) {
+    const res = await this.prisma.chatRoom.delete({
+      where: { id },
+      select: chatroomExcludePass,
+    });
+    return new ChatroomEntity(res);
+  }
+
   async getMessagesByCursor(roomId: number, take: number, cursor: number) {
-    const result = await this.prisma.chatMessage.findMany({
+    const res = await this.prisma.chatMessage.findMany({
       take,
       skip: 1,
       cursor: {
@@ -95,11 +113,11 @@ export class ChatroomsService {
         id: 'desc',
       },
     });
-    return result.reverse();
+    return res.reverse();
   }
 
   async getMessages(roomId: number, take: number) {
-    const result = await this.prisma.chatMessage.findMany({
+    const res = await this.prisma.chatMessage.findMany({
       take,
       where: {
         chatRoomId: roomId,
@@ -108,23 +126,12 @@ export class ChatroomsService {
         id: 'desc',
       },
     });
-    return result.reverse();
+    return res.reverse();
   }
 
   postMessage(postMessageDto: PostMessageDto) {
     return this.prisma.chatMessage.create({
       data: postMessageDto,
-    });
-  }
-
-  getMembers(roomId: number) {
-    return this.prisma.chatUserRelation.findMany({
-      where: {
-        chatRoomId: roomId,
-        userType: {
-          notIn: 'BANNED',
-        },
-      },
     });
   }
 }

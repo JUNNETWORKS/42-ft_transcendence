@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { RoomType } from '@prisma/client';
+import { ChatRoom, RoomType } from '@prisma/client';
+import { Exclude } from 'class-transformer';
 
-// TODO: roomPasswordを含まずにimplements ChatRoomが使えるか調べる。
-export class ChatroomEntity {
+export class ChatroomEntity implements ChatRoom {
   @ApiProperty()
   id!: number;
 
@@ -13,5 +13,13 @@ export class ChatroomEntity {
   roomType!: RoomType;
 
   @ApiProperty()
+  @Exclude()
+  roomPassword!: string | null;
+
+  @ApiProperty()
   createdAt!: Date;
+
+  constructor(partial: Partial<ChatroomEntity>) {
+    Object.assign(this, partial);
+  }
 }
