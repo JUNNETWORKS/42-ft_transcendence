@@ -23,7 +23,7 @@ describe('AppController (e2e)', () => {
     const body: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
-      members: [{ userId: 1, userType: 'OWNER' }],
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
     };
     const res = await request(app.getHttpServer())
       .post('/chatrooms')
@@ -38,7 +38,7 @@ describe('AppController (e2e)', () => {
     const body = {
       roomName: 'testroom' as any,
       roomType: 'PUBLIC',
-      members: [{ userId: 1, userType: 'OWNER' }],
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
     };
 
     let res;
@@ -77,7 +77,7 @@ describe('AppController (e2e)', () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC' as any,
-      members: [{ userId: 1, userType: 'OWNER' }],
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
     };
 
     let res;
@@ -102,7 +102,7 @@ describe('AppController (e2e)', () => {
       roomName: 'testroom',
       roomType: 'PUBLIC',
       roomPassword: 'string' as any,
-      members: [{ userId: 1, userType: 'OWNER' }],
+      roomMember: [{ userId: 1, memberType: 'OWNER' }],
     };
 
     let res;
@@ -137,39 +137,39 @@ describe('AppController (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('ルーム作成 members validation', async () => {
+  it('ルーム作成 roomMember validation', async () => {
     const body = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
-      members: [{ userId: 1, userType: 'OWNER' }] as any,
+      roomMember: [{ userId: 1, memberType: 'OWNER' }] as any,
     };
 
     let res;
 
-    body.members = [10];
+    body.roomMember = [10];
     res = await request(app.getHttpServer())
       .post('/chatrooms')
       .set('Accept', 'application/json')
       .send(body);
     expect(res.status).toEqual(400);
 
-    body.members = [{ userId: 1, userType: 'OWNER' }, 10];
+    body.roomMember = [{ userId: 1, memberType: 'OWNER' }, 10];
     res = await request(app.getHttpServer())
       .post('/chatrooms')
       .set('Accept', 'application/json')
       .send(body);
     expect(res.status).toEqual(400);
 
-    delete body.members;
+    delete body.roomMember;
     res = await request(app.getHttpServer())
       .post('/chatrooms')
       .set('Accept', 'application/json')
       .send(body);
     expect(res.status).toEqual(400);
 
-    body.members = [
-      { userId: 1, userType: 'OWNER' },
-      { userId: 2, userType: 'NOSUCH' },
+    body.roomMember = [
+      { userId: 1, memberType: 'OWNER' },
+      { userId: 2, memberType: 'NOSUCH' },
     ];
     res = await request(app.getHttpServer())
       .post('/chatrooms')
@@ -177,9 +177,9 @@ describe('AppController (e2e)', () => {
       .send(body);
     expect(res.status).toEqual(400);
 
-    body.members = [
-      { userId: 1, userType: 'OWNER' },
-      { userId: 2, userType: 'BANNED' },
+    body.roomMember = [
+      { userId: 1, memberType: 'OWNER' },
+      { userId: 2, memberType: 'BANNED' },
     ];
     res = await request(app.getHttpServer())
       .post('/chatrooms')
@@ -187,9 +187,9 @@ describe('AppController (e2e)', () => {
       .send(body);
     expect(res.status).toEqual(400);
 
-    body.members = [
-      { userId: 1, userType: 'OWNER' },
-      { userId: 2, userType: 'ADMIN' },
+    body.roomMember = [
+      { userId: 1, memberType: 'OWNER' },
+      { userId: 2, memberType: 'ADMIN' },
     ];
     res = await request(app.getHttpServer())
       .post('/chatrooms')

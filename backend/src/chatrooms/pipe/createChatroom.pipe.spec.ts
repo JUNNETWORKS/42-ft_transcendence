@@ -7,7 +7,7 @@ describe('CreateChatroomPipe', () => {
     expect(new CreateChatroomPipe()).toBeDefined();
   });
 
-  it('members.userTypeにBANNED,MUTEDが入っている', async () => {
+  it('members.memberTypeにBANNED,MUTEDが入っている', async () => {
     const target: CreateChatroomPipe = new CreateChatroomPipe();
     const metadata: ArgumentMetadata = {
       type: 'body',
@@ -17,9 +17,9 @@ describe('CreateChatroomPipe', () => {
     const dto: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
-      members: [
-        { userId: 1, userType: 'ADMIN' },
-        { userId: 2, userType: 'BANNED' },
+      roomMember: [
+        { userId: 1, memberType: 'ADMIN' },
+        { userId: 2, memberType: 'BANNED' },
       ],
     };
     expect(() => {
@@ -43,7 +43,7 @@ describe('CreateChatroomPipe', () => {
       roomName: 'testroom',
       roomType: 'PUBLIC',
       roomPassword: 'testpassword',
-      members: [{ userId: 1, userType: 'ADMIN' }],
+      roomMember: [{ userId: 1, memberType: 'ADMIN' }],
     };
     expect(() => {
       target.transform(dto, metadata);
@@ -65,7 +65,7 @@ describe('CreateChatroomPipe', () => {
     const dto: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'LOCKED',
-      members: [{ userId: 1, userType: 'ADMIN' }],
+      roomMember: [{ userId: 1, memberType: 'ADMIN' }],
     };
     expect(() => {
       target.transform(dto, metadata);

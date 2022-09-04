@@ -2,7 +2,7 @@
 CREATE TYPE "RoomType" AS ENUM ('PUBLIC', 'PRIVATE', 'LOCKED');
 
 -- CreateEnum
-CREATE TYPE "UserType" AS ENUM ('MEMBER', 'ADMIN', 'OWNER', 'BANNED', 'MUTED');
+CREATE TYPE "MemberType" AS ENUM ('MEMBER', 'ADMIN', 'OWNER', 'BANNED', 'MUTED');
 
 -- CreateTable
 CREATE TABLE "ChatRoom" (
@@ -19,7 +19,7 @@ CREATE TABLE "ChatRoom" (
 CREATE TABLE "ChatUserRelation" (
     "userId" INTEGER NOT NULL,
     "chatRoomId" INTEGER NOT NULL,
-    "userType" "UserType" NOT NULL DEFAULT 'MEMBER',
+    "memberType" "MemberType" NOT NULL DEFAULT 'MEMBER',
     "endAt" TIMESTAMP(3),
 
     CONSTRAINT "ChatUserRelation_pkey" PRIMARY KEY ("userId","chatRoomId")
@@ -40,13 +40,13 @@ CREATE TABLE "ChatMessage" (
 CREATE UNIQUE INDEX "ChatRoom_roomName_key" ON "ChatRoom"("roomName");
 
 -- AddForeignKey
-ALTER TABLE "ChatUserRelation" ADD CONSTRAINT "ChatUserRelation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ChatUserRelation" ADD CONSTRAINT "ChatUserRelation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChatUserRelation" ADD CONSTRAINT "ChatUserRelation_chatRoomId_fkey" FOREIGN KEY ("chatRoomId") REFERENCES "ChatRoom"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ChatUserRelation" ADD CONSTRAINT "ChatUserRelation_chatRoomId_fkey" FOREIGN KEY ("chatRoomId") REFERENCES "ChatRoom"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_chatRoomId_fkey" FOREIGN KEY ("chatRoomId") REFERENCES "ChatRoom"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_chatRoomId_fkey" FOREIGN KEY ("chatRoomId") REFERENCES "ChatRoom"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "ChatMessage" ADD CONSTRAINT "ChatMessage_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

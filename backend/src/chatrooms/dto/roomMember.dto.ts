@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserType } from '@prisma/client';
+import { MemberType } from '@prisma/client';
 import { IsDate, IsEnum, IsInt, IsNotEmpty, IsOptional } from 'class-validator';
 
 export class roomMemberDto {
@@ -9,9 +9,9 @@ export class roomMemberDto {
   userId!: number;
 
   @IsNotEmpty()
-  @IsEnum(UserType)
-  @ApiProperty({ name: 'userType', enum: UserType })
-  userType?: UserType;
+  @IsEnum(MemberType)
+  @ApiProperty({ name: 'userType', enum: MemberType })
+  memberType?: MemberType;
 
   @IsOptional()
   @IsDate()

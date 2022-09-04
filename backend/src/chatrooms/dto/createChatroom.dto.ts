@@ -34,5 +34,5 @@ export class CreateChatroomDto {
   @ValidateNested({ each: true })
   @Type(() => roomMemberDto)
   @ApiProperty({ type: [roomMemberDto] })
-  members!: roomMemberDto[];
+  roomMember!: roomMemberDto[];
 }

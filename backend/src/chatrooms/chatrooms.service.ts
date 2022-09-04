@@ -12,11 +12,9 @@ export class ChatroomsService {
   async create(createChatroomDto: CreateChatroomDto) {
     const res = await this.prisma.chatRoom.create({
       data: {
-        roomName: createChatroomDto.roomName,
-        roomType: createChatroomDto.roomType,
-        roomPassword: createChatroomDto.roomPassword,
-        chatUserRelation: {
-          create: createChatroomDto.members,
+        ...createChatroomDto,
+        roomMember: {
+          create: createChatroomDto.roomMember,
         },
       },
     });
@@ -66,7 +64,7 @@ export class ChatroomsService {
     return this.prisma.chatUserRelation.findMany({
       where: {
         chatRoomId: roomId,
-        userType: {
+        memberType: {
           notIn: 'BANNED',
         },
       },

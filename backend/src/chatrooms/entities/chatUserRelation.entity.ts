@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ChatUserRelation, UserType } from '@prisma/client';
+import { ChatUserRelation, MemberType } from '@prisma/client';
 
 export class chatUserRelationEntity implements ChatUserRelation {
   @ApiProperty()
@@ -8,8 +8,8 @@ export class chatUserRelationEntity implements ChatUserRelation {
   @ApiProperty()
   chatRoomId!: number;
 
-  @ApiProperty({ name: 'userType', enum: UserType })
-  userType!: UserType;
+  @ApiProperty({ name: 'userType', enum: MemberType })
+  memberType!: MemberType;
 
   @ApiProperty()
   endAt!: Date;

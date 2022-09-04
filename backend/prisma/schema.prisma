@@ -11,21 +11,21 @@ datasource db {
 }
 
 model User {
-  id               Int                @id @default(autoincrement())
-  email            String             @unique
-  displayName      String             @unique
-  chatMessage      ChatMessage[]
-  chatUserRelation ChatUserRelation[]
+  id          Int                @id @default(autoincrement())
+  email       String             @unique
+  displayName String             @unique
+  chatMessage ChatMessage[]
+  chatRoom    ChatUserRelation[]
 }
 
 model ChatRoom {
-  id               Int                @id @default(autoincrement())
-  roomName         String             @unique
-  roomType         RoomType           @default(PUBLIC)
-  roomPassword     String?
-  createdAt        DateTime           @default(now())
-  chatMessage      ChatMessage[]
-  chatUserRelation ChatUserRelation[]
+  id           Int                @id @default(autoincrement())
+  roomName     String             @unique
+  roomType     RoomType           @default(PUBLIC)
+  roomPassword String?
+  createdAt    DateTime           @default(now())
+  chatMessage  ChatMessage[]
+  roomMember   ChatUserRelation[]
 }
 
 enum RoomType {
@@ -36,17 +36,17 @@ enum RoomType {
 
 // userはsetDefaultで"削除されたユーザー"的な動作出来るかも。
 model ChatUserRelation {
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  chatRoom   ChatRoom  @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoom   ChatRoom   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
-  userType   UserType  @default(MEMBER)
+  memberType MemberType @default(MEMBER)
   endAt      DateTime? // userTypeがBANNED,MUTEDの時にのみ参照される。
 
   @@id([userId, chatRoomId])
 }
 
-enum UserType {
+enum MemberType {
   MEMBER
   ADMIN
   OWNER
@@ -56,7 +56,7 @@ enum UserType {
 
 model ChatMessage {
   id         Int      @id @default(autoincrement())
-  room       ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int

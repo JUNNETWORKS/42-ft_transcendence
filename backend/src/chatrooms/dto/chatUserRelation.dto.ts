@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserType } from '@prisma/client';
+import { MemberType } from '@prisma/client';
 import { IsInt, IsNotEmpty, ValidateNested } from 'class-validator';
 
 export class ChatUserRelationDto {
@@ -15,6 +15,6 @@ export class ChatUserRelationDto {
 
   @IsNotEmpty()
   @ValidateNested()
-  @ApiProperty({ name: 'userType', enum: UserType })
-  userType?: UserType;
+  @ApiProperty({ name: 'userType', enum: MemberType })
+  memberType?: MemberType;
 }
