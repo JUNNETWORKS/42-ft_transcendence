@@ -1,14 +1,14 @@
 import { ArgumentMetadata, HttpException } from '@nestjs/common';
 import { CreateChatroomDto } from '../dto/createChatroom.dto';
-import { CreateChatroomPipe } from './createChatroom.pipe';
+import { memberTypeValidationPipe } from './memberTypeValidation.pipe';
 
 describe('CreateChatroomPipe', () => {
   it('should be defined', () => {
-    expect(new CreateChatroomPipe()).toBeDefined();
+    expect(new memberTypeValidationPipe()).toBeDefined();
   });
 
   it('members.memberTypeにBANNED,MUTEDが入っている', async () => {
-    const target: CreateChatroomPipe = new CreateChatroomPipe();
+    const target: memberTypeValidationPipe = new memberTypeValidationPipe();
     const metadata: ArgumentMetadata = {
       type: 'body',
       metatype: CreateChatroomDto,
