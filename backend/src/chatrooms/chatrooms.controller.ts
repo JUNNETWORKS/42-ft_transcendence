@@ -14,7 +14,7 @@ import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
-import { UpdateRoomMemberDto } from './dto/updateAddMember.dto';
+import { CreateRoomMemberDto } from './dto/createRoomMember.dto';
 import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
 import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
@@ -106,7 +106,7 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   addMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() updateRoomMemberDto: UpdateRoomMemberDto
+    @Body() updateRoomMemberDto: CreateRoomMemberDto
   ) {
     return this.chatroomsService.addMember(roomId, updateRoomMemberDto);
   }
