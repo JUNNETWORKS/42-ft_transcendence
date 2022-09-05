@@ -7,7 +7,7 @@ import {
 import { CreateChatroomDto } from '../dto/createChatroom.dto';
 
 @Injectable()
-export class memberTypeValidationPipe implements PipeTransform {
+export class CreateMemberPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(value: CreateChatroomDto, metadata: ArgumentMetadata) {
     // members.userTypeにBANNED, MUTEDが入らないようにする。

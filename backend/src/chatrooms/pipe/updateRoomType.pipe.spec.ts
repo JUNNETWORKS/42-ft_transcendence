@@ -1,6 +1,6 @@
 import { ArgumentMetadata, HttpException } from '@nestjs/common';
 import { UpdateRoomTypeDto } from '../dto/updateRoomType.dto';
-import { UpdateRoomTypePipe } from './roomTypeValidation.pipe';
+import { UpdateRoomTypePipe } from './updateRoomType.pipe';
 
 describe('UpdateRoomTypePipe', () => {
   it('should be defined', () => {
