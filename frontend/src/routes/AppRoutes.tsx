@@ -1,5 +1,5 @@
 import { useRoutes } from 'react-router-dom';
-import { Hoge } from '@/routes/Hoge';
+import { Hoge } from '@/features/Hoge/Hoge';
 
 export const AppRoutes = () => {
   const commonRoutes = [{ path: '/', element: <Hoge /> }];
