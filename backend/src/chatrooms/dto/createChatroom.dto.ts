@@ -10,7 +10,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { roomMemberDto } from './roomMember.dto';
+import { RoomMemberDto } from './roomMember.dto';
 
 export class CreateChatroomDto {
   @IsNotEmpty()
@@ -32,7 +32,7 @@ export class CreateChatroomDto {
 
   @IsNotEmpty()
   @ValidateNested({ each: true })
-  @Type(() => roomMemberDto)
-  @ApiProperty({ type: [roomMemberDto] })
-  roomMember!: roomMemberDto[];
+  @Type(() => RoomMemberDto)
+  @ApiProperty({ type: [RoomMemberDto] })
+  roomMember!: RoomMemberDto[];
 }
