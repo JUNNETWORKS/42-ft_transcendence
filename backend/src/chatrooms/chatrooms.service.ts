@@ -123,16 +123,20 @@ export class ChatroomsService {
   }
 
   async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
+    // TODO: ONWERがBANN,MUTEDされないようにする。
+    const { userId, memberType, endAt } = roomMemberDto;
     return this.prisma.chatUserRelation.update({
       where: {
         userId_chatRoomId: {
-          userId: roomMemberDto.userId,
+          userId: userId,
           chatRoomId: roomId,
         },
       },
       data: {
-        memberType: roomMemberDto.memberType,
-        endAt: roomMemberDto.endAt,
+        memberType: memberType,
+        endAt: !(memberType === 'BANNED' || memberType === 'MUTED')
+          ? null
+          : endAt,
       },
     });
   }

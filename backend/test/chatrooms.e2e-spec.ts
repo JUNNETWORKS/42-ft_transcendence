@@ -7,6 +7,8 @@ import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
 import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
+import { CreateRoomMemberDto } from 'src/chatrooms/dto/createRoomMember.dto';
+import { RoomMemberDto } from 'src/chatrooms/dto/roomMember.dto';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
@@ -356,5 +358,121 @@ describe('/Chatrooms (e2e)', () => {
       .send(body);
 
     expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/addMember', async () => {
+    const body: CreateRoomMemberDto = {
+      roomMember: [
+        { userId: 2, memberType: 'MEMBER' },
+        { userId: 3, memberType: 'OWNER' },
+      ],
+    };
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(200);
+  });
+
+  it('PATCH /chatrooms/addMember useId validation', async () => {
+    const body = {
+      roomMember: [
+        { userId: 3, memberType: 'OWNER' },
+        { userId: 'hoge', memberType: 'MEMBER' },
+      ],
+    };
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/memberType MEMBER -> ADMIN', async () => {
+    const pbody: CreateRoomMemberDto = {
+      roomMember: [
+        { userId: 2, memberType: 'MEMBER' },
+        { userId: 3, memberType: 'OWNER' },
+      ],
+    };
+    await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(pbody);
+
+    const body: RoomMemberDto = {
+      userId: 2,
+      memberType: 'ADMIN',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(200);
+    expect(res.body.memberType).toEqual('ADMIN');
+    expect(res.body.endAt).toEqual(null);
+  });
+
+  it('PATCH /chatrooms/memberType MEMBER -> BANNED', async () => {
+    const pbody: CreateRoomMemberDto = {
+      roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+    };
+    await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(pbody);
+
+    const body: RoomMemberDto = {
+      userId: 2,
+      memberType: 'BANNED',
+      endAt: new Date(),
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(200);
+    expect(res.body.memberType).toEqual('BANNED');
+    expect(res.body.endAt).not.toEqual(null);
+  });
+
+  it('PATCH /chatrooms/memberType BANNED -> MEMBER', async () => {
+    const pbody: CreateRoomMemberDto = {
+      roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+    };
+    await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(pbody);
+
+    const banned: RoomMemberDto = {
+      userId: 2,
+      memberType: 'BANNED',
+      endAt: new Date(),
+    };
+
+    let res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(banned);
+    expect(res.status).toEqual(200);
+    expect(res.body.memberType).toEqual('BANNED');
+    expect(res.body.endAt).not.toEqual(null);
+
+    const toMember: RoomMemberDto = {
+      userId: 2,
+      memberType: 'MEMBER',
+    };
+    res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(toMember);
+    expect(res.status).toEqual(200);
+    expect(res.body.memberType).toEqual('MEMBER');
+    expect(res.body.endAt).toEqual(null);
   });
 });

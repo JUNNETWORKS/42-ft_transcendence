@@ -8,7 +8,6 @@ import {
   Delete,
   ParseIntPipe,
   Query,
-  ValidationPipe,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
@@ -33,7 +32,7 @@ export class ChatroomsController {
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
   create(
-    @Body(ValidationPipe, new CreateMemberPipe(), new UpdateRoomTypePipe())
+    @Body(new CreateMemberPipe(), new UpdateRoomTypePipe())
     createChatroomDto: CreateChatroomDto
   ) {
     return this.chatroomsService.create(createChatroomDto);
@@ -79,7 +78,7 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomType(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body(ValidationPipe, new UpdateRoomTypePipe())
+    @Body(new UpdateRoomTypePipe())
     updateRoomTypeDto: UpdateRoomTypeDto
   ) {
     return this.chatroomsService.updateRoomType(roomId, updateRoomTypeDto);
@@ -98,7 +97,7 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   addMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() createRoomMemberDto: CreateRoomMemberDto
+    @Body(new CreateMemberPipe()) createRoomMemberDto: CreateRoomMemberDto
   ) {
     return this.chatroomsService.addMember(roomId, createRoomMemberDto);
   }
@@ -107,7 +106,7 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   updateMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body(ValidationPipe, new UpdateMemberPipe()) roomMemberDto: RoomMemberDto
+    @Body(new UpdateMemberPipe()) roomMemberDto: RoomMemberDto
   ) {
     return this.chatroomsService.updateMember(roomId, roomMemberDto);
   }
