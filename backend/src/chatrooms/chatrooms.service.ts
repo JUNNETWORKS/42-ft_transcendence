@@ -3,7 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
 import { CreateRoomMemberDto } from './dto/createRoomMember.dto';
-import { UpdateChatroomDto } from './dto/updateChatroom.dto';
 import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
 import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
@@ -78,14 +77,6 @@ export class ChatroomsService {
         },
       },
     });
-  }
-
-  async update(id: number, updateChatroomDto: UpdateChatroomDto) {
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
-      data: updateChatroomDto,
-    });
-    return new ChatroomEntity(res);
   }
 
   async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
