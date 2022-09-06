@@ -475,4 +475,18 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.body.memberType).toEqual('MEMBER');
     expect(res.body.endAt).toEqual(null);
   });
+
+  it('PATCH /chatrooms/memberType OWNERからの変更はエラー', async () => {
+    const body: RoomMemberDto = {
+      userId: 1,
+      memberType: 'BANNED',
+      endAt: new Date(),
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+  });
 });

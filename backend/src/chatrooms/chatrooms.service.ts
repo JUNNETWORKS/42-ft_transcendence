@@ -123,8 +123,21 @@ export class ChatroomsService {
   }
 
   async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
-    // TODO: ONWERがBANN,MUTEDされないようにする。
+    // ONWERはmemberTypeを変更できない。
     const { userId, memberType, endAt } = roomMemberDto;
+    const currentRelation =
+      await this.prisma.chatUserRelation.findUniqueOrThrow({
+        where: {
+          userId_chatRoomId: {
+            userId: userId,
+            chatRoomId: roomId,
+          },
+        },
+      });
+    if (currentRelation.memberType === 'OWNER') {
+      throw new HttpException('OWNER does not change other member type.', 400);
+    }
+
     return this.prisma.chatUserRelation.update({
       where: {
         userId_chatRoomId: {
