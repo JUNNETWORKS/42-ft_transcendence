@@ -6,6 +6,7 @@ import { CreateRoomMemberDto } from './dto/createRoomMember.dto';
 import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
 import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
+import { RoomMemberDto } from './dto/roomMember.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -121,10 +122,23 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async remove(id: number) {
-    const res = await this.prisma.chatRoom.delete({
-      where: { id },
+  async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
+    return this.prisma.chatUserRelation.update({
+      where: {
+        userId_chatRoomId: {
+          userId: roomMemberDto.userId,
+          chatRoomId: roomId,
+        },
+      },
+      data: {
+        memberType: roomMemberDto.memberType,
+        endAt: roomMemberDto.endAt,
+      },
     });
+  }
+
+  async remove(id: number) {
+    const res = await this.prisma.chatRoom.delete({ where: { id } });
     return new ChatroomEntity(res);
   }
 
@@ -158,10 +172,8 @@ export class ChatroomsService {
     return res.reverse();
   }
 
-  postMessage(postMessageDto: PostMessageDto) {
+  postMessage(data: PostMessageDto) {
     // TODO: userがmemberか確認する。
-    return this.prisma.chatMessage.create({
-      data: postMessageDto,
-    });
+    return this.prisma.chatMessage.create({ data });
   }
 }

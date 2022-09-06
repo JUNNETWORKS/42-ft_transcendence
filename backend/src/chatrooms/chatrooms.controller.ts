@@ -22,6 +22,8 @@ import { ChatroomEntity } from './entities/chatroom.entity';
 import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
 import { CreateMemberPipe } from './pipe/createMember.pipe';
 import { UpdateRoomTypePipe } from './pipe/updateRoomType.pipe';
+import { RoomMemberDto } from './dto/roomMember.dto';
+import { UpdateMemberPipe } from './pipe/updateMember.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -96,9 +98,18 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   addMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body() updateRoomMemberDto: CreateRoomMemberDto
+    @Body() createRoomMemberDto: CreateRoomMemberDto
   ) {
-    return this.chatroomsService.addMember(roomId, updateRoomMemberDto);
+    return this.chatroomsService.addMember(roomId, createRoomMemberDto);
+  }
+
+  @Patch(':roomId/memberType')
+  @ApiOkResponse({ type: ChatroomEntity })
+  updateMember(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Body(ValidationPipe, new UpdateMemberPipe()) roomMemberDto: RoomMemberDto
+  ) {
+    return this.chatroomsService.updateMember(roomId, roomMemberDto);
   }
 
   @Delete(':roomId')
