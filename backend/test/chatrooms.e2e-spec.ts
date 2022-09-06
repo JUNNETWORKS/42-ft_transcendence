@@ -9,6 +9,7 @@ import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateRoomMemberDto } from 'src/chatrooms/dto/createRoomMember.dto';
 import { RoomMemberDto } from 'src/chatrooms/dto/roomMember.dto';
+import { chatUserRelationEntity } from 'src/chatrooms/entities/chatUserRelation.entity';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
@@ -51,7 +52,7 @@ describe('/Chatrooms (e2e)', () => {
     body = {
       roomName: 'locked room',
       roomType: 'LOCKED',
-      roomPassword: 'tetpass',
+      roomPassword: 'testpass',
       roomMember: [{ userId: 1, memberType: 'OWNER' }],
     };
     res = await request(app.getHttpServer())
@@ -262,6 +263,62 @@ describe('/Chatrooms (e2e)', () => {
     response.forEach((chatRoom) => {
       expect(chatRoom.roomType).not.toEqual('PRIVATE');
     });
+  });
+
+  it('GET /chatrooms/{id}', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/2')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    const response: ChatroomEntity = res.body;
+    expect(response.roomName).toEqual('locked room');
+    expect(response.roomType).toEqual('LOCKED');
+    expect(response.roomPassword).toEqual('testpass');
+  });
+
+  it('GET /chatrooms/{id} 存在しないroomIdはエラー', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/999')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/join', async () => {
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/join?userId=2')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+  });
+
+  it('PATCH /chatrooms/leave', async () => {
+    let res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/join?userId=2')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+
+    res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/leave?userId=2')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+  });
+
+  it('GET /chatrooms/members', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/1/members')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    const response: chatUserRelationEntity[] = res.body;
+    expect(response.length).toEqual(1);
+    expect(response[0].chatRoomId).toEqual(1);
+    expect(response[0].userId).toEqual(1);
+    expect(response[0].memberType).toEqual('OWNER');
+    expect(response[0].endAt).toEqual(null);
   });
 
   it('PATCH /chatrooms/roomType 不要なパスワードをエラーとして判定', async () => {
@@ -510,6 +567,18 @@ describe('/Chatrooms (e2e)', () => {
       .patch('/chatrooms/1/memberType')
       .set('Accept', 'application/json')
       .send(body);
+    expect(res.status).toEqual(400);
+  });
+
+  it('DELETE /chatrooms/{id}', async () => {
+    let res = await request(app.getHttpServer())
+      .delete('/chatrooms/1')
+      .set('Accept', 'application/json');
+    expect(res.status).toEqual(200);
+
+    res = await request(app.getHttpServer())
+      .get('/chatrooms/1')
+      .set('Accept', 'application/json');
     expect(res.status).toEqual(400);
   });
 });
