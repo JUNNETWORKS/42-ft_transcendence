@@ -390,6 +390,29 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
+  it('PATCH /chatrooms/addMember memberTypeがBANNED、MUTEDのときエラー', async () => {
+    const body = {
+      roomMember: [
+        { userId: 3, memberType: 'BANNED' },
+        { userId: 2, memberType: 'MEMBER' },
+      ],
+    };
+    let res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+
+    body.roomMember[0].memberType = 'MUTED';
+    res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
   it('PATCH /chatrooms/memberType MEMBER -> ADMIN', async () => {
     const pbody: CreateRoomMemberDto = {
       roomMember: [
