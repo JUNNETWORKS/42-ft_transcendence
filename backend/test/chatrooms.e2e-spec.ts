@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { resetTable } from '../src/prisma/testUtils';
+import { createRooms, postMessages, resetTable } from '../src/prisma/testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
 import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
@@ -32,45 +32,11 @@ describe('/Chatrooms (e2e)', () => {
   });
 
   beforeEach(async () => {
-    await resetTable(['ChatRoom']);
+    await resetTable(['ChatRoom', 'ChatMessage']);
 
-    // seeding some rooms
-    let body: CreateChatroomDto;
-    let res;
-
-    body = {
-      roomName: 'public room',
-      roomType: 'PUBLIC',
-      roomMember: [{ userId: 1, memberType: 'OWNER' }],
-    };
-    res = await request(app.getHttpServer())
-      .post('/chatrooms')
-      .set('Accept', 'application/json')
-      .send(body);
-    expect(res.status).toEqual(201);
-
-    body = {
-      roomName: 'locked room',
-      roomType: 'LOCKED',
-      roomPassword: 'testpass',
-      roomMember: [{ userId: 1, memberType: 'OWNER' }],
-    };
-    res = await request(app.getHttpServer())
-      .post('/chatrooms')
-      .set('Accept', 'application/json')
-      .send(body);
-    expect(res.status).toEqual(201);
-
-    body = {
-      roomName: 'private room',
-      roomType: 'PRIVATE',
-      roomMember: [{ userId: 1, memberType: 'OWNER' }],
-    };
-    res = await request(app.getHttpServer())
-      .post('/chatrooms')
-      .set('Accept', 'application/json')
-      .send(body);
-    expect(res.status).toEqual(201);
+    // seeding test data
+    await createRooms();
+    await postMessages();
   });
 
   it('POST /chatrooms', async () => {
@@ -447,6 +413,18 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
+  it('PATCH /chatrooms/addMember 存在しないuseId', async () => {
+    const body = {
+      roomMember: [{ userId: 999, memberType: 'OWNER' }],
+    };
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/addMember')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(400);
+  });
+
   it('PATCH /chatrooms/addMember memberTypeがBANNED、MUTEDのときエラー', async () => {
     const body = {
       roomMember: [
@@ -570,6 +548,33 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
+  it('PATCH /chatrooms/memberType MUTED, BANNEDのときendAtがないとエラー', async () => {
+    const body = {
+      userId: 1,
+      memberType: 'MUTED',
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+  });
+
+  it('PATCH /chatrooms/memberType MUTED, BANNED以外でendAtがあるとエラー', async () => {
+    const body: RoomMemberDto = {
+      userId: 1,
+      memberType: 'ADMIN',
+      endAt: new Date(),
+    };
+
+    const res = await request(app.getHttpServer())
+      .patch('/chatrooms/1/memberType')
+      .set('Accept', 'application/json')
+      .send(body);
+    expect(res.status).toEqual(400);
+  });
+
   it('DELETE /chatrooms/{id}', async () => {
     let res = await request(app.getHttpServer())
       .delete('/chatrooms/1')
@@ -580,5 +585,27 @@ describe('/Chatrooms (e2e)', () => {
       .get('/chatrooms/1')
       .set('Accept', 'application/json');
     expect(res.status).toEqual(400);
+  });
+
+  it('GET /chatrooms/{id}/messages', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/1/messages?take=5')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    expect(res.body.length).toEqual(5);
+    expect(res.body[0].userId).toEqual(3);
+    expect(res.body[0].content).toEqual('1');
+  });
+
+  it('GET /chatrooms/{id}/messages', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/1/messages?take=5')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    expect(res.body.length).toEqual(5);
+    expect(res.body[0].userId).toEqual(3);
+    expect(res.body[0].content).toEqual('1');
   });
 });

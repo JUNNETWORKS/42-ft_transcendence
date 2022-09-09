@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { stringify } from 'querystring';
 const prisma = new PrismaClient();
 
 async function main() {

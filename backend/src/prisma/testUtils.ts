@@ -17,3 +17,52 @@ export const resetTable = async (
   }
   // prisma.$disconnect();
 };
+
+export const createRooms = async () => {
+  await prisma.chatRoom.create({
+    data: {
+      roomName: 'public room',
+      roomType: 'PUBLIC',
+      roomMember: {
+        create: [{ userId: 1, memberType: 'OWNER' }],
+      },
+    },
+  });
+
+  await prisma.chatRoom.create({
+    data: {
+      roomName: 'locked room',
+      roomType: 'LOCKED',
+      roomPassword: 'testpass',
+      roomMember: {
+        create: [{ userId: 1, memberType: 'OWNER' }],
+      },
+    },
+  });
+
+  await prisma.chatRoom.create({
+    data: {
+      roomName: 'private room',
+      roomType: 'PRIVATE',
+      roomMember: {
+        create: [{ userId: 1, memberType: 'OWNER' }],
+      },
+    },
+  });
+};
+
+export const postMessages = async () => {
+  for (let i = 1; i <= 3; i++) {
+    for (let j = 1; j <= 3; j++) {
+      for (let k = 1; k <= 5; k++) {
+        await prisma.chatMessage.create({
+          data: {
+            userId: i,
+            chatRoomId: j,
+            content: `${k}`,
+          },
+        });
+      }
+    }
+  }
+};
