@@ -159,26 +159,16 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async getMessagesByCursor(roomId: number, take: number, cursor: number) {
+  async getMessages(roomId: number, take: number, cursor?: number) {
+    console.log(take, cursor);
     const res = await this.prisma.chatMessage.findMany({
       take,
-      skip: 1,
-      cursor: {
-        id: cursor,
-      },
-      where: {
-        chatRoomId: roomId,
-      },
-      orderBy: {
-        id: 'desc',
-      },
-    });
-    return res.reverse();
-  }
-
-  async getMessages(roomId: number, take: number) {
-    const res = await this.prisma.chatMessage.findMany({
-      take,
+      skip: cursor ? 1 : undefined,
+      cursor: cursor
+        ? {
+            id: cursor,
+          }
+        : undefined,
       where: {
         chatRoomId: roomId,
       },

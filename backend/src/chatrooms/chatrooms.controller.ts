@@ -9,7 +9,12 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/createChatroom.dto';
 import { PostMessageDto } from './dto/postMessage.dto';
@@ -23,6 +28,7 @@ import { CreateMemberPipe } from './pipe/createMember.pipe';
 import { UpdateRoomTypePipe } from './pipe/updateRoomType.pipe';
 import { RoomMemberDto } from './dto/roomMember.dto';
 import { UpdateMemberPipe } from './pipe/updateMember.pipe';
+import { GetMessagesDto } from './dto/getMessages.dto';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -42,6 +48,14 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity, isArray: true })
   findAll() {
     return this.chatroomsService.findAll();
+  }
+
+  @Get('messages')
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
+  getMessagesByCursor(@Query() getMessageDto: GetMessagesDto) {
+    const { roomId, take, cursor } = getMessageDto;
+    return this.chatroomsService.getMessages(roomId, take, cursor);
   }
 
   @Get(':roomId')
@@ -115,25 +129,6 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   remove(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.remove(roomId);
-  }
-
-  @Get(':roomId/messagesbycursor')
-  @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
-  getMessagesByCursor(
-    @Param('roomId', ParseIntPipe) roomId: number,
-    @Query('take', ParseIntPipe) take: number,
-    @Query('cursor', ParseIntPipe) cursor: number
-  ) {
-    return this.chatroomsService.getMessagesByCursor(roomId, take, cursor);
-  }
-
-  @Get(':roomId/messages')
-  @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
-  getMessages(
-    @Param('roomId', ParseIntPipe) roomId: number,
-    @Query('take', ParseIntPipe) take: number
-  ) {
-    return this.chatroomsService.getMessages(roomId, take);
   }
 
   @Post('/messages')

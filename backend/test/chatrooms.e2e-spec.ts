@@ -587,20 +587,9 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('GET /chatrooms/{id}/messages', async () => {
+  it('GET /chatrooms/messages', async () => {
     const res = await request(app.getHttpServer())
-      .get('/chatrooms/1/messages?take=5')
-      .set('Accept', 'application/json');
-
-    expect(res.status).toEqual(200);
-    expect(res.body.length).toEqual(5);
-    expect(res.body[0].userId).toEqual(3);
-    expect(res.body[0].content).toEqual('1');
-  });
-
-  it('GET /chatrooms/{id}/messages', async () => {
-    const res = await request(app.getHttpServer())
-      .get('/chatrooms/1/messages?take=5')
+      .get('/chatrooms/messages?roomId=1&take=5')
       .set('Accept', 'application/json');
 
     expect(res.status).toEqual(200);
