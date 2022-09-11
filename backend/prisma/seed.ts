@@ -41,6 +41,17 @@ async function main() {
       });
     }
   }
+
+  // chatMessageたくさん入れる
+  // const data = [];
+  // for (let i = 0; i < 1000000; i++) {
+  //   data.push({
+  //     userId: 1,
+  //     chatRoomId: 1,
+  //     content: `${i}`,
+  //   });
+  // }
+  // await prisma.chatMessage.createMany({ data });
 }
 
 main()
