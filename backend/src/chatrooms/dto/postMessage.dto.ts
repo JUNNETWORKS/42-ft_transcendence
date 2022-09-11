@@ -1,14 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsNotEmpty, IsInt, IsString, MaxLength } from 'class-validator';
 
 export class PostMessageDto {
   @IsNotEmpty()
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
   @ApiProperty()
   chatRoomId!: number;
 
   @IsNotEmpty()
-  @IsNumber()
+  @Type(() => Number)
+  @IsInt()
   @ApiProperty()
   userId!: number;
 

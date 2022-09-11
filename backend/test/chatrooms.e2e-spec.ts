@@ -10,6 +10,7 @@ import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateRoomMemberDto } from 'src/chatrooms/dto/createRoomMember.dto';
 import { RoomMemberDto } from 'src/chatrooms/dto/roomMember.dto';
 import { chatUserRelationEntity } from 'src/chatrooms/entities/chatUserRelation.entity';
+import { PostMessageDto } from 'src/chatrooms/dto/postMessage.dto';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
@@ -587,14 +588,54 @@ describe('/Chatrooms (e2e)', () => {
     expect(res.status).toEqual(400);
   });
 
-  it('GET /chatrooms/messages', async () => {
+  it('GET /chatrooms/messages カーソルなし', async () => {
     const res = await request(app.getHttpServer())
       .get('/chatrooms/messages?roomId=1&take=5')
       .set('Accept', 'application/json');
 
     expect(res.status).toEqual(200);
     expect(res.body.length).toEqual(5);
+    expect(res.body[0].id).toEqual(11);
     expect(res.body[0].userId).toEqual(3);
     expect(res.body[0].content).toEqual('1');
+  });
+
+  it('GET /chatrooms/messages カーソルあり', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/messages?roomId=1&take=5&cursor=11')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    expect(res.body.length).toEqual(5);
+    expect(res.body[0].id).toEqual(6);
+    expect(res.body[0].userId).toEqual(2);
+    expect(res.body[0].content).toEqual('1');
+  });
+
+  it('GET /chatrooms/messages カーソルあり 存在しないID', async () => {
+    const res = await request(app.getHttpServer())
+      .get('/chatrooms/messages?roomId=1&take=5&cursor=999')
+      .set('Accept', 'application/json');
+
+    expect(res.status).toEqual(200);
+    expect(res.body.length).toEqual(5);
+    expect(res.body[0].id).toEqual(11);
+    expect(res.body[0].userId).toEqual(3);
+    expect(res.body[0].content).toEqual('1');
+  });
+
+  it('POST /chatrooms/messages', async () => {
+    const body: PostMessageDto = {
+      chatRoomId: 1,
+      userId: 1,
+      content: 'hogehoge',
+    };
+    const res = await request(app.getHttpServer())
+      .post('/chatrooms/messages')
+      .set('Accept', 'application/json')
+      .send(body);
+
+    expect(res.status).toEqual(201);
+    expect(res.body.content).toEqual('hogehoge');
   });
 });
