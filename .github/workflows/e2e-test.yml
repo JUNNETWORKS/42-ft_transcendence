@@ -1,0 +1,17 @@
+name: e2e test
+
+on: [pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: run compose
+        run: |
+          make up -d
+
+      - name: run e2e test
+        run: |
+          cd backend
+          npm run test:e2e
