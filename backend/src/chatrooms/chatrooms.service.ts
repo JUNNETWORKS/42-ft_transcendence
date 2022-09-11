@@ -160,23 +160,32 @@ export class ChatroomsService {
   }
 
   async getMessages(roomId: number, take: number, cursor?: number) {
-    console.log(take, cursor);
-    const res = await this.prisma.chatMessage.findMany({
-      take,
-      skip: cursor ? 1 : undefined,
-      cursor: cursor
-        ? {
-            id: cursor,
-          }
-        : undefined,
-      where: {
-        chatRoomId: roomId,
-      },
-      orderBy: {
-        id: 'desc',
-      },
-    });
-    return res.reverse();
+    if (typeof cursor === 'number') {
+      const res = await this.prisma.chatMessage.findMany({
+        take,
+        where: {
+          chatRoomId: roomId,
+          id: {
+            lt: cursor,
+          },
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+      return res.reverse();
+    } else {
+      const res = await this.prisma.chatMessage.findMany({
+        take,
+        where: {
+          chatRoomId: roomId,
+        },
+        orderBy: {
+          id: 'desc',
+        },
+      });
+      return res.reverse();
+    }
   }
 
   postMessage(data: PostMessageDto) {

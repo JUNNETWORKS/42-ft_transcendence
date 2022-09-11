@@ -57,8 +57,8 @@ export const postMessages = async () => {
       for (let k = 1; k <= 5; k++) {
         await prisma.chatMessage.create({
           data: {
-            userId: i,
-            chatRoomId: j,
+            userId: j,
+            chatRoomId: i,
             content: `${k}`,
           },
         });
