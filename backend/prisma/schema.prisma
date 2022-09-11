@@ -11,7 +11,24 @@ datasource db {
 }
 
 model User {
-  id          Int    @id @default(autoincrement())
-  email       String @unique
-  displayName String @unique
+  id          Int           @id @default(autoincrement())
+  email       String        @unique
+  displayName String        @unique
+  MatchResult MatchResult[]
+}
+
+model Match {
+  id          Int           @id @default(autoincrement())
+  beginDate   DateTime
+  MatchResult MatchResult[]
+}
+
+model MatchResult {
+  match   Match @relation(fields: [matchID], references: [id])
+  matchID Int
+  user    User  @relation(fields: [userID], references: [id])
+  userID  Int
+  score   Int
+
+  @@id([matchID, userID])
 }
