@@ -20,15 +20,13 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-  build:
-    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
 
       - name: move directory
         run: cd backend
 
-      - uses: actions/setup-node@v3
       - name: Install dependencies
         run: npm ci
 
