@@ -29,6 +29,7 @@ import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateMemberPipe } from './pipe/update-member.pipe';
 import { GetMessagesDto } from './dto/get-messages.dto';
+import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -38,7 +39,11 @@ export class ChatroomsController {
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
   create(
-    @Body(new CreateMemberPipe(), new UpdateRoomTypePipe())
+    @Body(
+      new CreateMemberPipe(),
+      new UpdateRoomTypePipe(),
+      new CreateChatroomPipe()
+    )
     createChatroomDto: CreateChatroomDto
   ) {
     return this.chatroomsService.create(createChatroomDto);

@@ -128,7 +128,7 @@ export class ChatroomsService {
     const { userId, memberType, endAt } = roomMemberDto;
     const roomInfo = await this.findOne(roomId);
     if (roomInfo.ownerId === userId) {
-      throw new HttpException('OWNER does not change other member type.', 400);
+      throw new HttpException('Room owner must be administrator.', 400);
     }
 
     return this.prisma.chatUserRelation.update({
