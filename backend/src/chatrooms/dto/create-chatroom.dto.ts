@@ -3,6 +3,7 @@ import { RoomType } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsEnum,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -29,6 +30,12 @@ export class CreateChatroomDto {
   @IsString()
   @ApiProperty()
   roomPassword?: string;
+
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  @ApiProperty()
+  ownerId!: number;
 
   @IsNotEmpty()
   @ValidateNested({ each: true })

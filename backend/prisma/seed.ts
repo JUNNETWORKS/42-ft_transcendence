@@ -17,14 +17,17 @@ async function main() {
       {
         roomName: 'chatroom1',
         roomType: 'PUBLIC',
+        ownerId: 1,
       },
       {
         roomName: 'chatroom2',
         roomType: 'PUBLIC',
+        ownerId: 1,
       },
       {
         roomName: 'chatroom3',
         roomType: 'PUBLIC',
+        ownerId: 1,
       },
     ],
     skipDuplicates: true,

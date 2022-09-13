@@ -17,6 +17,7 @@ describe('CreateMemberPipe', () => {
     const dto: CreateChatroomDto = {
       roomName: 'testroom',
       roomType: 'PUBLIC',
+      ownerId: 1,
       roomMember: [
         { userId: 1, memberType: 'ADMIN' },
         { userId: 2, memberType: 'BANNED' },

@@ -15,7 +15,8 @@ model User {
   email       String             @unique
   displayName String             @unique
   chatMessage ChatMessage[]
-  chatRoom    ChatUserRelation[]
+  joinedRoom  ChatUserRelation[]
+  ownedRoom   ChatRoom[]
 }
 
 model ChatRoom {
@@ -23,6 +24,8 @@ model ChatRoom {
   roomName     String             @unique
   roomType     RoomType           @default(PUBLIC)
   roomPassword String?
+  owner        User               @relation(fields: [ownerId], references: [id])
+  ownerId      Int
   createdAt    DateTime           @default(now())
   chatMessage  ChatMessage[]
   roomMember   ChatUserRelation[]
@@ -49,7 +52,6 @@ model ChatUserRelation {
 enum MemberType {
   MEMBER
   ADMIN
-  OWNER
   BANNED
   MUTED
 }

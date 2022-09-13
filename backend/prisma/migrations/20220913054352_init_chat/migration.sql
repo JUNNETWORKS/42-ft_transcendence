@@ -2,7 +2,7 @@
 CREATE TYPE "RoomType" AS ENUM ('PUBLIC', 'PRIVATE', 'LOCKED');
 
 -- CreateEnum
-CREATE TYPE "MemberType" AS ENUM ('MEMBER', 'ADMIN', 'OWNER', 'BANNED', 'MUTED');
+CREATE TYPE "MemberType" AS ENUM ('MEMBER', 'ADMIN', 'BANNED', 'MUTED');
 
 -- CreateTable
 CREATE TABLE "ChatRoom" (
@@ -10,6 +10,7 @@ CREATE TABLE "ChatRoom" (
     "roomName" TEXT NOT NULL,
     "roomType" "RoomType" NOT NULL DEFAULT 'PUBLIC',
     "roomPassword" TEXT,
+    "ownerId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "ChatRoom_pkey" PRIMARY KEY ("id")
@@ -38,6 +39,9 @@ CREATE TABLE "ChatMessage" (
 
 -- CreateIndex
 CREATE UNIQUE INDEX "ChatRoom_roomName_key" ON "ChatRoom"("roomName");
+
+-- AddForeignKey
+ALTER TABLE "ChatRoom" ADD CONSTRAINT "ChatRoom_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChatUserRelation" ADD CONSTRAINT "ChatUserRelation_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;

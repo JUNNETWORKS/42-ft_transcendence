@@ -16,6 +16,9 @@ export class ChatroomEntity implements ChatRoom {
   roomPassword!: string | null;
 
   @ApiProperty()
+  ownerId!: number;
+
+  @ApiProperty()
   createdAt!: Date;
 
   constructor(partial: Partial<ChatroomEntity>) {

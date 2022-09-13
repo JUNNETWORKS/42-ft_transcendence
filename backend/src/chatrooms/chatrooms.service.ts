@@ -126,16 +126,8 @@ export class ChatroomsService {
   async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType, endAt } = roomMemberDto;
-    const currentRelation =
-      await this.prisma.chatUserRelation.findUniqueOrThrow({
-        where: {
-          userId_chatRoomId: {
-            userId: userId,
-            chatRoomId: roomId,
-          },
-        },
-      });
-    if (currentRelation.memberType === 'OWNER') {
+    const roomInfo = await this.findOne(roomId);
+    if (roomInfo.ownerId === userId) {
       throw new HttpException('OWNER does not change other member type.', 400);
     }
 

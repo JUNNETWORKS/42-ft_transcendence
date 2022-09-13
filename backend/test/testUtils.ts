@@ -23,8 +23,9 @@ export const createRooms = async () => {
     data: {
       roomName: 'public room',
       roomType: 'PUBLIC',
+      ownerId: 1,
       roomMember: {
-        create: [{ userId: 1, memberType: 'OWNER' }],
+        create: [{ userId: 1, memberType: 'ADMIN' }],
       },
     },
   });
@@ -34,8 +35,9 @@ export const createRooms = async () => {
       roomName: 'locked room',
       roomType: 'LOCKED',
       roomPassword: 'testpass',
+      ownerId: 1,
       roomMember: {
-        create: [{ userId: 1, memberType: 'OWNER' }],
+        create: [{ userId: 1, memberType: 'ADMIN' }],
       },
     },
   });
@@ -44,8 +46,9 @@ export const createRooms = async () => {
     data: {
       roomName: 'private room',
       roomType: 'PRIVATE',
+      ownerId: 1,
       roomMember: {
-        create: [{ userId: 1, memberType: 'OWNER' }],
+        create: [{ userId: 1, memberType: 'ADMIN' }],
       },
     },
   });
