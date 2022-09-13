@@ -58,6 +58,20 @@ describe('/Chatrooms (e2e)', () => {
       expect(res.body.roomName).toEqual(body.roomName);
     });
 
+    it('ownerがmemberに含まれない時エラー', async () => {
+      const body: CreateChatroomDto = {
+        roomName: 'testroom',
+        roomType: 'PUBLIC',
+        ownerId: 1,
+        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+      };
+      const res = await request(app.getHttpServer())
+        .post('/chatrooms')
+        .set('Accept', 'application/json')
+        .send(body);
+      expect(res.status).toEqual(400);
+    });
+
     it('ownerがADMINでないときエラー', async () => {
       const body: CreateChatroomDto = {
         roomName: 'testroom',
