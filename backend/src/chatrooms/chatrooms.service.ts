@@ -1,12 +1,12 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateChatroomDto } from './dto/createChatroom.dto';
-import { PostMessageDto } from './dto/postMessage.dto';
-import { CreateRoomMemberDto } from './dto/createRoomMember.dto';
-import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
-import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
+import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { CreateRoomMemberDto } from './dto/create-room-member.dto';
+import { UpdateRoomNameDto } from './dto/update-room-name.dto';
+import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
-import { RoomMemberDto } from './dto/roomMember.dto';
+import { RoomMemberDto } from './dto/room-member.dto';
 
 @Injectable()
 export class ChatroomsService {

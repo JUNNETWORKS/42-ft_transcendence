@@ -4,7 +4,7 @@ import {
   Injectable,
   PipeTransform,
 } from '@nestjs/common';
-import { CreateChatroomDto } from '../dto/createChatroom.dto';
+import { CreateChatroomDto } from '../dto/create-chatroom.dto';
 
 @Injectable()
 export class CreateMemberPipe implements PipeTransform {

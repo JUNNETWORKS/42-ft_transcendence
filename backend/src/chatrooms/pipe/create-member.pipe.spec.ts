@@ -1,6 +1,6 @@
 import { ArgumentMetadata, HttpException } from '@nestjs/common';
-import { CreateChatroomDto } from '../dto/createChatroom.dto';
-import { CreateMemberPipe } from './createMember.pipe';
+import { CreateChatroomDto } from '../dto/create-chatroom.dto';
+import { CreateMemberPipe } from './create-member.pipe';
 
 describe('CreateMemberPipe', () => {
   it('should be defined', () => {

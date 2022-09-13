@@ -16,19 +16,19 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
-import { CreateChatroomDto } from './dto/createChatroom.dto';
-import { PostMessageDto } from './dto/postMessage.dto';
-import { CreateRoomMemberDto } from './dto/createRoomMember.dto';
-import { UpdateRoomNameDto } from './dto/updateRoomName.dto';
-import { UpdateRoomTypeDto } from './dto/updateRoomType.dto';
-import { ChatMessageEntity } from './entities/chatMessage.entity';
+import { CreateChatroomDto } from './dto/create-chatroom.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { CreateRoomMemberDto } from './dto/create-room-member.dto';
+import { UpdateRoomNameDto } from './dto/update-room-name.dto';
+import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
+import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
-import { chatUserRelationEntity } from './entities/chatUserRelation.entity';
-import { CreateMemberPipe } from './pipe/createMember.pipe';
-import { UpdateRoomTypePipe } from './pipe/updateRoomType.pipe';
-import { RoomMemberDto } from './dto/roomMember.dto';
-import { UpdateMemberPipe } from './pipe/updateMember.pipe';
-import { GetMessagesDto } from './dto/getMessages.dto';
+import { chatUserRelationEntity } from './entities/chat-user-relation.entity';
+import { CreateMemberPipe } from './pipe/create-member.pipe';
+import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
+import { RoomMemberDto } from './dto/room-member.dto';
+import { UpdateMemberPipe } from './pipe/update-member.pipe';
+import { GetMessagesDto } from './dto/get-messages.dto';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')

@@ -10,7 +10,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { RoomMemberDto } from './roomMember.dto';
+import { RoomMemberDto } from './room-member.dto';
 
 export class CreateChatroomDto {
   @IsNotEmpty()

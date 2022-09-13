@@ -3,14 +3,14 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
 import { createRooms, postMessages, resetTable } from '../src/prisma/testUtils';
-import { CreateChatroomDto } from '../src/chatrooms/dto/createChatroom.dto';
+import { CreateChatroomDto } from '../src/chatrooms/dto/create-chatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
-import { UpdateRoomTypeDto } from 'src/chatrooms/dto/updateRoomType.dto';
+import { UpdateRoomTypeDto } from 'src/chatrooms/dto/update-room-type.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
-import { CreateRoomMemberDto } from 'src/chatrooms/dto/createRoomMember.dto';
-import { RoomMemberDto } from 'src/chatrooms/dto/roomMember.dto';
-import { chatUserRelationEntity } from 'src/chatrooms/entities/chatUserRelation.entity';
-import { PostMessageDto } from 'src/chatrooms/dto/postMessage.dto';
+import { CreateRoomMemberDto } from 'src/chatrooms/dto/create-room-member.dto';
+import { RoomMemberDto } from 'src/chatrooms/dto/room-member.dto';
+import { chatUserRelationEntity } from 'src/chatrooms/entities/chat-user-relation.entity';
+import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;

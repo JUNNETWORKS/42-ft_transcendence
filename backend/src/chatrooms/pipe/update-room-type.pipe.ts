@@ -4,7 +4,7 @@ import {
   Injectable,
   PipeTransform,
 } from '@nestjs/common';
-import { UpdateRoomTypeDto } from '../dto/updateRoomType.dto';
+import { UpdateRoomTypeDto } from '../dto/update-room-type.dto';
 
 @Injectable()
 export class UpdateRoomTypePipe implements PipeTransform {
