@@ -25,10 +25,7 @@ describe('CreateMemberPipe', () => {
     expect(() => {
       target.transform(dto, metadata);
     }).toThrow(
-      new HttpException(
-        'new chatroom member type must not be "BANNED" or "MUTED"',
-        400
-      )
+      new HttpException('new chatroom member type must not be "BANNED"', 400)
     );
   });
 });
