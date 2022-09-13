@@ -54,8 +54,7 @@ export class ChatroomsController {
   @ApiQuery({ name: 'cursor', required: false })
   @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
   getMessagesByCursor(@Query() getMessageDto: GetMessagesDto) {
-    const { roomId, take, cursor } = getMessageDto;
-    return this.chatroomsService.getMessages(roomId, take, cursor);
+    return this.chatroomsService.getMessages(getMessageDto);
   }
 
   @Get(':roomId')

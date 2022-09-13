@@ -11,6 +11,7 @@ import { CreateRoomMemberDto } from 'src/chatrooms/dto/create-room-member.dto';
 import { RoomMemberDto } from 'src/chatrooms/dto/room-member.dto';
 import { chatUserRelationEntity } from 'src/chatrooms/entities/chat-user-relation.entity';
 import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
+import { ChatMessageEntity } from 'src/chatrooms/entities/chat-message.entity';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
@@ -619,28 +620,68 @@ describe('/Chatrooms (e2e)', () => {
   });
 
   describe('GET /chatrooms/messages', () => {
-    it('カーソルなし', async () => {
+    it('カーソルなし take plus', async () => {
       const res = await request(app.getHttpServer())
         .get('/chatrooms/messages?roomId=1&take=5')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
       expect(res.body.length).toEqual(5);
-      expect(res.body[0].id).toEqual(11);
-      expect(res.body[0].userId).toEqual(3);
-      expect(res.body[0].content).toEqual('1');
+      let id = 11;
+      let content = 1;
+      res.body.forEach((message: ChatMessageEntity) => {
+        expect(message.id).toEqual(id++);
+        expect(message.userId).toEqual(3);
+        expect(message.content).toEqual(`${content++}`);
+      });
     });
 
-    it('カーソルあり', async () => {
+    it('カーソルなし take minus', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms/messages?roomId=1&take=-5')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      expect(res.body.length).toEqual(5);
+      let id = 1;
+      let content = 1;
+      res.body.forEach((message: ChatMessageEntity) => {
+        expect(message.id).toEqual(id++);
+        expect(message.userId).toEqual(1);
+        expect(message.content).toEqual(`${content++}`);
+      });
+    });
+
+    it('カーソルあり take plus', async () => {
       const res = await request(app.getHttpServer())
         .get('/chatrooms/messages?roomId=1&take=5&cursor=11')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
       expect(res.body.length).toEqual(5);
-      expect(res.body[0].id).toEqual(6);
-      expect(res.body[0].userId).toEqual(2);
-      expect(res.body[0].content).toEqual('1');
+      let id = 6;
+      let content = 1;
+      res.body.forEach((message: ChatMessageEntity) => {
+        expect(message.id).toEqual(id++);
+        expect(message.userId).toEqual(2);
+        expect(message.content).toEqual(`${content++}`);
+      });
+    });
+
+    it('カーソルあり take minus', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms/messages?roomId=1&take=-5&cursor=11')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      expect(res.body.length).toEqual(4);
+      let id = 12;
+      let content = 2;
+      res.body.forEach((message: ChatMessageEntity) => {
+        expect(message.id).toEqual(id++);
+        expect(message.userId).toEqual(3);
+        expect(message.content).toEqual(`${content++}`);
+      });
     });
 
     it('カーソルあり 存在しないmessageID', async () => {

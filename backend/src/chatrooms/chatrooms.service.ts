@@ -7,6 +7,7 @@ import { UpdateRoomNameDto } from './dto/update-room-name.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { RoomMemberDto } from './dto/room-member.dto';
+import { GetMessagesDto } from './dto/get-messages.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -159,32 +160,25 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async getMessages(roomId: number, take: number, cursor?: number) {
-    if (typeof cursor === 'number') {
-      const res = await this.prisma.chatMessage.findMany({
-        take,
+  async getMessages(getMessageDto: GetMessagesDto) {
+    // TODO: userとchatroomの関係確認。-> pipe?
+    const { roomId, take, cursor } = getMessageDto;
+    if (take > 0) {
+      return await this.prisma.chatMessage.findMany({
+        take: -take,
         where: {
           chatRoomId: roomId,
-          id: {
-            lt: cursor,
-          },
-        },
-        orderBy: {
-          id: 'desc',
+          id: cursor ? { lt: cursor } : undefined,
         },
       });
-      return res.reverse();
     } else {
-      const res = await this.prisma.chatMessage.findMany({
-        take,
+      return await this.prisma.chatMessage.findMany({
+        take: -take,
         where: {
           chatRoomId: roomId,
-        },
-        orderBy: {
-          id: 'desc',
+          id: cursor ? { gt: cursor } : undefined,
         },
       });
-      return res.reverse();
     }
   }
 
