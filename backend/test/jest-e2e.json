@@ -9,5 +9,9 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "coveragePathIgnorePatterns": [
+    "src/prisma",
+    "test/testUtils.ts"
+  ]
 }

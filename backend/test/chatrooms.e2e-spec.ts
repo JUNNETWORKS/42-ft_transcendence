@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from './../src/app.module';
-import { createRooms, postMessages, resetTable } from '../src/prisma/testUtils';
+import { createRooms, postMessages, resetTable } from './testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/create-chatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
 import { UpdateRoomTypeDto } from 'src/chatrooms/dto/update-room-type.dto';
