@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
 
 const prisma = new PrismaClient();
 
@@ -55,17 +56,19 @@ export const createRooms = async () => {
 };
 
 export const postMessages = async () => {
+  const messages: PostMessageDto[] = [];
   for (let i = 1; i <= 3; i++) {
     for (let j = 1; j <= 3; j++) {
       for (let k = 1; k <= 5; k++) {
-        await prisma.chatMessage.create({
-          data: {
-            userId: j,
-            chatRoomId: i,
-            content: `${k}`,
-          },
+        messages.push({
+          userId: j,
+          chatRoomId: i,
+          content: `${k}`,
         });
       }
     }
   }
+  await prisma.chatMessage.createMany({
+    data: messages,
+  });
 };
