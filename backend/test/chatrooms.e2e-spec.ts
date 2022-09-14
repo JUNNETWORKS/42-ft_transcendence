@@ -750,5 +750,42 @@ describe('/Chatrooms (e2e)', () => {
       expect(res.status).toEqual(201);
       expect(res.body.content).toEqual('hogehoge');
     });
+
+    it('post後ユーザーを削除', async () => {
+      await prismaService.user.create({
+        data: {
+          displayName: 'test_user',
+          email: 'test@test.com',
+        },
+      });
+      const body: PostMessageDto = {
+        chatRoomId: 1,
+        userId: 4,
+        content: 'hogehoge',
+      };
+      const res = await request(app.getHttpServer())
+        .post('/chatrooms/messages')
+        .set('Accept', 'application/json')
+        .send(body);
+
+      expect(res.status).toEqual(201);
+      expect(res.body.userId).toEqual(4);
+      expect(res.body.content).toEqual('hogehoge');
+
+      const messageId = res.body.id;
+
+      await prismaService.user.delete({
+        where: { id: 4 },
+      });
+      const message = await prismaService.chatMessage.findFirst({
+        where: {
+          chatRoomId: 1,
+        },
+        take: -1,
+      });
+      expect(message?.id).toEqual(messageId);
+      expect(message?.content).toEqual('hogehoge');
+      expect(message?.userId).toBeNull();
+    });
   });
 });

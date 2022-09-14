@@ -60,8 +60,8 @@ model ChatMessage {
   id         Int      @id @default(autoincrement())
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId     Int
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId     Int?
   createdAt  DateTime @default(now())
   content    String
 }
