@@ -162,6 +162,7 @@ export class ChatroomsService {
           chatRoomId: roomId,
           id: cursor ? { lt: cursor } : undefined,
         },
+        orderBy: { id: 'asc' },
       });
     } else {
       return await this.prisma.chatMessage.findMany({
@@ -170,6 +171,7 @@ export class ChatroomsService {
           chatRoomId: roomId,
           id: cursor ? { gt: cursor } : undefined,
         },
+        orderBy: { id: 'asc' },
       });
     }
   }
