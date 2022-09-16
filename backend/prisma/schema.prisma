@@ -27,6 +27,7 @@ model ChatRoom {
   owner        User               @relation(fields: [ownerId], references: [id])
   ownerId      Int
   createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @default(now()) @updatedAt
   chatMessage  ChatMessage[]
   roomMember   ChatUserRelation[]
 }
