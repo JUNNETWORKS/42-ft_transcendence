@@ -30,6 +30,7 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateMemberPipe } from './pipe/update-member.pipe';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -50,15 +51,16 @@ export class ChatroomsController {
   }
 
   @Get()
+  @ApiQuery({ name: 'cursor', required: false })
   @ApiOkResponse({ type: ChatroomEntity, isArray: true })
-  findAll() {
-    return this.chatroomsService.findAll();
+  findMany(@Query() getChatroomsDto: GetChatroomsDto) {
+    return this.chatroomsService.findMany(getChatroomsDto);
   }
 
   @Get('messages')
   @ApiQuery({ name: 'cursor', required: false })
   @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
-  getMessagesByCursor(@Query() getMessageDto: GetMessagesDto) {
+  getMessages(@Query() getMessageDto: GetMessagesDto) {
     return this.chatroomsService.getMessages(getMessageDto);
   }
 

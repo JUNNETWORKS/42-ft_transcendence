@@ -1,4 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, RoomType } from '@prisma/client';
+import { randomInt } from 'crypto';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -32,6 +33,26 @@ async function main() {
     ],
     skipDuplicates: true,
   });
+
+  // const rooms = [];
+  // for (let i = 1; i <= 100000; i++) {
+  //   rooms.push({
+  //     roomName: `${i}`,
+  //     roomType: 'PUBLIC' as RoomType,
+  //     ownerId: 1,
+  //   });
+  // }
+  // await prisma.chatRoom.createMany({ data: rooms });
+
+  // for (let i = 1; i <= 10000; i = i++) {
+  //   const id = randomInt(1, 100000);
+  //   await prisma.chatRoom.update({
+  //     where: { id },
+  //     data: {
+  //       ownerId: 2,
+  //     },
+  //   });
+  // }
 
   for (let i = 1; i <= 3; i++) {
     for (let j = 1; j <= 20; j++) {

@@ -8,6 +8,7 @@ import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -25,15 +26,33 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async findAll() {
-    const res = await this.prisma.chatRoom.findMany({
-      where: {
-        roomType: {
-          notIn: 'PRIVATE',
+  async findMany(getChatroomsDto: GetChatroomsDto) {
+    const { take, cursor } = getChatroomsDto;
+    if (take > 0) {
+      const res = await this.prisma.chatRoom.findMany({
+        take: take,
+        where: {
+          roomType: {
+            notIn: 'PRIVATE',
+          },
+          id: cursor ? { lt: cursor } : undefined,
         },
-      },
-    });
-    return res.map((o) => new ChatroomEntity(o));
+        orderBy: { id: 'desc' },
+      });
+      return res.map((o) => new ChatroomEntity(o));
+    } else {
+      const res = await this.prisma.chatRoom.findMany({
+        take: take,
+        where: {
+          roomType: {
+            notIn: 'PRIVATE',
+          },
+          id: cursor ? { gt: cursor } : undefined,
+        },
+        orderBy: { id: 'desc' },
+      });
+      return res.map((o) => new ChatroomEntity(o));
+    }
   }
 
   async findOne(id: number) {
