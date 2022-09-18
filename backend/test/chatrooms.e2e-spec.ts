@@ -258,7 +258,7 @@ describe('/Chatrooms (e2e)', () => {
   describe('GET /chatrooms', () => {
     it('success privateなチャットルームを取得しない', async () => {
       const res = await request(app.getHttpServer())
-        .get('/chatrooms')
+        .get('/chatrooms?take=5')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
