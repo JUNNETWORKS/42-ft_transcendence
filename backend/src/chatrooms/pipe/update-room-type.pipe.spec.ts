@@ -3,8 +3,31 @@ import { UpdateRoomTypeDto } from '../dto/update-room-type.dto';
 import { UpdateRoomTypePipe } from './update-room-type.pipe';
 
 describe('UpdateRoomTypePipe', () => {
-  it('should be defined', () => {
-    expect(new UpdateRoomTypePipe()).toBeDefined();
+  it('success PUBLIC', async () => {
+    const target: UpdateRoomTypePipe = new UpdateRoomTypePipe();
+    const metadata: ArgumentMetadata = {
+      type: 'body',
+      metatype: UpdateRoomTypeDto,
+      data: '',
+    };
+    const dto: UpdateRoomTypeDto = {
+      roomType: 'PUBLIC',
+    };
+    expect(target.transform(dto, metadata)).toEqual(dto);
+  });
+
+  it('success LOCKED', async () => {
+    const target: UpdateRoomTypePipe = new UpdateRoomTypePipe();
+    const metadata: ArgumentMetadata = {
+      type: 'body',
+      metatype: UpdateRoomTypeDto,
+      data: '',
+    };
+    const dto: UpdateRoomTypeDto = {
+      roomType: 'LOCKED',
+      roomPassword: 'testpass',
+    };
+    expect(target.transform(dto, metadata)).toEqual(dto);
   });
 
   it('roomPasswordが必要のないタイプのルームのプロパティにある。', async () => {

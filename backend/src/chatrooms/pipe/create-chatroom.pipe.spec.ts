@@ -3,10 +3,6 @@ import { CreateChatroomDto } from '../dto/create-chatroom.dto';
 import { CreateChatroomPipe } from './create-chatroom.pipe';
 
 describe('CreateChatroomPipe', () => {
-  it('should be defined', () => {
-    expect(new CreateChatroomPipe()).toBeDefined();
-  });
-
   it('success', () => {
     const target = new CreateChatroomPipe();
     const metadata: ArgumentMetadata = {

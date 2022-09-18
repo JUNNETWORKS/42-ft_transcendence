@@ -3,8 +3,35 @@ import { RoomMemberDto } from '../dto/room-member.dto';
 import { UpdateMemberPipe } from './update-member.pipe';
 
 describe('UpdateMemberPipe', () => {
-  it('should be defined', () => {
-    expect(new UpdateMemberPipe()).toBeDefined();
+  it('success ADMIN', () => {
+    const target: UpdateMemberPipe = new UpdateMemberPipe();
+    const metadata: ArgumentMetadata = {
+      type: 'body',
+      metatype: RoomMemberDto,
+      data: '',
+    };
+    const dto: RoomMemberDto = {
+      userId: 1,
+      memberType: 'ADMIN',
+    };
+
+    expect(target.transform(dto, metadata)).toEqual(dto);
+  });
+
+  it('success BANNED', () => {
+    const target: UpdateMemberPipe = new UpdateMemberPipe();
+    const metadata: ArgumentMetadata = {
+      type: 'body',
+      metatype: RoomMemberDto,
+      data: '',
+    };
+    const dto: RoomMemberDto = {
+      userId: 1,
+      memberType: 'BANNED',
+      endAt: new Date(),
+    };
+
+    expect(target.transform(dto, metadata)).toEqual(dto);
   });
 
   it('membertypeがBANNED、MUTEDのときendAtがないとエラー', () => {

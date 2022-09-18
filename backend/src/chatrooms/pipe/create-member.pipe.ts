@@ -10,7 +10,7 @@ import { CreateChatroomDto } from '../dto/create-chatroom.dto';
 export class CreateMemberPipe implements PipeTransform {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   transform(value: CreateChatroomDto, metadata: ArgumentMetadata) {
-    // members.userTypeにBANNED, MUTEDが入らないようにする。
+    // memberTypeにBANNED, MUTEDが入らないようにする。
     for (const member of value.roomMember) {
       if (member.memberType === 'BANNED' || member.memberType === 'MUTED') {
         throw new HttpException(
