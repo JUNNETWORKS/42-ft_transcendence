@@ -53,6 +53,28 @@ export const createRooms = async () => {
       },
     },
   });
+
+  await prisma.chatRoom.create({
+    data: {
+      roomName: 'public room2',
+      roomType: 'PUBLIC',
+      ownerId: 1,
+      roomMember: {
+        create: [{ userId: 1, memberType: 'ADMIN' }],
+      },
+    },
+  });
+
+  await prisma.chatRoom.create({
+    data: {
+      roomName: 'public room3',
+      roomType: 'PUBLIC',
+      ownerId: 1,
+      roomMember: {
+        create: [{ userId: 1, memberType: 'ADMIN' }],
+      },
+    },
+  });
 };
 
 export const postMessages = async () => {

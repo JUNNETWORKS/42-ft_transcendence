@@ -263,10 +263,57 @@ describe('/Chatrooms (e2e)', () => {
 
       expect(res.status).toEqual(200);
       const response: ChatroomEntity[] = res.body;
-      expect(response.length).toEqual(2);
+      expect(response.length).toEqual(4);
       response.forEach((chatRoom) => {
         expect(chatRoom.roomType).not.toEqual('PRIVATE');
       });
+    });
+
+    it('success take minus', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms?take=-1')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      const response: ChatroomEntity[] = res.body;
+      expect(response.length).toEqual(1);
+      expect(response[0].id).toEqual(5);
+    });
+
+    it('success cursor', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms?take=5&cursor=2')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      const response: ChatroomEntity[] = res.body;
+      expect(response.length).toEqual(2);
+      expect(response[0].id).toEqual(4);
+      expect(response[1].id).toEqual(5);
+    });
+
+    it('success cursor minus', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms?take=-2&cursor=6')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      const response: ChatroomEntity[] = res.body;
+      expect(response.length).toEqual(2);
+      expect(response[0].id).toEqual(4);
+      expect(response[1].id).toEqual(5);
+    });
+
+    it('success cursor 存在しないid', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/chatrooms?take=2&cursor=0')
+        .set('Accept', 'application/json');
+
+      expect(res.status).toEqual(200);
+      const response: ChatroomEntity[] = res.body;
+      expect(response.length).toEqual(2);
+      expect(response[0].id).toEqual(1);
+      expect(response[1].id).toEqual(2);
     });
   });
 

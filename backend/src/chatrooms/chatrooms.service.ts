@@ -35,9 +35,9 @@ export class ChatroomsService {
           roomType: {
             notIn: 'PRIVATE',
           },
-          id: cursor ? { lt: cursor } : undefined,
+          id: cursor ? { gt: cursor } : undefined,
         },
-        orderBy: { id: 'desc' },
+        orderBy: { id: 'asc' },
       });
       return res.map((o) => new ChatroomEntity(o));
     } else {
@@ -47,9 +47,9 @@ export class ChatroomsService {
           roomType: {
             notIn: 'PRIVATE',
           },
-          id: cursor ? { gt: cursor } : undefined,
+          id: cursor ? { lt: cursor } : undefined,
         },
-        orderBy: { id: 'desc' },
+        orderBy: { id: 'asc' },
       });
       return res.map((o) => new ChatroomEntity(o));
     }
