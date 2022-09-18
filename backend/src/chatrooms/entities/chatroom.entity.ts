@@ -21,6 +21,9 @@ export class ChatroomEntity implements ChatRoom {
   @ApiProperty()
   createdAt!: Date;
 
+  @ApiProperty()
+  updatedAt!: Date;
+
   constructor(partial: Partial<ChatroomEntity>) {
     Object.assign(this, partial);
   }
