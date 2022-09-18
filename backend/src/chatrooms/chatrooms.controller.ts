@@ -9,12 +9,7 @@ import {
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import {
-  ApiCreatedResponse,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { PostMessageDto } from './dto/post-message.dto';
@@ -51,14 +46,12 @@ export class ChatroomsController {
   }
 
   @Get()
-  @ApiQuery({ name: 'cursor', required: false })
   @ApiOkResponse({ type: ChatroomEntity, isArray: true })
   findMany(@Query() getChatroomsDto: GetChatroomsDto) {
     return this.chatroomsService.findMany(getChatroomsDto);
   }
 
   @Get('messages')
-  @ApiQuery({ name: 'cursor', required: false })
   @ApiOkResponse({ type: ChatMessageEntity, isArray: true })
   getMessages(@Query() getMessageDto: GetMessagesDto) {
     return this.chatroomsService.getMessages(getMessageDto);
