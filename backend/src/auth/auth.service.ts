@@ -20,9 +20,16 @@ export class AuthService {
 
   async login(user: any) {
     console.log(user);
-    const payload = { email: user.email, sub: user.id };
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      iat: Math.floor(Date.now() / 1000),
+    };
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: this.jwtService.sign(payload, {
+        issuer: 'tra1000',
+        audience: 'tra1000',
+      }),
     };
   }
 }
