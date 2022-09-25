@@ -9,10 +9,10 @@ all: $(NAME)
 
 $(NAME):
 	$(info UID: $(LOCAL_UID) GID: $(LOCAL_GID))
-	LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker-compose -f docker-compose.yml  up  --build -d
+	LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker-compose -f docker-compose.yml up --build -d
 
 up:
-	LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker-compose -f docker-compose.yml  up  --build
+	LOCAL_UID=$(LOCAL_UID) LOCAL_GID=$(LOCAL_GID) docker-compose -f docker-compose.yml up --build
 
 down:
 	docker-compose -f docker-compose.yml down
@@ -24,3 +24,7 @@ logs:
 	docker-compose -f docker-compose.yml logs
 
 .PHONY: all $(NAME) up down ps logs
+
+.PHONY:	frontend backend postgres
+frontend backend postgres:
+	docker-compose -f docker-compose.yml exec $@ /bin/bash
