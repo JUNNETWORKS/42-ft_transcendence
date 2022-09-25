@@ -11,7 +11,7 @@ export const Chat = () => {
     socket.on('broadcast', (msg) => {
       console.log('catch message');
       console.log(msg);
-      setMessageList((messageList) => [...messageList, msg.data]);
+      setMessageList((messageList) => [...messageList, msg.content]);
     });
 
     return () => {
@@ -20,7 +20,12 @@ export const Chat = () => {
   }, []);
 
   const sendMessage = () => {
-    socket.emit('message', { data: message });
+    const data = {
+      chatRoomId: 1,
+      userId: 1,
+      content: message,
+    };
+    socket.emit('message', data);
   };
 
   return (
