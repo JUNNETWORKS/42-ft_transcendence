@@ -24,3 +24,7 @@ logs:
 	docker-compose -f docker-compose.yml logs
 
 .PHONY: all $(NAME) up down ps logs
+
+.PHONY:	frontend backend postgres
+frontend backend postgres:
+	docker-compose -f docker-compose.yml exec $@ /bin/bash
