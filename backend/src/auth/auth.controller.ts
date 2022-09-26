@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
+import { FtAuthGuard } from './ft-auth.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -19,5 +20,21 @@ export class AuthController {
   @Get('protected')
   async protected(@Request() req: any) {
     return req.user;
+  }
+
+  @UseGuards(FtAuthGuard)
+  @Post('login_ft')
+  async login_ft(@Request() req: any) {
+    console.log(req);
+    return this.authService.login(req.user);
+  }
+
+  @UseGuards(FtAuthGuard)
+  @Get('callback_ft')
+  async callback_ft(@Request() req: any) {
+    console.log('[callback_ft]');
+    console.log('req.headers:', req.headers);
+    console.log('req.query:', req.query);
+    return req.query;
   }
 }
