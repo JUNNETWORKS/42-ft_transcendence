@@ -35,6 +35,7 @@ export class AuthController {
     console.log('[callback_ft]');
     console.log('req.headers:', req.headers);
     console.log('req.query:', req.query);
-    return req.query;
+    console.log('req.user:', req.user);
+    return this.authService.login(req.user);
   }
 }

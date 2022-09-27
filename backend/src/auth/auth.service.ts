@@ -51,6 +51,7 @@ export class AuthService {
         issuer: 'tra1000',
         audience: 'tra1000',
       }),
+      user,
     };
   }
 }

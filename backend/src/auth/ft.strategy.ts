@@ -22,7 +22,7 @@ export class FtStrategy extends PassportStrategy(Strategy, '42') {
   async validate(accessToken: any, refreshToken: any, profile: any, cb: any) {
     // 第2引数
     console.log('[validate]');
-    {
+    try {
       // 42APIにアクセスし, 認証した人物が誰なのかを特定する.
       // (GET /v2/me を叩く)
       const url = `${ftApiConstants.endpointURL}/me`;
@@ -47,7 +47,10 @@ export class FtStrategy extends PassportStrategy(Strategy, '42') {
       console.log({
         ...user,
       });
+      console.log({ accessToken, refreshToken, profile, cb });
+      cb(null, user);
+    } catch (e) {
+      cb(e, null);
     }
-    return { accessToken, refreshToken, profile, cb };
   }
 }
