@@ -24,7 +24,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // validate にはデコード済みのJWTのペイロードが渡ってくる.
     // 主張 = ペイロードの中身
     // 検証 = 署名が正しいことの確認
-    console.log(payload);
     // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
     return { email: payload.email, id: payload.sub };
   }

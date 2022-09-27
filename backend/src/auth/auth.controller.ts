@@ -25,17 +25,12 @@ export class AuthController {
   @UseGuards(FtAuthGuard)
   @Post('login_ft')
   async login_ft(@Request() req: any) {
-    console.log(req);
     return this.authService.login(req.user);
   }
 
   @UseGuards(FtAuthGuard)
   @Get('callback_ft')
   async callback_ft(@Request() req: any) {
-    console.log('[callback_ft]');
-    console.log('req.headers:', req.headers);
-    console.log('req.query:', req.query);
-    console.log('req.user:', req.user);
     return this.authService.login(req.user);
   }
 }
