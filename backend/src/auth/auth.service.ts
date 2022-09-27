@@ -29,6 +29,11 @@ export class AuthService {
       return user;
     }
     // TODO: displayName をユニークにする
+    // ユニーク制約が破られた時には PrismaClientKnownRequestError が飛んでくる
+    const name = await this.usersService.findUniqueNameByPrefix(
+      data.displayName
+    );
+    data.displayName = name;
     const createdUser = await this.usersService.create({ intraId, ...data });
     console.log('createdUser', createdUser);
     return createdUser;

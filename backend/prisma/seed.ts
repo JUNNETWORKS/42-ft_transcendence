@@ -8,6 +8,7 @@ async function main() {
       { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       { displayName: 'Angelique', email: 'angelique@prisma.io', intraId: 2 },
+      { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
     ],
     skipDuplicates: true, // Skip 'Bobo'
   });
