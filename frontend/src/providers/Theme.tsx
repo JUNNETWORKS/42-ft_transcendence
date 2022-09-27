@@ -9,4 +9,7 @@ export const Theme = createTheme({
       main: '#5E5E5E',
     },
   },
+  typography: {
+    fontFamily: ['PixelMplus'].join(','),
+  },
 });
