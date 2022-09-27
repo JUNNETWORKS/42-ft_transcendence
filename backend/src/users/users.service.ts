@@ -23,6 +23,23 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { email } });
   }
 
+  findByIntraId(intraId: number) {
+    return this.prisma.user.findUnique({ where: { intraId } });
+  }
+
+  findDisplayNamesByPrefix(prefix: string) {
+    return this.prisma.user.findMany({
+      where: {
+        displayName: {
+          startsWith: prefix,
+        },
+      },
+      select: {
+        displayName: true,
+      },
+    });
+  }
+
   update(id: number, updateUserDto: UpdateUserDto) {
     return this.prisma.user.update({
       where: { id },

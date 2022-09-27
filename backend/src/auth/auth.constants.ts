@@ -3,7 +3,9 @@ export const jwtConstants = {
 };
 
 export const ftConstants = {
+  // 認可コード`code`を取得するためのURL
   authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
+  // 認可コードをアクセストークンに交換するためのURL
   tokenURL: 'https://api.intra.42.fr/oauth/token',
   // TODO: .envファイルに出す
   clientID: '32a5ce9ef2773462375aac9a37dfc0a258eab0f01e395242798d2c89a819f4d1',
