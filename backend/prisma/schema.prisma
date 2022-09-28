@@ -14,6 +14,7 @@ model User {
   id          Int                @id @default(autoincrement())
   email       String             @unique
   displayName String             @unique
+  intraId     Int                @unique
   chatMessage ChatMessage[]
   joinedRoom  ChatUserRelation[]
   ownedRoom   ChatRoom[]
