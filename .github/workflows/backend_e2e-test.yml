@@ -9,9 +9,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: prisma
-          POSTGRES_PASSWORD: prismapass
-          POSTGRES_DB: prismadb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         options: >-
@@ -33,6 +33,10 @@ jobs:
 
       - name: Apply migrations
         run: npx prisma migrate dev
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb?schema=public
 
       - name: run e2e test
         run: npm run test:e2e
+        env:
+          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb?schema=public
