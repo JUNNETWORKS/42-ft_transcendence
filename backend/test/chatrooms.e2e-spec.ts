@@ -803,6 +803,7 @@ describe('/Chatrooms (e2e)', () => {
         data: {
           displayName: 'test_user',
           email: 'test@test.com',
+          intraId: 999,
         },
       });
       const body: PostMessageDto = {
