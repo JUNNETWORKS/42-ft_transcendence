@@ -32,11 +32,7 @@ jobs:
         run: npm ci
 
       - name: Apply migrations
-        run: npx prisma migrate dev
-        env:
-          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb?schema=public
+        run: npx dotenv -e .env.test npx prisma migrate dev
 
       - name: run e2e test
-        run: npm run test:e2e
-        env:
-          DATABASE_URL: postgresql://testuser:testpass@localhost:5432/testdb?schema=public
+        run: npx dotenv -e .env.test npm run test:e2e
