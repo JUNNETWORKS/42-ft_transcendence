@@ -10,6 +10,7 @@ import { FtAuthGuard } from './ft-auth.guard';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  // TODO: 削除
   @UseGuards(LocalAuthGuard)
   @Post('login')
   async login(@Request() req: any) {

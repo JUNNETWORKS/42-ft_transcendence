@@ -17,7 +17,6 @@ RUN npm install
 COPY entrypoint.sh ./
 
 ENV DATABASE_URL=postgresql://prisma:prismapass@postgres:5432/prismadb?schema=public&connect_timeout=300
-ENV ONLY_IN_DOCKERFILE=hello
 
 ENTRYPOINT  [ "bash", "./entrypoint.sh" ]
 CMD [ "npm", "run", "start:dev" ]
