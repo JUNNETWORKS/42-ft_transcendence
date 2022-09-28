@@ -10,4 +10,9 @@ export class UserEntity implements User {
 
   @ApiProperty()
   displayName!: string;
+
+  @ApiProperty()
+  intraId!: number;
 }
+
+export type UserMinimum = Omit<User, 'id'>;

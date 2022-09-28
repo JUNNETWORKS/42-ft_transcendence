@@ -19,6 +19,7 @@ import { UserEntity } from './entities/user.entity';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  // TODO: 削除
   @Post()
   @ApiCreatedResponse({ type: UserEntity })
   create(@Body() createUserDto: CreateUserDto) {
@@ -37,6 +38,7 @@ export class UsersController {
     return this.usersService.findOne(id);
   }
 
+  // TODO: intraId は変更できないようにする
   @Patch(':id')
   @ApiOkResponse({ type: UserEntity })
   update(
