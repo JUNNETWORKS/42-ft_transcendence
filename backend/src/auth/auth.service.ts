@@ -3,6 +3,11 @@ import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
 
+export type LoginResult = {
+  access_token: string;
+  user: any;
+};
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -39,7 +44,7 @@ export class AuthService {
     return createdUser;
   }
 
-  async login(user: any) {
+  async login(user: any): Promise<LoginResult> {
     const iat = Date.now() / 1000;
     const payload = {
       email: user.email,
