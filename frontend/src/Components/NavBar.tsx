@@ -8,6 +8,7 @@ export const NavBar = () => {
       <Box css={NavBarContainer}>
         <Typography css={PageTitle}>HOME</Typography>
         <Box css={UserMenuContainer}>
+          <Img src="/Friend.png" alt="FriendIcon" css={Icon}></Img>
           <Box css={UserInfoContainer}>
             <Img src="/Kizaru.png" alt="UserProfileImage" css={UserImage}></Img>
             <Typography css={UserName}>HogeTaro</Typography>
@@ -20,8 +21,8 @@ export const NavBar = () => {
 };
 
 const Icon = css`
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
 `;
 
 const UserName = css`
