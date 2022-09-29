@@ -1,26 +1,20 @@
-import { AppBar, Stack, Typography, Box } from '@mui/material';
+import { AppBar, Typography, Box } from '@mui/material';
 import { css, Theme } from '@emotion/react';
 import { Img } from '@/Components/ImageBox';
 
 export const NavBar = () => {
   return (
     <AppBar position="static" color="primary">
-      <Stack>
-        <Box css={NavBarContainer}>
-          <Typography css={PageTitle}>HOME</Typography>
-          <Box css={UserMenuContainer}>
-            <Box css={UserInfoContainer}>
-              <Img
-                src="/Kizaru.png"
-                alt="UserProfileImage"
-                css={UserImage}
-              ></Img>
-              <Typography css={UserName}>HogeTaro</Typography>
-            </Box>
+      <Box css={NavBarContainer}>
+        <Typography css={PageTitle}>HOME</Typography>
+        <Box css={UserMenuContainer}>
+          <Box css={UserInfoContainer}>
+            <Img src="/Kizaru.png" alt="UserProfileImage" css={UserImage}></Img>
+            <Typography css={UserName}>HogeTaro</Typography>
           </Box>
         </Box>
-        <Box css={underBar}></Box>
-      </Stack>
+      </Box>
+      <Box css={underBar}></Box>
     </AppBar>
   );
 };
