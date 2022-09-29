@@ -1,3 +1,5 @@
+import { NavBar } from '@/Components/NavBar';
+
 export const Index = () => {
-  return <div>Hello IndexPage!</div>;
+  return <NavBar></NavBar>;
 };
