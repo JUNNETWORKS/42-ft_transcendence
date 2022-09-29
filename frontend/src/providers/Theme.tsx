@@ -8,6 +8,12 @@ export const Theme = createTheme({
     secondary: {
       main: '#5E5E5E',
     },
+    background: {
+      default: '#000000',
+    },
+    text: {
+      primary: '#FFFFFF',
+    },
   },
   typography: {
     fontFamily: ['PixelMplus'].join(','),
