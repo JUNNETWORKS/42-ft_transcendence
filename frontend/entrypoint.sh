@@ -15,4 +15,6 @@ export HOME=/home/user
 
 chown -R user:user node_modules/
 
+npm install
+
 exec /usr/sbin/gosu user "$@"
