@@ -62,7 +62,7 @@ export class PongGateway {
           match.updateBall();
           client.emit('pong.match.state', match.getState());
         }
-      }, 10);
+      }, 16.66); // 60fps
     }
     match.moveBar(client.id, playerAction);
   }
