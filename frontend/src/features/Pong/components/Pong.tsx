@@ -123,7 +123,7 @@ export const Pong: React.FC = () => {
   useEffect(() => {
     // WebSocket initialization
     if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3000');
+      socketRef.current = io('http://localhost:3000/pong');
     }
     // Register websocket event handlers
     socketRef.current.on('pong.match.state', (gameState: GameState) => {

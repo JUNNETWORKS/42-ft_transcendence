@@ -18,7 +18,7 @@ type PlayerAction = PlayerInput;
 let match: Match | null = null;
 let matchIntervalID: NodeJS.Timer | null = null;
 
-@WebSocketGateway({ cors: true })
+@WebSocketGateway({ cors: true, path: '/pong' })
 export class PongGateway {
   private readonly logger = new Logger('Match WS');
 
