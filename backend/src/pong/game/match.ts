@@ -1,3 +1,4 @@
+import { GameSettings } from './game-settings';
 import {
   Ball,
   Player,
@@ -79,8 +80,10 @@ export class Match {
   };
 
   // ball の位置を更新する
+  // TODO: ボールが移動先にあるときは移動できない
   updateBall = (): void => {
-    const newBallPos = this.ball.position;
+    let newVelocity = { ...this.ball.velocity };
+    const newBallPos = { ...this.ball.position };
     newBallPos.x += this.ball.velocity.x * this.ballDx;
     newBallPos.y += this.ball.velocity.y * this.ballDy;
 
@@ -89,23 +92,36 @@ export class Match {
       // right の勝ち
       this.players[this.getPlayerIdxBySide('right')].score++;
       this.ball = this.generateBall();
+      return;
     } else if (this.ball.position.x >= this.fieldWidth) {
       // left の勝ち
       this.players[this.getPlayerIdxBySide('left')].score++;
       this.ball = this.generateBall();
+      return;
     }
 
     // バーとの判定
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
-      if (this.isBallCollidedWithBarVertically(newBallPos, player.bar)) {
-        // バーの縦線に衝突
-        this.ball.velocity.x *= -1;
-      } else if (
-        this.isBallCollidedWithBarHorizontally(newBallPos, player.bar)
+      if (
+        this.isBallCollidedWithVerticalBar(
+          this.ball.position,
+          newBallPos,
+          player.bar,
+          player.side
+        )
       ) {
-        // バーの横線に衝突
-        this.ball.velocity.y *= -1;
+        // バーの左右面に衝突
+        newVelocity = { x: this.ball.velocity.x * -1, y: this.ball.velocity.y };
+      } else if (
+        this.isBallCollidedWithHorizontalBar(
+          this.ball.position,
+          newBallPos,
+          player.bar
+        )
+      ) {
+        // バーの上下面に衝突
+        newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
       }
     }
 
@@ -114,9 +130,10 @@ export class Match {
       newBallPos.y - this.ballRadius <= 0 ||
       newBallPos.y + this.ballRadius >= this.fieldHeight
     ) {
-      this.ball.velocity.y *= -1;
+      newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
     }
 
+    this.ball.velocity = newVelocity;
     this.ball.position.x += this.ballDx * this.ball.velocity.x;
     this.ball.position.y += this.ballDy * this.ball.velocity.y;
   };
@@ -172,6 +189,20 @@ export class Match {
     return state;
   };
 
+  getSettings = (): GameSettings => {
+    return {
+      field: {
+        width: this.fieldWidth,
+        height: this.fieldWidth,
+      },
+      ball: {
+        radius: this.ballRadius,
+        dx: this.ballDx,
+        dy: this.ballDy,
+      },
+    };
+  };
+
   private getPlayerIdx = (sessionID: string): number => {
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].id == sessionID) {
@@ -216,91 +247,44 @@ export class Match {
     return true;
   };
 
-  // バーの上下面にボールが衝突しているか
-  private isBallCollidedWithBarVertically = (
+  // バーの左右面にボールが衝突しているか
+  // ballPos: 現在フレームのボールの座標
+  // newBallPos: 次フレームのボールの座標
+  // ballPos と newBall の移動分の線分とバーの面の線分との交差判定で判定する｡
+  private isBallCollidedWithVerticalBar = (
     ballPos: Vector2d,
-    bar: Bar
+    newBallPos: Vector2d,
+    bar: Bar,
+    playerSide: PlayerSide
   ): boolean => {
-    // ボールの4つの頂点
-    const ballTopLeft: Vector2d = {
-      x: ballPos.x - this.ballRadius,
-      y: ballPos.y - this.ballRadius,
-    };
-    const ballTopRight: Vector2d = {
-      x: ballPos.x + this.ballRadius,
-      y: ballPos.y - this.ballRadius,
-    };
-    const ballBottomLeft: Vector2d = {
-      x: ballPos.x - this.ballRadius,
-      y: ballPos.y + this.ballRadius,
-    };
-    const ballBotttomRight: Vector2d = {
-      x: ballPos.x + this.ballRadius,
-      y: ballPos.y + this.ballRadius,
-    };
-    // バーの4つの頂点
-    const barTopLeft: Vector2d = bar.topLeft;
-    const barTopRight: Vector2d = {
-      x: bar.bottomRight.x,
-      y: bar.topLeft.y,
-    };
-    const barBottomLeft: Vector2d = {
-      x: bar.topLeft.x,
-      y: bar.bottomRight.y,
-    };
-    const barBotttomRight: Vector2d = bar.bottomRight;
+    let barTop: Vector2d;
+    let barBottom: Vector2d;
+    if (playerSide == 'right') {
+      barTop = bar.topLeft;
+      barBottom = {
+        x: bar.topLeft.x,
+        y: bar.bottomRight.y,
+      };
+    } else {
+      barTop = {
+        x: bar.bottomRight.x,
+        y: bar.topLeft.y,
+      };
+      barBottom = bar.bottomRight;
+    }
 
-    return (
-      this.determineIntersection(
-        ballTopLeft,
-        ballTopRight,
-        barTopLeft,
-        barBottomLeft
-      ) ||
-      this.determineIntersection(
-        ballBottomLeft,
-        ballBotttomRight,
-        barTopLeft,
-        barBottomLeft
-      ) ||
-      this.determineIntersection(
-        ballTopLeft,
-        ballTopRight,
-        barTopRight,
-        barBotttomRight
-      ) ||
-      this.determineIntersection(
-        ballBottomLeft,
-        ballBotttomRight,
-        barTopRight,
-        barBotttomRight
-      )
-    );
+    return this.determineIntersection(ballPos, newBallPos, barTop, barBottom);
   };
 
-  // バーの左右面にボールが衝突しているか
-  private isBallCollidedWithBarHorizontally = (
+  // バーの上下面にボールが衝突しているか
+  // ballPos: 現在フレームのボールの座標
+  // newBallPos: 次フレームのボールの座標
+  // ballPos と newBall の移動分の線分とバーの面の線分との交差判定で判定する｡
+  private isBallCollidedWithHorizontalBar = (
     ballPos: Vector2d,
+    newBallPos: Vector2d,
     bar: Bar
   ): boolean => {
-    // ボールの4つの頂点
-    const ballTopLeft: Vector2d = {
-      x: ballPos.x - this.ballRadius,
-      y: ballPos.y - this.ballRadius,
-    };
-    const ballTopRight: Vector2d = {
-      x: ballPos.x + this.ballRadius,
-      y: ballPos.y - this.ballRadius,
-    };
-    const ballBottomLeft: Vector2d = {
-      x: ballPos.x - this.ballRadius,
-      y: ballPos.y + this.ballRadius,
-    };
-    const ballBotttomRight: Vector2d = {
-      x: ballPos.x + this.ballRadius,
-      y: ballPos.y + this.ballRadius,
-    };
-    // バーの4つの頂点
     const barTopLeft: Vector2d = bar.topLeft;
     const barTopRight: Vector2d = {
       x: bar.bottomRight.x,
@@ -310,32 +294,20 @@ export class Match {
       x: bar.topLeft.x,
       y: bar.bottomRight.y,
     };
-    const barBotttomRight: Vector2d = bar.bottomRight;
+    const barBottomRight: Vector2d = bar.bottomRight;
 
     return (
       this.determineIntersection(
-        ballTopLeft,
-        ballBottomLeft,
+        ballPos,
+        newBallPos,
         barTopLeft,
         barTopRight
       ) ||
       this.determineIntersection(
-        ballTopRight,
-        ballBotttomRight,
-        barTopLeft,
-        barTopRight
-      ) ||
-      this.determineIntersection(
-        ballTopLeft,
-        ballBottomLeft,
+        ballPos,
+        newBallPos,
         barBottomLeft,
-        barBotttomRight
-      ) ||
-      this.determineIntersection(
-        ballTopRight,
-        ballBotttomRight,
-        barBottomLeft,
-        barBotttomRight
+        barBottomRight
       )
     );
   };
