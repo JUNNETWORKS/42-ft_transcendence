@@ -13,7 +13,7 @@ import { Match } from './game/match';
 // ========== WS: pong.matchmaking.start ==========
 // type MatchmakingEntry = {}
 
-// ========== WS: pong.matchmaking.start ==========
+// ========== WS: pong.match.action ==========
 type PlayerAction = PlayerInput;
 
 let match: Match | null = null;
@@ -36,6 +36,7 @@ export class PongGateway {
 
     if (matchIntervalID) {
       clearInterval(matchIntervalID);
+      matchIntervalID = null;
     }
     if (match) {
       match = null;
