@@ -57,8 +57,8 @@ export class PongGateway {
     if (!matchIntervalID) {
       matchIntervalID = setInterval(() => {
         if (match) {
-          match.updateBall();
           match.updateBar();
+          match.updateBall();
           client.emit('pong.match.state', match.getState());
         }
       }, 10);

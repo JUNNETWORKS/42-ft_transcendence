@@ -79,14 +79,16 @@ const drawBall = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
+  gameSettings: GameSettings,
   game: GameState
 ) => {
   const x = game.ball.position.x;
   const y = game.ball.position.y;
+  const r = gameSettings.ball.radius;
 
   ctx.beginPath();
-  ctx.arc(x, y, 10, 0, Math.PI * 2);
   ctx.fillStyle = '#0095DD';
+  ctx.fillRect(x - r, y - r, r * 2, r * 2);
   ctx.fill();
   ctx.closePath();
 };
@@ -103,7 +105,7 @@ const redrawGame = (
   clearCanvas(ctx, canvas.width, canvas.height);
   drawBackground(ctx, canvas.width, canvas.height, game);
   drawBar(ctx, canvas.width, canvas.height, game);
-  drawBall(ctx, canvas.width, canvas.height, game);
+  drawBall(ctx, canvas.width, canvas.height, gameSettings, game);
 };
 
 // ========================================
@@ -115,7 +117,7 @@ export const Pong: React.FC = () => {
 
   const gameSettings: GameSettings = {
     field: { width: 1920, height: 1080 },
-    ball: { radius: 2 * Math.PI, dx: 10, dy: 10 },
+    ball: { radius: 6, dx: 2, dy: 2 },
   };
 
   useEffect(() => {
