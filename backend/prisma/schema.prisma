@@ -10,22 +10,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Match {
-  id          Int           @id @default(autoincrement())
-  beginDate   DateTime
-  MatchResult MatchResult[]
-}
-
-model MatchResult {
-  match   Match @relation(fields: [matchID], references: [id])
-  matchID Int
-  user    User  @relation(fields: [userID], references: [id])
-  userID  Int
-  score   Int
-
-  @@id([matchID, userID])
-}
-
 model User {
   id          Int                @id @default(autoincrement())
   email       String             @unique
@@ -33,7 +17,6 @@ model User {
   chatMessage ChatMessage[]
   joinedRoom  ChatUserRelation[]
   ownedRoom   ChatRoom[]
-  MatchResult MatchResult[]
 }
 
 model ChatRoom {
