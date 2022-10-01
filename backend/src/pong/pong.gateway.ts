@@ -27,14 +27,19 @@ export class PongGateway {
     return;
   }
 
-  @SubscribeMessage('connection')
-  receiveConnection(client: Socket) {
+  handleConnection(client: Socket) {
     this.logger.log(`WebSocket connection ID(${client.id}).`);
   }
 
-  @SubscribeMessage('disconnection')
-  receiveDisconnection(client: Socket) {
-    this.logger.log(`WebSocket connection ID(${client.id}).`);
+  handleDisconnect(client: Socket) {
+    this.logger.log(`WebSocket disconnection ID(${client.id}).`);
+
+    if (matchIntervalID) {
+      clearInterval(matchIntervalID);
+    }
+    if (match) {
+      match = null;
+    }
   }
 
   @SubscribeMessage('pong.match.action')
@@ -42,19 +47,22 @@ export class PongGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() playerAction: PlayerAction
   ) {
-    this.logger.log(`WS: pong.action from ID(${client.id}).`);
+    this.logger.log(
+      `pong.action from ID(${client.id}). ${JSON.stringify(playerAction)}`
+    );
 
     if (!match) {
       match = new Match(client.id, client.id);
     }
-    match.moveBar(client.id, playerAction);
     if (!matchIntervalID) {
       matchIntervalID = setInterval(() => {
         if (match) {
           match.updateBall();
+          match.updateBar();
           client.emit('pong.match.state', match.getState());
         }
       }, 10);
     }
+    match.moveBar(client.id, playerAction);
   }
 }

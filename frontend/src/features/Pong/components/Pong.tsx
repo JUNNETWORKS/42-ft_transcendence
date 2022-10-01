@@ -6,7 +6,7 @@ import { io, Socket } from 'socket.io-client';
 // Canvas
 
 const resizeCanvas = (canvas: HTMLCanvasElement, game: GameSettings) => {
-  // 現在の画面サイズとゲーム設定をもとにアスペクト比を保った最も大きいCanvasにする
+  // TODO: 現在の画面サイズとゲーム設定をもとにアスペクト比を保った最も大きいCanvasにする
   const windowHeight = window.innerHeight;
   const windowWidth = window.innerWidth;
   const ratio = window.innerWidth;
@@ -60,6 +60,18 @@ const drawBar = (
 ) => {
   for (let i = 0; i < game.players.length; i++) {
     const player = game.players[i];
+
+    ctx.beginPath();
+    ctx.fillStyle = '#000';
+    ctx.fillRect(
+      player.bar.topLeft.x,
+      player.bar.topLeft.y,
+      player.bar.bottomRight.x - player.bar.topLeft.x,
+      player.bar.bottomRight.y - player.bar.topLeft.y
+    );
+    ctx.closePath();
+    player.bar.topLeft;
+    player.bar.bottomRight;
   }
 };
 
@@ -69,8 +81,8 @@ const drawBall = (
   height: number,
   game: GameState
 ) => {
-  const x = game.ball.position.x * width;
-  const y = game.ball.position.y * height;
+  const x = game.ball.position.x;
+  const y = game.ball.position.y;
 
   ctx.beginPath();
   ctx.arc(x, y, 10, 0, Math.PI * 2);
@@ -99,7 +111,6 @@ const redrawGame = (
 
 export const Pong: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [width, height] = [480, 320];
   const socketRef = useRef<Socket>();
 
   const gameSettings: GameSettings = {
@@ -112,6 +123,7 @@ export const Pong: React.FC = () => {
     if (!socketRef.current) {
       socketRef.current = io('http://localhost:3000');
     }
+    // Register websocket event handlers
     socketRef.current.on('pong.match.state', (gameState: GameState) => {
       if (canvasRef.current) {
         redrawGame(canvasRef.current, gameSettings, gameState);
@@ -120,14 +132,12 @@ export const Pong: React.FC = () => {
 
     // add event listeners
     window.addEventListener('keydown', (e) => {
-      e.preventDefault();
       socketRef.current?.emit('pong.match.action', {
         up: e.key === 'w' || e.key === 'ArrowUp',
         down: e.key === 's' || e.key === 'ArrowDown',
       });
     });
     window.addEventListener('keyup', (e) => {
-      e.preventDefault();
       socketRef.current?.emit('pong.match.action', {
         up: false,
         down: false,
@@ -140,5 +150,12 @@ export const Pong: React.FC = () => {
     });
   }, []);
 
-  return <canvas id="pong" ref={canvasRef} height={height} width={width} />;
+  return (
+    <canvas
+      id="pong"
+      ref={canvasRef}
+      width={gameSettings.field.width}
+      height={gameSettings.field.height}
+    />
+  );
 };
