@@ -19,7 +19,7 @@ model User {
   joinedRoom         ChatUserRelation[]
   ownedRoom          ChatRoom[]
   chatroomAttribute  ChatUserAttribute[]
-  userRlation        UserRelation[]      @relation("user")
+  userRelation       UserRelation[]      @relation("user")
   referencedRelation UserRelation[]      @relation("targetUser")
 }
 
@@ -36,7 +36,7 @@ model UserRelation {
 enum Relation {
   FRIEND
   WAITING_ACCEPT
-  RECIEVED_REQUEST
+  RECEIVED_REQUEST
   BLOKING
   BLOCKED
 }
