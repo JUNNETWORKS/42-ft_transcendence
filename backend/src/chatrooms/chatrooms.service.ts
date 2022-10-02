@@ -56,14 +56,9 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    const res = await this.prisma.chatRoom
-      .findUniqueOrThrow({
-        where: { id },
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+    const res = await this.prisma.chatRoom.findUniqueOrThrow({
+      where: { id },
+    });
     return new ChatroomEntity(res);
   }
 
@@ -111,32 +106,22 @@ export class ChatroomsService {
   }
 
   async updateRoomName(id: number, updateRoomNameDto: UpdateRoomNameDto) {
-    const res = await this.prisma.chatRoom
-      .update({
-        where: { id },
-        data: updateRoomNameDto,
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: updateRoomNameDto,
+    });
     return new ChatroomEntity(res);
   }
 
   async addMember(id: number, updateRoomMemberDto: CreateRoomMemberDto) {
-    const res = await this.prisma.chatRoom
-      .update({
-        where: { id },
-        data: {
-          roomMember: {
-            create: updateRoomMemberDto.roomMember,
-          },
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: {
+        roomMember: {
+          create: updateRoomMemberDto.roomMember,
         },
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+      },
+    });
     return new ChatroomEntity(res);
   }
 
