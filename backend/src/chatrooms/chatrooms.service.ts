@@ -90,12 +90,10 @@ export class ChatroomsService {
   }
 
   getMembers(roomId: number) {
+    // TODO: バンされているユーザーをどう扱うか
     return this.prisma.chatUserRelation.findMany({
       where: {
         chatRoomId: roomId,
-        memberType: {
-          notIn: 'BANNED',
-        },
       },
     });
   }
@@ -144,7 +142,7 @@ export class ChatroomsService {
 
   async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
-    const { userId, memberType, endAt } = roomMemberDto;
+    const { userId, memberType } = roomMemberDto;
     const roomInfo = await this.findOne(roomId);
     if (roomInfo.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
@@ -159,9 +157,6 @@ export class ChatroomsService {
       },
       data: {
         memberType: memberType,
-        endAt: !(memberType === 'BANNED' || memberType === 'MUTED')
-          ? null
-          : endAt,
       },
     });
   }

@@ -385,7 +385,6 @@ describe('/Chatrooms (e2e)', () => {
       expect(response[0].chatRoomId).toEqual(1);
       expect(response[0].userId).toEqual(1);
       expect(response[0].memberType).toEqual('ADMIN');
-      expect(response[0].endAt).toEqual(null);
     });
   });
 
@@ -531,29 +530,6 @@ describe('/Chatrooms (e2e)', () => {
 
       expect(res.status).toEqual(400);
     });
-
-    it('memberTypeがBANNED、MUTEDのときエラー', async () => {
-      const body = {
-        roomMember: [
-          { userId: 3, memberType: 'BANNED' },
-          { userId: 2, memberType: 'MEMBER' },
-        ],
-      };
-      let res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
-        .set('Accept', 'application/json')
-        .send(body);
-
-      expect(res.status).toEqual(400);
-
-      body.roomMember[0].memberType = 'MUTED';
-      res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
-        .set('Accept', 'application/json')
-        .send(body);
-
-      expect(res.status).toEqual(400);
-    });
   });
 
   describe('PATCH /chatrooms/memberType', () => {
@@ -577,10 +553,9 @@ describe('/Chatrooms (e2e)', () => {
         .send(body);
       expect(res.status).toEqual(200);
       expect(res.body.memberType).toEqual('ADMIN');
-      expect(res.body.endAt).toEqual(null);
     });
 
-    it('MEMBER -> BANNED', async () => {
+    it('ADMIN -> MEMBER', async () => {
       const pbody: CreateRoomMemberDto = {
         roomMember: [{ userId: 2, memberType: 'MEMBER' }],
       };
@@ -589,43 +564,17 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json')
         .send(pbody);
 
-      const body: RoomMemberDto = {
+      const toAdmin: RoomMemberDto = {
         userId: 2,
-        memberType: 'BANNED',
-        endAt: new Date(),
-      };
-
-      const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
-        .set('Accept', 'application/json')
-        .send(body);
-      expect(res.status).toEqual(200);
-      expect(res.body.memberType).toEqual('BANNED');
-      expect(res.body.endAt).not.toEqual(null);
-    });
-
-    it('BANNED -> MEMBER', async () => {
-      const pbody: CreateRoomMemberDto = {
-        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
-      };
-      await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
-        .set('Accept', 'application/json')
-        .send(pbody);
-
-      const banned: RoomMemberDto = {
-        userId: 2,
-        memberType: 'BANNED',
-        endAt: new Date(),
+        memberType: 'ADMIN',
       };
 
       let res = await request(app.getHttpServer())
         .patch('/chatrooms/1/memberType')
         .set('Accept', 'application/json')
-        .send(banned);
+        .send(toAdmin);
       expect(res.status).toEqual(200);
-      expect(res.body.memberType).toEqual('BANNED');
-      expect(res.body.endAt).not.toEqual(null);
+      expect(res.body.memberType).toEqual('ADMIN');
 
       const toMember: RoomMemberDto = {
         userId: 2,
@@ -637,41 +586,12 @@ describe('/Chatrooms (e2e)', () => {
         .send(toMember);
       expect(res.status).toEqual(200);
       expect(res.body.memberType).toEqual('MEMBER');
-      expect(res.body.endAt).toEqual(null);
     });
 
     it('OWNERからの変更はエラー', async () => {
       const body: RoomMemberDto = {
         userId: 1,
-        memberType: 'BANNED',
-        endAt: new Date(),
-      };
-
-      const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
-        .set('Accept', 'application/json')
-        .send(body);
-      expect(res.status).toEqual(400);
-    });
-
-    it('MUTED, BANNEDのときendAtがないとエラー', async () => {
-      const body = {
-        userId: 1,
-        memberType: 'MUTED',
-      };
-
-      const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
-        .set('Accept', 'application/json')
-        .send(body);
-      expect(res.status).toEqual(400);
-    });
-
-    it('MUTED, BANNED以外でendAtがあるとエラー', async () => {
-      const body: RoomMemberDto = {
-        userId: 1,
-        memberType: 'ADMIN',
-        endAt: new Date(),
+        memberType: 'MEMBER',
       };
 
       const res = await request(app.getHttpServer())
