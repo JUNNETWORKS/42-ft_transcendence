@@ -18,21 +18,21 @@ model User {
   chatMessage       ChatMessage[]
   joinedRoom        ChatUserRelation[]
   ownedRoom         ChatRoom[]
-  ChatUserAttribute ChatUserAttribute[]
+  chatroomAttribute ChatUserAttribute[]
 }
 
 model ChatRoom {
-  id                Int                 @id @default(autoincrement())
-  roomName          String              @unique
-  roomType          RoomType            @default(PUBLIC)
-  roomPassword      String?
-  owner             User                @relation(fields: [ownerId], references: [id])
-  ownerId           Int
-  createdAt         DateTime            @default(now())
-  updatedAt         DateTime            @default(now()) @updatedAt
-  chatMessage       ChatMessage[]
-  roomMember        ChatUserRelation[]
-  ChatUserAttribute ChatUserAttribute[]
+  id              Int                 @id @default(autoincrement())
+  roomName        String              @unique
+  roomType        RoomType            @default(PUBLIC)
+  roomPassword    String?
+  owner           User                @relation(fields: [ownerId], references: [id])
+  ownerId         Int
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @default(now()) @updatedAt
+  chatMessage     ChatMessage[]
+  roomMember      ChatUserRelation[]
+  memberAttribute ChatUserAttribute[]
 }
 
 enum RoomType {
