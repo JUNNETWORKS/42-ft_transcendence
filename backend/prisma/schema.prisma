@@ -11,14 +11,34 @@ datasource db {
 }
 
 model User {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique
-  displayName       String              @unique
-  intraId           Int                 @unique
-  chatMessage       ChatMessage[]
-  joinedRoom        ChatUserRelation[]
-  ownedRoom         ChatRoom[]
-  chatroomAttribute ChatUserAttribute[]
+  id                 Int                 @id @default(autoincrement())
+  email              String              @unique
+  displayName        String              @unique
+  intraId            Int                 @unique
+  chatMessage        ChatMessage[]
+  joinedRoom         ChatUserRelation[]
+  ownedRoom          ChatRoom[]
+  chatroomAttribute  ChatUserAttribute[]
+  userRlation        UserRelation[]      @relation("user")
+  referencedRelation UserRelation[]      @relation("targetUser")
+}
+
+model UserRelation {
+  user         User     @relation(name: "user", fields: [userId], references: [id])
+  userId       Int
+  targetUser   User     @relation(name: "targetUser", fields: [targetUserId], references: [id])
+  targetUserId Int
+  relation     Relation
+
+  @@id([userId, targetUserId])
+}
+
+enum Relation {
+  FRIEND
+  WAITING_ACCEPT
+  RECIEVED_REQUEST
+  BLOKING
+  BLOCKED
 }
 
 model ChatRoom {
