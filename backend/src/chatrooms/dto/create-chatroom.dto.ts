@@ -6,6 +6,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
+  IsPositive,
   IsString,
   MaxLength,
   MinLength,
@@ -32,8 +33,8 @@ export class CreateChatroomDto {
   roomPassword?: string;
 
   @IsNotEmpty()
-  @Type(() => Number)
   @IsInt()
+  @IsPositive()
   @ApiProperty()
   ownerId!: number;
 

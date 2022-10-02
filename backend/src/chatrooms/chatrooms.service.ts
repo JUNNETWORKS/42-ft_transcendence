@@ -56,19 +56,14 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    const res = await this.prisma.chatRoom
-      .findUniqueOrThrow({
-        where: { id },
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+    const res = await this.prisma.chatRoom.findUniqueOrThrow({
+      where: { id },
+    });
     return new ChatroomEntity(res);
   }
 
   join(roomId: number, userId: number) {
-    // TODO: userTypeに応じた処理
+    // TODO: BANされているユーザーはjoinできない
     return this.prisma.chatUserRelation.create({
       data: {
         userId: userId,
@@ -78,7 +73,7 @@ export class ChatroomsService {
   }
 
   leave(roomId: number, userId: number) {
-    // TODO: userTypeに応じた処理
+    // TODO: OWNERをどう扱うか
     return this.prisma.chatUserRelation.delete({
       where: {
         userId_chatRoomId: {
@@ -90,12 +85,10 @@ export class ChatroomsService {
   }
 
   getMembers(roomId: number) {
+    // TODO: バンされているユーザーをどう扱うか
     return this.prisma.chatUserRelation.findMany({
       where: {
         chatRoomId: roomId,
-        memberType: {
-          notIn: 'BANNED',
-        },
       },
     });
   }
@@ -113,38 +106,28 @@ export class ChatroomsService {
   }
 
   async updateRoomName(id: number, updateRoomNameDto: UpdateRoomNameDto) {
-    const res = await this.prisma.chatRoom
-      .update({
-        where: { id },
-        data: updateRoomNameDto,
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: updateRoomNameDto,
+    });
     return new ChatroomEntity(res);
   }
 
   async addMember(id: number, updateRoomMemberDto: CreateRoomMemberDto) {
-    const res = await this.prisma.chatRoom
-      .update({
-        where: { id },
-        data: {
-          roomMember: {
-            create: updateRoomMemberDto.roomMember,
-          },
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: {
+        roomMember: {
+          create: updateRoomMemberDto.roomMember,
         },
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
-      });
+      },
+    });
     return new ChatroomEntity(res);
   }
 
   async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
-    const { userId, memberType, endAt } = roomMemberDto;
+    const { userId, memberType } = roomMemberDto;
     const roomInfo = await this.findOne(roomId);
     if (roomInfo.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
@@ -159,9 +142,6 @@ export class ChatroomsService {
       },
       data: {
         memberType: memberType,
-        endAt: !(memberType === 'BANNED' || memberType === 'MUTED')
-          ? null
-          : endAt,
       },
     });
   }
