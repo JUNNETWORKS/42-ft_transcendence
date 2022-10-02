@@ -10,7 +10,4 @@ export class chatUserRelationEntity implements ChatUserRelation {
 
   @ApiProperty({ name: 'memberType', enum: MemberType })
   memberType!: MemberType;
-
-  @ApiProperty()
-  endAt!: Date;
 }
