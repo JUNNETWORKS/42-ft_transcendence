@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseIntPipe,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
@@ -57,7 +57,7 @@ export class ChatroomsController {
     return this.chatroomsService.findOne(roomId);
   }
 
-  @Patch(':roomId/join')
+  @Put(':roomId/join')
   @ApiOkResponse({ type: chatUserRelationEntity })
   join(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -66,7 +66,7 @@ export class ChatroomsController {
     return this.chatroomsService.join(roomId, userId);
   }
 
-  @Patch(':roomId/leave')
+  @Delete(':roomId/leave')
   @ApiOkResponse({ type: chatUserRelationEntity })
   leave(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -81,7 +81,7 @@ export class ChatroomsController {
     return this.chatroomsService.getMembers(roomId);
   }
 
-  @Patch(':roomId/roomType')
+  @Put(':roomId/roomType')
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomType(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -91,7 +91,7 @@ export class ChatroomsController {
     return this.chatroomsService.updateRoomType(roomId, updateRoomTypeDto);
   }
 
-  @Patch(':roomId/roomName')
+  @Put(':roomId/roomName')
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomName(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -100,7 +100,7 @@ export class ChatroomsController {
     return this.chatroomsService.updateRoomName(roomId, updateRoomNameDto);
   }
 
-  @Patch(':roomId/addMember')
+  @Put(':roomId/addMember')
   @ApiOkResponse({ type: ChatroomEntity })
   addMember(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -109,7 +109,7 @@ export class ChatroomsController {
     return this.chatroomsService.addMember(roomId, createRoomMemberDto);
   }
 
-  @Patch(':roomId/memberType')
+  @Put(':roomId/memberType')
   @ApiOkResponse({ type: ChatroomEntity })
   updateMember(
     @Param('roomId', ParseIntPipe) roomId: number,

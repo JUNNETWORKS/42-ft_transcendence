@@ -342,23 +342,23 @@ describe('/Chatrooms (e2e)', () => {
   describe('PATCH /chatrooms/{id}/join', () => {
     it('success', async () => {
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/join?userId=2')
+        .put('/chatrooms/1/join?userId=2')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
     });
   });
 
-  describe('PATCH /chatrooms/{id}/leave', () => {
+  describe('DELETE /chatrooms/{id}/leave', () => {
     it('success', async () => {
       let res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/join?userId=2')
+        .put('/chatrooms/1/join?userId=2')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
 
       res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/leave?userId=2')
+        .delete('/chatrooms/1/leave?userId=2')
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
@@ -366,7 +366,7 @@ describe('/Chatrooms (e2e)', () => {
 
     // it('joinしていないroomからleave', async () => {
     //   const res = await request(app.getHttpServer())
-    //     .patch('/chatrooms/1/leave?userId=2')
+    //     .put('/chatrooms/1/leave?userId=2')
     //     .set('Accept', 'application/json');
 
     //   expect(res.status).toEqual(200);
@@ -396,7 +396,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/roomType')
+        .put('/chatrooms/1/roomType')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -409,7 +409,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/roomType')
+        .put('/chatrooms/1/roomType')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -423,7 +423,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/roomType')
+        .put('/chatrooms/1/roomType')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -437,7 +437,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/2/roomType')
+        .put('/chatrooms/2/roomType')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -453,7 +453,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/2/roomName')
+        .put('/chatrooms/2/roomName')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -467,7 +467,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/2/roomName')
+        .put('/chatrooms/2/roomName')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -480,7 +480,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/2/roomName')
+        .put('/chatrooms/2/roomName')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -497,7 +497,7 @@ describe('/Chatrooms (e2e)', () => {
         ],
       };
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
+        .put('/chatrooms/1/addMember')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -512,7 +512,7 @@ describe('/Chatrooms (e2e)', () => {
         ],
       };
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
+        .put('/chatrooms/1/addMember')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -524,7 +524,7 @@ describe('/Chatrooms (e2e)', () => {
         roomMember: [{ userId: 999, memberType: 'ADMIN' }],
       };
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
+        .put('/chatrooms/1/addMember')
         .set('Accept', 'application/json')
         .send(body);
 
@@ -538,7 +538,7 @@ describe('/Chatrooms (e2e)', () => {
         roomMember: [{ userId: 2, memberType: 'MEMBER' }],
       };
       await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
+        .put('/chatrooms/1/addMember')
         .set('Accept', 'application/json')
         .send(pbody);
 
@@ -548,7 +548,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
+        .put('/chatrooms/1/memberType')
         .set('Accept', 'application/json')
         .send(body);
       expect(res.status).toEqual(200);
@@ -560,7 +560,7 @@ describe('/Chatrooms (e2e)', () => {
         roomMember: [{ userId: 2, memberType: 'MEMBER' }],
       };
       await request(app.getHttpServer())
-        .patch('/chatrooms/1/addMember')
+        .put('/chatrooms/1/addMember')
         .set('Accept', 'application/json')
         .send(pbody);
 
@@ -570,7 +570,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       let res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
+        .put('/chatrooms/1/memberType')
         .set('Accept', 'application/json')
         .send(toAdmin);
       expect(res.status).toEqual(200);
@@ -581,7 +581,7 @@ describe('/Chatrooms (e2e)', () => {
         memberType: 'MEMBER',
       };
       res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
+        .put('/chatrooms/1/memberType')
         .set('Accept', 'application/json')
         .send(toMember);
       expect(res.status).toEqual(200);
@@ -595,7 +595,7 @@ describe('/Chatrooms (e2e)', () => {
       };
 
       const res = await request(app.getHttpServer())
-        .patch('/chatrooms/1/memberType')
+        .put('/chatrooms/1/memberType')
         .set('Accept', 'application/json')
         .send(body);
       expect(res.status).toEqual(400);
