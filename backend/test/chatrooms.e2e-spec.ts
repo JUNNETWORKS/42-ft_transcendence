@@ -335,7 +335,7 @@ describe('/Chatrooms (e2e)', () => {
         .get('/chatrooms/999')
         .set('Accept', 'application/json');
 
-      expect(res.status).toEqual(400);
+      expect(res.status).toEqual(500);
     });
   });
 
@@ -471,7 +471,7 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json')
         .send(body);
 
-      expect(res.status).toEqual(400);
+      expect(res.status).toEqual(500);
     });
 
     it('validationエラー', async () => {
@@ -528,7 +528,7 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json')
         .send(body);
 
-      expect(res.status).toEqual(400);
+      expect(res.status).toEqual(500);
     });
   });
 
@@ -612,7 +612,7 @@ describe('/Chatrooms (e2e)', () => {
       res = await request(app.getHttpServer())
         .get('/chatrooms/1')
         .set('Accept', 'application/json');
-      expect(res.status).toEqual(400);
+      expect(res.status).toEqual(500);
     });
   });
 
