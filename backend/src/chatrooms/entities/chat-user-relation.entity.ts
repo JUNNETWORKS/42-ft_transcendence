@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ChatUserRelation, MemberType } from '@prisma/client';
 
-export class chatUserRelationEntity implements ChatUserRelation {
+export class ChatUserRelationEntity implements ChatUserRelation {
   @ApiProperty()
   userId!: number;
 

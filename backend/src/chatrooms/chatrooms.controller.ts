@@ -18,7 +18,7 @@ import { UpdateRoomNameDto } from './dto/update-room-name.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
-import { chatUserRelationEntity } from './entities/chat-user-relation.entity';
+import { ChatUserRelationEntity } from './entities/chat-user-relation.entity';
 import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
@@ -58,7 +58,7 @@ export class ChatroomsController {
   }
 
   @Put(':roomId/join')
-  @ApiOkResponse({ type: chatUserRelationEntity })
+  @ApiOkResponse({ type: ChatUserRelationEntity })
   join(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('userId', ParseIntPipe) userId: number
@@ -67,7 +67,7 @@ export class ChatroomsController {
   }
 
   @Delete(':roomId/leave')
-  @ApiOkResponse({ type: chatUserRelationEntity })
+  @ApiOkResponse({ type: ChatUserRelationEntity })
   leave(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('userId', ParseIntPipe) userId: number
@@ -76,7 +76,7 @@ export class ChatroomsController {
   }
 
   @Get(':roomId/members')
-  @ApiOkResponse({ type: chatUserRelationEntity, isArray: true })
+  @ApiOkResponse({ type: ChatUserRelationEntity, isArray: true })
   getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.getMembers(roomId);
   }

@@ -9,7 +9,7 @@ import { UpdateRoomTypeDto } from 'src/chatrooms/dto/update-room-type.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateRoomMemberDto } from 'src/chatrooms/dto/create-room-member.dto';
 import { RoomMemberDto } from 'src/chatrooms/dto/room-member.dto';
-import { chatUserRelationEntity } from 'src/chatrooms/entities/chat-user-relation.entity';
+import { ChatUserRelationEntity } from 'src/chatrooms/entities/chat-user-relation.entity';
 import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
 import { ChatMessageEntity } from 'src/chatrooms/entities/chat-message.entity';
 
@@ -380,7 +380,7 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json');
 
       expect(res.status).toEqual(200);
-      const response: chatUserRelationEntity[] = res.body;
+      const response: ChatUserRelationEntity[] = res.body;
       expect(response.length).toEqual(1);
       expect(response[0].chatRoomId).toEqual(1);
       expect(response[0].userId).toEqual(1);
