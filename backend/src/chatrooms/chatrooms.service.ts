@@ -78,6 +78,7 @@ export class ChatroomsService {
   }
 
   leave(roomId: number, userId: number) {
+    // TODO: OWNERをどう扱うか
     return this.prisma.chatUserRelation.delete({
       where: {
         userId_chatRoomId: {
