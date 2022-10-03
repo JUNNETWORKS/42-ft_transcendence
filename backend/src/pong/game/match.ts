@@ -1,3 +1,4 @@
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { GameSettings } from './game-settings';
 import {
   Ball,
@@ -6,7 +7,7 @@ import {
   PlayerInput,
   PlayerSide,
   Vector2d,
-  Bar,
+  Rectangle,
 } from './game-state';
 
 export class Match {
@@ -14,9 +15,9 @@ export class Match {
   readonly fieldWidth = 1920;
   readonly fieldHeight = 1080;
   // ball
-  readonly ballRadius = 6;
-  readonly ballDx = 2;
-  readonly ballDy = 2;
+  readonly ballRadius = 60;
+  readonly ballDx = 10;
+  readonly ballDy = 10;
   // bar
   readonly barHeight = this.fieldHeight / 8;
   readonly barWidth = this.fieldWidth * 0.01;
@@ -80,13 +81,7 @@ export class Match {
   };
 
   // ball の位置を更新する
-  // TODO: ボールが移動先にあるときは移動できない
   updateBall = (): void => {
-    let newVelocity = { ...this.ball.velocity };
-    const newBallPos = { ...this.ball.position };
-    newBallPos.x += this.ball.velocity.x * this.ballDx;
-    newBallPos.y += this.ball.velocity.y * this.ballDy;
-
     // 左右の壁との判定
     if (this.ball.position.x <= 0) {
       // right の勝ち
@@ -100,10 +95,25 @@ export class Match {
       return;
     }
 
+    let newVelocity: Vector2d = JSON.parse(JSON.stringify(this.ball.velocity));
+    const newBallPos: Vector2d = JSON.parse(JSON.stringify(this.ball.position));
+    newBallPos.x += this.ball.velocity.x * this.ballDx;
+    newBallPos.y += this.ball.velocity.y * this.ballDy;
+
     // バーとの判定
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
       if (
+        this.isBallCollidedWithHorizontalBar(
+          this.ball.position,
+          newBallPos,
+          player.bar,
+          player.side
+        )
+      ) {
+        // バーの上下面に衝突
+        newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
+      } else if (
         this.isBallCollidedWithVerticalBar(
           this.ball.position,
           newBallPos,
@@ -113,15 +123,6 @@ export class Match {
       ) {
         // バーの左右面に衝突
         newVelocity = { x: this.ball.velocity.x * -1, y: this.ball.velocity.y };
-      } else if (
-        this.isBallCollidedWithHorizontalBar(
-          this.ball.position,
-          newBallPos,
-          player.bar
-        )
-      ) {
-        // バーの上下面に衝突
-        newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
       }
     }
 
@@ -152,7 +153,6 @@ export class Match {
   };
 
   // 現在のプレイヤーのキー入力をもとにバーの位置を更新する
-  // TODO: プレイヤーが左右に移動中にバーの上下面にボールが衝突したとき､ボールがバーの中に入ってしまう｡
   updateBar = (): void => {
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
@@ -161,22 +161,54 @@ export class Match {
       // y=0 がフィールド上部である点に注意
       let dy = 0;
       if (input.down) {
-        if (player.bar.bottomRight.y + this.barDy > this.fieldHeight) {
-          dy = this.fieldHeight - player.bar.bottomRight.y;
-        } else {
-          dy = this.barDy;
-        }
+        dy = Math.min(this.fieldHeight - player.bar.bottomRight.y, this.barDy);
       } else if (input.up) {
-        if (player.bar.topLeft.y - this.barDy < 0) {
-          dy = -player.bar.topLeft.y;
-        } else {
-          dy = -this.barDy;
-        }
+        dy = Math.max(-player.bar.topLeft.y, -this.barDy);
       }
-      player.bar.topLeft.y += dy;
-      player.bar.bottomRight.y += dy;
 
-      this.players[idx] = player;
+      // ボールにバーがめり込まない場合のみバーを移動させる
+      const ballRectangle: Rectangle = {
+        topLeft: {
+          x: this.ball.position.x - this.ballRadius,
+          y: this.ball.position.y - this.ballRadius,
+        },
+        bottomRight: {
+          x: this.ball.position.x + this.ballRadius,
+          y: this.ball.position.y + this.ballRadius,
+        },
+      };
+      const nextBallRectangle: Rectangle = {
+        topLeft: {
+          x:
+            this.ball.position.x +
+            this.ball.velocity.x * this.ballDx -
+            this.ballRadius,
+          y:
+            this.ball.position.y +
+            this.ball.velocity.y * this.ballDy -
+            this.ballRadius,
+        },
+        bottomRight: {
+          x:
+            this.ball.position.x +
+            this.ball.velocity.x * this.ballDx +
+            this.ballRadius,
+          y:
+            this.ball.position.y +
+            this.ball.velocity.y * this.ballDy +
+            this.ballRadius,
+        },
+      };
+      // TODO: Node17以上にアップグレードして､structuredClone()を使えるようにする｡
+      const newBarPos: Rectangle = JSON.parse(JSON.stringify(player.bar));
+      newBarPos.topLeft.y += dy;
+      newBarPos.bottomRight.y += dy;
+      if (
+        !this.isReactanglesOverlap(newBarPos, ballRectangle) &&
+        !this.isReactanglesOverlap(newBarPos, nextBallRectangle)
+      ) {
+        this.players[idx].bar = newBarPos;
+      }
     }
   };
 
@@ -254,26 +286,32 @@ export class Match {
   private isBallCollidedWithVerticalBar = (
     ballPos: Vector2d,
     newBallPos: Vector2d,
-    bar: Bar,
+    bar: Rectangle,
     playerSide: PlayerSide
   ): boolean => {
-    let barTop: Vector2d;
-    let barBottom: Vector2d;
-    if (playerSide == 'right') {
-      barTop = bar.topLeft;
-      barBottom = {
-        x: bar.topLeft.x,
-        y: bar.bottomRight.y,
-      };
-    } else {
-      barTop = {
-        x: bar.bottomRight.x,
-        y: bar.topLeft.y,
-      };
-      barBottom = bar.bottomRight;
-    }
+    const newBallRect: Rectangle = {
+      topLeft: {
+        x: newBallPos.x - this.ballRadius,
+        y: newBallPos.y - this.ballRadius,
+      },
+      bottomRight: {
+        x: newBallPos.x + this.ballRadius,
+        y: newBallPos.y + this.ballRadius,
+      },
+    };
 
-    return this.determineIntersection(ballPos, newBallPos, barTop, barBottom);
+    if (
+      this.isReactanglesOverlap(newBallRect, bar) &&
+      !this.isBallCollidedWithHorizontalBar(
+        ballPos,
+        newBallPos,
+        bar,
+        playerSide
+      )
+    ) {
+      return true;
+    }
+    return false;
   };
 
   // バーの上下面にボールが衝突しているか
@@ -283,32 +321,80 @@ export class Match {
   private isBallCollidedWithHorizontalBar = (
     ballPos: Vector2d,
     newBallPos: Vector2d,
-    bar: Bar
+    bar: Rectangle,
+    playerSide: PlayerSide
   ): boolean => {
-    const barTopLeft: Vector2d = bar.topLeft;
-    const barTopRight: Vector2d = {
-      x: bar.bottomRight.x,
-      y: bar.topLeft.y,
+    // 長方形の重なり判定によるバーの上下面の判定
+    const newBallRect: Rectangle = {
+      topLeft: {
+        x: newBallPos.x - this.ballRadius,
+        y: newBallPos.y - this.ballRadius,
+      },
+      bottomRight: {
+        x: newBallPos.x + this.ballRadius,
+        y: newBallPos.y + this.ballRadius,
+      },
     };
-    const barBottomLeft: Vector2d = {
-      x: bar.topLeft.x,
-      y: bar.bottomRight.y,
-    };
-    const barBottomRight: Vector2d = bar.bottomRight;
+    // smallRect が bigRect に衝突するのに合わせた処理になっている｡
+    // ボールがバーの幅より小さい場合は smallRect がボール､ bigRect がバー になる｡
+    let smallRect: Rectangle;
+    let bigRect: Rectangle;
+    if (this.ballRadius <= bar.bottomRight.x - bar.topLeft.x) {
+      smallRect = newBallRect;
+      bigRect = bar;
+    } else {
+      smallRect = bar;
+      bigRect = newBallRect;
+    }
 
-    return (
-      this.determineIntersection(
-        ballPos,
-        newBallPos,
-        barTopLeft,
-        barTopRight
-      ) ||
-      this.determineIntersection(
-        ballPos,
-        newBallPos,
-        barBottomLeft,
-        barBottomRight
-      )
-    );
+    if (this.isReactanglesOverlap(smallRect, bigRect)) {
+      const isSmallRectCollidedWithBigRectTopBottom =
+        smallRect.topLeft.x >= bigRect.topLeft.x &&
+        smallRect.bottomRight.x <= bigRect.bottomRight.x;
+      const isSmallRectCollidedWithBigRectTopLeft =
+        smallRect.bottomRight.x >= bigRect.bottomRight.x &&
+        smallRect.topLeft.y <= bigRect.topLeft.y;
+      const isSmallRectCollidedWithBigRectBottomLeft =
+        smallRect.bottomRight.x >= bigRect.bottomRight.x &&
+        smallRect.bottomRight.y >= bigRect.bottomRight.y;
+      const isSmallRectCollidedWithBigRectTopRight =
+        smallRect.topLeft.x <= bigRect.topLeft.x &&
+        smallRect.topLeft.y <= bigRect.topLeft.y;
+      const isSmallRectCollidedWithBigRectBottomRight =
+        smallRect.topLeft.x <= bigRect.topLeft.x &&
+        smallRect.bottomRight.y >= bigRect.bottomRight.y;
+
+      if (playerSide === 'left') {
+        return (
+          isSmallRectCollidedWithBigRectTopBottom ||
+          isSmallRectCollidedWithBigRectTopLeft ||
+          isSmallRectCollidedWithBigRectBottomLeft
+        );
+      } else {
+        return (
+          isSmallRectCollidedWithBigRectTopBottom ||
+          isSmallRectCollidedWithBigRectTopRight ||
+          isSmallRectCollidedWithBigRectBottomRight
+        );
+      }
+    }
+    return false;
+  };
+
+  // 長方形動詞が重なっているか判定する
+  // https://nihaoshijie.hatenadiary.jp/entry/2018/01/14/192201
+  private isReactanglesOverlap = (
+    rect1: Rectangle,
+    rect2: Rectangle
+  ): boolean => {
+    if (
+      Math.max(rect1.topLeft.x, rect2.topLeft.x) <=
+        Math.min(rect1.bottomRight.x, rect2.bottomRight.x) &&
+      Math.max(rect1.topLeft.y, rect2.topLeft.y) <=
+        Math.min(rect1.bottomRight.y, rect2.bottomRight.y)
+    ) {
+      return true;
+    }
+    return false;
   };
 }
