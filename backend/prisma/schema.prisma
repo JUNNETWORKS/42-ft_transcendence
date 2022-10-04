@@ -61,6 +61,7 @@ enum RoomType {
   PUBLIC
   PRIVATE
   LOCKED
+  DM
 }
 
 model ChatUserRelation {
