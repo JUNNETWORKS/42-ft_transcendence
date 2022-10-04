@@ -9,9 +9,9 @@ jobs:
       postgres:
         image: postgres
         env:
-          POSTGRES_USER: prisma
-          POSTGRES_PASSWORD: prismapass
-          POSTGRES_DB: prismadb
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         options: >-
@@ -32,7 +32,7 @@ jobs:
         run: npm ci
 
       - name: Apply migrations
-        run: npx prisma migrate dev
+        run: npx dotenv -e .env.test npx prisma migrate dev
 
       - name: run e2e test
-        run: npm run test:e2e
+        run: npx dotenv -e .env.test npm run test:e2e
