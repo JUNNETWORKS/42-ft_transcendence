@@ -17,8 +17,6 @@ import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 
-const iRoomId = 10;
-
 @WebSocketGateway({
   cors: true,
   namespace: 'chat',
@@ -49,21 +47,24 @@ export class ChatGateway implements OnGatewayConnection {
     this.joinChannel(client, 'Global', 'global');
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const rooms = (await this.charRoomService.getRoomsJoining(userId)).map(
-      (r) => r.chatRoom
+    const joiningRooms = (
+      await this.charRoomService.getRoomsJoining(userId)
+    ).map((r) => r.chatRoom);
+    const joiningRoomNames = joiningRooms.map((r) =>
+      this.fullRoomName('ChatRoom', r.id)
     );
-    const roomNames = rooms.map((r) => this.fullRoomName('ChatRoom', r.id));
-    console.log(`user ${userId} is joining to: [${roomNames}]`);
+    console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    if (roomNames.length > 0) {
-      this.socketsInUserChannel(userId).socketsJoin(roomNames);
+    if (joiningRoomNames.length > 0) {
+      this.socketsInUserChannel(userId).socketsJoin(joiningRoomNames);
     }
     // (connectionでは入室それ自体の通知は不要)
 
-    // [オンライン状態の変化を通知]
+    // [オンライン状態の変化を全体に通知]
+    // TODO: 通知対象をフレンドのみに限定
     this.sendResults(
-      'ft_connection',
+      'ft_connection_friend',
       {
         userId,
         displayName: user.displayName,
@@ -71,6 +72,30 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         global: 'global',
+      }
+    );
+    // [TODO: 初期表示に必要な情報をユーザ本人に通知]
+    const visibleRooms = await this.charRoomService.findMany({ take: 40 });
+    this.sendResults(
+      'ft_connection',
+      {
+        userId,
+        displayName: user.displayName,
+        visibleRooms: visibleRooms.map((r) => ({
+          id: r.id,
+          roomName: r.roomName,
+          roomTypoe: r.roomType,
+          updatedAt: r.updatedAt,
+        })),
+        joiningRooms: joiningRooms.map((r) => ({
+          id: r.id,
+          roomName: r.roomName,
+          roomTypoe: r.roomType,
+          updatedAt: r.updatedAt,
+        })),
+      },
+      {
+        userId,
       }
     );
   }
@@ -184,6 +209,7 @@ export class ChatGateway implements OnGatewayConnection {
     data.callerId = user.id;
     const roomId = data.roomId;
     // [TODO: 入室対象のチャットルームが存在していることを確認]
+    console.log('ft_join', data);
     const room = await this.charRoomService.findOne(roomId);
 
     // [TODO: 実行者が対象チャットルームに入室できることを確認]
@@ -205,7 +231,8 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_join',
       {
-        ...data,
+        id: roomId,
+        roomName: room.roomName,
         displayName: user.displayName,
       },
       {
@@ -248,12 +275,13 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_leave',
       {
-        roomId,
+        id: roomId,
         userId: user.id,
         displayName: user.displayName,
       },
       {
         roomId,
+        userId: user.id,
       }
     );
   }
@@ -342,7 +370,7 @@ export class ChatGateway implements OnGatewayConnection {
     const fullChatRoomName = this.fullRoomName(roomType, roomName);
     const socks = await this.server.in(fullUserRoomName).allSockets();
     console.log(
-      `leaveing clients in ${fullUserRoomName} from ${fullChatRoomName}`,
+      `leaving clients in ${fullUserRoomName} from ${fullChatRoomName}`,
       socks
     );
     this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);

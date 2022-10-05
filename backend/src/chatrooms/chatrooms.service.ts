@@ -56,15 +56,18 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    const res = await this.prisma.chatRoom
-      .findUniqueOrThrow({
+    try {
+      console.log({ id });
+      const res = await this.prisma.chatRoom.findUniqueOrThrow({
         where: { id },
-      })
-      .catch((err) => {
-        // TODO: errの種類拾う
-        throw new HttpException(`${err}`, 400);
       });
-    return new ChatroomEntity(res);
+      console.log(res);
+      return new ChatroomEntity(res);
+    } catch (err) {
+      console.error(err);
+      // TODO: errの種類拾う
+      throw new HttpException(`${err}`, 400);
+    }
   }
 
   join(roomId: number, userId: number) {
