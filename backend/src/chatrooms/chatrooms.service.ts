@@ -100,6 +100,40 @@ export class ChatroomsService {
     });
   }
 
+  /**
+   * ユーザを指定して, joinしているチャットルームを取得する
+   * @param userId
+   * @returns
+   */
+  getRoomsJoining(userId: number) {
+    return this.prisma.chatUserRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        chatRoom: true,
+      },
+    });
+  }
+
+  /**
+   * ルームとユーザを指定して, リレーションおよびルーム情報を取得する
+   * @param chatRoomId
+   * @param userId
+   * @returns
+   */
+  getRelation(chatRoomId: number, userId: number) {
+    return this.prisma.chatUserRelation.findFirst({
+      where: {
+        chatRoomId,
+        userId,
+      },
+      include: {
+        chatRoom: true,
+      },
+    });
+  }
+
   async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
     const { roomType, roomPassword } = updateRoomTypeDto;
     const res = await this.prisma.chatRoom.update({
@@ -131,7 +165,7 @@ export class ChatroomsService {
         where: { id },
         data: {
           roomMember: {
-            create: updateRoomMemberDto.roomMember,
+            create: updateRoomMemberDto,
           },
         },
       })
@@ -142,10 +176,10 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
+  async updateMember(chatRoomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType, endAt } = roomMemberDto;
-    const roomInfo = await this.findOne(roomId);
+    const roomInfo = await this.findOne(chatRoomId);
     if (roomInfo.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
     }
@@ -154,7 +188,7 @@ export class ChatroomsService {
       where: {
         userId_chatRoomId: {
           userId: userId,
-          chatRoomId: roomId,
+          chatRoomId,
         },
       },
       data: {
@@ -164,6 +198,18 @@ export class ChatroomsService {
           : endAt,
       },
     });
+  }
+
+  async removeMember(chatRoomId: number, userId: number) {
+    const res = await this.prisma.chatUserRelation.delete({
+      where: {
+        userId_chatRoomId: {
+          userId,
+          chatRoomId,
+        },
+      },
+    });
+    return res;
   }
 
   async remove(id: number) {

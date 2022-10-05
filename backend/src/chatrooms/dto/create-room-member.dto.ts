@@ -1,6 +1,3 @@
-import { PickType } from '@nestjs/swagger';
-import { CreateChatroomDto } from './create-chatroom.dto';
+import { RoomMemberDto } from './room-member.dto';
 
-export class CreateRoomMemberDto extends PickType(CreateChatroomDto, [
-  'roomMember',
-] as const) {}
+export class CreateRoomMemberDto extends RoomMemberDto {}

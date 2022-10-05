@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { jwtConstants } from 'src/auth/auth.constants';
+import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
@@ -16,7 +17,7 @@ import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 
-let iRoomId = 10;
+const iRoomId = 10;
 
 @WebSocketGateway({
   cors: true,
@@ -28,6 +29,7 @@ export class ChatGateway implements OnGatewayConnection {
 
   constructor(
     private readonly chatService: ChatService,
+    private readonly charRoomService: ChatroomsService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService
   ) {}
@@ -42,13 +44,24 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     const userId = user.id;
-    // システムチャンネルへのjoin
+    // [システムチャンネルへのjoin]
     this.joinChannel(client, 'User', userId);
     this.joinChannel(client, 'Global', 'global');
-    // TODO: ユーザがjoinしているチャットルーム(ハードリレーション)の取得
-    // TODO: roomへのjoin状態をハードリレーションに同期させる
+
+    // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
+    const rooms = (await this.charRoomService.getRoomsJoining(userId)).map(
+      (r) => r.chatRoom
+    );
+    const roomNames = rooms.map((r) => this.fullRoomName('ChatRoom', r.id));
+    console.log(`user ${userId} is joining to: [${roomNames}]`);
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
+    if (roomNames.length > 0) {
+      this.socketsInUserChannel(userId).socketsJoin(roomNames);
+    }
     // (connectionでは入室それ自体の通知は不要)
-    // オンライン状態の変化を通知
+
+    // [オンライン状態の変化を通知]
     this.sendResults(
       'ft_connection',
       {
@@ -79,16 +92,31 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     data.callerId = user.id;
-    // TODO: パラメータが正しければチャットルームを作成する
-    const roomId = iRoomId;
-    iRoomId += 1;
-    // 作成されたチャットルームにjoin
+    // [TODO: パラメータが正しければチャットルームを作成する]
+    const createdRoom = await this.charRoomService.create({
+      roomName: data.roomName,
+      roomType: data.roomType,
+      ownerId: user.id,
+      roomMember: [
+        {
+          userId: user.id,
+          memberType: 'ADMIN',
+        },
+      ],
+    });
+    console.log('created', createdRoom);
+    const roomId = createdRoom.id;
+
+    // [作成されたチャットルームにjoin]
     await this.usersJoin(user.id, 'ChatRoom', roomId);
-    // 新しいチャットルームが作成されたことを通知する
+
+    // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
       'ft_open',
       {
         roomId,
+        roomName: createdRoom.roomName,
+        roomType: createdRoom.roomType,
       },
       {
         global: 'global',
@@ -113,9 +141,15 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     data.callerId = user.id;
-    // TODO: 対象チャットルームの存在確認
-    // TODO: 実行者がチャットルームで発言可能であることの確認
+    // [TODO: 対象チャットルームの存在確認]
+    // [TODO: 実行者がチャットルームで発言可能であることの確認]
     const roomId = data.roomId;
+    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    if (!relation) {
+      return;
+    }
+    const chatRoom = relation.chatRoom;
+
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
     // 発言内容を通知
@@ -149,10 +183,23 @@ export class ChatGateway implements OnGatewayConnection {
     }
     data.callerId = user.id;
     const roomId = data.roomId;
-    // TODO: 入室対象のチャットルームが存在していることを確認
-    // TODO: 実行者が対象チャットルームに入室できることを確認
-    // TODO: ハードリレーション更新
-    // roomへのjoin状態をハードリレーションに同期させる
+    // [TODO: 入室対象のチャットルームが存在していることを確認]
+    const room = await this.charRoomService.findOne(roomId);
+
+    // [TODO: 実行者が対象チャットルームに入室できることを確認]
+    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    if (relation) {
+      return;
+    }
+
+    // [TODO: ハードリレーション更新]
+    const member = await this.charRoomService.addMember(roomId, {
+      userId: user.id,
+      memberType: 'MEMBER',
+    });
+    console.log('member', member);
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
     await this.usersJoin(user.id, 'ChatRoom', roomId);
     // 入室したことを通知
     this.sendResults(
@@ -184,16 +231,25 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     data.callerId = user.id;
+    // [TODO: 退出対象のチャットルームが存在していることを確認]
+    // [TODO: 実行者が対象チャットルームに入室していることを確認]
     const roomId = data.roomId;
-    // TODO: 退出対象のチャットルームが存在していることを確認
-    // TODO: 実行者が対象チャットルームに入室していることを確認
-    // TODO: ハードリレーション更新
-    // roomへのjoin状態をハードリレーションに同期させる
+    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    if (!relation) {
+      return;
+    }
+    const chatRoom = relation.chatRoom;
+
+    // [TODO: ハードリレーション更新]
+    await this.charRoomService.removeMember(roomId, user.id);
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
     await this.usersLeave(user.id, 'ChatRoom', roomId);
     this.sendResults(
       'ft_leave',
       {
-        ...data,
+        roomId,
+        userId: user.id,
         displayName: user.displayName,
       },
       {
@@ -242,6 +298,11 @@ export class ChatGateway implements OnGatewayConnection {
       Global: '%',
     }[roomType];
     return `${roomSuffix}${roomName}`;
+  }
+
+  private socketsInUserChannel(userId: number) {
+    const fullUserRoomName = this.fullRoomName('User', userId);
+    return this.server.in(fullUserRoomName);
   }
 
   /**
