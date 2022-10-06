@@ -230,6 +230,14 @@ export class ChatroomsService {
           chatRoomId: roomId,
           id: cursor ? { lt: cursor } : undefined,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+            },
+          },
+        },
         orderBy: { id: 'asc' },
       });
     } else {
@@ -238,6 +246,14 @@ export class ChatroomsService {
         where: {
           chatRoomId: roomId,
           id: cursor ? { gt: cursor } : undefined,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+            },
+          },
         },
         orderBy: { id: 'asc' },
       });

@@ -112,9 +112,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = await this.trapAuth(client);
     if (!user) {
-      {
-        return;
-      }
+      return;
     }
     data.callerId = user.id;
     // [TODO: パラメータが正しければチャットルームを作成する]
@@ -161,9 +159,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = await this.trapAuth(client);
     if (!user) {
-      {
-        return;
-      }
+      return;
     }
     data.callerId = user.id;
     // [TODO: 対象チャットルームの存在確認]
@@ -182,7 +178,10 @@ export class ChatGateway implements OnGatewayConnection {
       'ft_say',
       {
         ...chatMessage,
-        displayName: user.displayName,
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
       },
       {
         roomId,
@@ -202,11 +201,10 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = await this.trapAuth(client);
     if (!user) {
-      {
-        return;
-      }
+      return;
     }
     data.callerId = user.id;
+    const userId = user.id;
     const roomId = data.roomId;
     // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
@@ -220,7 +218,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [TODO: ハードリレーション更新]
     const member = await this.charRoomService.addMember(roomId, {
-      userId: user.id,
+      userId,
       memberType: 'MEMBER',
     });
     console.log('member', member);
@@ -239,6 +237,21 @@ export class ChatGateway implements OnGatewayConnection {
         roomId,
       }
     );
+    // チャットルームの内容を通知
+    const messages = await this.charRoomService.getMessages({
+      roomId,
+      take: 50,
+    });
+    this.sendResults(
+      'ft_room_messages',
+      {
+        id: roomId,
+        messages,
+      },
+      {
+        userId,
+      }
+    );
   }
 
   /**
@@ -253,9 +266,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = await this.trapAuth(client);
     if (!user) {
-      {
-        return;
-      }
+      return;
     }
     data.callerId = user.id;
     // [TODO: 退出対象のチャットルームが存在していることを確認]

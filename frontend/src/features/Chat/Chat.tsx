@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { DefaultEventsMap } from '@socket.io/component-emitter';
+import * as TD from './typedef';
+import * as Utils from '@/utils';
 
 const socket = io('http://localhost:3000/chat', {
   auth: (cb) => {
@@ -12,7 +14,7 @@ const socket = io('http://localhost:3000/chat', {
 });
 
 export const Chat = () => {
-  type ChannelMessage = any;
+  type ChatRoomMessage = TD.ChatRoomMessage;
   // 見えているチャットルームの一覧
   const [visibleRoomList, setVisibleRoomList] = useState<any[]>([]);
   // join しているチャットルームの一覧
@@ -20,12 +22,12 @@ export const Chat = () => {
   // 今発言用に入力しているメッセージ
   const [content, setContent] = useState('');
   // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId] = useState<number>(NaN);
+  const [focusedRoomId, setFocusedRoomId] = useState(-1);
   // openしたいチャットルームの名前
   const [newRoomName, setNewRoomName] = useState('');
 
   const [messagesInChannel, setMessagesInChannel] = useState<{
-    [key: string]: ChannelMessage[];
+    [key: string]: ChatRoomMessage[];
   }>({});
 
   useEffect(() => {
@@ -36,40 +38,22 @@ export const Chat = () => {
     });
 
     socket.on('ft_say', (data: any) => {
+      const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
-      console.log(data);
       const roomId = data.chatRoomId;
-      setMessagesInChannel((prev) => {
-        const next: { [key: string]: ChannelMessage[] } = {};
-        Object.keys(prev).forEach((key) => {
-          next[key] = [...prev[key]];
-        });
-        if (!next[roomId]) {
-          next[roomId] = [];
-        }
-        const messages = next[roomId];
-        messages.push(data);
-        next[roomId] = messages;
-        console.log(next);
-        console.log(roomId, focusedRoomId, next[roomId]);
-        return next;
-      });
+      manip.addMessagesToRoom(roomId, [message]);
       manip.focusRoom(roomId);
     });
 
     socket.on('ft_join', (data: any) => {
       console.log('catch join');
       setJoiningRoomList((prev) => {
-        console.log('[data]', data);
-        console.log('[joiningRoomList]', prev);
         const sameRoom = prev.find((r) => r.id === data.id);
-        console.log(sameRoom);
         if (sameRoom) {
           return prev;
         }
         const newRoomList = [...prev];
         newRoomList.push(data);
-        console.log(prev, '=>', newRoomList);
         return newRoomList;
       });
     });
@@ -77,23 +61,30 @@ export const Chat = () => {
     socket.on('ft_leave', (data: any) => {
       console.log('catch leave');
       setJoiningRoomList((prev) => {
-        console.log('[data]', data);
-        console.log('[joiningRoomList]', prev);
+        console.log(predicate.isFocusingTo(data.id), focusedRoomId, data.id);
+        manip.unfocusRoom(data.id);
+        // if (predicate.isFocusingTo(data.id)) {
+        // }
         const newRoomList = prev.filter((r) => r.id !== data.id);
-        console.log(newRoomList.length);
         if (newRoomList.length === prev.length) {
           return prev;
         }
-        console.log(prev, '=>', newRoomList);
-        manip.unfocusRoom(data.id);
         return newRoomList;
       });
+    });
+
+    socket.on('ft_room_messages', (data: any) => {
+      console.log('catch room_messages');
+      const { id, messages } = data;
+      manip.addMessagesToRoom(id, messages.map(TD.Mapper.chatRoomMessage));
     });
 
     return () => {
       socket.off('ft_connection');
       socket.off('ft_say');
       socket.off('ft_join');
+      socket.off('ft_leave');
+      socket.off('ft_room_messages');
     };
   }, []);
 
@@ -132,35 +123,61 @@ export const Chat = () => {
   };
 
   const manip = {
+    // 指定したルームにフォーカス(フロントエンドで中身を表示)する
     focusRoom: (roomId: number) => {
-      console.log(
-        `[manip.focusRoom] predicate.isFocusingTo(${roomId})`,
-        predicate.isFocusingTo(roomId)
-      );
-      if (!predicate.isFocusingTo(roomId)) {
-        console.log('[manip.focusRoom] focus to', roomId);
-        setFocusedRoomId(roomId);
+      setFocusedRoomId((prev) => {
         console.log(
-          `[manip.focusRoom] roomId: ${roomId}, focusedRoomId: ${focusedRoomId}, `
+          `[manip.focusRoom] predicate.isFocusingTo(${roomId})`,
+          predicate.isFocusingTo(roomId)
         );
-      }
-      console.log(messagesInChannel);
-      console.log(
-        '[manip.focusRoom] keys',
-        Object.keys(messagesInChannel).map((key) => [
-          key,
-          (messagesInChannel[key] || []).length,
-        ])
-      );
+        if (!predicate.isFocusingTo(roomId)) {
+          console.log('[manip.focusRoom] focus to', roomId);
+          return roomId;
+        }
+        return prev;
+      });
     },
-    unfocusRoom: (roomId: number) => setFocusedRoomId(() => NaN),
+
+    // ルームへのフォーカスをやめる
+    unfocusRoom: (roomId: number) =>
+      setFocusedRoomId((prev) => {
+        console.log('unfocusing..');
+        if (prev === roomId) {
+          return -1;
+        } else {
+          return prev;
+        }
+      }),
+
+    // チャットルームにメッセージを追加する
+    // (メッセージは投稿時刻の昇順になる)
+    addMessagesToRoom: (roomId: number, newMessages: any[]) => {
+      console.log('[addMessagesToChannel]', roomId, newMessages);
+      setMessagesInChannel((prev) => {
+        const next: { [key: string]: ChatRoomMessage[] } = {};
+        Object.keys(prev).forEach((key) => {
+          next[key] = [...prev[key]];
+        });
+        if (!next[roomId]) {
+          next[roomId] = [];
+        }
+        const messages = next[roomId];
+        messages.push(...newMessages);
+        next[roomId] = Utils.sortBy(
+          Utils.uniqBy(messages, (m) => m.id),
+          (m) => m.createdAt
+        );
+        return next;
+      });
+      manip.focusRoom(roomId);
+    },
   };
 
   const predicate = {
     isJoiningTo: (roomId: number) =>
       !!joiningRoomList.find((r) => r.id === roomId),
     isFocusingTo: (roomId: number) => focusedRoomId === roomId,
-    isFocusingToSomeRoom: () => !!focusedRoomId,
+    isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
 
   const computed = {
@@ -171,6 +188,7 @@ export const Chat = () => {
       }
       return ms;
     },
+    focusedRoom: () => visibleRoomList.find((r) => r.id === focusedRoomId),
   };
 
   const utils = {
@@ -186,6 +204,7 @@ export const Chat = () => {
   return (
     <div
       style={{
+        height: '50em',
         padding: '2px',
         border: '1px solid gray',
         display: 'flex',
@@ -197,6 +216,8 @@ export const Chat = () => {
         style={{
           flexGrow: 0,
           flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
         }}
       >
         {/* 見えているチャットルーム */}
@@ -205,14 +226,25 @@ export const Chat = () => {
           style={{
             padding: '2px',
             border: '1px solid gray',
-            flexGrow: 0,
-            flexShrink: 0,
+            flexGrow: 1,
+            flexShrink: 1,
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <h3>ChatRooms</h3>
+          <h3
+            style={{
+              flexGrow: 0,
+              flexShrink: 0,
+            }}
+          >
+            ChatRooms {focusedRoomId}
+          </h3>
           <div
             style={{
               padding: '2px',
+              flexGrow: 1,
+              flexShrink: 1,
               display: 'flex',
               flexDirection: 'column',
             }}
@@ -285,7 +317,12 @@ export const Chat = () => {
 
         <div
           className="new-room"
-          style={{ padding: '2px', border: '1px solid gray' }}
+          style={{
+            padding: '2px',
+            border: '1px solid gray',
+            flexGrow: 0,
+            flexShrink: 0,
+          }}
         >
           <h4>Open</h4>
           <input
@@ -298,86 +335,149 @@ export const Chat = () => {
         </div>
       </div>
 
-      {predicate.isFocusingToSomeRoom() && (
-        <div
-          className="vertical right"
-          style={{
-            flexGrow: 1,
-            flexShrink: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {/* 今フォーカスしているルームのメッセージ */}
+      <div
+        className="vertical right"
+        style={{
+          flexGrow: 1,
+          flexShrink: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* 今フォーカスしているルーム */}
+        {!!computed.focusedRoom() && (
           <div
-            className="message-list"
+            className="room-main"
             style={{
-              padding: '2px',
+              display: 'flex',
+              flexDirection: 'row',
               border: '1px solid gray',
-              flexGrow: 1,
-              flexShrink: 1,
+              padding: '2px',
+              height: '100%',
             }}
           >
-            <h3>Messages</h3>
-            {computed.messages().map((data: any, index) => {
-              return (
+            <div
+              className="room-left-pane"
+              style={{
+                flexGrow: 1,
+                flexShrink: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                overflow: 'hidden',
+              }}
+            >
+              {/* 今フォーカスしているルームのメッセージ */}
+              <div
+                className="room-message-list"
+                style={{
+                  padding: '2px',
+                  border: '1px solid gray',
+                  flexGrow: 1,
+                  flexShrink: 1,
+                  overflow: 'scroll',
+                }}
+              >
+                {computed.messages().map((data: TD.ChatRoomMessage, index) => {
+                  return (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        padding: '2px',
+                        border: '1px solid gray',
+                      }}
+                      key={data.id}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                        }}
+                      >
+                        <div style={{ paddingRight: '4px' }}>
+                          displayName: {data.user.displayName}
+                        </div>
+                        <div style={{ paddingRight: '4px' }}>
+                          chatRoomId: {data.chatRoomId}
+                        </div>
+                        <div style={{ paddingRight: '4px' }}>
+                          createdAt: {data.createdAt.toISOString()}
+                        </div>
+                      </div>
+                      <div>{data.content}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div
+                className="input-panel"
+                style={{
+                  padding: '2px',
+                  border: '1px solid gray',
+                  flexGrow: 0,
+                  flexShrink: 0,
+                }}
+              >
+                {/* 今フォーカスしているルームへの発言 */}
+                <div
+                  className="content"
+                  style={{ padding: '2px', border: '1px solid gray' }}
+                >
+                  <h4>Content</h4>
+                  <input
+                    id="input"
+                    autoComplete="off"
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                  />
+                  <button onClick={command.say}>Send</button>
+                </div>
+              </div>
+            </div>
+            <div
+              className="room-right-pane"
+              style={{
+                flexGrow: 0,
+                flexShrink: 0,
+                flexBasis: '10em',
+              }}
+            >
+              <div
+                className="room-members"
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                }}
+              >
+                <h4
+                  style={{
+                    flexGrow: 0,
+                    flexShrink: 0,
+                  }}
+                >
+                  Members
+                </h4>
                 <div
                   style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    padding: '2px',
-                    border: '1px solid gray',
+                    flexGrow: 1,
+                    flexShrink: 1,
                   }}
-                  key={data.id}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'row',
-                    }}
-                  >
-                    <div style={{ paddingRight: '4px' }}>
-                      displayName: {data.displayName}
-                    </div>
-                    <div style={{ paddingRight: '4px' }}>
-                      chatRoomId: {data.chatRoomId}
-                    </div>
-                    <div style={{ paddingRight: '4px' }}>
-                      createdAt: {data.createdAt}
-                    </div>
-                  </div>
-                  <div>{data.content}</div>
-                </div>
-              );
-            })}
-          </div>
-          <div
-            className="input-panel"
-            style={{
-              padding: '2px',
-              border: '1px solid gray',
-              flexGrow: 0,
-              flexShrink: 0,
-            }}
-          >
-            {/* 今フォーカスしているルームへの発言 */}
-            <div
-              className="content"
-              style={{ padding: '2px', border: '1px solid gray' }}
-            >
-              <h4>Content</h4>
-              <input
-                id="input"
-                autoComplete="off"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-              />
-              <button onClick={command.say}>Send</button>
+                ></div>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      <div>
+        )}
+      </div>
+      <div
+        style={{
+          flexGrow: 0,
+          flexShrink: 0,
+          flexBasis: '20em',
+          overflow: 'scroll',
+        }}
+      >
         <div>
           <h4>visibleRoomList</h4>
           {JSON.stringify(visibleRoomList)}
