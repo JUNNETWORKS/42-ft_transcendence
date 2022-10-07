@@ -10,6 +10,7 @@ import {
 import { Socket, Server } from 'socket.io';
 import { jwtConstants } from 'src/auth/auth.constants';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
+import { OperationGetRoomMessageDtpo } from 'src/chatrooms/dto/operation-get-room-message';
 import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
@@ -95,7 +96,7 @@ export class ChatGateway implements OnGatewayConnection {
         })),
       },
       {
-        userId,
+        client,
       }
     );
   }
@@ -231,9 +232,11 @@ export class ChatGateway implements OnGatewayConnection {
       {
         id: roomId,
         roomName: room.roomName,
+        userId,
         displayName: user.displayName,
       },
       {
+        userId: user.id,
         roomId,
       }
     );
@@ -243,13 +246,13 @@ export class ChatGateway implements OnGatewayConnection {
       take: 50,
     });
     this.sendResults(
-      'ft_room_messages',
+      'ft_get_room_messages',
       {
         id: roomId,
         messages,
       },
       {
-        userId,
+        client,
       }
     );
   }
@@ -293,6 +296,36 @@ export class ChatGateway implements OnGatewayConnection {
       {
         roomId,
         userId: user.id,
+      }
+    );
+  }
+
+  /**
+   * @param data
+   * @param client
+   */
+  @SubscribeMessage('ft_get_room_messages')
+  async handleRoomMessages(
+    @MessageBody() data: OperationGetRoomMessageDtpo,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    data.callerId = user.id;
+    const messages = await this.charRoomService.getMessages({
+      roomId: data.roomId,
+      take: data.take,
+    });
+    this.sendResults(
+      'ft_get_room_messages',
+      {
+        id: data.roomId,
+        messages,
+      },
+      {
+        client,
       }
     );
   }
@@ -404,6 +437,7 @@ export class ChatGateway implements OnGatewayConnection {
       userId?: number;
       roomId?: number;
       global?: string;
+      client?: Socket;
     }
   ) {
     if (typeof target.userId === 'number') {
@@ -414,6 +448,10 @@ export class ChatGateway implements OnGatewayConnection {
     }
     if (target.global) {
       await this.sendResultRoom(op, 'Global', target.global, payload);
+    }
+    if (target.client) {
+      console.log('sending downlink to client:', target.client.id, op, payload);
+      target.client.emit(op, payload);
     }
   }
 

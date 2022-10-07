@@ -8,7 +8,7 @@ const socket = io('http://localhost:3000/chat', {
   auth: (cb) => {
     cb({
       token:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY0OTAzODU3LjUwNSwiZXhwIjoxNjY3NDk1ODU3LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.z9hmpKZDEyBgxfTN70EyPPWJLsyUCrJKHUZkIBup4Do',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1MDUzMTQ5LjYyNiwiZXhwIjoxNjY3NjQ1MTQ5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.CQ7QIQWSEm9lNV4iHwq0-7doJG_ZVXLhzqPfbBIE49g',
     });
   },
 });
@@ -41,8 +41,8 @@ export const Chat = () => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
       const roomId = data.chatRoomId;
-      manip.addMessagesToRoom(roomId, [message]);
-      manip.focusRoom(roomId);
+      stateSetter.addMessagesToRoom(roomId, [message]);
+      stateSetter.focusRoom(roomId);
     });
 
     socket.on('ft_join', (data: any) => {
@@ -62,7 +62,7 @@ export const Chat = () => {
       console.log('catch leave');
       setJoiningRoomList((prev) => {
         console.log(predicate.isFocusingTo(data.id), focusedRoomId, data.id);
-        manip.unfocusRoom(data.id);
+        stateSetter.unfocusRoom(data.id);
         // if (predicate.isFocusingTo(data.id)) {
         // }
         const newRoomList = prev.filter((r) => r.id !== data.id);
@@ -73,10 +73,14 @@ export const Chat = () => {
       });
     });
 
-    socket.on('ft_room_messages', (data: any) => {
-      console.log('catch room_messages');
+    socket.on('ft_get_room_messages', (data: any) => {
+      console.log('catch get_room_messages');
       const { id, messages } = data;
-      manip.addMessagesToRoom(id, messages.map(TD.Mapper.chatRoomMessage));
+      console.log(id, !!messages);
+      stateSetter.addMessagesToRoom(
+        id,
+        messages.map(TD.Mapper.chatRoomMessage)
+      );
     });
 
     return () => {
@@ -84,7 +88,7 @@ export const Chat = () => {
       socket.off('ft_say');
       socket.off('ft_join');
       socket.off('ft_leave');
-      socket.off('ft_room_messages');
+      socket.off('ft_get_room_messages');
     };
   }, []);
 
@@ -120,21 +124,33 @@ export const Chat = () => {
       socket.emit('ft_say', data);
       setContent('');
     },
+
+    get_room_messages: (roomId: number) => {
+      const data = {
+        roomId,
+        take: 50,
+        callerId: 1,
+      };
+      console.log(['get_room_messages'], data);
+      socket.emit('ft_get_room_messages', data);
+    },
   };
 
-  const manip = {
+  const stateSetter = {
     // 指定したルームにフォーカス(フロントエンドで中身を表示)する
     focusRoom: (roomId: number) => {
       setFocusedRoomId((prev) => {
-        console.log(
-          `[manip.focusRoom] predicate.isFocusingTo(${roomId})`,
-          predicate.isFocusingTo(roomId)
-        );
-        if (!predicate.isFocusingTo(roomId)) {
-          console.log('[manip.focusRoom] focus to', roomId);
-          return roomId;
+        if (predicate.isFocusingTo(roomId)) {
+          // すでにフォーカスしている
+          console.log('[focusRoom] stay');
+          return prev;
         }
-        return prev;
+        // メッセージがないなら取得する
+        console.log('[focusRoom]', roomId);
+        if (store.count_message(roomId) === 0) {
+          setFetchRoomId(roomId);
+        }
+        return roomId;
       });
     },
 
@@ -169,7 +185,7 @@ export const Chat = () => {
         );
         return next;
       });
-      manip.focusRoom(roomId);
+      stateSetter.focusRoom(roomId);
     },
   };
 
@@ -191,7 +207,7 @@ export const Chat = () => {
     focusedRoom: () => visibleRoomList.find((r) => r.id === focusedRoomId),
   };
 
-  const utils = {
+  const store = {
     count_message: (roomId: number) => {
       const ms = messagesInChannel[roomId];
       if (!ms || ms.length === 0) {
@@ -199,7 +215,26 @@ export const Chat = () => {
       }
       return ms.length;
     },
+    room_messages: (roomId: number) => {
+      const ms = messagesInChannel[roomId];
+      if (!ms || ms.length === 0) {
+        return [];
+      }
+      return ms;
+    },
   };
+
+  const useFetchMessage = (initialRoomId: number) => {
+    const [fetchRoomId, setFetchRoomId] = useState(initialRoomId);
+    useEffect(() => {
+      if (!(fetchRoomId > 0)) {
+        return;
+      }
+      command.get_room_messages(fetchRoomId);
+    }, [fetchRoomId]);
+    return [setFetchRoomId];
+  };
+  const [setFetchRoomId] = useFetchMessage(0);
 
   return (
     <div
@@ -299,13 +334,13 @@ export const Chat = () => {
                     }}
                     onClick={() => {
                       if (predicate.isJoiningTo(data.id)) {
-                        manip.focusRoom(data.id);
+                        stateSetter.focusRoom(data.id);
                       }
                     }}
                   >
                     {data.id} / {data.roomName}{' '}
                     {(() => {
-                      const n = utils.count_message(data.id);
+                      const n = store.count_message(data.id);
                       return n > 0 ? `(${n})` : '';
                     })()}
                   </div>
