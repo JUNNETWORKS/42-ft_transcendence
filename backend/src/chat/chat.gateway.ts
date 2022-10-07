@@ -10,7 +10,8 @@ import {
 import { Socket, Server } from 'socket.io';
 import { jwtConstants } from 'src/auth/auth.constants';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
-import { OperationGetRoomMessageDtpo } from 'src/chatrooms/dto/operation-get-room-message';
+import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members';
+import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message';
 import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
@@ -315,7 +316,7 @@ export class ChatGateway implements OnGatewayConnection {
    */
   @SubscribeMessage('ft_get_room_messages')
   async handleRoomMessages(
-    @MessageBody() data: OperationGetRoomMessageDtpo,
+    @MessageBody() data: OperationGetRoomMessageDto,
     @ConnectedSocket() client: Socket
   ) {
     const user = await this.trapAuth(client);
@@ -332,6 +333,35 @@ export class ChatGateway implements OnGatewayConnection {
       {
         id: data.roomId,
         messages,
+      },
+      {
+        client,
+      }
+    );
+  }
+
+  /**
+   *
+   * @param data
+   * @param client
+   * @returns
+   */
+  @SubscribeMessage('ft_get_room_members')
+  async handleRoomMembers(
+    @MessageBody() data: OperationGetRoomMembersDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    data.callerId = user.id;
+    const members = await this.charRoomService.getMembers(data.roomId);
+    this.sendResults(
+      'ft_get_room_members',
+      {
+        id: data.roomId,
+        members,
       },
       {
         client,

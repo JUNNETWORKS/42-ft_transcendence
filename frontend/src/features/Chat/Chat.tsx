@@ -58,6 +58,63 @@ const ChatRoomMessage = (props: { message: TD.ChatRoomMessage }) => {
   );
 };
 
+const ChatRoomMembers = (props: {
+  userId: number;
+  members: UserRelationMap;
+}) => {
+  const computed = {
+    members: useMemo(() => {
+      const mems: TD.ChatUserRelation[] = [];
+      const you = props.members[props.userId];
+      if (you) {
+        mems.push(you);
+      }
+      Utils.keys(props.members).forEach((id) => {
+        const m = props.members[id];
+        if (props.userId === m.userId) {
+          return;
+        }
+        mems.push(m);
+      });
+      return mems;
+    }, [props.userId, props.members]),
+  };
+
+  return (
+    <div
+      className="room-members"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+      }}
+    >
+      <h4
+        style={{
+          flexGrow: 0,
+          flexShrink: 0,
+        }}
+      >
+        Members
+      </h4>
+      <div
+        style={{
+          flexGrow: 1,
+          flexShrink: 1,
+        }}
+      >
+        {computed.members.map((member) => {
+          return (
+            <div className="room-member-element" key={member.userId}>
+              {member.user.displayName}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
  */
@@ -125,12 +182,17 @@ const Sayer = (props: { sender: (content: string) => void }) => {
   );
 };
 
+type UserRelationMap = {
+  [userId: number]: TD.ChatUserRelation;
+};
+
 /**
  *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = () => {
   type ChatRoomMessage = TD.ChatRoomMessage;
+  const [userId, setUserId] = useState(-1);
   // 見えているチャットルームの一覧
   const [visibleRoomList, setVisibleRoomList] = useState<TD.ChatRoom[]>([]);
   // join しているチャットルームの一覧
@@ -140,13 +202,25 @@ export const Chat = () => {
   // openしたいチャットルームの名前
   const [newRoomName, setNewRoomName] = useState('');
 
-  const [messagesInChannel, setMessagesInChannel] = useState<{
-    [key: string]: ChatRoomMessage[];
+  /**
+   * チャットルーム内のメッセージのリスト
+   * TODO: もっとマシな方法ないの
+   */
+  const [messagesInRoom, setMessagesInRoom] = useState<{
+    [roomId: number]: ChatRoomMessage[];
   }>({});
+  /**
+   * チャットルーム内のメンバーのマップ
+   */
+  const [membersInRoom, setMembersInRoom] = useState<{
+    [roomId: number]: UserRelationMap;
+  }>({});
+  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
     socket.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection');
+      setUserId(data.userId);
       setJoiningRoomList(data.joiningRooms);
       setVisibleRoomList(data.visibleRooms);
     });
@@ -196,15 +270,29 @@ export const Chat = () => {
       );
     });
 
+    socket.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
+      console.log('catch get_room_members');
+      const { id, members } = data;
+      console.log(id, members);
+      stateMutater.addMembersInRoom(
+        id,
+        Utils.keyBy(members, (a) => `${a.userId}`)
+      );
+    });
+
     return () => {
       socket.off('ft_connection');
       socket.off('ft_say');
       socket.off('ft_join');
       socket.off('ft_leave');
       socket.off('ft_get_room_messages');
+      socket.off('ft_get_room_members');
     };
   });
 
+  /**
+   * チャットコマンド
+   */
   const command = {
     join: (roomId: number) => {
       const data = {
@@ -246,8 +334,20 @@ export const Chat = () => {
       console.log(['get_room_messages'], data);
       socket.emit('ft_get_room_messages', data);
     },
+
+    get_room_members: (roomId: number) => {
+      const data = {
+        roomId,
+        callerId: 1,
+      };
+      console.log(['get_room_members'], data);
+      socket.emit('ft_get_room_members', data);
+    },
   };
 
+  /**
+   * ステート変更処理のラッパ
+   */
   const stateMutater = {
     // 指定したルームにフォーカス(フロントエンドで中身を表示)する
     focusRoom: (roomId: number) => {
@@ -259,6 +359,8 @@ export const Chat = () => {
         }
         // メッセージがないなら取得する
         action.get_room_message(roomId);
+        // メンバー情報がないなら取得する
+        action.get_room_members(roomId);
         return roomId;
       });
     },
@@ -277,9 +379,9 @@ export const Chat = () => {
     // チャットルームにメッセージを追加する
     // (メッセージは投稿時刻の昇順になる)
     addMessagesToRoom: (roomId: number, newMessages: TD.ChatRoomMessage[]) => {
-      setMessagesInChannel((prev) => {
-        const next: { [key: string]: ChatRoomMessage[] } = {};
-        Object.keys(prev).forEach((key) => {
+      setMessagesInRoom((prev) => {
+        const next: { [roomId: number]: ChatRoomMessage[] } = {};
+        Utils.keys(prev).forEach((key) => {
           next[key] = [...prev[key]];
         });
         if (!next[roomId]) {
@@ -293,10 +395,34 @@ export const Chat = () => {
         );
         return next;
       });
-      stateMutater.focusRoom(roomId);
+    },
+
+    /**
+     * チャットルームにメンバーをマージする
+     * @param roomId
+     * @param newMembers
+     */
+    addMembersInRoom: (roomId: number, newMembers: UserRelationMap) => {
+      setMembersInRoom((prev) => {
+        const next: { [roomId: number]: UserRelationMap } = {};
+        Utils.keys(prev).forEach((key) => {
+          next[key] = prev[key];
+        });
+        if (!next[roomId]) {
+          next[roomId] = {};
+        }
+        const members = next[roomId];
+        Utils.keys(newMembers).forEach((key) => {
+          members[key] = newMembers[key];
+        });
+        return next;
+      });
     },
   };
 
+  /**
+   * わざわざ分けなくてもいいかな
+   */
   const predicate = {
     isJoiningTo: (roomId: number) =>
       !!joiningRoomList.find((r) => r.id === roomId),
@@ -304,32 +430,46 @@ export const Chat = () => {
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
 
+  /**
+   * 算出プロパティ的なの
+   */
   const computed = {
     messages: useMemo(() => {
-      const ms = messagesInChannel[focusedRoomId];
+      const ms = messagesInRoom[focusedRoomId];
       if (!ms || ms.length === 0) {
         return [];
       }
       return ms;
-    }, [messagesInChannel, focusedRoomId]),
+    }, [messagesInRoom, focusedRoomId]),
+
     focusedRoom: useMemo(
       () => visibleRoomList.find((r) => r.id === focusedRoomId),
       [visibleRoomList, focusedRoomId]
     ),
   };
 
+  /**
+   * 保持しているデータに対する参照
+   */
   const store = {
     count_message: (roomId: number) => {
-      const ms = messagesInChannel[roomId];
+      const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return 0;
       }
       return ms.length;
     },
     room_messages: (roomId: number) => {
-      const ms = messagesInChannel[roomId];
+      const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return [];
+      }
+      return ms;
+    },
+    room_members: (roomId: number) => {
+      const ms = membersInRoom[roomId];
+      if (!ms) {
+        return {};
       }
       return ms;
     },
@@ -340,9 +480,15 @@ export const Chat = () => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: useAction(0, (id) => {
-      if (id > 0 && store.count_message(id) === 0) {
-        command.get_room_messages(id);
+    get_room_message: useAction(0, (roomId) => {
+      if (roomId > 0 && store.count_message(roomId) === 0) {
+        command.get_room_messages(roomId);
+      }
+    })[0],
+
+    get_room_members: useAction(0, (roomId) => {
+      if (roomId > 0 && Object.keys(store.room_members(roomId)).length === 0) {
+        command.get_room_members(roomId);
       }
     })[0],
   };
@@ -526,9 +672,11 @@ export const Chat = () => {
                   overflow: 'scroll',
                 }}
               >
-                {computed.messages.map((data: TD.ChatRoomMessage) => (
-                  <ChatRoomMessage key={data.id} message={data} />
-                ))}
+                {store
+                  .room_messages(focusedRoomId)
+                  .map((data: TD.ChatRoomMessage) => (
+                    <ChatRoomMessage key={data.id} message={data} />
+                  ))}
               </div>
               <div
                 className="input-panel"
@@ -551,29 +699,10 @@ export const Chat = () => {
                 flexBasis: '10em',
               }}
             >
-              <div
-                className="room-members"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  height: '100%',
-                }}
-              >
-                <h4
-                  style={{
-                    flexGrow: 0,
-                    flexShrink: 0,
-                  }}
-                >
-                  Members
-                </h4>
-                <div
-                  style={{
-                    flexGrow: 1,
-                    flexShrink: 1,
-                  }}
-                ></div>
-              </div>
+              <ChatRoomMembers
+                userId={userId}
+                members={store.room_members(focusedRoomId)}
+              />
             </div>
           </div>
         )}

@@ -7,6 +7,13 @@ export type User = {
   displayName: string;
 };
 
+export type ChatUserRelation = {
+  user: User;
+  userId: number;
+  chatRoomId: number;
+  memberType: string; // TODO: ほんとはenum
+};
+
 export type ChatRoom = {
   id: number;
   roomName: string;
@@ -47,6 +54,11 @@ export type LeaveResult = {
 export type GetRoomMessagesResult = {
   id: number;
   messages: ChatRoomMessage[];
+};
+
+export type GetRoomMembersResult = {
+  id: number;
+  members: ChatUserRelation[];
 };
 
 export const Mapper = {

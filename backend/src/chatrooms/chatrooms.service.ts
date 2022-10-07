@@ -100,6 +100,9 @@ export class ChatroomsService {
           notIn: 'BANNED',
         },
       },
+      include: {
+        user: true,
+      },
     });
   }
 
