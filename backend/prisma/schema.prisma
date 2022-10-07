@@ -19,25 +19,25 @@ model User {
   joinedRoom        ChatUserRelation[]
   ownedRoom         ChatRoom[]
   chatroomAttribute ChatUserAttribute[]
-  followingUser     FriendRelation[]    @relation("user")
-  followedUser      FriendRelation[]    @relation("targetUser")
-  blockingUser      BlockRelation[]     @relation("user")
-  blockedUser       BlockRelation[]     @relation("targetUser")
+  followingUser     FriendRelation[]    @relation("followingUser")
+  followedUser      FriendRelation[]    @relation("followedUser")
+  blockingUser      BlockRelation[]     @relation("blockingUser")
+  blockedUser       BlockRelation[]     @relation("blockedUser")
 }
 
 model FriendRelation {
-  user         User @relation(name: "user", fields: [userId], references: [id])
+  user         User @relation(name: "followingUser", fields: [userId], references: [id])
   userId       Int
-  targetUser   User @relation(name: "targetUser", fields: [targetUserId], references: [id])
+  targetUser   User @relation(name: "followedUser", fields: [targetUserId], references: [id])
   targetUserId Int
 
   @@id([userId, targetUserId])
 }
 
 model BlockRelation {
-  user         User @relation(name: "user", fields: [userId], references: [id])
+  user         User @relation(name: "blockingUser", fields: [userId], references: [id])
   userId       Int
-  targetUser   User @relation(name: "targetUser", fields: [targetUserId], references: [id])
+  targetUser   User @relation(name: "blockedUser", fields: [targetUserId], references: [id])
   targetUserId Int
 
   @@id([userId, targetUserId])
