@@ -7,6 +7,13 @@ export type User = {
   displayName: string;
 };
 
+export type ChatRoom = {
+  id: number;
+  roomName: string;
+  roomType: string;
+  updatedAt: Date;
+};
+
 export type ChatRoomMessage = {
   id: number;
   chatRoomId: number;
@@ -14,6 +21,32 @@ export type ChatRoomMessage = {
   userId: number;
   createdAt: Date;
   content: string;
+};
+
+export type ConnectionResult = {
+  userId: number;
+  displayName: string;
+  visibleRooms: ChatRoom[];
+  joiningRooms: ChatRoom[];
+};
+
+export type SayResult = ChatRoomMessage & {
+  user: User;
+};
+
+export type JoinResult = {
+  room: ChatRoom;
+  user: User;
+};
+
+export type LeaveResult = {
+  room: ChatRoom;
+  user: User;
+};
+
+export type GetRoomMessagesResult = {
+  id: number;
+  messages: ChatRoomMessage[];
 };
 
 export const Mapper = {

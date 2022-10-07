@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { DefaultEventsMap } from '@socket.io/component-emitter';
+import { useEffect, useState, useMemo } from 'react';
+import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
 
@@ -13,14 +12,129 @@ const socket = io('http://localhost:3000/chat', {
   },
 });
 
+/**
+ * `id`の変化をトリガーとして何らかのアクションを行うフック
+ * @param initialId `id`の初期値
+ * @param action  `id`を受け取り, アクションを実行する関数
+ */
+function useAction<T>(initialId: T, action: (id: T) => void) {
+  const [actionId, setActionId] = useState<T>(initialId);
+  useEffect(() => action(actionId), [action, actionId]);
+  return [setActionId];
+}
+
+/**
+ * メッセージコンポーネント
+ */
+const ChatRoomMessage = (props: { message: TD.ChatRoomMessage }) => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        padding: '2px',
+        border: '1px solid gray',
+      }}
+      key={props.message.id}
+    >
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+        }}
+      >
+        <div style={{ paddingRight: '4px' }}>
+          displayName: {props.message.user.displayName}
+        </div>
+        <div style={{ paddingRight: '4px' }}>
+          chatRoomId: {props.message.chatRoomId}
+        </div>
+        <div style={{ paddingRight: '4px' }}>
+          createdAt: {props.message.createdAt.toISOString()}
+        </div>
+      </div>
+      <div>{props.message.content}</div>
+    </div>
+  );
+};
+
+/**
+ * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
+ */
+const Sayer = (props: { sender: (content: string) => void }) => {
+  const [content, setContent] = useState('');
+  const sender = () => {
+    // クライアント側バリデーション
+    if (!content.trim()) {
+      return;
+    }
+    props.sender(content);
+    setContent('');
+  };
+  const computed = {
+    isSendable: () => {
+      if (!content.trim()) {
+        return false;
+      }
+      return true;
+    },
+  };
+
+  return (
+    <div
+      className="content"
+      style={{
+        padding: '2px',
+        border: '1px solid gray',
+        display: 'flex',
+        flexDirection: 'row',
+      }}
+    >
+      <div
+        style={{
+          flexGrow: 0,
+          flexShrink: 0,
+          padding: '2px',
+        }}
+      >
+        <button disabled={!computed.isSendable()} onClick={sender}>
+          Send
+        </button>
+      </div>
+      <div
+        style={{
+          flexGrow: 1,
+          flexShrink: 1,
+        }}
+      >
+        <input
+          id="input"
+          autoComplete="off"
+          value={content}
+          placeholder="発言内容"
+          onChange={(e) => setContent(e.target.value)}
+          style={{
+            display: 'block',
+            height: '100%',
+            width: '100%',
+            padding: '0',
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+/**
+ *
+ * @returns チャットインターフェースコンポーネント
+ */
 export const Chat = () => {
   type ChatRoomMessage = TD.ChatRoomMessage;
   // 見えているチャットルームの一覧
-  const [visibleRoomList, setVisibleRoomList] = useState<any[]>([]);
+  const [visibleRoomList, setVisibleRoomList] = useState<TD.ChatRoom[]>([]);
   // join しているチャットルームの一覧
-  const [joiningRoomList, setJoiningRoomList] = useState<any[]>([]);
-  // 今発言用に入力しているメッセージ
-  const [content, setContent] = useState('');
+  const [joiningRoomList, setJoiningRoomList] = useState<TD.ChatRoom[]>([]);
   // 今フォーカスしているチャットルームのID
   const [focusedRoomId, setFocusedRoomId] = useState(-1);
   // openしたいチャットルームの名前
@@ -31,41 +145,40 @@ export const Chat = () => {
   }>({});
 
   useEffect(() => {
-    socket.on('ft_connection', (data: any) => {
+    socket.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection');
       setJoiningRoomList(data.joiningRooms);
       setVisibleRoomList(data.visibleRooms);
     });
 
-    socket.on('ft_say', (data: any) => {
+    socket.on('ft_say', (data: TD.SayResult) => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
       const roomId = data.chatRoomId;
-      stateSetter.addMessagesToRoom(roomId, [message]);
-      stateSetter.focusRoom(roomId);
+      stateMutater.addMessagesToRoom(roomId, [message]);
     });
 
-    socket.on('ft_join', (data: any) => {
+    socket.on('ft_join', (data: TD.JoinResult) => {
       console.log('catch join');
       setJoiningRoomList((prev) => {
-        const sameRoom = prev.find((r) => r.id === data.id);
+        const { room } = data;
+        const sameRoom = prev.find((r) => r.id === room.id);
         if (sameRoom) {
           return prev;
         }
         const newRoomList = [...prev];
-        newRoomList.push(data);
+        newRoomList.push(room);
         return newRoomList;
       });
     });
 
-    socket.on('ft_leave', (data: any) => {
+    socket.on('ft_leave', (data: TD.LeaveResult) => {
       console.log('catch leave');
       setJoiningRoomList((prev) => {
-        console.log(predicate.isFocusingTo(data.id), focusedRoomId, data.id);
-        stateSetter.unfocusRoom(data.id);
-        // if (predicate.isFocusingTo(data.id)) {
-        // }
-        const newRoomList = prev.filter((r) => r.id !== data.id);
+        const { room } = data;
+        console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
+        stateMutater.unfocusRoom(room.id);
+        const newRoomList = prev.filter((r) => r.id !== room.id);
         if (newRoomList.length === prev.length) {
           return prev;
         }
@@ -73,11 +186,11 @@ export const Chat = () => {
       });
     });
 
-    socket.on('ft_get_room_messages', (data: any) => {
+    socket.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
-      stateSetter.addMessagesToRoom(
+      stateMutater.addMessagesToRoom(
         id,
         messages.map(TD.Mapper.chatRoomMessage)
       );
@@ -90,7 +203,7 @@ export const Chat = () => {
       socket.off('ft_leave');
       socket.off('ft_get_room_messages');
     };
-  }, []);
+  });
 
   const command = {
     join: (roomId: number) => {
@@ -111,18 +224,17 @@ export const Chat = () => {
       socket.emit('ft_leave', data);
     },
 
-    say: () => {
+    say: (content: string) => {
       if (!focusedRoomId) {
         return;
       }
       const data = {
         roomId: focusedRoomId,
         callerId: 1,
-        content: content,
+        content,
       };
       console.log(data);
       socket.emit('ft_say', data);
-      setContent('');
     },
 
     get_room_messages: (roomId: number) => {
@@ -136,7 +248,7 @@ export const Chat = () => {
     },
   };
 
-  const stateSetter = {
+  const stateMutater = {
     // 指定したルームにフォーカス(フロントエンドで中身を表示)する
     focusRoom: (roomId: number) => {
       setFocusedRoomId((prev) => {
@@ -146,10 +258,7 @@ export const Chat = () => {
           return prev;
         }
         // メッセージがないなら取得する
-        console.log('[focusRoom]', roomId);
-        if (store.count_message(roomId) === 0) {
-          setFetchRoomId(roomId);
-        }
+        action.get_room_message(roomId);
         return roomId;
       });
     },
@@ -167,8 +276,7 @@ export const Chat = () => {
 
     // チャットルームにメッセージを追加する
     // (メッセージは投稿時刻の昇順になる)
-    addMessagesToRoom: (roomId: number, newMessages: any[]) => {
-      console.log('[addMessagesToChannel]', roomId, newMessages);
+    addMessagesToRoom: (roomId: number, newMessages: TD.ChatRoomMessage[]) => {
       setMessagesInChannel((prev) => {
         const next: { [key: string]: ChatRoomMessage[] } = {};
         Object.keys(prev).forEach((key) => {
@@ -185,7 +293,7 @@ export const Chat = () => {
         );
         return next;
       });
-      stateSetter.focusRoom(roomId);
+      stateMutater.focusRoom(roomId);
     },
   };
 
@@ -197,14 +305,17 @@ export const Chat = () => {
   };
 
   const computed = {
-    messages: () => {
+    messages: useMemo(() => {
       const ms = messagesInChannel[focusedRoomId];
       if (!ms || ms.length === 0) {
         return [];
       }
       return ms;
-    },
-    focusedRoom: () => visibleRoomList.find((r) => r.id === focusedRoomId),
+    }, [messagesInChannel, focusedRoomId]),
+    focusedRoom: useMemo(
+      () => visibleRoomList.find((r) => r.id === focusedRoomId),
+      [visibleRoomList, focusedRoomId]
+    ),
   };
 
   const store = {
@@ -224,17 +335,17 @@ export const Chat = () => {
     },
   };
 
-  const useFetchMessage = (initialRoomId: number) => {
-    const [fetchRoomId, setFetchRoomId] = useState(initialRoomId);
-    useEffect(() => {
-      if (!(fetchRoomId > 0)) {
-        return;
+  const action = {
+    /**
+     * 実態はステート更新関数.
+     * レンダリング後に副作用フックでコマンドが走る.
+     */
+    get_room_message: useAction(0, (id) => {
+      if (id > 0 && store.count_message(id) === 0) {
+        command.get_room_messages(id);
       }
-      command.get_room_messages(fetchRoomId);
-    }, [fetchRoomId]);
-    return [setFetchRoomId];
+    })[0],
   };
-  const [setFetchRoomId] = useFetchMessage(0);
 
   return (
     <div
@@ -284,10 +395,11 @@ export const Chat = () => {
               flexDirection: 'column',
             }}
           >
-            {visibleRoomList.map((data: any, index) => {
+            {visibleRoomList.map((data: TD.ChatRoom) => {
               return (
                 /* クリックしたルームにフォーカスを当てる */
                 <div
+                  className="room-list-element"
                   style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -297,6 +409,7 @@ export const Chat = () => {
                   key={data.id}
                 >
                   <div
+                    className="joining-button"
                     style={{
                       flexGrow: 0,
                       flexBasis: 0,
@@ -334,7 +447,7 @@ export const Chat = () => {
                     }}
                     onClick={() => {
                       if (predicate.isJoiningTo(data.id)) {
-                        stateSetter.focusRoom(data.id);
+                        stateMutater.focusRoom(data.id);
                       }
                     }}
                   >
@@ -380,7 +493,7 @@ export const Chat = () => {
         }}
       >
         {/* 今フォーカスしているルーム */}
-        {!!computed.focusedRoom() && (
+        {!!computed.focusedRoom && (
           <div
             className="room-main"
             style={{
@@ -413,37 +526,9 @@ export const Chat = () => {
                   overflow: 'scroll',
                 }}
               >
-                {computed.messages().map((data: TD.ChatRoomMessage, index) => {
-                  return (
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        padding: '2px',
-                        border: '1px solid gray',
-                      }}
-                      key={data.id}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'row',
-                        }}
-                      >
-                        <div style={{ paddingRight: '4px' }}>
-                          displayName: {data.user.displayName}
-                        </div>
-                        <div style={{ paddingRight: '4px' }}>
-                          chatRoomId: {data.chatRoomId}
-                        </div>
-                        <div style={{ paddingRight: '4px' }}>
-                          createdAt: {data.createdAt.toISOString()}
-                        </div>
-                      </div>
-                      <div>{data.content}</div>
-                    </div>
-                  );
-                })}
+                {computed.messages.map((data: TD.ChatRoomMessage) => (
+                  <ChatRoomMessage key={data.id} message={data} />
+                ))}
               </div>
               <div
                 className="input-panel"
@@ -455,19 +540,7 @@ export const Chat = () => {
                 }}
               >
                 {/* 今フォーカスしているルームへの発言 */}
-                <div
-                  className="content"
-                  style={{ padding: '2px', border: '1px solid gray' }}
-                >
-                  <h4>Content</h4>
-                  <input
-                    id="input"
-                    autoComplete="off"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                  />
-                  <button onClick={command.say}>Send</button>
-                </div>
+                <Sayer sender={command.say} />
               </div>
             </div>
             <div

@@ -85,13 +85,13 @@ export class ChatGateway implements OnGatewayConnection {
         visibleRooms: visibleRooms.map((r) => ({
           id: r.id,
           roomName: r.roomName,
-          roomTypoe: r.roomType,
+          roomType: r.roomType,
           updatedAt: r.updatedAt,
         })),
         joiningRooms: joiningRooms.map((r) => ({
           id: r.id,
           roomName: r.roomName,
-          roomTypoe: r.roomType,
+          roomType: r.roomType,
           updatedAt: r.updatedAt,
         })),
       },
@@ -230,10 +230,14 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_join',
       {
-        id: roomId,
-        roomName: room.roomName,
-        userId,
-        displayName: user.displayName,
+        room: {
+          id: roomId,
+          roomName: room.roomName,
+        },
+        user: {
+          id: userId,
+          displayName: user.displayName,
+        },
       },
       {
         userId: user.id,
@@ -289,9 +293,14 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_leave',
       {
-        id: roomId,
-        userId: user.id,
-        displayName: user.displayName,
+        room: {
+          id: roomId,
+          roomName: chatRoom.roomName,
+        },
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
       },
       {
         roomId,
