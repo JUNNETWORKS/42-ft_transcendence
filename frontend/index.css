@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  @apply text-white;
+}
+
 @font-face {
   font-family: 'PixelMplus';
   src: url('./fonts/PixelMplus12-Regular.ttf') format('truetype');
