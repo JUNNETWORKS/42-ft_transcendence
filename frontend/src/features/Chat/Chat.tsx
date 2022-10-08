@@ -23,10 +23,14 @@ function useAction<T>(initialId: T, action: (id: T) => void) {
   return [setActionId];
 }
 
+type UserRelationMap = {
+  [userId: number]: TD.ChatUserRelation;
+};
+
 /**
- * メッセージコンポーネント
+ * メッセージを表示するコンポーネント
  */
-const ChatRoomMessage = (props: { message: TD.ChatRoomMessage }) => {
+const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   return (
     <div
       style={{
@@ -58,7 +62,7 @@ const ChatRoomMessage = (props: { message: TD.ChatRoomMessage }) => {
   );
 };
 
-const ChatRoomMembers = (props: {
+const ChatRoomMembersList = (props: {
   userId: number;
   members: UserRelationMap;
 }) => {
@@ -118,7 +122,7 @@ const ChatRoomMembers = (props: {
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
  */
-const Sayer = (props: { sender: (content: string) => void }) => {
+const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
   const [content, setContent] = useState('');
   const sender = () => {
     // クライアント側バリデーション
@@ -182,8 +186,45 @@ const Sayer = (props: { sender: (content: string) => void }) => {
   );
 };
 
-type UserRelationMap = {
-  [userId: number]: TD.ChatUserRelation;
+/**
+ * 新しく作成するチャットルームの情報を編集し, 外部に送出するコンポーネント
+ * @param props
+ * @returns
+ */
+const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
+  const [roomName, setRoomName] = useState('');
+  const sender = () => {
+    // クライアント側バリデーション
+    if (!roomName.trim()) {
+      return;
+    }
+    props.sender({
+      roomName,
+      roomType: 'PUBLIC',
+    });
+    setRoomName('');
+  };
+  return (
+    <div
+      className="new-room"
+      style={{
+        padding: '2px',
+        border: '1px solid gray',
+        flexGrow: 0,
+        flexShrink: 0,
+      }}
+    >
+      <h4>Open</h4>
+      <input
+        id="input"
+        autoComplete="off"
+        placeholder="チャットルーム名"
+        value={roomName}
+        onChange={(e) => setRoomName(e.target.value)}
+      />
+      <button onClick={() => sender()}>Open</button>
+    </div>
+  );
 };
 
 /**
@@ -199,8 +240,6 @@ export const Chat = () => {
   const [joiningRoomList, setJoiningRoomList] = useState<TD.ChatRoom[]>([]);
   // 今フォーカスしているチャットルームのID
   const [focusedRoomId, setFocusedRoomId] = useState(-1);
-  // openしたいチャットルームの名前
-  const [newRoomName, setNewRoomName] = useState('');
 
   /**
    * チャットルーム内のメッセージのリスト
@@ -223,6 +262,28 @@ export const Chat = () => {
       setUserId(data.userId);
       setJoiningRoomList(data.joiningRooms);
       setVisibleRoomList(data.visibleRooms);
+    });
+
+    socket.on('ft_open', (data: TD.OpenResult) => {
+      console.log('catch open');
+      console.log(data);
+      const room: TD.ChatRoom = {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setVisibleRoomList((prev) => {
+        const next = [...prev];
+        next.push(room);
+        return next;
+      });
+      if (room.ownerId === userId) {
+        setJoiningRoomList((prev) => {
+          const next = [...prev];
+          next.push(room);
+          return next;
+        });
+      }
     });
 
     socket.on('ft_say', (data: TD.SayResult) => {
@@ -282,6 +343,7 @@ export const Chat = () => {
 
     return () => {
       socket.off('ft_connection');
+      socket.off('ft_open');
       socket.off('ft_say');
       socket.off('ft_join');
       socket.off('ft_leave');
@@ -294,6 +356,15 @@ export const Chat = () => {
    * チャットコマンド
    */
   const command = {
+    open: (args: TD.OpenArgument) => {
+      const data = {
+        ...args,
+        callerId: 1,
+      };
+      console.log(data);
+      socket.emit('ft_open', data);
+    },
+
     join: (roomId: number) => {
       const data = {
         roomId,
@@ -454,8 +525,8 @@ export const Chat = () => {
   const store = {
     count_message: (roomId: number) => {
       const ms = messagesInRoom[roomId];
-      if (!ms || ms.length === 0) {
-        return 0;
+      if (!ms) {
+        return undefined;
       }
       return ms.length;
     },
@@ -469,7 +540,7 @@ export const Chat = () => {
     room_members: (roomId: number) => {
       const ms = membersInRoom[roomId];
       if (!ms) {
-        return {};
+        return null;
       }
       return ms;
     },
@@ -481,14 +552,19 @@ export const Chat = () => {
      * レンダリング後に副作用フックでコマンドが走る.
      */
     get_room_message: useAction(0, (roomId) => {
-      if (roomId > 0 && store.count_message(roomId) === 0) {
-        command.get_room_messages(roomId);
+      if (roomId > 0) {
+        if (!Utils.isfinite(store.count_message(roomId))) {
+          command.get_room_messages(roomId);
+        }
       }
     })[0],
 
     get_room_members: useAction(0, (roomId) => {
-      if (roomId > 0 && Object.keys(store.room_members(roomId)).length === 0) {
-        command.get_room_members(roomId);
+      if (roomId > 0) {
+        const mems = store.room_members(roomId);
+        if (!mems) {
+          command.get_room_members(roomId);
+        }
       }
     })[0],
   };
@@ -600,7 +676,7 @@ export const Chat = () => {
                     {data.id} / {data.roomName}{' '}
                     {(() => {
                       const n = store.count_message(data.id);
-                      return n > 0 ? `(${n})` : '';
+                      return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
                     })()}
                   </div>
                 </div>
@@ -608,25 +684,7 @@ export const Chat = () => {
             })}
           </div>
         </div>
-
-        <div
-          className="new-room"
-          style={{
-            padding: '2px',
-            border: '1px solid gray',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
-          <h4>Open</h4>
-          <input
-            id="input"
-            autoComplete="off"
-            value={newRoomName}
-            onChange={(e) => setNewRoomName(e.target.value)}
-          />
-          <button onClick={() => command.join(0)}>Open</button>
-        </div>
+        <OpenCard sender={command.open} />
       </div>
 
       <div
@@ -675,7 +733,7 @@ export const Chat = () => {
                 {store
                   .room_messages(focusedRoomId)
                   .map((data: TD.ChatRoomMessage) => (
-                    <ChatRoomMessage key={data.id} message={data} />
+                    <ChatRoomMessageCard key={data.id} message={data} />
                   ))}
               </div>
               <div
@@ -688,7 +746,7 @@ export const Chat = () => {
                 }}
               >
                 {/* 今フォーカスしているルームへの発言 */}
-                <Sayer sender={command.say} />
+                <SayCard sender={command.say} />
               </div>
             </div>
             <div
@@ -699,9 +757,9 @@ export const Chat = () => {
                 flexBasis: '10em',
               }}
             >
-              <ChatRoomMembers
+              <ChatRoomMembersList
                 userId={userId}
-                members={store.room_members(focusedRoomId)}
+                members={store.room_members(focusedRoomId) || {}}
               />
             </div>
           </div>

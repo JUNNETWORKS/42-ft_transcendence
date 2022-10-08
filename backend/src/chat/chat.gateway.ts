@@ -139,9 +139,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_open',
       {
-        roomId,
-        roomName: createdRoom.roomName,
-        roomType: createdRoom.roomType,
+        ...createdRoom,
       },
       {
         global: 'global',

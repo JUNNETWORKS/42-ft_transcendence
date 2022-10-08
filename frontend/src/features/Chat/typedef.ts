@@ -18,6 +18,8 @@ export type ChatRoom = {
   id: number;
   roomName: string;
   roomType: string;
+  ownerId: number;
+  createdAt: Date;
   updatedAt: Date;
 };
 
@@ -30,12 +32,21 @@ export type ChatRoomMessage = {
   content: string;
 };
 
+// コマンド系
+
+export type SayArgument = string;
+export type OpenArgument = Pick<ChatRoom, 'roomName' | 'roomType'>;
+
+// リザルト系
+
 export type ConnectionResult = {
   userId: number;
   displayName: string;
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
 };
+
+export type OpenResult = ChatRoom;
 
 export type SayResult = ChatRoomMessage & {
   user: User;

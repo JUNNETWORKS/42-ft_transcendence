@@ -85,3 +85,7 @@ export function keyBy<T>(
   });
   return r;
 }
+
+export function isfinite(val: any): val is number {
+  return typeof val === 'number' && isFinite(val);
+}
