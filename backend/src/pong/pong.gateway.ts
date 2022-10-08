@@ -18,7 +18,7 @@ type PlayerAction = PlayerInput;
 let match: Match | null = null;
 let matchIntervalID: NodeJS.Timer | null = null;
 
-@WebSocketGateway({ cors: true, path: '/pong' })
+@WebSocketGateway({ cors: true, namespace: '/pong' })
 export class PongGateway {
   private readonly logger = new Logger('Match WS');
 
@@ -47,18 +47,14 @@ export class PongGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() playerAction: PlayerAction
   ) {
-    this.logger.log(
-      `pong.action from ID(${client.id}). ${JSON.stringify(playerAction)}`
-    );
-
     if (!match) {
       match = new Match(client.id, client.id);
     }
     if (!matchIntervalID) {
       matchIntervalID = setInterval(() => {
         if (match) {
-          match.updateBar();
           match.updateBall();
+          match.updateBar();
           client.emit('pong.match.state', match.getState());
         }
       }, 16.66); // 60fps
