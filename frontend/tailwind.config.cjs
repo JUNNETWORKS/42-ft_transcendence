@@ -7,6 +7,10 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",],
   theme: {
     extend: {
+      colors: {
+        'primary': '#353535',
+        'secondary': '#5D5D5D',
+      },
       fontFamily: {
         sans: ["PixelMplus", ...defaultTheme.fontFamily.sans],
       },
