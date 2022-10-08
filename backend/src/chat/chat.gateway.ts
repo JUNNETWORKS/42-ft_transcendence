@@ -369,7 +369,8 @@ export class ChatGateway implements OnGatewayConnection {
 
   private async trapAuth(client: Socket) {
     if (client.handshake.auth) {
-      const token = client.handshake.auth.token;
+      const { token, sub } = client.handshake.auth;
+      // token による認証
       if (token) {
         const verified = this.jwtService.verify(token, {
           secret: jwtConstants.secret,
@@ -385,6 +386,15 @@ export class ChatGateway implements OnGatewayConnection {
               return user;
             }
           }
+        }
+      }
+      // subによる認証スキップ
+      // TODO: 提出時には絶対に除去すること!!!!
+      if (sub) {
+        const userId = parseInt(sub);
+        const user = await this.usersService.findOne(userId);
+        if (user) {
+          return user;
         }
       }
     }
