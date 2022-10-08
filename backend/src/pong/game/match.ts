@@ -1,4 +1,3 @@
-import { HttpException, HttpStatus } from '@nestjs/common';
 import { GameSettings } from './game-settings';
 import {
   Ball,
@@ -15,7 +14,7 @@ export class Match {
   readonly fieldWidth = 1920;
   readonly fieldHeight = 1080;
   // ball
-  readonly ballRadius = 60;
+  readonly ballRadius = 6;
   readonly ballDx = 10;
   readonly ballDy = 10;
   // bar
