@@ -1,15 +1,14 @@
-import { NavBar } from '@/Components/NavBar';
 import { ReactNode } from 'react';
+import { NavBar } from '@/components/NavBar';
 
 type Props = {
   children: ReactNode;
 };
-
-export function Layout({ children }: Props) {
+export const Layout = ({ children }: Props) => {
   return (
-    <>
+    <div className="flex h-screen flex-col">
       <NavBar />
-      {children}
-    </>
+      <div className="flex flex-1">{children}</div>
+    </div>
   );
-}
+};
