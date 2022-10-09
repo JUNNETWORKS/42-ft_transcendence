@@ -7,6 +7,9 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",],
   theme: {
     extend: {
+      backgroundImage: {
+        'navbar-img': "url('./src/assets/NavBar.png')",
+      },
       colors: {
         'primary': '#353535',
         'secondary': '#5D5D5D',
