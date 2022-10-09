@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       backgroundImage: {
-        'navbar-img': "url('./src/assets/NavBar.png')",
+        'navbar-img': "url('./src/assets/NavBar.svg')",
       },
       colors: {
         'primary': '#353535',
