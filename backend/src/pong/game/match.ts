@@ -28,7 +28,7 @@ export class Match {
   players: [Player, Player];
 
   constructor(sessionID1: string, sessionID2: string) {
-    this.ball = this.generateBall();
+    this.ball = this.regenerateBall();
     this.players = [
       {
         id: sessionID1,
@@ -71,7 +71,8 @@ export class Match {
     ];
   }
 
-  generateBall = (): Ball => {
+  // 中央からランダムな方向へボールを飛ばす
+  regenerateBall = (): Ball => {
     const rad = Math.random() * 2 * Math.PI;
     return {
       position: { x: this.fieldWidth / 2, y: this.fieldHeight / 2 },
@@ -85,12 +86,12 @@ export class Match {
     if (this.ball.position.x <= 0) {
       // right の勝ち
       this.players[this.getPlayerIdxBySide('right')].score++;
-      this.ball = this.generateBall();
+      this.ball = this.regenerateBall();
       return;
     } else if (this.ball.position.x >= this.fieldWidth) {
       // left の勝ち
       this.players[this.getPlayerIdxBySide('left')].score++;
-      this.ball = this.generateBall();
+      this.ball = this.regenerateBall();
       return;
     }
 
