@@ -2,6 +2,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
+import { styleTextFieldCommon, styleButtonCommon } from './styles';
+import { FTTextField, FTH3, FTH4 } from './FTBasicComponents';
+import * as dayjs from 'dayjs';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -39,7 +42,8 @@ const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
         display: 'flex',
         flexDirection: 'column',
         padding: '2px',
-        border: '1px solid gray',
+        border: '1px solid useFetcher',
+        marginBottom: '12px',
       }}
       key={props.message.id}
     >
@@ -49,14 +53,21 @@ const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
           flexDirection: 'row',
         }}
       >
+        <div
+          style={{
+            margin: '1px',
+            padding: '0 4px',
+            color: 'black',
+            backgroundColor: 'white',
+          }}
+        >
+          {props.message.user.displayName}
+        </div>
         <div style={{ paddingRight: '4px' }}>
-          displayName: {props.message.user.displayName}
+          {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
         </div>
         <div style={{ paddingRight: '4px' }}>
           chatRoomId: {props.message.chatRoomId}
-        </div>
-        <div style={{ paddingRight: '4px' }}>
-          createdAt: {props.message.createdAt.toISOString()}
         </div>
       </div>
       <div>{props.message.content}</div>
@@ -95,14 +106,14 @@ const ChatRoomMembersList = (props: {
         height: '100%',
       }}
     >
-      <h4
+      <FTH4
         style={{
           flexGrow: 0,
           flexShrink: 0,
         }}
       >
         Members
-      </h4>
+      </FTH4>
       <div
         style={{
           flexGrow: 1,
@@ -152,7 +163,11 @@ const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
           padding: '2px',
         }}
       >
-        <button disabled={!computed.isSendable()} onClick={sender}>
+        <button
+          disabled={!computed.isSendable()}
+          onClick={sender}
+          style={{ ...styleButtonCommon }}
+        >
           Send
         </button>
       </div>
@@ -162,13 +177,13 @@ const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
           flexShrink: 1,
         }}
       >
-        <input
-          id="input"
+        <FTTextField
           autoComplete="off"
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
           style={{
+            ...styleTextFieldCommon,
             display: 'block',
             height: '100%',
             width: '100%',
@@ -198,17 +213,22 @@ const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
     });
     resetRoomName();
   };
+
   return (
     <div className="open-card">
-      <h4>Open</h4>
-      <input
-        id="input"
+      <FTH4>Open</FTH4>
+      <FTTextField
         autoComplete="off"
         placeholder="チャットルーム名"
         value={roomName}
         onChange={(e) => setRoomName(e.target.value)}
+        style={{
+          ...styleTextFieldCommon,
+        }}
       />
-      <button onClick={() => sender()}>Open</button>
+      <button onClick={() => sender()} style={{ ...styleButtonCommon }}>
+        Open
+      </button>
     </div>
   );
 };
@@ -220,17 +240,24 @@ const SelfCard = (props: {
   const [userIdStr, setUserIdStr] = useState('');
   return (
     <div className="self-card">
-      <h4>Self</h4>
+      <FTH4>Self</FTH4>
       Current userId: {props.currentUserIdStr || '(none)'}
       <br />
-      <input
-        id="input"
+      <FTTextField
         autoComplete="off"
         placeholder="ユーザID"
         value={userIdStr}
         onChange={(e) => setUserIdStr(e.target.value)}
+        style={{
+          ...styleTextFieldCommon,
+        }}
       />
-      <button onClick={() => props.sender(userIdStr)}>Force Login</button>
+      <button
+        onClick={() => props.sender(userIdStr)}
+        style={{ ...styleButtonCommon }}
+      >
+        Force Login
+      </button>
     </div>
   );
 };
@@ -681,7 +708,7 @@ export const Chat = () => {
       style={{
         height: '50em',
         padding: '2px',
-        border: '1px solid gray',
+        border: '1px solid useFetcher',
         display: 'flex',
         flexDirection: 'row',
       }}
@@ -699,22 +726,21 @@ export const Chat = () => {
         <div
           className="room-list"
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 1,
             flexShrink: 1,
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <h3
+          <FTH3
             style={{
               flexGrow: 0,
               flexShrink: 0,
             }}
           >
             ChatRooms {focusedRoomId}
-          </h3>
+          </FTH3>
           <div
             style={{
               padding: '2px',
@@ -733,7 +759,7 @@ export const Chat = () => {
                     display: 'flex',
                     flexDirection: 'row',
                     padding: '2px',
-                    border: '1px solid gray',
+                    border: '1px solid white',
                   }}
                   key={data.id}
                 >
@@ -746,14 +772,19 @@ export const Chat = () => {
                   >
                     {predicate.isJoiningTo(data.id) ? (
                       <button
-                        style={{ width: '4em' }}
+                        style={{
+                          ...styleButtonCommon,
+                          width: '4em',
+                          color: 'black',
+                          backgroundColor: 'white',
+                        }}
                         onClick={() => command.leave(data.id)}
                       >
                         Leave
                       </button>
                     ) : (
                       <button
-                        style={{ width: '4em' }}
+                        style={{ ...styleButtonCommon, width: '4em' }}
                         onClick={() => command.join(data.id)}
                       >
                         Join
@@ -764,15 +795,16 @@ export const Chat = () => {
                     style={{
                       flexGrow: 1,
                       flexBasis: 1,
+                      padding: '4px',
                       cursor: predicate.isJoiningTo(data.id)
                         ? 'pointer'
                         : 'unset',
                       fontWeight: predicate.isJoiningTo(data.id)
                         ? 'bold'
                         : 'normal',
-                      backgroundColor: predicate.isFocusingTo(data.id)
-                        ? 'lightgreen'
-                        : 'unset',
+                      ...(predicate.isFocusingTo(data.id)
+                        ? { borderLeft: '12px solid turquoise' }
+                        : {}),
                     }}
                     onClick={() => {
                       if (predicate.isJoiningTo(data.id)) {
@@ -793,8 +825,7 @@ export const Chat = () => {
         </div>
         <div
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 0,
             flexShrink: 0,
           }}
@@ -803,8 +834,7 @@ export const Chat = () => {
         </div>
         <div
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 0,
             flexShrink: 0,
           }}
@@ -829,7 +859,7 @@ export const Chat = () => {
             style={{
               display: 'flex',
               flexDirection: 'row',
-              border: '1px solid gray',
+              border: '1px solid white',
               padding: '2px',
               height: '100%',
             }}
@@ -849,8 +879,7 @@ export const Chat = () => {
               <div
                 className="room-message-list"
                 style={{
-                  padding: '2px',
-                  border: '1px solid gray',
+                  border: '1px solid white',
                   flexGrow: 1,
                   flexShrink: 1,
                   overflow: 'scroll',
@@ -866,7 +895,7 @@ export const Chat = () => {
                 className="input-panel"
                 style={{
                   padding: '2px',
-                  border: '1px solid gray',
+                  border: '1px solid white',
                   flexGrow: 0,
                   flexShrink: 0,
                 }}
@@ -875,7 +904,7 @@ export const Chat = () => {
                 <div
                   style={{
                     padding: '2px',
-                    border: '1px solid gray',
+                    border: '1px solid white',
                     display: 'flex',
                     flexDirection: 'row',
                   }}
@@ -909,11 +938,11 @@ export const Chat = () => {
         }}
       >
         <div>
-          <h4>visibleRoomList</h4>
+          <FTH4>visibleRoomList</FTH4>
           {JSON.stringify(visibleRooms)}
         </div>
         <div>
-          <h4>joiningRoomList</h4>
+          <FTH4>joiningRoomList</FTH4>
           {JSON.stringify(joiningRooms)}
         </div>
       </div>
