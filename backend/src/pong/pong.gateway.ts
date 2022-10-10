@@ -6,17 +6,15 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { PlayerInput } from './game/game-state';
+import { PlayerAction } from './dto/player-action';
 import { Match } from './game/match';
-
-// ========== WS: pong.matchmaking.start ==========
-// type MatchmakingEntry = {}
-
-// ========== WS: pong.match.action ==========
-type PlayerAction = PlayerInput;
+import { MatchMaker } from './match_managers/match_maker';
+import { ProgressingMatchManager } from './match_managers/progressing_match_manager';
 
 let match: Match | null = null;
 let matchIntervalID: NodeJS.Timer | null = null;
+const progressing_match_manager = new ProgressingMatchManager();
+const match_maker: MatchMaker = new MatchMaker(progressing_match_manager);
 
 @WebSocketGateway({ cors: true, namespace: '/pong' })
 export class PongGateway {
@@ -40,6 +38,11 @@ export class PongGateway {
     if (match) {
       match = null;
     }
+  }
+
+  @SubscribeMessage('pong.match_making.entry')
+  entryMatchMaking(@ConnectedSocket() client: Socket) {
+    match_maker.entry(client.id);
   }
 
   @SubscribeMessage('pong.match.action')
