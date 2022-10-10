@@ -33,7 +33,12 @@ export type FullRectangle = Rectangle & {
 
 export function makeFullRectangle(rect: Rectangle): FullRectangle {
   return {
-    ...rect,
+    topLeft: {
+      ...rect.topLeft,
+    },
+    bottomRight: {
+      ...rect.bottomRight,
+    },
     topRight: {
       x: rect.bottomRight.x,
       y: rect.topLeft.y,
