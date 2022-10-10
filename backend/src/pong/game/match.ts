@@ -7,6 +7,10 @@ import {
   PlayerSide,
   Vector2d,
   Rectangle,
+  makeFullRectangle,
+  FullRectangle,
+  makeEdge,
+  areRangesOverlap,
 } from './game-state';
 
 export class Match {
@@ -73,10 +77,15 @@ export class Match {
 
   // 中央からランダムな方向へボールを飛ばす
   regenerateBall = (): Ball => {
-    const rad = Math.random() * 2 * Math.PI;
+    const rad = Math.random() * (2 * Math.PI);
+    const position = { x: this.fieldWidth / 2, y: this.fieldHeight / 2 };
+    const velocity = { x: Math.cos(rad), y: Math.sin(rad) };
+    if (velocity.x < 0) {
+      velocity.x = -velocity.x;
+    }
     return {
-      position: { x: this.fieldWidth / 2, y: this.fieldHeight / 2 },
-      velocity: { x: Math.cos(rad), y: Math.sin(rad) },
+      position,
+      velocity,
     };
   };
 
@@ -101,28 +110,101 @@ export class Match {
     newBallPos.y += this.ball.velocity.y * this.ballDy;
 
     // バーとの判定
+    const newBallRect: Rectangle = {
+      topLeft: {
+        x: newBallPos.x - this.ballRadius,
+        y: newBallPos.y - this.ballRadius,
+      },
+      bottomRight: {
+        x: newBallPos.x + this.ballRadius,
+        y: newBallPos.y + this.ballRadius,
+      },
+    };
+    const velocityMag = Math.sqrt(
+      newVelocity.x * newVelocity.x + newVelocity.y * newVelocity.y
+    );
+    /**
+     * ベクトル`r`を, "ベクトル`newVlocity`が(+1, 0)を向くような回転変換"により回転したものを返す.
+     * @param
+     * @returns
+     */
+    const rot = (r: Vector2d): Vector2d => {
+      return {
+        x: (r.x * newVelocity.x + r.y * newVelocity.y) / velocityMag,
+        y: (r.x * -newVelocity.y + r.y * newVelocity.x) / velocityMag,
+      };
+    };
+    /**
+     * フル長方形`re`を, "ベクトル`newVlocity`が(+1, 0)を向くような回転変換"により回転したものを返す.
+     * @param
+     * @returns
+     */
+    const rotRect = (re: FullRectangle): FullRectangle => {
+      return {
+        topLeft: rot(re.topLeft),
+        bottomRight: rot(re.bottomRight),
+        topRight: rot(re.topRight),
+        bottomLeft: rot(re.bottomLeft),
+      };
+    };
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
-      if (
-        this.isBallCollidedWithHorizontalBar(
-          this.ball.position,
-          newBallPos,
-          player.bar,
-          player.side
-        )
-      ) {
-        // バーの上下面に衝突
-        newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
-      } else if (
-        this.isBallCollidedWithVerticalBar(
-          this.ball.position,
-          newBallPos,
-          player.bar,
-          player.side
-        )
-      ) {
-        // バーの左右面に衝突
-        newVelocity = { x: this.ball.velocity.x * -1, y: this.ball.velocity.y };
+      if (!this.isReactanglesOverlap(newBallRect, player.bar)) {
+        continue;
+      }
+      // [ボールとバーの衝突判定]
+      // 0. ボールとバーが重なることがわかっているものとする.
+      //  - TODO: 速度が大きい場合, 単なる長方形オーバーラップだと貫通する可能性がある
+      // 1. ボールがX軸正方向, つまり (+1, 0) に沿って動くように, 座標系を回転する.
+      // 2. ボールとバーの四隅について, X座標を無視することにすると,
+      //    衝突判定は "ボールとバーの1辺同士が交差するかどうか" を判定する問題になるので, それを解く.
+      const rotatedBall = rotRect(makeFullRectangle(newBallRect));
+      const rotatedBar = rotRect(makeFullRectangle(player.bar));
+      if (newVelocity.x >= 0) {
+        // 右側に進んでいる -> ボール右辺とバー左辺の衝突を判定する
+        const ballSide = makeEdge(rotatedBall, 'y', 'right');
+        const barSide = makeEdge(rotatedBar, 'y', 'left');
+        if (areRangesOverlap(ballSide, barSide)) {
+          newVelocity = {
+            x: this.ball.velocity.x * -1,
+            y: this.ball.velocity.y,
+          };
+          break;
+        }
+      } else {
+        // 左側に進んでいる -> ボール左辺とバー右辺の衝突を判定する
+        const ballSide = makeEdge(rotatedBall, 'y', 'left');
+        const barSide = makeEdge(rotatedBar, 'y', 'right');
+        if (areRangesOverlap(ballSide, barSide)) {
+          newVelocity = {
+            x: this.ball.velocity.x * -1,
+            y: this.ball.velocity.y,
+          };
+          break;
+        }
+      }
+      if (newVelocity.y <= 0) {
+        // 上側に進んでいる -> ボール上辺とバー下辺の衝突を判定する
+        const ballSide = makeEdge(rotatedBall, 'y', 'top');
+        const barSide = makeEdge(rotatedBar, 'y', 'bottom');
+        if (areRangesOverlap(ballSide, barSide)) {
+          newVelocity = {
+            x: this.ball.velocity.x,
+            y: this.ball.velocity.y * -1,
+          };
+          break;
+        }
+      } else {
+        // 下側に進んでいる -> ボール下辺とバー上辺の衝突を判定する
+        const ballSide = makeEdge(rotatedBall, 'y', 'bottom');
+        const barSide = makeEdge(rotatedBar, 'y', 'top');
+        if (areRangesOverlap(ballSide, barSide)) {
+          newVelocity = {
+            x: this.ball.velocity.x,
+            y: this.ball.velocity.y * -1,
+          };
+          break;
+        }
       }
     }
 
@@ -251,134 +333,6 @@ export class Match {
       }
     }
     return -1;
-  };
-
-  // 2つの線分の交差判定
-  // 線分1: a, b
-  // 線分2: c, d
-  // https://qiita.com/zu_rin/items/e04fdec4e3dec6072104
-  private determineIntersection = (
-    a: Vector2d,
-    b: Vector2d,
-    c: Vector2d,
-    d: Vector2d
-  ): boolean => {
-    let s: number;
-    let t: number;
-    s = (a.x - b.x) * (c.y - a.y) - (a.y - b.y) * (c.x - a.x);
-    t = (a.x - b.x) * (d.y - a.y) - (a.y - b.y) * (d.x - a.x);
-    if (s * t > 0) {
-      return false;
-    }
-
-    s = (c.x - d.x) * (a.y - c.y) - (c.y - d.y) * (a.x - c.x);
-    t = (c.x - d.x) * (b.y - c.y) - (c.y - d.y) * (b.x - c.x);
-    if (s * t > 0) {
-      return false;
-    }
-    return true;
-  };
-
-  // バーの左右面にボールが衝突しているか
-  // ballPos: 現在フレームのボールの座標
-  // newBallPos: 次フレームのボールの座標
-  // ballPos と newBall の移動分の線分とバーの面の線分との交差判定で判定する｡
-  private isBallCollidedWithVerticalBar = (
-    ballPos: Vector2d,
-    newBallPos: Vector2d,
-    bar: Rectangle,
-    playerSide: PlayerSide
-  ): boolean => {
-    const newBallRect: Rectangle = {
-      topLeft: {
-        x: newBallPos.x - this.ballRadius,
-        y: newBallPos.y - this.ballRadius,
-      },
-      bottomRight: {
-        x: newBallPos.x + this.ballRadius,
-        y: newBallPos.y + this.ballRadius,
-      },
-    };
-
-    if (
-      this.isReactanglesOverlap(newBallRect, bar) &&
-      !this.isBallCollidedWithHorizontalBar(
-        ballPos,
-        newBallPos,
-        bar,
-        playerSide
-      )
-    ) {
-      return true;
-    }
-    return false;
-  };
-
-  // バーの上下面にボールが衝突しているか
-  // ballPos: 現在フレームのボールの座標
-  // newBallPos: 次フレームのボールの座標
-  // ballPos と newBall の移動分の線分とバーの面の線分との交差判定で判定する｡
-  private isBallCollidedWithHorizontalBar = (
-    ballPos: Vector2d,
-    newBallPos: Vector2d,
-    bar: Rectangle,
-    playerSide: PlayerSide
-  ): boolean => {
-    // 長方形の重なり判定によるバーの上下面の判定
-    const newBallRect: Rectangle = {
-      topLeft: {
-        x: newBallPos.x - this.ballRadius,
-        y: newBallPos.y - this.ballRadius,
-      },
-      bottomRight: {
-        x: newBallPos.x + this.ballRadius,
-        y: newBallPos.y + this.ballRadius,
-      },
-    };
-    // smallRect が bigRect に衝突するのに合わせた処理になっている｡
-    // ボールがバーの幅より小さい場合は smallRect がボール､ bigRect がバー になる｡
-    let smallRect: Rectangle;
-    let bigRect: Rectangle;
-    if (this.ballRadius <= bar.bottomRight.x - bar.topLeft.x) {
-      smallRect = newBallRect;
-      bigRect = bar;
-    } else {
-      smallRect = bar;
-      bigRect = newBallRect;
-    }
-
-    if (this.isReactanglesOverlap(smallRect, bigRect)) {
-      const isSmallRectCollidedWithBigRectTopBottom =
-        smallRect.topLeft.x >= bigRect.topLeft.x &&
-        smallRect.bottomRight.x <= bigRect.bottomRight.x;
-      const isSmallRectCollidedWithBigRectTopLeft =
-        smallRect.bottomRight.x >= bigRect.bottomRight.x &&
-        smallRect.topLeft.y <= bigRect.topLeft.y;
-      const isSmallRectCollidedWithBigRectBottomLeft =
-        smallRect.bottomRight.x >= bigRect.bottomRight.x &&
-        smallRect.bottomRight.y >= bigRect.bottomRight.y;
-      const isSmallRectCollidedWithBigRectTopRight =
-        smallRect.topLeft.x <= bigRect.topLeft.x &&
-        smallRect.topLeft.y <= bigRect.topLeft.y;
-      const isSmallRectCollidedWithBigRectBottomRight =
-        smallRect.topLeft.x <= bigRect.topLeft.x &&
-        smallRect.bottomRight.y >= bigRect.bottomRight.y;
-
-      if (playerSide === 'left') {
-        return (
-          isSmallRectCollidedWithBigRectTopBottom ||
-          isSmallRectCollidedWithBigRectTopLeft ||
-          isSmallRectCollidedWithBigRectBottomLeft
-        );
-      } else {
-        return (
-          isSmallRectCollidedWithBigRectTopBottom ||
-          isSmallRectCollidedWithBigRectTopRight ||
-          isSmallRectCollidedWithBigRectBottomRight
-        );
-      }
-    }
-    return false;
   };
 
   // 長方形動詞が重なっているか判定する
