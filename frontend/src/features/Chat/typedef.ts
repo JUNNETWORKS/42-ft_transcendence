@@ -7,13 +7,6 @@ export type User = {
   displayName: string;
 };
 
-export type ChatUserRelation = {
-  user: User;
-  userId: number;
-  chatRoomId: number;
-  memberType: string; // TODO: ほんとはenum
-};
-
 export type ChatRoom = {
   id: number;
   roomName: string;
@@ -21,6 +14,17 @@ export type ChatRoom = {
   ownerId: number;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type ChatUserRelation = {
+  user: User;
+  userId: number;
+  chatRoomId: number;
+  memberType: string; // TODO: ほんとはenum
+};
+
+export type ChatUserRelationWithRoom = ChatUserRelation & {
+  chatRoom: ChatRoom;
 };
 
 export type ChatRoomMessage = {
@@ -53,11 +57,13 @@ export type SayResult = ChatRoomMessage & {
 };
 
 export type JoinResult = {
+  relation: ChatUserRelationWithRoom;
   room: ChatRoom;
   user: User;
 };
 
 export type LeaveResult = {
+  relation: ChatUserRelationWithRoom;
   room: ChatRoom;
   user: User;
 };

@@ -211,9 +211,11 @@ export class ChatGateway implements OnGatewayConnection {
     const room = await this.charRoomService.findOne(roomId);
 
     // [TODO: 実行者が対象チャットルームに入室できることを確認]
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
-    if (relation) {
-      return;
+    {
+      const relation = await this.charRoomService.getRelation(roomId, user.id);
+      if (relation) {
+        return;
+      }
     }
 
     // [TODO: ハードリレーション更新]
@@ -222,6 +224,10 @@ export class ChatGateway implements OnGatewayConnection {
       memberType: 'MEMBER',
     });
     console.log('member', member);
+    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    if (!relation) {
+      return;
+    }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.usersJoin(user.id, 'ChatRoom', roomId);
@@ -229,6 +235,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_join',
       {
+        relation,
         room: {
           id: roomId,
           roomName: room.roomName,
@@ -292,6 +299,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendResults(
       'ft_leave',
       {
+        relation,
         room: {
           id: roomId,
           roomName: chatRoom.roomName,

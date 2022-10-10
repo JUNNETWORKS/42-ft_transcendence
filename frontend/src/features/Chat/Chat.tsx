@@ -3,17 +3,16 @@ import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
 
-const socket = io('http://localhost:3000/chat', {
-  auth: (cb) => {
-    cb({
-      // 本当はアクセストークンをここに記載する
-      // token:
-      //   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1MDUzMTQ5LjYyNiwiZXhwIjoxNjY3NjQ1MTQ5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.CQ7QIQWSEm9lNV4iHwq0-7doJG_ZVXLhzqPfbBIE49g',
-      // 開発中はここにuserIdを書いてもよい
-      sub: '1',
-    });
-  },
-});
+/**
+ * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
+ * @param initial
+ * @returns
+ */
+function useStateWithResetter<T>(initial: T) {
+  const [val, setter] = useState<T>(initial);
+  const resetter = () => setter(initial);
+  return [val, setter, resetter] as const;
+}
 
 /**
  * `id`の変化をトリガーとして何らかのアクションを行うフック
@@ -126,14 +125,14 @@ const ChatRoomMembersList = (props: {
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
  */
 const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
-  const [content, setContent] = useState('');
+  const [content, setContent, resetContent] = useStateWithResetter('');
   const sender = () => {
     // クライアント側バリデーション
     if (!content.trim()) {
       return;
     }
     props.sender(content);
-    setContent('');
+    resetContent();
   };
   const computed = {
     isSendable: () => {
@@ -145,15 +144,7 @@ const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
   };
 
   return (
-    <div
-      className="content"
-      style={{
-        padding: '2px',
-        border: '1px solid gray',
-        display: 'flex',
-        flexDirection: 'row',
-      }}
-    >
+    <>
       <div
         style={{
           flexGrow: 0,
@@ -185,7 +176,7 @@ const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
           }}
         />
       </div>
-    </div>
+    </>
   );
 };
 
@@ -195,7 +186,7 @@ const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
  * @returns
  */
 const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
-  const [roomName, setRoomName] = useState('');
+  const [roomName, setRoomName, resetRoomName] = useStateWithResetter('');
   const sender = () => {
     // クライアント側バリデーション
     if (!roomName.trim()) {
@@ -205,18 +196,10 @@ const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
       roomName,
       roomType: 'PUBLIC',
     });
-    setRoomName('');
+    resetRoomName();
   };
   return (
-    <div
-      className="new-room"
-      style={{
-        padding: '2px',
-        border: '1px solid gray',
-        flexGrow: 0,
-        flexShrink: 0,
-      }}
-    >
+    <div className="open-card">
       <h4>Open</h4>
       <input
         id="input"
@@ -230,44 +213,120 @@ const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
   );
 };
 
+const SelfCard = (props: {
+  currentUserIdStr: string;
+  sender: (userIdStr: string) => void;
+}) => {
+  const [userIdStr, setUserIdStr] = useState('');
+  return (
+    <div className="self-card">
+      <h4>Self</h4>
+      Current userId: {props.currentUserIdStr || '(none)'}
+      <br />
+      <input
+        id="input"
+        autoComplete="off"
+        placeholder="ユーザID"
+        value={userIdStr}
+        onChange={(e) => setUserIdStr(e.target.value)}
+      />
+      <button onClick={() => props.sender(userIdStr)}>Force Login</button>
+    </div>
+  );
+};
+
 /**
  *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = () => {
   type ChatRoomMessage = TD.ChatRoomMessage;
-  const [userId, setUserId] = useState(-1);
+  const useSocket = () => {
+    const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(
+      null
+    );
+    const [userIdStr, setUserIdStr] = useState('');
+    const setter = (str: string) => {
+      setUserIdStr((prev) => {
+        if (prev === str.trim()) {
+          return prev;
+        }
+        const next = str.trim();
+        if (!next) {
+          return prev;
+        }
+        const userId = parseInt(next);
+        if (userId > 0) {
+          setMySocket((prev) => {
+            prev?.disconnect();
+            // すべてのstateをリセット
+
+            resetUserId();
+            resetVisibleRooms();
+            resetJoiningRooms();
+            resetFocusedRoomId();
+            resetMessagesInRoom();
+            resetMembersInRoom();
+            action.get_room_members(0);
+            action.get_room_message(0);
+            const socket = io('http://localhost:3000/chat', {
+              auth: (cb) => {
+                cb({
+                  // 本当はアクセストークンをここに記載する
+                  // token: "some_access_token"
+                  // 開発中はここにuserIdを書いてもよい
+                  sub: userId,
+                });
+              },
+            });
+            return socket;
+          });
+          return next;
+        }
+        return prev;
+      });
+    };
+    return [userIdStr, setter, mySocket] as const;
+  };
+  const [userIdStr, setUserIdStr, mySocket] = useSocket();
+
+  const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
   // 見えているチャットルームの一覧
-  const [visibleRoomList, setVisibleRoomList] = useState<TD.ChatRoom[]>([]);
+  const [visibleRooms, setVisibleRooms, resetVisibleRooms] =
+    useStateWithResetter<TD.ChatRoom[]>([]);
   // join しているチャットルームの一覧
-  const [joiningRoomList, setJoiningRoomList] = useState<TD.ChatRoom[]>([]);
+  const [joiningRooms, setJoiningRooms, resetJoiningRooms] =
+    useStateWithResetter<TD.ChatRoom[]>([]);
   // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId] = useState(-1);
+  const [focusedRoomId, setFocusedRoomId, resetFocusedRoomId] =
+    useStateWithResetter(-1);
 
   /**
    * チャットルーム内のメッセージのリスト
    * TODO: もっとマシな方法ないの
    */
-  const [messagesInRoom, setMessagesInRoom] = useState<{
-    [roomId: number]: ChatRoomMessage[];
-  }>({});
+  const [messagesInRoom, setMessagesInRoom, resetMessagesInRoom] =
+    useStateWithResetter<{
+      [roomId: number]: ChatRoomMessage[];
+    }>({});
   /**
    * チャットルーム内のメンバーのマップ
    */
-  const [membersInRoom, setMembersInRoom] = useState<{
-    [roomId: number]: UserRelationMap;
-  }>({});
+  const [membersInRoom, setMembersInRoom, resetMembersInRoom] =
+    useStateWithResetter<{
+      [roomId: number]: UserRelationMap;
+    }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
-    socket.on('ft_connection', (data: TD.ConnectionResult) => {
+    mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection');
       setUserId(data.userId);
-      setJoiningRoomList(data.joiningRooms);
-      setVisibleRoomList(data.visibleRooms);
+      setJoiningRooms(data.joiningRooms);
+      setVisibleRooms(data.visibleRooms);
     });
 
-    socket.on('ft_open', (data: TD.OpenResult) => {
+    mySocket?.on('ft_open', (data: TD.OpenResult) => {
       console.log('catch open');
       console.log(data);
       const room: TD.ChatRoom = {
@@ -275,13 +334,13 @@ export const Chat = () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      setVisibleRoomList((prev) => {
+      setVisibleRooms((prev) => {
         const next = [...prev];
         next.push(room);
         return next;
       });
       if (room.ownerId === userId) {
-        setJoiningRoomList((prev) => {
+        setJoiningRooms((prev) => {
           const next = [...prev];
           next.push(room);
           return next;
@@ -289,42 +348,70 @@ export const Chat = () => {
       }
     });
 
-    socket.on('ft_say', (data: TD.SayResult) => {
+    mySocket?.on('ft_say', (data: TD.SayResult) => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
       const roomId = data.chatRoomId;
       stateMutater.addMessagesToRoom(roomId, [message]);
     });
 
-    socket.on('ft_join', (data: TD.JoinResult) => {
-      console.log('catch join');
-      setJoiningRoomList((prev) => {
-        const { room } = data;
-        const sameRoom = prev.find((r) => r.id === room.id);
-        if (sameRoom) {
-          return prev;
+    mySocket?.on('ft_join', (data: TD.JoinResult) => {
+      console.log('catch join', data);
+      if (userId > 0) {
+        const { chatRoom: room } = data.relation;
+        const user = data.user;
+        console.log(room, user);
+        if (user.id === userId) {
+          // 自分に関する通知
+          console.log('for self');
+          setJoiningRooms((prev) => {
+            const sameRoom = prev.find((r) => r.id === room.id);
+            if (sameRoom) {
+              return prev;
+            }
+            const newRoomList = [...prev];
+            newRoomList.push(room);
+            return newRoomList;
+          });
+        } else {
+          // 他人に関する通知
+          console.log('for other');
+          stateMutater.addMembersInRoom(room.id, { [user.id]: data.relation });
         }
-        const newRoomList = [...prev];
-        newRoomList.push(room);
-        return newRoomList;
-      });
+      }
     });
 
-    socket.on('ft_leave', (data: TD.LeaveResult) => {
-      console.log('catch leave');
-      setJoiningRoomList((prev) => {
-        const { room } = data;
-        console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
-        stateMutater.unfocusRoom(room.id);
-        const newRoomList = prev.filter((r) => r.id !== room.id);
-        if (newRoomList.length === prev.length) {
-          return prev;
+    mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
+      console.log('catch leave', data);
+      if (userId > 0) {
+        const { chatRoom: room } = data.relation;
+        const user = data.user;
+        console.log(room, user);
+        if (user.id === userId) {
+          // 自分に関する通知
+          console.log('for self');
+          setJoiningRooms((prev) => {
+            console.log(
+              predicate.isFocusingTo(room.id),
+              focusedRoomId,
+              room.id
+            );
+            stateMutater.unfocusRoom(room.id);
+            const newRoomList = prev.filter((r) => r.id !== room.id);
+            if (newRoomList.length === prev.length) {
+              return prev;
+            }
+            return newRoomList;
+          });
+        } else {
+          // 他人に関する通知
+          console.log('for other');
+          stateMutater.removeMembersInRoom(room.id, user.id);
         }
-        return newRoomList;
-      });
+      }
     });
 
-    socket.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
+    mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
@@ -334,7 +421,7 @@ export const Chat = () => {
       );
     });
 
-    socket.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
+    mySocket?.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
@@ -345,13 +432,7 @@ export const Chat = () => {
     });
 
     return () => {
-      socket.off('ft_connection');
-      socket.off('ft_open');
-      socket.off('ft_say');
-      socket.off('ft_join');
-      socket.off('ft_leave');
-      socket.off('ft_get_room_messages');
-      socket.off('ft_get_room_members');
+      mySocket?.removeAllListeners();
     };
   });
 
@@ -365,7 +446,7 @@ export const Chat = () => {
         callerId: 1,
       };
       console.log(data);
-      socket.emit('ft_open', data);
+      mySocket?.emit('ft_open', data);
     },
 
     join: (roomId: number) => {
@@ -374,7 +455,7 @@ export const Chat = () => {
         callerId: 1,
       };
       console.log(data);
-      socket.emit('ft_join', data);
+      mySocket?.emit('ft_join', data);
     },
 
     leave: (roomId: number) => {
@@ -383,7 +464,7 @@ export const Chat = () => {
         callerId: 1,
       };
       console.log(data);
-      socket.emit('ft_leave', data);
+      mySocket?.emit('ft_leave', data);
     },
 
     say: (content: string) => {
@@ -396,7 +477,7 @@ export const Chat = () => {
         content,
       };
       console.log(data);
-      socket.emit('ft_say', data);
+      mySocket?.emit('ft_say', data);
     },
 
     get_room_messages: (roomId: number) => {
@@ -406,7 +487,7 @@ export const Chat = () => {
         callerId: 1,
       };
       console.log(['get_room_messages'], data);
-      socket.emit('ft_get_room_messages', data);
+      mySocket?.emit('ft_get_room_messages', data);
     },
 
     get_room_members: (roomId: number) => {
@@ -415,7 +496,7 @@ export const Chat = () => {
         callerId: 1,
       };
       console.log(['get_room_members'], data);
-      socket.emit('ft_get_room_members', data);
+      mySocket?.emit('ft_get_room_members', data);
     },
   };
 
@@ -477,10 +558,12 @@ export const Chat = () => {
      * @param newMembers
      */
     addMembersInRoom: (roomId: number, newMembers: UserRelationMap) => {
+      console.log(`addMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
+        console.log(`addMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
-          next[key] = prev[key];
+          next[key] = prev[key] ? { ...prev[key] } : {};
         });
         if (!next[roomId]) {
           next[roomId] = {};
@@ -489,6 +572,27 @@ export const Chat = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
+        console.log(prev, next);
+        return next;
+      });
+    },
+
+    removeMembersInRoom: (roomId: number, userId: number) => {
+      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
+      setMembersInRoom((prev) => {
+        console.log(`removeMembersInRoom -> setMembersInRoom`);
+        const next: { [roomId: number]: UserRelationMap } = {};
+        Utils.keys(prev).forEach((key) => {
+          next[key] = prev[key] ? { ...prev[key] } : {};
+        });
+        const members = next[roomId];
+        if (!members) {
+          return next;
+        }
+        console.log('removing member', userId, 'from', members);
+        delete members[userId];
+        console.log('members', members);
+        console.log(prev, next);
         return next;
       });
     },
@@ -499,7 +603,7 @@ export const Chat = () => {
    */
   const predicate = {
     isJoiningTo: (roomId: number) =>
-      !!joiningRoomList.find((r) => r.id === roomId),
+      !!joiningRooms.find((r) => r.id === roomId),
     isFocusingTo: (roomId: number) => focusedRoomId === roomId,
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
@@ -517,8 +621,8 @@ export const Chat = () => {
     }, [messagesInRoom, focusedRoomId]),
 
     focusedRoom: useMemo(
-      () => visibleRoomList.find((r) => r.id === focusedRoomId),
-      [visibleRoomList, focusedRoomId]
+      () => visibleRooms.find((r) => r.id === focusedRoomId),
+      [visibleRooms, focusedRoomId]
     ),
   };
 
@@ -620,7 +724,7 @@ export const Chat = () => {
               flexDirection: 'column',
             }}
           >
-            {visibleRoomList.map((data: TD.ChatRoom) => {
+            {visibleRooms.map((data: TD.ChatRoom) => {
               return (
                 /* クリックしたルームにフォーカスを当てる */
                 <div
@@ -687,7 +791,26 @@ export const Chat = () => {
             })}
           </div>
         </div>
-        <OpenCard sender={command.open} />
+        <div
+          style={{
+            padding: '2px',
+            border: '1px solid gray',
+            flexGrow: 0,
+            flexShrink: 0,
+          }}
+        >
+          <OpenCard sender={command.open} />
+        </div>
+        <div
+          style={{
+            padding: '2px',
+            border: '1px solid gray',
+            flexGrow: 0,
+            flexShrink: 0,
+          }}
+        >
+          <SelfCard currentUserIdStr={userIdStr} sender={setUserIdStr} />
+        </div>
       </div>
 
       <div
@@ -749,7 +872,16 @@ export const Chat = () => {
                 }}
               >
                 {/* 今フォーカスしているルームへの発言 */}
-                <SayCard sender={command.say} />
+                <div
+                  style={{
+                    padding: '2px',
+                    border: '1px solid gray',
+                    display: 'flex',
+                    flexDirection: 'row',
+                  }}
+                >
+                  <SayCard sender={command.say} />
+                </div>
               </div>
             </div>
             <div
@@ -778,11 +910,11 @@ export const Chat = () => {
       >
         <div>
           <h4>visibleRoomList</h4>
-          {JSON.stringify(visibleRoomList)}
+          {JSON.stringify(visibleRooms)}
         </div>
         <div>
           <h4>joiningRoomList</h4>
-          {JSON.stringify(joiningRoomList)}
+          {JSON.stringify(joiningRooms)}
         </div>
       </div>
     </div>
