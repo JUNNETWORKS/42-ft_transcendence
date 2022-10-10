@@ -75,8 +75,33 @@ const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   );
 };
 
+const ChatRoomMemberCard = (props: {
+  userId: number;
+  room: TD.ChatRoom;
+  member: TD.ChatUserRelation;
+}) => {
+  const isYou = props.userId === props.member.user.id;
+  const isAdmin = props.member.memberType === 'ADMIN';
+  const isOwner = props.room.ownerId === props.member.user.id;
+  return (
+    <div
+      className="room-member-element"
+      key={props.member.userId}
+      style={{
+        ...(props.userId === props.member.user.id
+          ? { fontWeight: 'bold' }
+          : {}),
+      }}
+    >
+      {isOwner ? '👑 ' : isAdmin ? '🔧 ' : ''}
+      {props.member.user.displayName}
+    </div>
+  );
+};
+
 const ChatRoomMembersList = (props: {
   userId: number;
+  room: TD.ChatRoom;
   members: UserRelationMap;
 }) => {
   const computed = {
@@ -122,9 +147,12 @@ const ChatRoomMembersList = (props: {
       >
         {computed.members.map((member) => {
           return (
-            <div className="room-member-element" key={member.userId}>
-              {member.user.displayName}
-            </div>
+            <ChatRoomMemberCard
+              key={member.userId}
+              userId={props.userId}
+              room={props.room}
+              member={member}
+            />
           );
         })}
       </div>
@@ -347,7 +375,7 @@ export const Chat = () => {
 
   useEffect(() => {
     mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
-      console.log('catch connection');
+      console.log('catch connection', data);
       setUserId(data.userId);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
@@ -923,6 +951,7 @@ export const Chat = () => {
             >
               <ChatRoomMembersList
                 userId={userId}
+                room={computed.focusedRoom}
                 members={store.room_members(focusedRoomId) || {}}
               />
             </div>
