@@ -491,10 +491,8 @@ describe('/Chatrooms (e2e)', () => {
   describe('PATCH / chatrooms/addMember', () => {
     it('success', async () => {
       const body: CreateRoomMemberDto = {
-        roomMember: [
-          { userId: 2, memberType: 'MEMBER' },
-          { userId: 3, memberType: 'ADMIN' },
-        ],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       const res = await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
@@ -535,7 +533,8 @@ describe('/Chatrooms (e2e)', () => {
   describe('PATCH /chatrooms/memberType', () => {
     it('MEMBER -> ADMIN', async () => {
       const pbody: CreateRoomMemberDto = {
-        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
@@ -557,7 +556,8 @@ describe('/Chatrooms (e2e)', () => {
 
     it('ADMIN -> MEMBER', async () => {
       const pbody: CreateRoomMemberDto = {
-        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
