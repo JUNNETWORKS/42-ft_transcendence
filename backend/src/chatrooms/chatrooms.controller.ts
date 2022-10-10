@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   ParseIntPipe,
   Query,
+  Put,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ChatroomsService } from './chatrooms.service';
@@ -18,11 +18,9 @@ import { UpdateRoomNameDto } from './dto/update-room-name.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatMessageEntity } from './entities/chat-message.entity';
 import { ChatroomEntity } from './entities/chatroom.entity';
-import { chatUserRelationEntity } from './entities/chat-user-relation.entity';
-import { CreateMemberPipe } from './pipe/create-member.pipe';
+import { ChatUserRelationEntity } from './entities/chat-user-relation.entity';
 import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
 import { RoomMemberDto } from './dto/room-member.dto';
-import { UpdateMemberPipe } from './pipe/update-member.pipe';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
@@ -35,11 +33,7 @@ export class ChatroomsController {
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
   create(
-    @Body(
-      new CreateMemberPipe(),
-      new UpdateRoomTypePipe(),
-      new CreateChatroomPipe()
-    )
+    @Body(new UpdateRoomTypePipe(), new CreateChatroomPipe())
     createChatroomDto: CreateChatroomDto
   ) {
     return this.chatroomsService.create(createChatroomDto);
@@ -63,8 +57,8 @@ export class ChatroomsController {
     return this.chatroomsService.findOne(roomId);
   }
 
-  @Patch(':roomId/join')
-  @ApiOkResponse({ type: chatUserRelationEntity })
+  @Put(':roomId/join')
+  @ApiOkResponse({ type: ChatUserRelationEntity })
   join(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('userId', ParseIntPipe) userId: number
@@ -72,8 +66,8 @@ export class ChatroomsController {
     return this.chatroomsService.join(roomId, userId);
   }
 
-  @Patch(':roomId/leave')
-  @ApiOkResponse({ type: chatUserRelationEntity })
+  @Delete(':roomId/leave')
+  @ApiOkResponse({ type: ChatUserRelationEntity })
   leave(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Query('userId', ParseIntPipe) userId: number
@@ -82,12 +76,12 @@ export class ChatroomsController {
   }
 
   @Get(':roomId/members')
-  @ApiOkResponse({ type: chatUserRelationEntity, isArray: true })
+  @ApiOkResponse({ type: ChatUserRelationEntity, isArray: true })
   getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.getMembers(roomId);
   }
 
-  @Patch(':roomId/roomType')
+  @Put(':roomId/roomType')
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomType(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -97,7 +91,7 @@ export class ChatroomsController {
     return this.chatroomsService.updateRoomType(roomId, updateRoomTypeDto);
   }
 
-  @Patch(':roomId/roomName')
+  @Put(':roomId/roomName')
   @ApiOkResponse({ type: ChatroomEntity })
   updateRoomName(
     @Param('roomId', ParseIntPipe) roomId: number,
@@ -106,20 +100,20 @@ export class ChatroomsController {
     return this.chatroomsService.updateRoomName(roomId, updateRoomNameDto);
   }
 
-  @Patch(':roomId/addMember')
+  @Put(':roomId/addMember')
   @ApiOkResponse({ type: ChatroomEntity })
   addMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body(new CreateMemberPipe()) createRoomMemberDto: CreateRoomMemberDto
+    @Body() createRoomMemberDto: CreateRoomMemberDto
   ) {
     return this.chatroomsService.addMember(roomId, createRoomMemberDto);
   }
 
-  @Patch(':roomId/memberType')
+  @Put(':roomId/memberType')
   @ApiOkResponse({ type: ChatroomEntity })
   updateMember(
     @Param('roomId', ParseIntPipe) roomId: number,
-    @Body(new UpdateMemberPipe()) roomMemberDto: RoomMemberDto
+    @Body() roomMemberDto: RoomMemberDto
   ) {
     return this.chatroomsService.updateMember(roomId, roomMemberDto);
   }

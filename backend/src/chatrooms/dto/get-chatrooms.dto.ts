@@ -12,6 +12,6 @@ export class GetChatroomsDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @ApiProperty()
+  @ApiProperty({ required: false })
   cursor?: number;
 }
