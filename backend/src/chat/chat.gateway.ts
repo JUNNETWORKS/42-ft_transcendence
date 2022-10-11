@@ -20,6 +20,15 @@ import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import * as Utils from 'src/utils';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
+import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
+
+const secondInMilliseconds = 1000;
+const minuteInSeconds = 60;
+
+const constants = {
+  banDuration: 5 * minuteInSeconds * secondInMilliseconds,
+  muteDuration: 5 * minuteInSeconds * secondInMilliseconds,
+};
 
 @WebSocketGateway({
   cors: true,
@@ -31,7 +40,7 @@ export class ChatGateway implements OnGatewayConnection {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly charRoomService: ChatroomsService,
+    private readonly chatRoomService: ChatroomsService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService
   ) {}
@@ -52,7 +61,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
-      await this.charRoomService.getRoomsJoining(userId)
+      await this.chatRoomService.getRoomsJoining(userId)
     ).map((r) => r.chatRoom);
     const joiningRoomNames = joiningRooms.map((r) =>
       this.fullRoomName('ChatRoom', r.id)
@@ -79,7 +88,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
-    const visibleRooms = await this.charRoomService.findMany({ take: 40 });
+    const visibleRooms = await this.chatRoomService.findMany({ take: 40 });
     this.sendResults(
       'ft_connection',
       {
@@ -114,7 +123,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     data.callerId = user.id;
     // [TODO: パラメータが正しければチャットルームを作成する]
-    const createdRoom = await this.charRoomService.create({
+    const createdRoom = await this.chatRoomService.create({
       roomName: data.roomName,
       roomType: data.roomType,
       ownerId: user.id,
@@ -161,11 +170,20 @@ export class ChatGateway implements OnGatewayConnection {
     // [TODO: 対象チャットルームの存在確認]
     // [TODO: 実行者がチャットルームで発言可能であることの確認]
     const roomId = data.roomId;
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const rel = await Utils.PromiseMap({
+      relation: this.chatRoomService.getRelation(roomId, user.id),
+      attr: this.chatRoomService.getAttribute(roomId, user.id),
+    });
+    const relation = rel.relation;
     if (!relation) {
       return;
     }
-    const chatRoom = relation.chatRoom;
+    // [TODO: mute状態かどうか]
+    const isMuted = rel.attr && rel.attr.mutedEndAt > new Date();
+    if (isMuted) {
+      console.log('** you are muted **');
+      return;
+    }
 
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
@@ -204,23 +222,23 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = data.roomId;
     // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
-    const room = await this.charRoomService.findOne(roomId);
+    const room = await this.chatRoomService.findOne(roomId);
 
     // [TODO: 実行者が対象チャットルームに入室できることを確認]
     {
-      const relation = await this.charRoomService.getRelation(roomId, user.id);
+      const relation = await this.chatRoomService.getRelation(roomId, user.id);
       if (relation) {
         return;
       }
     }
 
     // [TODO: ハードリレーション更新]
-    const member = await this.charRoomService.addMember(roomId, {
+    const member = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
     });
     console.log('member', member);
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const relation = await this.chatRoomService.getRelation(roomId, user.id);
     if (!relation) {
       return;
     }
@@ -247,7 +265,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // チャットルームの内容を通知
-    const messages = await this.charRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages({
       roomId,
       take: 50,
     });
@@ -281,14 +299,14 @@ export class ChatGateway implements OnGatewayConnection {
     // [TODO: 退出対象のチャットルームが存在していることを確認]
     // [TODO: 実行者が対象チャットルームに入室していることを確認]
     const roomId = data.roomId;
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const relation = await this.chatRoomService.getRelation(roomId, user.id);
     if (!relation) {
       return;
     }
     const chatRoom = relation.chatRoom;
 
     // [TODO: ハードリレーション更新]
-    await this.charRoomService.removeMember(roomId, user.id);
+    await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.usersLeave(user.id, 'ChatRoom', roomId);
@@ -321,55 +339,102 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    // [TODO: 送信者・対象者がjoinしているか？]
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: 対象者がjoinしているか？]
     const roomId = data.roomId;
-    const targetRelation = await this.charRoomService.getRelationWithUser(
+    const rels = await this.chatService.getCallerAndTargetRelation(
       roomId,
+      user.id,
       data.userId
     );
-    console.log('targetRelation', targetRelation);
-    if (!targetRelation) {
+    console.log('targetRelation', rels.targetRelation);
+    console.log('callerRelation', rels.callerRelation);
+    if (!rels.targetRelation || !rels.callerRelation) {
       return;
     }
-    const targetUser = targetRelation.user;
     // [TODO: 送信者がADMINまたはオーナーか？]
-    const callerRelation = await this.charRoomService.getRelationWithUser(
-      roomId,
-      user.id
-    );
-    console.log('callerRelation', callerRelation);
-    if (!callerRelation) {
-      console.warn('fail: caller is not joining the room');
-      return;
-    }
+    const room = rels.targetRelation.chatRoom;
     if (
-      !(
-        callerRelation.memberType === 'ADMIN' ||
-        callerRelation.chatRoom.ownerId === callerRelation.userId
+      !this.chatService.isCallerKickableTarget(
+        room,
+        rels.callerRelation,
+        rels.targetRelation
       )
     ) {
       console.warn("fail: caller doesn't have a right for the operation.");
       return;
     }
-    const chatRoom = targetRelation.chatRoom;
-
+    const targetUser = rels.targetRelation.user;
     // [TODO: ハードリレーション更新]
-    await this.charRoomService.removeMember(roomId, targetUser.id);
+    await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.usersLeave(targetUser.id, 'ChatRoom', roomId);
     this.sendResults(
       'ft_kick',
       {
-        room: {
-          id: roomId,
-          roomName: chatRoom.roomName,
-        },
+        room: Utils.pick(room, 'id', 'roomName'),
         user: Utils.pick(targetUser, 'id', 'displayName'),
       },
       {
         roomId,
         userId: targetUser.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_mute')
+  async handleMute(
+    @MessageBody() data: OperationMuteDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+      targetMute: this.chatRoomService.getAttribute(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerMutableTarget(room, rels.caller, rels.target)
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットのChatUserAttributeの `mutedEndAt` を更新する]
+    // なければ新規に作る
+    const prolongedMutedEndAt = new Date(
+      (rels.targetMute ? rels.targetMute.mutedEndAt.getTime() : Date.now()) +
+        constants.banDuration
+    );
+    console.log('[old attr]', rels.targetMute);
+    const attr = await this.chatRoomService.upsertAttribute(roomId, targetId, {
+      mutedEndAt: prolongedMutedEndAt,
+    });
+    console.log(prolongedMutedEndAt);
+    console.log('[new attr]', attr);
+
+    this.sendResults(
+      'ft_mute',
+      {
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
       }
     );
   }
@@ -388,7 +453,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    const messages = await this.charRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
       take: data.take,
     });
@@ -420,7 +485,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    const members = await this.charRoomService.getMembers(data.roomId);
+    const members = await this.chatRoomService.getMembers(data.roomId);
     this.sendResults(
       'ft_get_room_members',
       {

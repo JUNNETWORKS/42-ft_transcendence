@@ -89,3 +89,17 @@ export function keyBy<T>(
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }
+
+export type Promised<P> = P extends Promise<infer E> ? E : never;
+
+export async function PromiseMap<T>(pmap: { [P in keyof T]: Promise<T[P]> }) {
+  const r: any = {};
+  await Promise.all(
+    Object.keys(pmap).map((key) =>
+      (async () => {
+        r[key] = await (pmap as any)[key];
+      })()
+    )
+  );
+  return r as T;
+}

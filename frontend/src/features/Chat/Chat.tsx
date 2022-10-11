@@ -314,6 +314,11 @@ export const Chat = () => {
 
     mute: (member: TD.ChatUserRelation) => {
       console.log('[mute]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_mute', data);
     },
   };
   const memberOperations: TD.MemberOperations = {
