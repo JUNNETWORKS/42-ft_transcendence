@@ -18,6 +18,7 @@ import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
+import * as Utils from 'src/utils';
 
 @WebSocketGateway({
   cors: true,
@@ -83,20 +84,12 @@ export class ChatGateway implements OnGatewayConnection {
       {
         userId,
         displayName: user.displayName,
-        visibleRooms: visibleRooms.map((r) => ({
-          id: r.id,
-          roomName: r.roomName,
-          roomType: r.roomType,
-          ownerId: r.ownerId,
-          updatedAt: r.updatedAt,
-        })),
-        joiningRooms: joiningRooms.map((r) => ({
-          id: r.id,
-          roomName: r.roomName,
-          roomType: r.roomType,
-          ownerId: r.ownerId,
-          updatedAt: r.updatedAt,
-        })),
+        visibleRooms: visibleRooms.map((r) =>
+          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+        ),
+        joiningRooms: joiningRooms.map((r) =>
+          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+        ),
       },
       {
         client,

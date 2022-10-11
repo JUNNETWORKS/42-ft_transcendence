@@ -1,5 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
-import { styleTextFieldCommon, styleH3, styleH4 } from './styles';
+import {
+  styleTextFieldCommon,
+  styleH3,
+  styleH4,
+  styleButtonCommon,
+} from './styles';
 
 export const FTTextField = (
   props: React.DetailedHTMLProps<
@@ -14,6 +19,23 @@ export const FTTextField = (
       style={{
         ...(props.style || {}),
         ...styleTextFieldCommon,
+      }}
+    />
+  );
+};
+
+export const FTButton = (
+  props: React.DetailedHTMLProps<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    HTMLButtonElement
+  >
+) => {
+  return (
+    <button
+      {...{ ...props }}
+      style={{
+        ...(props.style || {}),
+        ...styleButtonCommon,
       }}
     />
   );

@@ -36,6 +36,10 @@ export type ChatRoomMessage = {
   content: string;
 };
 
+export type UserRelationMap = {
+  [userId: number]: ChatUserRelation;
+};
+
 // コマンド系
 
 export type SayArgument = string;
@@ -101,4 +105,12 @@ export const Mapper = {
     }
     return r;
   },
+};
+
+// UI系
+export type MemberOperations = {
+  onNomminateClick?: (r: ChatUserRelation) => void;
+  onBanClick?: (r: ChatUserRelation) => void;
+  onMuteClick?: (r: ChatUserRelation) => void;
+  onKickClick?: (r: ChatUserRelation) => void;
 };

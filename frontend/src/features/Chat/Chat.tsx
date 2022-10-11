@@ -3,8 +3,8 @@ import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
 import { styleTextFieldCommon, styleButtonCommon } from './styles';
-import { FTTextField, FTH3, FTH4 } from './FTBasicComponents';
-import * as dayjs from 'dayjs';
+import { FTTextField, FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -27,138 +27,6 @@ function useAction<T>(initialId: T, action: (id: T) => void) {
   useEffect(() => action(actionId), [action, actionId]);
   return [setActionId];
 }
-
-type UserRelationMap = {
-  [userId: number]: TD.ChatUserRelation;
-};
-
-/**
- * メッセージを表示するコンポーネント
- */
-const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '2px',
-        border: '1px solid useFetcher',
-        marginBottom: '12px',
-      }}
-      key={props.message.id}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <div
-          style={{
-            margin: '1px',
-            padding: '0 4px',
-            color: 'black',
-            backgroundColor: 'white',
-          }}
-        >
-          {props.message.user.displayName}
-        </div>
-        <div style={{ paddingRight: '4px' }}>
-          {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-        </div>
-        <div style={{ paddingRight: '4px' }}>
-          chatRoomId: {props.message.chatRoomId}
-        </div>
-      </div>
-      <div>{props.message.content}</div>
-    </div>
-  );
-};
-
-const ChatRoomMemberCard = (props: {
-  userId: number;
-  room: TD.ChatRoom;
-  member: TD.ChatUserRelation;
-}) => {
-  const isYou = props.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-  return (
-    <div
-      className="room-member-element"
-      key={props.member.userId}
-      style={{
-        ...(props.userId === props.member.user.id
-          ? { fontWeight: 'bold' }
-          : {}),
-      }}
-    >
-      {isOwner ? '👑 ' : isAdmin ? '🔧 ' : ''}
-      {props.member.user.displayName}
-    </div>
-  );
-};
-
-const ChatRoomMembersList = (props: {
-  userId: number;
-  room: TD.ChatRoom;
-  members: UserRelationMap;
-}) => {
-  const computed = {
-    members: useMemo(() => {
-      const mems: TD.ChatUserRelation[] = [];
-      const you = props.members[props.userId];
-      if (you) {
-        mems.push(you);
-      }
-      Utils.keys(props.members).forEach((id) => {
-        const m = props.members[id];
-        if (props.userId === m.userId) {
-          return;
-        }
-        mems.push(m);
-      });
-      return mems;
-    }, [props.userId, props.members]),
-  };
-
-  return (
-    <div
-      className="room-members"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
-      <FTH4
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-        }}
-      >
-        Members
-      </FTH4>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
-        {computed.members.map((member) => {
-          return (
-            <ChatRoomMemberCard
-              key={member.userId}
-              userId={props.userId}
-              room={props.room}
-              member={member}
-            />
-          );
-        })}
-      </div>
-    </div>
-  );
-};
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
@@ -369,7 +237,7 @@ export const Chat = () => {
    */
   const [membersInRoom, setMembersInRoom, resetMembersInRoom] =
     useStateWithResetter<{
-      [roomId: number]: UserRelationMap;
+      [roomId: number]: TD.UserRelationMap;
     }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
@@ -553,6 +421,28 @@ export const Chat = () => {
       console.log(['get_room_members'], data);
       mySocket?.emit('ft_get_room_members', data);
     },
+
+    nomminate: (member: TD.ChatUserRelation) => {
+      console.log('[nomminate]', member);
+    },
+
+    ban: (member: TD.ChatUserRelation) => {
+      console.log('[ban]', member);
+    },
+
+    kick: (member: TD.ChatUserRelation) => {
+      console.log('[kick]', member);
+    },
+
+    mute: (member: TD.ChatUserRelation) => {
+      console.log('[mute]', member);
+    },
+  };
+  const memberOperations: TD.MemberOperations = {
+    onNomminateClick: command.nomminate,
+    onBanClick: command.ban,
+    onKickClick: command.kick,
+    onMuteClick: command.mute,
   };
 
   /**
@@ -612,11 +502,11 @@ export const Chat = () => {
      * @param roomId
      * @param newMembers
      */
-    addMembersInRoom: (roomId: number, newMembers: UserRelationMap) => {
+    addMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
       console.log(`addMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
         console.log(`addMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: UserRelationMap } = {};
+        const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
         });
@@ -636,7 +526,7 @@ export const Chat = () => {
       console.log(`removeMembersInRoom(${roomId}, ${userId})`);
       setMembersInRoom((prev) => {
         console.log(`removeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: UserRelationMap } = {};
+        const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
         });
@@ -739,6 +629,7 @@ export const Chat = () => {
         border: '1px solid useFetcher',
         display: 'flex',
         flexDirection: 'row',
+        width: '100%',
       }}
     >
       <div
@@ -767,7 +658,7 @@ export const Chat = () => {
               flexShrink: 0,
             }}
           >
-            ChatRooms {focusedRoomId}
+            ChatRooms
           </FTH3>
           <div
             style={{
@@ -831,7 +722,7 @@ export const Chat = () => {
                         ? 'bold'
                         : 'normal',
                       ...(predicate.isFocusingTo(data.id)
-                        ? { borderLeft: '12px solid turquoise' }
+                        ? { borderLeft: '12px solid teal' }
                         : {}),
                     }}
                     onClick={() => {
@@ -946,19 +837,20 @@ export const Chat = () => {
               style={{
                 flexGrow: 0,
                 flexShrink: 0,
-                flexBasis: '10em',
+                flexBasis: '20em',
               }}
             >
               <ChatRoomMembersList
                 userId={userId}
                 room={computed.focusedRoom}
                 members={store.room_members(focusedRoomId) || {}}
+                {...memberOperations}
               />
             </div>
           </div>
         )}
       </div>
-      <div
+      {/* <div
         style={{
           flexGrow: 0,
           flexShrink: 0,
@@ -974,7 +866,7 @@ export const Chat = () => {
           <FTH4>joiningRoomList</FTH4>
           {JSON.stringify(joiningRooms)}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
