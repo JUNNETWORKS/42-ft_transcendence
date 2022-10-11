@@ -2,8 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
-import { styleTextFieldCommon, styleButtonCommon } from './styles';
-import { FTTextField, FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { FTButton, FTH3, FTH4 } from './FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
 import { useStateWithResetter, useAction } from './hooks';
 import { SayCard, OpenCard, SelfCard } from './CommandCard';
@@ -540,9 +539,8 @@ export const Chat = () => {
                     }}
                   >
                     {predicate.isJoiningTo(data.id) ? (
-                      <button
+                      <FTButton
                         style={{
-                          ...styleButtonCommon,
                           width: '4em',
                           color: 'black',
                           backgroundColor: 'white',
@@ -550,14 +548,14 @@ export const Chat = () => {
                         onClick={() => command.leave(data.id)}
                       >
                         Leave
-                      </button>
+                      </FTButton>
                     ) : (
-                      <button
-                        style={{ ...styleButtonCommon, width: '4em' }}
+                      <FTButton
+                        style={{ width: '4em' }}
                         onClick={() => command.join(data.id)}
                       >
                         Join
-                      </button>
+                      </FTButton>
                     )}
                   </div>
                   <div

@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import * as TD from './typedef';
-import * as Utils from '@/utils';
 import { FTTextField, FTButton, FTH3, FTH4 } from './FTBasicComponents';
 import { useStateWithResetter } from './hooks';
-import { styleTextFieldCommon, styleButtonCommon } from './styles';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
@@ -38,13 +36,9 @@ export const SayCard = (props: {
           padding: '2px',
         }}
       >
-        <button
-          disabled={!computed.isSendable()}
-          onClick={sender}
-          style={{ ...styleButtonCommon }}
-        >
+        <FTButton disabled={!computed.isSendable()} onClick={sender}>
           Send
-        </button>
+        </FTButton>
       </div>
       <div
         style={{
@@ -58,7 +52,6 @@ export const SayCard = (props: {
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
           style={{
-            ...styleTextFieldCommon,
             display: 'block',
             height: '100%',
             width: '100%',
@@ -99,13 +92,8 @@ export const OpenCard = (props: {
         placeholder="チャットルーム名"
         value={roomName}
         onChange={(e) => setRoomName(e.target.value)}
-        style={{
-          ...styleTextFieldCommon,
-        }}
       />
-      <button onClick={() => sender()} style={{ ...styleButtonCommon }}>
-        Open
-      </button>
+      <FTButton onClick={() => sender()}>Open</FTButton>
     </div>
   );
 };
@@ -125,16 +113,8 @@ export const SelfCard = (props: {
         placeholder="ユーザID"
         value={userIdStr}
         onChange={(e) => setUserIdStr(e.target.value)}
-        style={{
-          ...styleTextFieldCommon,
-        }}
       />
-      <button
-        onClick={() => props.sender(userIdStr)}
-        style={{ ...styleButtonCommon }}
-      >
-        Force Login
-      </button>
+      <FTButton onClick={() => props.sender(userIdStr)}>Force Login</FTButton>
     </div>
   );
 };
