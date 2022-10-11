@@ -1,7 +1,9 @@
 import { ProgressingMatchManager } from './progressing_match_manager';
+import { Server } from 'socket.io';
 
 // マッチ成立待ちユーザーのリストを保持し､定期的にマッチの成立を試みる
 export class MatchMaker {
+  // マッチメイキングを試みる間隔
   private readonly MatchMakingIntervalMs = 500;
 
   // マッチ成立可能かチェックするタイマー
@@ -9,11 +11,17 @@ export class MatchMaker {
   // マッチメイキング待機中のユーザー
   private waitingUsers: Array<string> = new Array<string>();
   // マッチが成立したらここに入れる
-  private progressing_match_manager: ProgressingMatchManager;
+  private progressingMatchManager: ProgressingMatchManager;
+  // 現在のマッチ待機状況を送信するためのWSインスタンス
+  private wsServer: Server;
 
-  constructor(progressing_match_manager: ProgressingMatchManager) {
-    this.progressing_match_manager = progressing_match_manager;
-    // 500msに一度マッチの成立が可能か調べ､可能であるならマッチ開始
+  constructor(
+    wsServer: Server,
+    progressing_match_manager: ProgressingMatchManager
+  ) {
+    this.wsServer = wsServer;
+    this.progressingMatchManager = progressing_match_manager;
+    // 500msごとにマッチの成立が可能か調べ､可能であるならマッチ開始
     this.intervalID = setInterval(() => {
       this.makeMatches();
     }, this.MatchMakingIntervalMs);
@@ -57,6 +65,7 @@ export class MatchMaker {
       }
       // TODO: マッチの開始
       // - マッチインスタンスの作成
+      this.progressingMatchManager.start()
     }
   };
 }

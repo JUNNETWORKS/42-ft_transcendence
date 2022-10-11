@@ -1,8 +1,10 @@
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
@@ -10,15 +12,25 @@ import { PlayerAction } from './dto/player-action';
 import { Match } from './game/match';
 import { MatchMaker } from './match_managers/match_maker';
 import { ProgressingMatchManager } from './match_managers/progressing_match_manager';
+import { Server } from 'socket.io';
 
 let match: Match | null = null;
 let matchIntervalID: NodeJS.Timer | null = null;
-const progressing_match_manager = new ProgressingMatchManager();
-const match_maker: MatchMaker = new MatchMaker(progressing_match_manager);
 
 @WebSocketGateway({ cors: true, namespace: '/pong' })
-export class PongGateway {
+export class PongGateway implements OnGatewayInit {
+  private wsServer!: Server;
+  private progressingMatchManager!: ProgressingMatchManager;
+  private matchMaker!: MatchMaker;
+  private clients: Map<string, Socket> = new Map<string, Socket>();
+
   private readonly logger = new Logger('Match WS');
+
+  afterInit(server: Server) {
+    this.wsServer = server;
+    this.progressingMatchManager = new ProgressingMatchManager(server);
+    this.matchMaker = new MatchMaker(server, this.progressingMatchManager);
+  }
 
   onApplicationBootstrap() {
     return;
@@ -26,10 +38,12 @@ export class PongGateway {
 
   handleConnection(client: Socket) {
     this.logger.log(`WebSocket connection ID(${client.id}).`);
+    this.clients.set(client.id, client); // TODO: ユーザー名などにいずれ変える
   }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`WebSocket disconnection ID(${client.id}).`);
+    this.clients.delete(client.id);
 
     if (matchIntervalID) {
       clearInterval(matchIntervalID);
@@ -42,7 +56,7 @@ export class PongGateway {
 
   @SubscribeMessage('pong.match_making.entry')
   entryMatchMaking(@ConnectedSocket() client: Socket) {
-    match_maker.entry(client.id);
+    this.matchMaker.entry(client.id);
   }
 
   @SubscribeMessage('pong.match.action')
