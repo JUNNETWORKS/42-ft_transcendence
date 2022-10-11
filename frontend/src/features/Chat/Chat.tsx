@@ -129,57 +129,81 @@ export const Chat = () => {
 
     mySocket?.on('ft_join', (data: TD.JoinResult) => {
       console.log('catch join', data);
-      if (userId > 0) {
-        const { chatRoom: room } = data.relation;
-        const user = data.user;
-        console.log(room, user);
-        if (user.id === userId) {
-          // 自分に関する通知
-          console.log('for self');
-          setJoiningRooms((prev) => {
-            const sameRoom = prev.find((r) => r.id === room.id);
-            if (sameRoom) {
-              return prev;
-            }
-            const newRoomList = [...prev];
-            newRoomList.push(room);
-            return newRoomList;
-          });
-        } else {
-          // 他人に関する通知
-          console.log('for other');
-          stateMutater.addMembersInRoom(room.id, { [user.id]: data.relation });
-        }
+      if (!(userId > 0)) {
+        return;
+      }
+      const { chatRoom: room } = data.relation;
+      const user = data.user;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          const sameRoom = prev.find((r) => r.id === room.id);
+          if (sameRoom) {
+            return prev;
+          }
+          const newRoomList = [...prev];
+          newRoomList.push(room);
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.addMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
 
     mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
       console.log('catch leave', data);
-      if (userId > 0) {
-        const { chatRoom: room } = data.relation;
-        const user = data.user;
-        console.log(room, user);
-        if (user.id === userId) {
-          // 自分に関する通知
-          console.log('for self');
-          setJoiningRooms((prev) => {
-            console.log(
-              predicate.isFocusingTo(room.id),
-              focusedRoomId,
-              room.id
-            );
-            stateMutater.unfocusRoom(room.id);
-            const newRoomList = prev.filter((r) => r.id !== room.id);
-            if (newRoomList.length === prev.length) {
-              return prev;
-            }
-            return newRoomList;
-          });
-        } else {
-          // 他人に関する通知
-          console.log('for other');
-          stateMutater.removeMembersInRoom(room.id, user.id);
-        }
+      if (!(userId > 0)) {
+        return;
+      }
+      const { chatRoom: room } = data.relation;
+      const user = data.user;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
+          stateMutater.unfocusRoom(room.id);
+          const newRoomList = prev.filter((r) => r.id !== room.id);
+          if (newRoomList.length === prev.length) {
+            return prev;
+          }
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.removeMembersInRoom(room.id, user.id);
+      }
+    });
+
+    mySocket?.on('ft_kick', (data: TD.LeaveResult) => {
+      console.log('catch kick', data);
+      if (!(userId > 0)) {
+        return;
+      }
+      const { room, user } = data;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
+          stateMutater.unfocusRoom(room.id);
+          const newRoomList = prev.filter((r) => r.id !== room.id);
+          if (newRoomList.length === prev.length) {
+            return prev;
+          }
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.removeMembersInRoom(room.id, user.id);
       }
     });
 
@@ -281,6 +305,11 @@ export const Chat = () => {
 
     kick: (member: TD.ChatUserRelation) => {
       console.log('[kick]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_kick', data);
     },
 
     mute: (member: TD.ChatUserRelation) => {

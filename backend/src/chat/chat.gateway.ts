@@ -19,6 +19,7 @@ import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import * as Utils from 'src/utils';
+import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 
 @WebSocketGateway({
   cors: true,
@@ -303,6 +304,68 @@ export class ChatGateway implements OnGatewayConnection {
           id: user.id,
           displayName: user.displayName,
         },
+      },
+      {
+        roomId,
+        userId: user.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_kick')
+  async handleKick(
+    @MessageBody() data: OperationKickDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者・対象者がjoinしているか？]
+    const roomId = data.roomId;
+    const targetRelation = await this.charRoomService.getRelationWithUser(
+      roomId,
+      data.userId
+    );
+    console.log('targetRelation', targetRelation);
+    if (!targetRelation) {
+      return;
+    }
+    const targetUser = targetRelation.user;
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const callerRelation = await this.charRoomService.getRelationWithUser(
+      roomId,
+      user.id
+    );
+    console.log('callerRelation', callerRelation);
+    if (!callerRelation) {
+      console.warn('fail: caller is not joining the room');
+      return;
+    }
+    if (
+      !(
+        callerRelation.memberType === 'ADMIN' ||
+        callerRelation.chatRoom.ownerId === callerRelation.userId
+      )
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const chatRoom = targetRelation.chatRoom;
+
+    // [TODO: ハードリレーション更新]
+    await this.charRoomService.removeMember(roomId, targetUser.id);
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
+    await this.usersLeave(targetUser.id, 'ChatRoom', roomId);
+    this.sendResults(
+      'ft_kick',
+      {
+        room: {
+          id: roomId,
+          roomName: chatRoom.roomName,
+        },
+        user: Utils.pick(targetUser, 'id', 'displayName'),
       },
       {
         roomId,
