@@ -369,7 +369,7 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         roomId,
-        userId: user.id,
+        userId: targetUser.id,
       }
     );
   }
