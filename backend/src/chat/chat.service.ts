@@ -51,6 +51,32 @@ export class ChatService {
     });
   }
 
+  isCallerNomminatableTarget(
+    room: ChatRoom,
+    caller: ChatUserRelation,
+    target: ChatUserRelation
+  ): boolean {
+    // callerがtargetをnomminateできる条件
+    // - targetが当該ルームにjoinしている
+    // - targetが当該ルームのOwnerではない
+    // - callerが当該ルームのOwnerである or (callerが当該ルームのAdminであり, targetが当該ルームのAdminではない)
+    console.log(room, caller, target);
+    const targetIsOwner = target.userId === room.ownerId;
+    const callerIsOwner = caller.userId === room.ownerId;
+    console.log(callerIsOwner, targetIsOwner);
+    if (targetIsOwner) {
+      return false;
+    }
+    if (callerIsOwner) {
+      return true;
+    }
+    console.log(caller.memberType, target.memberType);
+    if (caller.memberType === 'ADMIN') {
+      return true;
+    }
+    return false;
+  }
+
   isCallerKickableTarget(
     room: ChatRoom,
     caller: ChatUserRelation,
@@ -60,37 +86,70 @@ export class ChatService {
     // - targetが当該ルームにjoinしている
     // - targetが当該ルームのOwnerではない
     // - callerが当該ルームのOwnerである or (callerが当該ルームのAdminであり, targetが当該ルームのAdminではない)
-    if (target.userId === room.ownerId) {
+    console.log(room, caller, target);
+    const targetIsOwner = target.userId === room.ownerId;
+    const callerIsOwner = caller.userId === room.ownerId;
+    console.log(callerIsOwner, targetIsOwner);
+    if (targetIsOwner) {
       return false;
     }
-    if (caller.userId === room.ownerId) {
+    if (callerIsOwner) {
       return true;
     }
-    if (caller.memberType === 'ADMIN' && target.memberType !== 'ADMIN') {
+    console.log(caller.memberType, target.memberType);
+    if (caller.memberType === 'ADMIN') {
       return true;
     }
     return false;
   }
+
+  isCallerBannableTarget(
+    room: ChatRoom,
+    caller: ChatUserRelation,
+    target: ChatUserRelation
+  ): boolean {
+    // callerがtargetをbanできる条件
+    // - targetが当該ルームにjoinしている
+    // - targetが当該ルームのOwnerではない
+    // - callerが当該ルームのOwnerである or (callerが当該ルームのAdminであり, targetが当該ルームのAdminではない)
+    console.log(room, caller, target);
+    const targetIsOwner = target.userId === room.ownerId;
+    const callerIsOwner = caller.userId === room.ownerId;
+    console.log(callerIsOwner, targetIsOwner);
+    if (targetIsOwner) {
+      return false;
+    }
+    if (callerIsOwner) {
+      return true;
+    }
+    console.log(caller.memberType, target.memberType);
+    if (caller.memberType === 'ADMIN') {
+      return true;
+    }
+    return false;
+  }
+
   isCallerMutableTarget(
     room: ChatRoom,
     caller: ChatUserRelation,
     target: ChatUserRelation
   ): boolean {
-    // callerがtargetをmuteきる条件
+    // callerがtargetをmuteできる条件
     // - targetが当該ルームにjoinしている
     // - targetが当該ルームのOwnerではない
     // - callerが当該ルームのOwnerである or (callerが当該ルームのAdminであり, targetが当該ルームのAdminではない)
     console.log(room, caller, target);
-    console.log(target.userId === room.ownerId);
-    if (target.userId === room.ownerId) {
+    const targetIsOwner = target.userId === room.ownerId;
+    const callerIsOwner = caller.userId === room.ownerId;
+    console.log(callerIsOwner, targetIsOwner);
+    if (targetIsOwner) {
       return false;
     }
-    console.log(caller.userId === room.ownerId);
-    if (caller.userId === room.ownerId) {
+    if (callerIsOwner) {
       return true;
     }
     console.log(caller.memberType, target.memberType);
-    if (caller.memberType === 'ADMIN' && target.memberType !== 'ADMIN') {
+    if (caller.memberType === 'ADMIN') {
       return true;
     }
     return false;

@@ -66,6 +66,12 @@ export type JoinResult = {
   user: User;
 };
 
+export type NomminateResult = {
+  relation: ChatUserRelationWithRoom;
+  room: ChatRoom;
+  user: User;
+};
+
 export type LeaveResult = {
   relation: ChatUserRelationWithRoom;
   room: ChatRoom;

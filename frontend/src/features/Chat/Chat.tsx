@@ -150,7 +150,7 @@ export const Chat = () => {
       } else {
         // 他人に関する通知
         console.log('for other');
-        stateMutater.addMembersInRoom(room.id, { [user.id]: data.relation });
+        stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
 
@@ -207,6 +207,16 @@ export const Chat = () => {
       }
     });
 
+    mySocket?.on('ft_nomminate', (data: TD.NomminateResult) => {
+      console.log('catch nomminate', data);
+      if (!(userId > 0)) {
+        return;
+      }
+      const { relation, room, user } = data;
+      console.log(relation, room, user);
+      stateMutater.mergeMembersInRoom(room.id, { [user.id]: relation });
+    });
+
     mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
@@ -221,7 +231,7 @@ export const Chat = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
-      stateMutater.addMembersInRoom(
+      stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
       );
@@ -297,6 +307,11 @@ export const Chat = () => {
 
     nomminate: (member: TD.ChatUserRelation) => {
       console.log('[nomminate]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_nomminate', data);
     },
 
     ban: (member: TD.ChatUserRelation) => {
@@ -390,10 +405,10 @@ export const Chat = () => {
      * @param roomId
      * @param newMembers
      */
-    addMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`addMembersInRoom(${roomId}, ${newMembers})`);
+    mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
+      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
-        console.log(`addMembersInRoom -> setMembersInRoom`);
+        console.log(`mergeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -405,7 +420,9 @@ export const Chat = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
-        console.log(prev, next);
+        console.log('[newMembers]', newMembers);
+        console.log('[prev]', prev);
+        console.log('[next]', next);
         return next;
       });
     },
@@ -457,6 +474,20 @@ export const Chat = () => {
       () => visibleRooms.find((r) => r.id === focusedRoomId),
       [visibleRooms, focusedRoomId]
     ),
+
+    you: useMemo(() => {
+      if (!userId) {
+        return null;
+      }
+      if (!focusedRoomId) {
+        return null;
+      }
+      const us = membersInRoom[focusedRoomId];
+      if (!us) {
+        return null;
+      }
+      return us[userId];
+    }, [userId, focusedRoomId, membersInRoom]),
   };
 
   /**
@@ -728,7 +759,7 @@ export const Chat = () => {
               }}
             >
               <ChatRoomMembersList
-                userId={userId}
+                you={computed.you}
                 room={computed.focusedRoom}
                 members={store.room_members(focusedRoomId) || {}}
                 {...memberOperations}

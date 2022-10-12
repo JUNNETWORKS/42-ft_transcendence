@@ -22,6 +22,7 @@ import * as Utils from 'src/utils';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -250,7 +251,10 @@ export class ChatGateway implements OnGatewayConnection {
       memberType: 'MEMBER',
     });
     console.log('member', member);
-    const relation = await this.chatRoomService.getRelation(roomId, user.id);
+    const relation = await this.chatRoomService.getRelationWithUser(
+      roomId,
+      user.id
+    );
     if (!relation) {
       return;
     }
@@ -342,6 +346,64 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  @SubscribeMessage('ft_nomminate')
+  async handleNomminate(
+    @MessageBody() data: OperationNomminateDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerNomminatableTarget(
+        room,
+        rels.caller,
+        rels.target
+      )
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットリレーションの `memberType` を `ADMIN` に更新する]
+    await this.chatRoomService.updateMember(roomId, {
+      ...rels.target,
+      memberType: 'ADMIN',
+    });
+    const newRel = await this.chatRoomService.getRelationWithUser(
+      roomId,
+      targetId
+    );
+    console.log('[newRel]', newRel);
+
+    this.sendResults(
+      'ft_nomminate',
+      {
+        relation: newRel,
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+      }
+    );
+  }
+
   @SubscribeMessage('ft_kick')
   async handleKick(
     @MessageBody() data: OperationKickDto,
@@ -420,7 +482,7 @@ export class ChatGateway implements OnGatewayConnection {
     // [TODO: 送信者がADMINまたはオーナーか？]
     const room = rels.target.chatRoom;
     if (
-      !this.chatService.isCallerMutableTarget(room, rels.caller, rels.target)
+      !this.chatService.isCallerBannableTarget(room, rels.caller, rels.target)
     ) {
       console.warn("fail: caller doesn't have a right for the operation.");
       return;

@@ -49,19 +49,18 @@ export const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
 
 export const ChatRoomMemberCard = (
   props: {
-    userId: number;
+    you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
     member: TD.ChatUserRelation;
     onClick?: (r: TD.ChatUserRelation) => void;
   } & TD.MemberOperations
 ) => {
-  const areYouOwner = props.userId === props.room.ownerId;
-  const areYouAdmin = false;
+  const areYouOwner = props.you?.userId === props.room.ownerId;
+  const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
-  const isYou = props.userId === props.member.user.id;
+  const isYou = props.you?.userId === props.member.user.id;
   const isAdmin = props.member.memberType === 'ADMIN';
   const isOwner = props.room.ownerId === props.member.user.id;
-
   const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
@@ -142,7 +141,7 @@ export const ChatRoomMemberCard = (
 
 export const ChatRoomMembersList = (
   props: {
-    userId: number;
+    you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
     members: TD.UserRelationMap;
   } & TD.MemberOperations
@@ -150,13 +149,13 @@ export const ChatRoomMembersList = (
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
-      const you = props.members[props.userId];
+      const you = props.you ? props.members[props.you.userId] : null;
       if (you) {
         mems.push(you);
       }
       Utils.keys(props.members).forEach((id) => {
         const m = props.members[id];
-        if (props.userId === m.userId) {
+        if (props.you?.userId === m.userId) {
           return;
         }
         mems.push(m);
