@@ -75,8 +75,51 @@ export class Match {
     ];
   }
 
+  // ゲーム状態を更新
+  update = (): void => {
+    this.updateBall();
+    this.updateBar();
+  };
+
+  // sessionID のバーをdir方向に動かす
+  moveBar = (sessionID: string, input: PlayerInput): void => {
+    // const idx = this.getPlayerIdx(sessionID);
+    // if (idx < 0) {
+    //   return;
+    // }
+    // this.players[idx].input = input;
+    // デバッグ用に両方のプレイヤーに操作を反映する
+    for (let idx = 0; idx < 2; idx++) {
+      this.players[idx].input = input;
+    }
+  };
+
+  // 現在のゲームの状態を返す
+  getState = (): GameState => {
+    const state: GameState = {
+      ball: this.ball,
+      players: this.players,
+    };
+    return state;
+  };
+
+  // ゲームの設定を返す
+  getSettings = (): GameSettings => {
+    return {
+      field: {
+        width: this.fieldWidth,
+        height: this.fieldWidth,
+      },
+      ball: {
+        radius: this.ballRadius,
+        dx: this.ballDx,
+        dy: this.ballDy,
+      },
+    };
+  };
+
   // 中央からランダムな方向へボールを飛ばす
-  regenerateBall = (): Ball => {
+  private regenerateBall = (): Ball => {
     const rad = Math.random() * (2 * Math.PI);
     const position = { x: this.fieldWidth / 2, y: this.fieldHeight / 2 };
     const velocity = { x: Math.cos(rad), y: Math.sin(rad) };
@@ -90,7 +133,7 @@ export class Match {
   };
 
   // ball の位置を更新する
-  updateBall = (): void => {
+  private updateBall = (): void => {
     // 左右の壁との判定
     if (this.ball.position.x <= 0) {
       // right の勝ち
@@ -221,21 +264,8 @@ export class Match {
     this.ball.position.y += this.ballDy * this.ball.velocity.y;
   };
 
-  // sessionID のバーをdir方向に動かす
-  moveBar = (sessionID: string, input: PlayerInput): void => {
-    // const idx = this.getPlayerIdx(sessionID);
-    // if (idx < 0) {
-    //   return;
-    // }
-    // this.players[idx].input = input;
-    // デバッグ用に両方のプレイヤーに操作を反映する
-    for (let idx = 0; idx < 2; idx++) {
-      this.players[idx].input = input;
-    }
-  };
-
   // 現在のプレイヤーのキー入力をもとにバーの位置を更新する
-  updateBar = (): void => {
+  private updateBar = (): void => {
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
       const input = player.input;
@@ -294,29 +324,6 @@ export class Match {
     }
   };
 
-  // 現在のゲームの状態を返す
-  getState = (): GameState => {
-    const state: GameState = {
-      ball: this.ball,
-      players: this.players,
-    };
-    return state;
-  };
-
-  getSettings = (): GameSettings => {
-    return {
-      field: {
-        width: this.fieldWidth,
-        height: this.fieldWidth,
-      },
-      ball: {
-        radius: this.ballRadius,
-        dx: this.ballDx,
-        dy: this.ballDy,
-      },
-    };
-  };
-
   private getPlayerIdx = (sessionID: string): number => {
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].id == sessionID) {
@@ -335,7 +342,7 @@ export class Match {
     return -1;
   };
 
-  // 長方形動詞が重なっているか判定する
+  // 長方形同士が重なっているか判定する
   // https://nihaoshijie.hatenadiary.jp/entry/2018/01/14/192201
   private isReactanglesOverlap = (
     rect1: Rectangle,

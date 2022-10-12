@@ -1,13 +1,17 @@
 import { ProgressingMatchManager } from './progressing_match_manager';
 import { Server } from 'socket.io';
+import { Match } from '../game/match';
 
 // マッチ成立待ちユーザーのリストを保持し､定期的にマッチの成立を試みる
 export class MatchMaker {
   // マッチメイキングを試みる間隔
-  private readonly MatchMakingIntervalMs = 500;
+  private readonly MatchMakingIntervalMs = 1000;
+  private readonly matchMakingProgressSyncIntervalMs = 100;
 
   // マッチ成立可能かチェックするタイマー
-  private intervalID: NodeJS.Timer;
+  private matchMakingIntervalID: NodeJS.Timer;
+  // マッチメイキング待機ユーザーを共有するタイマー
+  private matchMakingProgressSyncIntervalID: NodeJS.Timer;
   // マッチメイキング待機中のユーザー
   private waitingUsers: Array<string> = new Array<string>();
   // マッチが成立したらここに入れる
@@ -21,18 +25,24 @@ export class MatchMaker {
   ) {
     this.wsServer = wsServer;
     this.progressingMatchManager = progressing_match_manager;
-    // 500msごとにマッチの成立が可能か調べ､可能であるならマッチ開始
-    this.intervalID = setInterval(() => {
+    // 一定時間ごとにマッチの成立が可能か調べ､可能であるならマッチ開始
+    this.matchMakingIntervalID = setInterval(() => {
       this.makeMatches();
     }, this.MatchMakingIntervalMs);
+    // 一定時間ごとにマッチメイキングの進捗をクライアントに共有する
+    this.matchMakingProgressSyncIntervalID = setInterval(() => {
+      this.syncMatchMakingProgress();
+    }, this.matchMakingProgressSyncIntervalMs);
   }
 
   entry = (sessionID: string) => {
     this.addWaitingUsers(sessionID);
+    this.addMatchMakingRoom(sessionID);
   };
 
   exit = (sessionID: string) => {
     this.deleteWaitingUsers(sessionID);
+    this.deleteMatchMakingRoom(sessionID);
   };
 
   waitingCount = (): number => {
@@ -63,9 +73,24 @@ export class MatchMaker {
         this.waitingUsers.unshift(sessionID1);
         return;
       }
-      // TODO: マッチの開始
-      // - マッチインスタンスの作成
-      this.progressingMatchManager.start()
+      // マッチ開始
+      const match = new Match(sessionID1, sessionID2);
+      this.progressingMatchManager.startMatch(match);
     }
+  };
+
+  private addMatchMakingRoom = (sessionID: string) => {
+    // TODO: match_making/waiters roomに入れる
+    console.log(sessionID);
+  };
+
+  private deleteMatchMakingRoom = (sessionID: string) => {
+    // TODO: match_making/waiters roomからユーザーを除く
+    console.log(sessionID);
+  };
+
+  // マッチメイキングの進捗をクライアントに共有する
+  private syncMatchMakingProgress = () => {
+    console.log('コミットするためにある意味のないログ');
   };
 }
