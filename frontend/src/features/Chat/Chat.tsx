@@ -301,6 +301,11 @@ export const Chat = () => {
 
     ban: (member: TD.ChatUserRelation) => {
       console.log('[ban]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_ban', data);
     },
 
     kick: (member: TD.ChatUserRelation) => {

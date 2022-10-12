@@ -21,6 +21,7 @@ import { ChatService } from './chat.service';
 import * as Utils from 'src/utils';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
+import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -222,14 +223,25 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = data.roomId;
     // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
-    const room = await this.chatRoomService.findOne(roomId);
 
+    const rel = await Utils.PromiseMap({
+      room: this.chatRoomService.findOne(roomId),
+      relation: this.chatRoomService.getRelation(roomId, user.id),
+      attr: this.chatRoomService.getAttribute(roomId, user.id),
+    });
+
+    const room = rel.room;
     // [TODO: 実行者が対象チャットルームに入室できることを確認]
     {
-      const relation = await this.chatRoomService.getRelation(roomId, user.id);
+      const relation = rel.relation;
       if (relation) {
         return;
       }
+    }
+    // [TODO: 実行者がbanされていないことを確認]
+    if (rel.attr && rel.attr.bannedEndAt > new Date()) {
+      console.log('** you are banned **');
+      return;
     }
 
     // [TODO: ハードリレーション更新]
@@ -383,6 +395,59 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  @SubscribeMessage('ft_ban')
+  async handleBan(
+    @MessageBody() data: OperationBanDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+      targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerMutableTarget(room, rels.caller, rels.target)
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットのChatUserAttributeの `bannedEndAt` を更新する]
+    // なければ新規に作る
+    const prolongedBannedEndAt = new Date(Date.now() + constants.banDuration);
+    console.log('[old attr]', rels.targetAttr);
+    const attr = await this.chatRoomService.upsertAttribute(roomId, targetId, {
+      bannedEndAt: prolongedBannedEndAt,
+    });
+    console.log(prolongedBannedEndAt);
+    console.log('[new attr]', attr);
+
+    this.sendResults(
+      'ft_ban',
+      {
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+      }
+    );
+  }
+
   @SubscribeMessage('ft_mute')
   async handleMute(
     @MessageBody() data: OperationMuteDto,
@@ -400,7 +465,7 @@ export class ChatGateway implements OnGatewayConnection {
     const rels = await Utils.PromiseMap({
       caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
       target: this.chatRoomService.getRelationWithUser(roomId, targetId),
-      targetMute: this.chatRoomService.getAttribute(roomId, targetId),
+      targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
     });
     if (!rels.caller || !rels.target) {
       return;
@@ -416,11 +481,8 @@ export class ChatGateway implements OnGatewayConnection {
     const targetUser = rels.target.user;
     // [TODO: ターゲットのChatUserAttributeの `mutedEndAt` を更新する]
     // なければ新規に作る
-    const prolongedMutedEndAt = new Date(
-      (rels.targetMute ? rels.targetMute.mutedEndAt.getTime() : Date.now()) +
-        constants.banDuration
-    );
-    console.log('[old attr]', rels.targetMute);
+    const prolongedMutedEndAt = new Date(Date.now() + constants.muteDuration);
+    console.log('[old attr]', rels.targetAttr);
     const attr = await this.chatRoomService.upsertAttribute(roomId, targetId, {
       mutedEndAt: prolongedMutedEndAt,
     });
