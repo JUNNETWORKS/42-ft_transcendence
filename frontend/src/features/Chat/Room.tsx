@@ -161,7 +161,7 @@ export const ChatRoomMembersList = (
         mems.push(m);
       });
       return mems;
-    }, [props.userId, props.members]),
+    }, [props.you, props.members]),
   };
 
   return (
