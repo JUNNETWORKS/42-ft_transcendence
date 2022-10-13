@@ -2,10 +2,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { FTButton, FTH3, FTH4 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction, useEffectOnce } from './hooks';
-import { SayCard, OpenCard, SelfCard } from './CommandCard';
+import { useStateWithResetter, useAction, useEffectOnce } from '../../hooks';
+import { SayCard, OpenCard, SelfCard } from '../../components/CommandCard';
 
 /**
  *
