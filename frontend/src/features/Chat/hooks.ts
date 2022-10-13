@@ -21,3 +21,7 @@ export function useAction<T>(initialId: T, action: (id: T) => void) {
   useEffect(() => action(actionId), [action, actionId]);
   return [setActionId];
 }
+
+export const useEffectOnce = (action: React.EffectCallback) => {
+  useEffect(action, []);
+};

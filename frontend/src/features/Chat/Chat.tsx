@@ -4,7 +4,7 @@ import * as TD from './typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3, FTH4 } from './FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction } from './hooks';
+import { useStateWithResetter, useAction, useEffectOnce } from './hooks';
 import { SayCard, OpenCard, SelfCard } from './CommandCard';
 
 /**
@@ -61,6 +61,7 @@ export const Chat = () => {
     return [userIdStr, setter, mySocket] as const;
   };
   const [userIdStr, setUserIdStr, mySocket] = useSocket();
+  useEffectOnce(() => setUserIdStr('1'));
 
   const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
   // 見えているチャットルームの一覧
@@ -249,7 +250,6 @@ export const Chat = () => {
     open: (args: TD.OpenArgument) => {
       const data = {
         ...args,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_open', data);
@@ -258,7 +258,6 @@ export const Chat = () => {
     join: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_join', data);
@@ -267,7 +266,6 @@ export const Chat = () => {
     leave: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_leave', data);
@@ -279,7 +277,6 @@ export const Chat = () => {
       }
       const data = {
         roomId: focusedRoomId,
-        callerId: 1,
         content,
       };
       console.log(data);
@@ -290,7 +287,6 @@ export const Chat = () => {
       const data = {
         roomId,
         take: 50,
-        callerId: 1,
       };
       console.log(['get_room_messages'], data);
       mySocket?.emit('ft_get_room_messages', data);
@@ -299,7 +295,6 @@ export const Chat = () => {
     get_room_members: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(['get_room_members'], data);
       mySocket?.emit('ft_get_room_members', data);
