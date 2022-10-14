@@ -100,7 +100,6 @@ export const ChatRoomMemberCard = (
 
       {isNomminatable && (
         <FTButton
-          className="button-nomminate"
           onClick={() =>
             props.onNomminateClick ? props.onNomminateClick(props.member) : null
           }
@@ -110,7 +109,6 @@ export const ChatRoomMemberCard = (
       )}
       {isBannable && (
         <FTButton
-          className="button-ban"
           onClick={() =>
             props.onBanClick ? props.onBanClick(props.member) : null
           }
@@ -120,7 +118,6 @@ export const ChatRoomMemberCard = (
       )}
       {isKickable && (
         <FTButton
-          className="button-kick"
           onClick={() =>
             props.onKickClick ? props.onKickClick(props.member) : null
           }
@@ -130,7 +127,6 @@ export const ChatRoomMemberCard = (
       )}
       {isMutable && (
         <FTButton
-          className="button-mute"
           onClick={() =>
             props.onMuteClick ? props.onMuteClick(props.member) : null
           }

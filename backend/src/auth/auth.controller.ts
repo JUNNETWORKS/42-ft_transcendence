@@ -1,4 +1,12 @@
-import { Controller, Get, Post, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+  Request,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { LocalAuthGuard } from './local-auth.guard';
@@ -48,5 +56,14 @@ export class AuthController {
   })
   async callback_ft(@Request() req: any) {
     return this.authService.login(req.user);
+  }
+
+  @Get('self/:id')
+  @ApiFoundResponse({})
+  async self(@Param('id', ParseIntPipe) id: number) {
+    console.log('id', id);
+    const user = await this.usersService.findOne(id);
+    console.log('user', user);
+    return this.authService.login(user!);
   }
 }

@@ -1,48 +1,158 @@
-import { FTH1, FTH3 } from '@/components/FTBasicComponents';
-import { useStoredCredential } from '@/hooks';
+import {
+  FTH1,
+  FTH3,
+  FTH4,
+  FTButton,
+  FTSubmit,
+  FTTextField,
+} from '@/components/FTBasicComponents';
+import { useQuery, useStoredCredential } from '@/hooks';
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const useQuery = () => {
-  const { search } = useLocation();
-  return useMemo(() => new URLSearchParams(search), [search]);
+const apiHost = `http://localhost:3000`;
+
+const FtAuthForm = () => (
+  <form method="POST" action="http://localhost:3000/auth/login_ft">
+    <FTSubmit className="hover:bg-white hover:text-black" value="Login" />
+  </form>
+);
+
+const SelfAuthForm = (props: { finalizer: (data: any) => void }) => {
+  const [userIdStr, setUserIdStr] = useState('');
+  type Phase = 'Ready' | 'NotReady' | 'Working';
+  // 状態遷移
+  // - ボタン押せる
+  // - ボタン押せない
+  // - ボタン押してる
+  const [phase, setPhase] = useState<Phase>('NotReady');
+
+  const sender = async (s: string) => {
+    const url = `${apiHost}/auth/self/${s}`;
+    const result = await fetch(url, {
+      method: 'GET',
+      mode: 'cors',
+    });
+    const json = await result.json();
+    console.log('json', json);
+    props.finalizer(json);
+  };
+
+  const validator = (s: string) => {
+    if (!s) {
+      return 'empty?';
+    }
+    const n = parseInt(s);
+    if (`${n}` !== s) {
+      return 'not a valid number?';
+    }
+    if (n < 1) {
+      return 'not a valid userId?';
+    }
+    return null;
+  };
+
+  const click = async () => {
+    try {
+      setPhase('Working');
+      await sender(userIdStr);
+    } catch (e) {
+      console.error(e);
+    }
+    setPhase('Ready');
+  };
+
+  const errorMessage = (() => {
+    if (phase === 'Working') {
+      return null;
+    }
+    return validator(userIdStr);
+  })();
+
+  return (
+    <>
+      <FTTextField
+        className="border-2"
+        autoComplete="off"
+        placeholder="ユーザID"
+        value={userIdStr}
+        onChange={(e) => setUserIdStr(e.target.value)}
+      />
+      <FTButton disabled={!!errorMessage} onClick={() => click()}>
+        Force Login
+      </FTButton>
+      <div>{errorMessage}</div>
+    </>
+  );
 };
 
-export const DevAuthLogin = () => {
+export const DevAuthLogin = (props: { finalizer: (data: any) => void }) => {
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-        Login
+        Login, Please.
       </FTH1>
-      <br></br>
-      <div className="flex flex-col gap-6">
-        <FTH3>By 42</FTH3>
-        <div>
-          <form method="POST" action="http://localhost:3000/auth/login_ft">
-            <input type="submit" value="Login" />
-          </form>
+      <br />
+      <div className="flex flex-col gap-8">
+        <FTH3>By 42Auth</FTH3>
+        <div className="text-center">
+          <FtAuthForm />
         </div>
         <FTH3>By Self</FTH3>
+        <div className="text-center">
+          <SelfAuthForm finalizer={props.finalizer} />
+        </div>
+        <FTH3>By Email / Password</FTH3>
+        <div></div>
       </div>
     </>
   );
 };
 
-export const DevAuthLogout = () => {
+export const DevAuthenticated = (props: {
+  personalData: UserPersonalData;
+  onLogout?: () => void;
+}) => {
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-        Logout
+        You&apos;re Authenticated.
       </FTH1>
+      <div className="flex flex-col gap-2">
+        <FTH4>id</FTH4>
+        <div>{props.personalData.id}</div>
+        <FTH4>name</FTH4>
+        <div>{props.personalData.displayName}</div>
+        <FTH4>email</FTH4>
+        <div>{props.personalData.email}</div>
+      </div>
+      <br />
+      <div className="flex flex-col gap-2">
+        <FTH4>Logout?</FTH4>
+        <div className="text-center">
+          <FTButton
+            onClick={() => {
+              if (props.onLogout) props.onLogout();
+            }}
+          >
+            Logout
+          </FTButton>
+        </div>
+      </div>
     </>
   );
 };
 
 export const DevAuthValidating = () => {
-  return <>クレデンシャルを検証しています...</>;
+  return (
+    <>
+      <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
+        Just A Moment, Please.
+      </FTH1>
+      <div>クレデンシャルを検証しています...</div>
+    </>
+  );
 };
-
-const apiHost = `http://localhost:3000`;
 
 type AuthenticationFlowState =
   | 'Neutral'
@@ -51,6 +161,11 @@ type AuthenticationFlowState =
   | 'NotAuthenticated'
   | 'NeutralAuthorizationCode'
   | 'ValidatingAuthorizationCode';
+type UserPersonalData = {
+  id: number;
+  email: string;
+  displayName: string;
+};
 
 let i = 0;
 
@@ -66,8 +181,6 @@ export const DevAuth = () => {
       return ['', 'Neutral'] as const;
     }
     // 認可コードがある -> 認可コードを検証!!
-    // query.delete("code");
-    console.log({ code });
     return [code, 'NeutralAuthorizationCode'] as const;
   })();
   const [authState, setAuthState] =
@@ -75,7 +188,11 @@ export const DevAuth = () => {
   // ブラウザが保持しているクレデンシャル
   const [storedCredential, setStoredCredential] = useStoredCredential();
   // 認可コード
-  const [ftAuthCode, setFtAuthCode] = useState(initialAuthCode);
+  const [ftAuthCode] = useState(initialAuthCode);
+  // パーソナルデータ
+  const [personalData, setPersonalData] = useState<UserPersonalData | null>(
+    null
+  );
 
   const callSession = async () => {
     console.log({ storedCredential });
@@ -90,16 +207,18 @@ export const DevAuth = () => {
           },
         });
         const json = await result.json();
-        console.log(json);
-        setAuthState('Authenticated');
-        return;
+        console.log('callSession', json);
+        if (json) {
+          setPersonalData(json);
+          setAuthState('Authenticated');
+          return;
+        }
       } catch (e) {
         console.error(e);
-        setAuthState('NotAuthenticated');
       }
-    } else {
-      setAuthState('NotAuthenticated');
     }
+    setPersonalData(null);
+    setAuthState('NotAuthenticated');
   };
 
   const callCallbackFt = async () => {
@@ -115,6 +234,7 @@ export const DevAuth = () => {
       // アクセストークンが得られた
       // -> 認証完了状態にする
       setStoredCredential({ token: access_token });
+      setPersonalData(user);
       setAuthState('Authenticated');
     } else {
       // アクセストークンがなかった
@@ -158,15 +278,30 @@ export const DevAuth = () => {
     }
   }, [authState]);
 
-  const com = (() => {
+  const doLogout = () => {
+    setStoredCredential(null);
+    setAuthState('NotAuthenticated');
+  };
+
+  const finalizer = (data: any) => {
+    const { token, user } = data;
+    setStoredCredential({ token });
+    setPersonalData(user);
+    setAuthState('Authenticated');
+  };
+
+  const presentator = (() => {
     switch (authState) {
       case 'Neutral':
       case 'Validating':
         return DevAuthValidating();
       case 'Authenticated':
-        return DevAuthLogout();
+        return DevAuthenticated({
+          personalData: personalData!,
+          onLogout: doLogout,
+        });
       case 'NotAuthenticated':
-        return DevAuthLogin();
+        return DevAuthLogin({ finalizer });
       case 'NeutralAuthorizationCode':
       case 'ValidatingAuthorizationCode':
         return DevAuthValidating();
@@ -177,7 +312,9 @@ export const DevAuth = () => {
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-      <div className="w-96 basis-1 border-4 border-white">{com}</div>
+      <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
+        {presentator}
+      </div>
     </div>
   );
 };

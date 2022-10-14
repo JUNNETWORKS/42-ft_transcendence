@@ -607,11 +607,8 @@ export const Chat = () => {
                   >
                     {predicate.isJoiningTo(data.id) ? (
                       <FTButton
-                        style={{
-                          width: '4em',
-                          color: 'black',
-                          backgroundColor: 'white',
-                        }}
+                        className="bg-white text-black hover:bg-black hover:text-white"
+                        style={{ width: '4em' }}
                         onClick={() => command.leave(data.id)}
                       >
                         Leave

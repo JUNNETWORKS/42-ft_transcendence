@@ -31,7 +31,26 @@ export const FTButton = (
 ) => {
   return (
     <button
+      className="hover:bg-white hover:text-black disabled:opacity-50"
       {...{ ...props }}
+      style={{
+        ...(props.style || {}),
+        ...styleButtonCommon,
+      }}
+    />
+  );
+};
+
+export const FTSubmit = (
+  props: React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+  >
+) => {
+  return (
+    <input
+      {...{ ...props }}
+      type="submit"
       style={{
         ...(props.style || {}),
         ...styleButtonCommon,

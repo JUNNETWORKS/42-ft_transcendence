@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
+import * as Utils from 'src/utils';
 
 export type LoginResult = {
   access_token: string;
@@ -52,12 +53,13 @@ export class AuthService {
       sub: user.id,
       iat,
     };
+    const u = await this.usersService.findOne(user.id);
     const result = {
       access_token: this.jwtService.sign(payload, {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user,
+      user: Utils.pick(u!, 'id', 'displayName', 'email'),
     };
     console.log(`[login]`, result);
     return result;

@@ -7,7 +7,7 @@ export const styleTextFieldCommon: CSSProperties = {
 };
 
 export const styleButtonCommon: CSSProperties = {
-  border: '1px solid white',
+  border: '2px solid white',
   padding: '2px 6px',
 };
 
