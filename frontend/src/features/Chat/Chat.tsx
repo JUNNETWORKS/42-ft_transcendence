@@ -45,9 +45,11 @@ export const Chat = () => {
               auth: (cb) => {
                 cb({
                   // 本当はアクセストークンをここに記載する
+                  token:
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1NzE0NDc5LjIxNCwiZXhwIjoxNjY4MzA2NDc5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.YUQgpOc5xJvwYN4mRQyRTS4XSXBdx2EZL2SOLBI8Gw4',
                   // token: "some_access_token"
                   // 開発中はここにuserIdを書いてもよい
-                  sub: userId,
+                  // sub: userId,
                 });
               },
             });

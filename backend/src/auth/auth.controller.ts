@@ -5,11 +5,16 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { FtAuthGuard } from './ft-auth.guard';
 import { LoginResultEntity } from './entities/auth.entity';
+import { UsersService } from 'src/users/users.service';
+import * as Utils from 'src/utils';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService
+  ) {}
 
   // TODO: 削除
   @UseGuards(LocalAuthGuard)
@@ -20,9 +25,10 @@ export class AuthController {
   }
 
   @UseGuards(JwtAuthGuard)
-  @Get('protected')
-  async protected(@Request() req: any) {
-    return req.user;
+  @Get('session')
+  async session(@Request() req: any) {
+    const user = await this.usersService.findOne(req.user.id);
+    return Utils.pick(user!, 'id', 'displayName', 'email');
   }
 
   @UseGuards(FtAuthGuard)

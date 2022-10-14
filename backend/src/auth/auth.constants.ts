@@ -11,5 +11,6 @@ export const ftConstants = {
   clientID: process.env.AUTH_FT_CLIENT_ID,
   // TODO: .envファイルに出す
   clientSecret: process.env.AUTH_FT_CLIENT_SECRET,
-  callbackURL: 'http://localhost:3000/auth/callback_ft',
+  // callbackURL: 'http://localhost:3000/auth/callback_ft',
+  callbackURL: 'http://localhost:5173/auth',
 };
