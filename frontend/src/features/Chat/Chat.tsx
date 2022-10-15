@@ -235,7 +235,7 @@ const SelfCard = (props: {
   );
 };
 
-const useSocket = () => {
+const useSocket = (resetState: () => void) => {
   const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(null);
   const [userIdStr, setUserIdStr] = useState('');
   const setter = (str: string) => {
@@ -251,6 +251,7 @@ const useSocket = () => {
       if (userId > 0) {
         setMySocket((prev) => {
           prev?.disconnect();
+          resetState();
           const socket = io('http://localhost:3000/chat', {
             auth: (cb) => {
               cb({
@@ -277,7 +278,16 @@ const useSocket = () => {
  */
 export const Chat = () => {
   type ChatRoomMessage = TD.ChatRoomMessage;
-  const [userIdStr, setUserIdStr, mySocket] = useSocket();
+  const [userIdStr, setUserIdStr, mySocket] = useSocket(() => {
+    resetUserId();
+    resetVisibleRooms();
+    resetJoiningRooms();
+    resetFocusedRoomId();
+    resetMessagesInRoom();
+    resetMembersInRoom();
+    action.get_room_members(0);
+    action.get_room_message(0);
+  });
 
   const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
   // 見えているチャットルームの一覧
@@ -312,15 +322,6 @@ export const Chat = () => {
     console.log(mySocket);
 
     if (!mySocket) return;
-
-    resetUserId();
-    resetVisibleRooms();
-    resetJoiningRooms();
-    resetFocusedRoomId();
-    resetMessagesInRoom();
-    resetMembersInRoom();
-    action.get_room_members(0);
-    action.get_room_message(0);
 
     mySocket.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection');
@@ -437,7 +438,7 @@ export const Chat = () => {
     return () => {
       mySocket?.removeAllListeners();
     };
-  }, [mySocket]);
+  });
 
   /**
    * チャットコマンド
