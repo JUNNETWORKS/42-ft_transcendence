@@ -235,59 +235,48 @@ const SelfCard = (props: {
   );
 };
 
+const useSocket = () => {
+  const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(null);
+  const [userIdStr, setUserIdStr] = useState('');
+  const setter = (str: string) => {
+    setUserIdStr((prev) => {
+      if (prev === str.trim()) {
+        return prev;
+      }
+      const next = str.trim();
+      if (!next) {
+        return prev;
+      }
+      const userId = parseInt(next);
+      if (userId > 0) {
+        setMySocket((prev) => {
+          prev?.disconnect();
+          const socket = io('http://localhost:3000/chat', {
+            auth: (cb) => {
+              cb({
+                // 本当はアクセストークンをここに記載する
+                // token: "some_access_token"
+                // 開発中はここにuserIdを書いてもよい
+                sub: userId,
+              });
+            },
+          });
+          return socket;
+        });
+        return next;
+      }
+      return prev;
+    });
+  };
+  return [userIdStr, setter, mySocket] as const;
+};
+
 /**
  *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = () => {
   type ChatRoomMessage = TD.ChatRoomMessage;
-  const useSocket = () => {
-    const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(
-      null
-    );
-    const [userIdStr, setUserIdStr] = useState('');
-    const setter = (str: string) => {
-      setUserIdStr((prev) => {
-        if (prev === str.trim()) {
-          return prev;
-        }
-        const next = str.trim();
-        if (!next) {
-          return prev;
-        }
-        const userId = parseInt(next);
-        if (userId > 0) {
-          setMySocket((prev) => {
-            prev?.disconnect();
-            // すべてのstateをリセット
-
-            resetUserId();
-            resetVisibleRooms();
-            resetJoiningRooms();
-            resetFocusedRoomId();
-            resetMessagesInRoom();
-            resetMembersInRoom();
-            action.get_room_members(0);
-            action.get_room_message(0);
-            const socket = io('http://localhost:3000/chat', {
-              auth: (cb) => {
-                cb({
-                  // 本当はアクセストークンをここに記載する
-                  // token: "some_access_token"
-                  // 開発中はここにuserIdを書いてもよい
-                  sub: userId,
-                });
-              },
-            });
-            return socket;
-          });
-          return next;
-        }
-        return prev;
-      });
-    };
-    return [userIdStr, setter, mySocket] as const;
-  };
   const [userIdStr, setUserIdStr, mySocket] = useSocket();
 
   const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
@@ -319,14 +308,28 @@ export const Chat = () => {
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
-    mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
+    // すべてのstateをリセット
+    console.log(mySocket);
+
+    if (!mySocket) return;
+
+    resetUserId();
+    resetVisibleRooms();
+    resetJoiningRooms();
+    resetFocusedRoomId();
+    resetMessagesInRoom();
+    resetMembersInRoom();
+    action.get_room_members(0);
+    action.get_room_message(0);
+
+    mySocket.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection');
       setUserId(data.userId);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
     });
 
-    mySocket?.on('ft_open', (data: TD.OpenResult) => {
+    mySocket.on('ft_open', (data: TD.OpenResult) => {
       console.log('catch open');
       console.log(data);
       const room: TD.ChatRoom = {
@@ -348,14 +351,14 @@ export const Chat = () => {
       }
     });
 
-    mySocket?.on('ft_say', (data: TD.SayResult) => {
+    mySocket.on('ft_say', (data: TD.SayResult) => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
       const roomId = data.chatRoomId;
       stateMutater.addMessagesToRoom(roomId, [message]);
     });
 
-    mySocket?.on('ft_join', (data: TD.JoinResult) => {
+    mySocket.on('ft_join', (data: TD.JoinResult) => {
       console.log('catch join', data);
       if (userId > 0) {
         const { chatRoom: room } = data.relation;
@@ -381,7 +384,7 @@ export const Chat = () => {
       }
     });
 
-    mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
+    mySocket.on('ft_leave', (data: TD.LeaveResult) => {
       console.log('catch leave', data);
       if (userId > 0) {
         const { chatRoom: room } = data.relation;
@@ -411,7 +414,7 @@ export const Chat = () => {
       }
     });
 
-    mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
+    mySocket.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
@@ -421,7 +424,7 @@ export const Chat = () => {
       );
     });
 
-    mySocket?.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
+    mySocket.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
@@ -434,7 +437,7 @@ export const Chat = () => {
     return () => {
       mySocket?.removeAllListeners();
     };
-  });
+  }, [mySocket]);
 
   /**
    * チャットコマンド
