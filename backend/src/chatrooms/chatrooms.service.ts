@@ -56,10 +56,16 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    const res = await this.prisma.chatRoom.findUniqueOrThrow({
-      where: { id },
-    });
-    return new ChatroomEntity(res);
+    try {
+      const res = await this.prisma.chatRoom.findUniqueOrThrow({
+        where: { id },
+      });
+      return new ChatroomEntity(res);
+    } catch (err) {
+      console.error(err);
+      // TODO: errの種類拾う
+      throw new HttpException(`${err}`, 400);
+    }
   }
 
   join(roomId: number, userId: number) {
@@ -90,6 +96,45 @@ export class ChatroomsService {
       where: {
         chatRoomId: roomId,
       },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  /**
+   * ユーザを指定して, joinしているチャットルームを取得する
+   * @param userId
+   * @returns
+   */
+  getRoomsJoining(userId: number) {
+    return this.prisma.chatUserRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        chatRoom: true,
+      },
+    });
+  }
+
+  /**
+   * ルームとユーザを指定して, リレーションおよびルーム情報を取得する
+   * @param chatRoomId
+   * @param userId
+   * @returns
+   */
+  getRelation(chatRoomId: number, userId: number) {
+    return this.prisma.chatUserRelation.findUnique({
+      where: {
+        userId_chatRoomId: {
+          chatRoomId,
+          userId,
+        },
+      },
+      include: {
+        chatRoom: true,
+      },
     });
   }
 
@@ -118,17 +163,17 @@ export class ChatroomsService {
       where: { id },
       data: {
         roomMember: {
-          create: updateRoomMemberDto.roomMember,
+          create: updateRoomMemberDto,
         },
       },
     });
     return new ChatroomEntity(res);
   }
 
-  async updateMember(roomId: number, roomMemberDto: RoomMemberDto) {
+  async updateMember(chatRoomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType } = roomMemberDto;
-    const roomInfo = await this.findOne(roomId);
+    const roomInfo = await this.findOne(chatRoomId);
     if (roomInfo.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
     }
@@ -137,13 +182,25 @@ export class ChatroomsService {
       where: {
         userId_chatRoomId: {
           userId: userId,
-          chatRoomId: roomId,
+          chatRoomId,
         },
       },
       data: {
         memberType: memberType,
       },
     });
+  }
+
+  async removeMember(chatRoomId: number, userId: number) {
+    const res = await this.prisma.chatUserRelation.delete({
+      where: {
+        userId_chatRoomId: {
+          userId,
+          chatRoomId,
+        },
+      },
+    });
+    return res;
   }
 
   async remove(id: number) {
@@ -161,6 +218,14 @@ export class ChatroomsService {
           chatRoomId: roomId,
           id: cursor ? { lt: cursor } : undefined,
         },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+            },
+          },
+        },
         orderBy: { id: 'asc' },
       });
     } else {
@@ -169,6 +234,14 @@ export class ChatroomsService {
         where: {
           chatRoomId: roomId,
           id: cursor ? { gt: cursor } : undefined,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              displayName: true,
+            },
+          },
         },
         orderBy: { id: 'asc' },
       });

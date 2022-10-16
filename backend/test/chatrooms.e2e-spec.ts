@@ -335,7 +335,7 @@ describe('/Chatrooms (e2e)', () => {
         .get('/chatrooms/999')
         .set('Accept', 'application/json');
 
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 
@@ -491,10 +491,8 @@ describe('/Chatrooms (e2e)', () => {
   describe('PATCH / chatrooms/addMember', () => {
     it('success', async () => {
       const body: CreateRoomMemberDto = {
-        roomMember: [
-          { userId: 2, memberType: 'MEMBER' },
-          { userId: 3, memberType: 'ADMIN' },
-        ],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       const res = await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
@@ -528,14 +526,15 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json')
         .send(body);
 
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 
   describe('PATCH /chatrooms/memberType', () => {
     it('MEMBER -> ADMIN', async () => {
       const pbody: CreateRoomMemberDto = {
-        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
@@ -557,7 +556,8 @@ describe('/Chatrooms (e2e)', () => {
 
     it('ADMIN -> MEMBER', async () => {
       const pbody: CreateRoomMemberDto = {
-        roomMember: [{ userId: 2, memberType: 'MEMBER' }],
+        userId: 2,
+        memberType: 'MEMBER',
       };
       await request(app.getHttpServer())
         .put('/chatrooms/1/addMember')
@@ -612,7 +612,7 @@ describe('/Chatrooms (e2e)', () => {
       res = await request(app.getHttpServer())
         .get('/chatrooms/1')
         .set('Accept', 'application/json');
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 

@@ -13,5 +13,6 @@
   "coveragePathIgnorePatterns": [
     "src/prisma",
     "test/testUtils.ts"
-  ]
+  ],
+  "moduleDirectories": ["<rootDir>", "node_modules"]
 }

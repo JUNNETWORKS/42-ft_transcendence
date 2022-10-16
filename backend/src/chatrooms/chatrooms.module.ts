@@ -7,5 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
   controllers: [ChatroomsController],
   providers: [ChatroomsService],
   imports: [PrismaModule],
+  exports: [ChatroomsService],
 })
 export class ChatroomsModule {}

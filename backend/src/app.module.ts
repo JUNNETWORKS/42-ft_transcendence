@@ -5,9 +5,17 @@ import { ChatroomsModule } from './chatrooms/chatrooms.module';
 import { PongModule } from './pong/pong.module';
 import { PongGateway } from './pong/pong.gateway';
 import { AuthModule } from './auth/auth.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
-  imports: [PrismaModule, UsersModule, ChatroomsModule, AuthModule, PongModule],
+  imports: [
+    PrismaModule,
+    UsersModule,
+    ChatroomsModule,
+    AuthModule,
+    ChatModule,
+    PongModule,
+  ],
   providers: [PongGateway],
 })
 export class AppModule {}
