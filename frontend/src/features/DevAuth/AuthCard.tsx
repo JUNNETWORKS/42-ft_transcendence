@@ -1,3 +1,4 @@
+import { personalDataAtom } from '@/atoms';
 import {
   FTH1,
   FTH3,
@@ -6,6 +7,7 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 
 const apiHost = `http://localhost:3000`;
@@ -120,23 +122,23 @@ export const DevAuthLogin = (props: {
   );
 };
 
-export const DevAuthenticated = (props: {
-  personalData: UserPersonalData;
-  onLogout?: () => void;
-}) => {
+export const DevAuthenticated = (props: { onLogout?: () => void }) => {
+  const [personalData] = useAtom(personalDataAtom);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         You&apos;re Authenticated.
       </FTH1>
-      <div className="flex flex-col gap-2">
-        <FTH4>id</FTH4>
-        <div>{props.personalData.id}</div>
-        <FTH4>name</FTH4>
-        <div>{props.personalData.displayName}</div>
-        <FTH4>email</FTH4>
-        <div>{props.personalData.email}</div>
-      </div>
+      {personalData && (
+        <div className="flex flex-col gap-2">
+          <FTH4>id</FTH4>
+          <div>{personalData.id}</div>
+          <FTH4>name</FTH4>
+          <div>{personalData.displayName}</div>
+          <FTH4>email</FTH4>
+          <div>{personalData.email}</div>
+        </div>
+      )}
       <br />
       <div className="flex flex-col gap-2">
         <FTH4>Logout?</FTH4>
