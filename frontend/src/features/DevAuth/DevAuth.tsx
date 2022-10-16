@@ -1,6 +1,8 @@
+import { personalDataAtom, storedCredentialAtom } from '@/atoms';
 import { AppCredential, useQuery } from '@/hooks';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useRecoilState } from 'recoil';
 import {
   DevAuthenticated,
   DevAuthLogin,
@@ -18,12 +20,11 @@ type AuthenticationFlowState =
   | 'NeutralAuthorizationCode'
   | 'ValidatingAuthorizationCode';
 
-export const DevAuth = (props: {
-  storedCredential: AppCredential | null;
-  setStoredCredential: (val: AppCredential | null) => void;
-  personalData: UserPersonalData | null;
-  setPersonalData: (val: UserPersonalData | null) => void;
-}) => {
+export const DevAuth = () => {
+  const [storedCredential, setStoredCredential] =
+    useRecoilState(storedCredentialAtom);
+  // パーソナルデータ
+  const [personalData, setPersonalData] = useRecoilState(personalDataAtom);
   const query = useQuery();
   const navigation = useNavigate();
   // 認証フローの状態
@@ -44,15 +45,15 @@ export const DevAuth = (props: {
     onSucceeded: (user: any) => void,
     onFailed: () => void
   ) => {
-    console.log({ storedCredential: props.storedCredential });
-    if (props.storedCredential && props.storedCredential.token) {
+    console.log({ storedCredential });
+    if (storedCredential && storedCredential.token) {
       console.log(`calling callSession`);
       try {
         const result = await fetch(`${apiHost}/auth/session`, {
           method: 'GET',
           mode: 'cors',
           headers: {
-            Authorization: `Bearer ${props.storedCredential.token}`,
+            Authorization: `Bearer ${storedCredential.token}`,
           },
         });
         const json = await result.json();
@@ -69,25 +70,25 @@ export const DevAuth = (props: {
   };
 
   const doLogout = () => {
-    props.setStoredCredential(null);
-    props.setPersonalData(null);
+    setStoredCredential(null);
+    setPersonalData(null);
     setAuthState('NotAuthenticated');
   };
 
   const finalizer = (token: string, user: any) => {
-    props.setStoredCredential({ token });
-    props.setPersonalData(user);
+    setStoredCredential({ token });
+    setPersonalData(user);
     setAuthState('Authenticated');
   };
 
   const invokeSession = () =>
     callSession(
       (user) => {
-        props.setPersonalData(user);
+        setPersonalData(user);
         setAuthState('Authenticated');
       },
       () => {
-        props.setPersonalData(null);
+        setPersonalData(null);
         setAuthState('NotAuthenticated');
       }
     );
@@ -158,7 +159,7 @@ export const DevAuth = (props: {
         return DevAuthValidating();
       case 'Authenticated':
         return DevAuthenticated({
-          personalData: props.personalData!,
+          personalData: personalData!,
           onLogout: doLogout,
         });
       case 'NotAuthenticated':
