@@ -3,17 +3,11 @@ import { Chat } from '@/features/Chat/Chat';
 import { Pong } from '@/features/Pong/components/Pong';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { useState } from 'react';
-import { UserPersonalData } from '@/features/DevAuth/AuthCard';
-import { useStoredCredential } from '@/features/DevAuth/hooks';
+import { useStoredCredential } from '@/hooks';
 
 export const AppRoutes = () => {
   // ブラウザが保持しているクレデンシャル
   const [storedCredential, setStoredCredential] = useStoredCredential();
-  // パーソナルデータ
-  const [personalData, setPersonalData] = useState<UserPersonalData | null>(
-    null
-  );
 
   const commonRoutes = [
     { path: '/chat', element: <Chat /> },
@@ -24,8 +18,6 @@ export const AppRoutes = () => {
         <DevAuth
           storedCredential={storedCredential}
           setStoredCredential={setStoredCredential}
-          personalData={personalData}
-          setPersonalData={setPersonalData}
         />
       ),
     },

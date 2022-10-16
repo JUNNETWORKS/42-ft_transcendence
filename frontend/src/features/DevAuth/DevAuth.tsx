@@ -1,4 +1,6 @@
+import { personalDataAtom } from '@/atoms';
 import { AppCredential, useQuery } from '@/hooks';
+import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -21,9 +23,9 @@ type AuthenticationFlowState =
 export const DevAuth = (props: {
   storedCredential: AppCredential | null;
   setStoredCredential: (val: AppCredential | null) => void;
-  personalData: UserPersonalData | null;
-  setPersonalData: (val: UserPersonalData | null) => void;
 }) => {
+  // パーソナルデータ
+  const [personalData, setPersonalData] = useAtom(personalDataAtom);
   const query = useQuery();
   const navigation = useNavigate();
   // 認証フローの状態
@@ -70,24 +72,24 @@ export const DevAuth = (props: {
 
   const doLogout = () => {
     props.setStoredCredential(null);
-    props.setPersonalData(null);
+    setPersonalData(null);
     setAuthState('NotAuthenticated');
   };
 
   const finalizer = (token: string, user: any) => {
     props.setStoredCredential({ token });
-    props.setPersonalData(user);
+    setPersonalData(user);
     setAuthState('Authenticated');
   };
 
   const invokeSession = () =>
     callSession(
       (user) => {
-        props.setPersonalData(user);
+        setPersonalData(user);
         setAuthState('Authenticated');
       },
       () => {
-        props.setPersonalData(null);
+        setPersonalData(null);
         setAuthState('NotAuthenticated');
       }
     );
@@ -158,7 +160,7 @@ export const DevAuth = (props: {
         return DevAuthValidating();
       case 'Authenticated':
         return DevAuthenticated({
-          personalData: props.personalData!,
+          personalData: personalData!,
           onLogout: doLogout,
         });
       case 'NotAuthenticated':
