@@ -42,7 +42,7 @@ const SelfAuthForm = (props: {
     if (result.ok) {
       const json = await result.json();
       console.log('json', json);
-      const { token, user } = json;
+      const { access_token: token, user } = json;
       props.finalizer(token, user);
     }
   };
