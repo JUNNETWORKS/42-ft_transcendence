@@ -1,4 +1,4 @@
-import { personalDataAtom } from '@/atoms';
+import { personalDataAtom, storedCredentialAtom } from '@/atoms';
 import { AppCredential, useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
@@ -20,10 +20,8 @@ type AuthenticationFlowState =
   | 'NeutralAuthorizationCode'
   | 'ValidatingAuthorizationCode';
 
-export const DevAuth = (props: {
-  storedCredential: AppCredential | null;
-  setStoredCredential: (val: AppCredential | null) => void;
-}) => {
+export const DevAuth = () => {
+  const [storedCredential, setStoredCredential] = useAtom(storedCredentialAtom);
   // パーソナルデータ
   const [personalData, setPersonalData] = useAtom(personalDataAtom);
   const query = useQuery();
@@ -46,15 +44,15 @@ export const DevAuth = (props: {
     onSucceeded: (user: any) => void,
     onFailed: () => void
   ) => {
-    console.log({ storedCredential: props.storedCredential });
-    if (props.storedCredential && props.storedCredential.token) {
+    console.log({ storedCredential });
+    if (storedCredential && storedCredential.token) {
       console.log(`calling callSession`);
       try {
         const result = await fetch(`${apiHost}/auth/session`, {
           method: 'GET',
           mode: 'cors',
           headers: {
-            Authorization: `Bearer ${props.storedCredential.token}`,
+            Authorization: `Bearer ${storedCredential.token}`,
           },
         });
         const json = await result.json();
@@ -71,13 +69,13 @@ export const DevAuth = (props: {
   };
 
   const doLogout = () => {
-    props.setStoredCredential(null);
+    setStoredCredential(null);
     setPersonalData(null);
     setAuthState('NotAuthenticated');
   };
 
   const finalizer = (token: string, user: any) => {
-    props.setStoredCredential({ token });
+    setStoredCredential({ token });
     setPersonalData(user);
     setAuthState('Authenticated');
   };

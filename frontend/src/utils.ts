@@ -1,3 +1,5 @@
+import { Atom } from 'jotai';
+
 type Many<T> = T | ReadonlyArray<T>;
 
 /**
@@ -103,3 +105,7 @@ export function keyBy<T>(
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }
+
+export type Promised<P> = P extends Promise<infer E> ? E : never;
+
+export type Atommed<P> = P extends Atom<infer E> ? E : never;
