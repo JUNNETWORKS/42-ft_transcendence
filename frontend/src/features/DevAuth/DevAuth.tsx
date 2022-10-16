@@ -1,31 +1,55 @@
-import { personalDataAtom, storedCredentialAtom } from '@/atoms';
-import { AppCredential, useQuery } from '@/hooks';
+import {
+  authFlowStateAtom,
+  personalDataAtom,
+  storedCredentialAtom,
+} from '@/atoms';
+import { useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  DevAuthenticated,
-  DevAuthLogin,
-  DevAuthValidating,
-  UserPersonalData,
-} from './AuthCard';
+import { DevAuthenticated, DevAuthLogin, DevAuthValidating } from './AuthCard';
 
 const apiHost = `http://localhost:3000`;
 
-type AuthenticationFlowState =
+type FtAuthenticationFlowState =
   | 'Neutral'
-  | 'Validating'
-  | 'Authenticated'
-  | 'NotAuthenticated'
   | 'NeutralAuthorizationCode'
   | 'ValidatingAuthorizationCode';
 
+const callCallbackFt = async (
+  authCode: string,
+  onSucceeded: (token: string, user: any) => void,
+  onFailed: () => void
+) => {
+  const url = `${apiHost}/auth/callback_ft?code=${authCode}`;
+  console.log(`calling cf`, url);
+  const result = await fetch(url, {
+    method: 'GET',
+    mode: 'cors',
+    headers: {},
+  });
+  if (result.ok) {
+    const { access_token, user } = (await result.json()) || {};
+    if (access_token && typeof access_token === 'string') {
+      // アクセストークンが得られた
+      // -> 認証完了状態にする
+      onSucceeded(access_token, user);
+      return;
+    }
+  }
+  // アクセストークンがなかった
+  // クレデンシャルを破棄する
+  onFailed();
+};
+
 export const DevAuth = () => {
-  const [storedCredential, setStoredCredential] = useAtom(storedCredentialAtom);
-  // パーソナルデータ
-  const [personalData, setPersonalData] = useAtom(personalDataAtom);
+  const [authState, setAuthState] = useAtom(authFlowStateAtom);
+  const setStoredCredential = useAtom(storedCredentialAtom)[1];
+  const setPersonalData = useAtom(personalDataAtom)[1];
+
   const query = useQuery();
   const navigation = useNavigate();
+
   // 認証フローの状態
   const [initialAuthCode, initialFlowState] = (() => {
     const code = query.get('code');
@@ -35,105 +59,33 @@ export const DevAuth = () => {
     // 認可コードがある -> 認可コードを検証!!
     return [code, 'NeutralAuthorizationCode'] as const;
   })();
-  const [authState, setAuthState] =
-    useState<AuthenticationFlowState>(initialFlowState);
+  const [ftAuthState, setFtAuthState] =
+    useState<FtAuthenticationFlowState>(initialFlowState);
   // 認可コード
   const [ftAuthCode] = useState(initialAuthCode);
-
-  const callSession = async (
-    onSucceeded: (user: any) => void,
-    onFailed: () => void
-  ) => {
-    console.log({ storedCredential });
-    if (storedCredential && storedCredential.token) {
-      console.log(`calling callSession`);
-      try {
-        const result = await fetch(`${apiHost}/auth/session`, {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            Authorization: `Bearer ${storedCredential.token}`,
-          },
-        });
-        const json = await result.json();
-        console.log('callSession', json);
-        if (json) {
-          onSucceeded(json);
-          return;
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-    onFailed();
-  };
 
   const doLogout = () => {
     setStoredCredential(null);
     setPersonalData(null);
     setAuthState('NotAuthenticated');
+    setFtAuthState('Neutral');
   };
 
   const finalizer = (token: string, user: any) => {
     setStoredCredential({ token });
     setPersonalData(user);
+    setFtAuthState('Neutral');
     setAuthState('Authenticated');
   };
-
-  const invokeSession = () =>
-    callSession(
-      (user) => {
-        setPersonalData(user);
-        setAuthState('Authenticated');
-      },
-      () => {
-        setPersonalData(null);
-        setAuthState('NotAuthenticated');
-      }
-    );
-  const invokeCallbackFt = () => callCallbackFt(finalizer, doLogout);
-
-  const callCallbackFt = async (
-    onSucceeded: (token: string, user: any) => void,
-    onFailed: () => void
-  ) => {
-    const url = `${apiHost}/auth/callback_ft?code=${ftAuthCode}`;
-    console.log(`calling callCallbackFt`, url);
-    const result = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-      headers: {},
-    });
-    if (result.ok) {
-      const { access_token, user } = (await result.json()) || {};
-      if (access_token && typeof access_token === 'string') {
-        // アクセストークンが得られた
-        // -> 認証完了状態にする
-        onSucceeded(access_token, user);
-        return;
-      }
-    }
-    // アクセストークンがなかった
-    // クレデンシャルを破棄する
-    onFailed();
-  };
+  const invokeCallbackFt = (authCode: string) =>
+    callCallbackFt(authCode, finalizer, doLogout);
 
   // 認証状態のチェック
   useEffect(() => {
-    switch (authState) {
+    switch (ftAuthState) {
       case 'Neutral': {
-        // [検証中]
-        // -> 保存されてる
-        setAuthState('Validating');
         break;
       }
-      case 'Validating':
-        invokeSession();
-        break;
-      case 'NotAuthenticated':
-        // [未認証]
-        // -> ログインUIを表示
-        break;
       case 'NeutralAuthorizationCode': {
         // [認可コード検証]
         // -> 認可コード検証APIをコール
@@ -141,33 +93,33 @@ export const DevAuth = () => {
           break;
         }
         navigation('/auth', { replace: true });
-        setAuthState('ValidatingAuthorizationCode');
+        setFtAuthState('ValidatingAuthorizationCode');
         break;
       }
       case 'ValidatingAuthorizationCode': {
-        invokeCallbackFt();
+        invokeCallbackFt(ftAuthCode);
         break;
       }
     }
-  }, [authState]);
+  }, [ftAuthState]);
 
   const presentator = (() => {
-    switch (authState) {
-      case 'Neutral':
-      case 'Validating':
-        return DevAuthValidating();
-      case 'Authenticated':
-        return DevAuthenticated({
-          personalData: personalData!,
-          onLogout: doLogout,
-        });
-      case 'NotAuthenticated':
-        return DevAuthLogin({ finalizer });
+    switch (ftAuthState) {
       case 'NeutralAuthorizationCode':
       case 'ValidatingAuthorizationCode':
-        return DevAuthValidating();
+        return <DevAuthValidating />;
       default:
-        return <div>(default)</div>;
+        switch (authState) {
+          case 'Neutral':
+          case 'Validating':
+            return <DevAuthValidating />;
+          case 'Authenticated':
+            return <DevAuthenticated onLogout={doLogout} />;
+          case 'NotAuthenticated':
+            return <DevAuthLogin finalizer={finalizer} />;
+          default:
+            return <div>(default)</div>;
+        }
     }
   })();
 

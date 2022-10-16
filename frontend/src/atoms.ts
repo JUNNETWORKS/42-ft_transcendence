@@ -3,6 +3,13 @@ import { UserPersonalData } from '@/features/DevAuth/AuthCard';
 import { AppCredential } from './hooks';
 import { io } from 'socket.io-client';
 
+type AuthenticationFlowState =
+  | 'Neutral'
+  | 'Validating'
+  | 'Authenticated'
+  | 'NotAuthenticated';
+export const authFlowStateAtom = atom<AuthenticationFlowState>('Neutral');
+
 export const personalDataAtom = atom<UserPersonalData | null>(null);
 
 const credentialKey = 'ft_transcendence_credential';
