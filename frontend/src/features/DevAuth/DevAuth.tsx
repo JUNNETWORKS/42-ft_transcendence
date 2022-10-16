@@ -3,44 +3,12 @@ import {
   personalDataAtom,
   storedCredentialAtom,
 } from '@/atoms';
+import { callCallbackFt, FtAuthenticationFlowState } from '@/auth';
 import { useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DevAuthenticated, DevAuthLogin, DevAuthValidating } from './AuthCard';
-
-const apiHost = `http://localhost:3000`;
-
-type FtAuthenticationFlowState =
-  | 'Neutral'
-  | 'NeutralAuthorizationCode'
-  | 'ValidatingAuthorizationCode';
-
-const callCallbackFt = async (
-  authCode: string,
-  onSucceeded: (token: string, user: any) => void,
-  onFailed: () => void
-) => {
-  const url = `${apiHost}/auth/callback_ft?code=${authCode}`;
-  console.log(`calling cf`, url);
-  const result = await fetch(url, {
-    method: 'GET',
-    mode: 'cors',
-    headers: {},
-  });
-  if (result.ok) {
-    const { access_token, user } = (await result.json()) || {};
-    if (access_token && typeof access_token === 'string') {
-      // アクセストークンが得られた
-      // -> 認証完了状態にする
-      onSucceeded(access_token, user);
-      return;
-    }
-  }
-  // アクセストークンがなかった
-  // クレデンシャルを破棄する
-  onFailed();
-};
 
 export const DevAuth = () => {
   const [authState, setAuthState] = useAtom(authFlowStateAtom);
@@ -50,7 +18,6 @@ export const DevAuth = () => {
   const query = useQuery();
   const navigation = useNavigate();
 
-  // 認証フローの状態
   const [initialAuthCode, initialFlowState] = (() => {
     const code = query.get('code');
     if (!code || typeof code !== 'string') {
@@ -59,12 +26,13 @@ export const DevAuth = () => {
     // 認可コードがある -> 認可コードを検証!!
     return [code, 'NeutralAuthorizationCode'] as const;
   })();
+  // 42認証用の認証フロー状態
   const [ftAuthState, setFtAuthState] =
     useState<FtAuthenticationFlowState>(initialFlowState);
   // 認可コード
   const [ftAuthCode] = useState(initialAuthCode);
 
-  const doLogout = () => {
+  const anonymizer = () => {
     setStoredCredential(null);
     setPersonalData(null);
     setAuthState('NotAuthenticated');
@@ -77,8 +45,6 @@ export const DevAuth = () => {
     setFtAuthState('Neutral');
     setAuthState('Authenticated');
   };
-  const invokeCallbackFt = (authCode: string) =>
-    callCallbackFt(authCode, finalizer, doLogout);
 
   // 認証状態のチェック
   useEffect(() => {
@@ -87,17 +53,19 @@ export const DevAuth = () => {
         break;
       }
       case 'NeutralAuthorizationCode': {
-        // [認可コード検証]
-        // -> 認可コード検証APIをコール
+        // -> URLに認可コードがあるなら, それを取り込んで ValidatingAuthorizationCode に遷移
         if (!ftAuthCode || typeof ftAuthCode !== 'string') {
+          setFtAuthState('Neutral');
           break;
         }
         navigation('/auth', { replace: true });
+        // ここ(useEffect内)でのstate変更は意図的なもの
         setFtAuthState('ValidatingAuthorizationCode');
         break;
       }
       case 'ValidatingAuthorizationCode': {
-        invokeCallbackFt(ftAuthCode);
+        // -> 認可コード検証APIをコール
+        callCallbackFt(ftAuthCode, finalizer, anonymizer);
         break;
       }
     }
@@ -114,11 +82,11 @@ export const DevAuth = () => {
           case 'Validating':
             return <DevAuthValidating />;
           case 'Authenticated':
-            return <DevAuthenticated onLogout={doLogout} />;
+            return <DevAuthenticated onLogout={anonymizer} />;
           case 'NotAuthenticated':
-            return <DevAuthLogin finalizer={finalizer} />;
-          default:
-            return <div>(default)</div>;
+            return (
+              <DevAuthLogin onSucceeded={finalizer} onFailed={anonymizer} />
+            );
         }
     }
   })();

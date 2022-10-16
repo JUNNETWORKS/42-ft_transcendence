@@ -2,12 +2,8 @@ import { atom } from 'jotai';
 import { UserPersonalData } from '@/features/DevAuth/AuthCard';
 import { AppCredential } from './hooks';
 import { io } from 'socket.io-client';
+import { AuthenticationFlowState } from './auth';
 
-type AuthenticationFlowState =
-  | 'Neutral'
-  | 'Validating'
-  | 'Authenticated'
-  | 'NotAuthenticated';
 export const authFlowStateAtom = atom<AuthenticationFlowState>('Neutral');
 
 export const personalDataAtom = atom<UserPersonalData | null>(null);
