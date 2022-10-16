@@ -36,7 +36,7 @@ export const useEffectOnce = (action: React.EffectCallback) => {
   useEffect(action, []);
 };
 
-type AppCredential = {
+export type AppCredential = {
   token: string;
 };
 
