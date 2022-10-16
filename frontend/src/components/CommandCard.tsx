@@ -97,24 +97,3 @@ export const OpenCard = (props: {
     </div>
   );
 };
-
-export const SelfCard = (props: {
-  currentUserIdStr: string;
-  sender: (userIdStr: string) => void;
-}) => {
-  const [userIdStr, setUserIdStr] = useState('');
-  return (
-    <div className="self-card">
-      <FTH4>Self</FTH4>
-      Current userId: {props.currentUserIdStr || '(none)'}
-      <br />
-      <FTTextField
-        autoComplete="off"
-        placeholder="ユーザID"
-        value={userIdStr}
-        onChange={(e) => setUserIdStr(e.target.value)}
-      />
-      <FTButton onClick={() => props.sender(userIdStr)}>Force Login</FTButton>
-    </div>
-  );
-};
