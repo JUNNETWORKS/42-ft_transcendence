@@ -31,7 +31,10 @@ export class AuthService {
    * いなければ登録して返す.
    * @returns Promise\<User\>
    */
-  async retrieveUser(intraId: number, data: Omit<UserMinimum, 'intraId'>) {
+  async retrieveUser(
+    intraId: number,
+    data: Omit<UserMinimum, 'intraId' | 'password'>
+  ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
       // ユーザがいた -> そのまま返す
@@ -42,7 +45,11 @@ export class AuthService {
     data.displayName = await this.usersService.findUniqueNameByPrefix(
       data.displayName
     );
-    const createdUser = await this.usersService.create({ intraId, ...data });
+    const createdUser = await this.usersService.create({
+      intraId,
+      ...data,
+      password: '',
+    });
     return createdUser;
   }
 

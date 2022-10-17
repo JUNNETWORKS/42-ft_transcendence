@@ -1,4 +1,6 @@
 import { Injectable } from '@nestjs/common';
+import { createHmac } from 'crypto';
+import { passwordConstants } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -73,4 +75,15 @@ export class UsersService {
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
   }
+}
+
+/**
+ * 与えられた生パスワード`password`をハッシュ化する.\
+ * ハッシュ化に用いるキーは`passwordConstants.secret`.
+ */
+export function hash_password(password: string) {
+  return createHmac('sha256', passwordConstants.secret)
+    .update(password)
+    .digest('hex')
+    .toString();
 }

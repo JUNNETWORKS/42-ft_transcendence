@@ -1,5 +1,5 @@
 import { PrismaClient, RoomType } from '@prisma/client';
-import { randomInt } from 'crypto';
+import { hash_password } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -9,7 +9,12 @@ async function main() {
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       { displayName: 'Angelique', email: 'angelique@prisma.io', intraId: 2 },
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
-    ],
+    ].map((d) => {
+      return {
+        ...d,
+        password: hash_password(d.displayName),
+      };
+    }),
     skipDuplicates: true, // Skip 'Bobo'
   });
   console.log(createMany);
