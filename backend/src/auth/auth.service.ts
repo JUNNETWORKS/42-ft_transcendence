@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { hash_password, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
 import * as Utils from 'src/utils';
@@ -16,12 +16,17 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    console.log(email, pass);
+  async validateUser(email: string, password: string): Promise<any> {
+    console.log(email, password);
     const user = await this.usersService.findByEmail(email);
     console.log(user);
     if (user) {
-      return user;
+      const hashed = hash_password(password);
+      if (user.password === hashed) {
+        console.log('succeeded');
+        return user;
+      }
+      console.log('FAIL');
     }
     return null;
   }
