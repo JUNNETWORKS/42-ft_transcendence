@@ -28,7 +28,7 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOkResponse({ type: LoginResultEntity })
-  async login(@Request() req: any) {
+  async loginByPassword(@Request() req: any) {
     return this.authService.login(req.user);
   }
 
@@ -60,7 +60,7 @@ export class AuthController {
 
   @Get('self/:id')
   @ApiFoundResponse({})
-  async self(@Param('id', ParseIntPipe) id: number) {
+  async loginbySelf(@Param('id', ParseIntPipe) id: number) {
     console.log('id', id);
     const user = await this.usersService.findOne(id);
     console.log('user', user);
