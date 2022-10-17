@@ -1,5 +1,5 @@
 import { personalDataAtom } from '@/atoms';
-import { callSelf, urlLoginFt } from '@/auth';
+import { loginBySelf, urlLoginFt } from '@/auth';
 import {
   FTH1,
   FTH3,
@@ -59,7 +59,7 @@ const SelfAuthForm = (props: {
   const click = async () => {
     try {
       setPhase('Working');
-      await callSelf(userIdStr, props.onSucceeded, props.onFailed);
+      await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
@@ -93,7 +93,7 @@ const SelfAuthForm = (props: {
 /**
  * 各種認証フォームをまとめたUI
  */
-export const DevAuthLogin = (props: {
+export const DevAuthLoginCard = (props: {
   onSucceeded: (token: string, user: any) => void;
   onFailed: () => void;
 }) => {
@@ -125,7 +125,7 @@ export const DevAuthLogin = (props: {
 /**
  * 認証済み状態で表示されるUI
  */
-export const DevAuthenticated = (props: { onLogout?: () => void }) => {
+export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
   const [personalData] = useAtom(personalDataAtom);
   return (
     <>
@@ -162,7 +162,7 @@ export const DevAuthenticated = (props: { onLogout?: () => void }) => {
 /**
  * 各種検証作業中に表示されるUI
  */
-export const DevAuthValidating = () => {
+export const DevAuthValidatingCard = () => {
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>

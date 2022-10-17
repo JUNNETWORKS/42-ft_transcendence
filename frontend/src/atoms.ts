@@ -1,17 +1,30 @@
 import { atom } from 'jotai';
-import { UserPersonalData } from '@/features/DevAuth/AuthCard';
+import { UserPersonalData } from '@/components/AuthCard';
 import { AppCredential } from './hooks';
 import { io } from 'socket.io-client';
-import { AuthenticationFlowState } from './auth';
+import { AuthenticationFlowState, urlChatSocket } from './auth';
 
+/**
+ * 認証フロー状態のAtom
+ */
 export const authFlowStateAtom = atom<AuthenticationFlowState>('Neutral');
 
+/**
+ * ユーザデータのAtom
+ */
 export const personalDataAtom = atom<UserPersonalData | null>(null);
 
 const credentialKey = 'ft_transcendence_credential';
+/**
+ * ローカルに保存されているクレデンシャルの文字列データのAtom
+ */
 const storedCredentialStrAtom = atom<string>(
   localStorage.getItem(credentialKey) || ''
 );
+
+/**
+ * ローカルに保存されているクレデンシャルのオブジェクトデータのAtom
+ */
 export const storedCredentialAtom = atom(
   (get) => {
     const str = get(storedCredentialStrAtom);
@@ -37,16 +50,19 @@ export const storedCredentialAtom = atom(
   }
 );
 
-const socketFromCredential = (credential: AppCredential | null) => {
+const chatSocketFromCredential = (credential: AppCredential | null) => {
   if (!credential) {
     return null;
   }
-  const socket = io('http://localhost:3000/chat', {
+  const socket = io(urlChatSocket, {
     auth: (cb) => cb(credential),
   });
   return socket;
 };
 
-export const socketAtom = atom((get) =>
-  socketFromCredential(get(storedCredentialAtom))
+/**
+ * ユーザに紐づくチャットWSのAtom
+ */
+export const chatSocketAtom = atom((get) =>
+  chatSocketFromCredential(get(storedCredentialAtom))
 );
