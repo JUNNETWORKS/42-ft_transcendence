@@ -1,10 +1,10 @@
-import { useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction } from '../../hooks';
+import { useAction } from '../../hooks';
 import { SayCard, OpenCard } from '../../components/CommandCard';
 import { useAtom } from 'jotai';
 import { personalDataAtom } from '@/atoms';
@@ -19,27 +19,23 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const [personalData] = useAtom(personalDataAtom);
   const userId = personalData ? personalData.id : -1;
   // 見えているチャットルームの一覧
-  const [visibleRooms, setVisibleRooms] = useStateWithResetter<TD.ChatRoom[]>(
-    []
-  );
+  const [visibleRooms, setVisibleRooms] = useState<TD.ChatRoom[]>([]);
   // join しているチャットルームの一覧
-  const [joiningRooms, setJoiningRooms] = useStateWithResetter<TD.ChatRoom[]>(
-    []
-  );
+  const [joiningRooms, setJoiningRooms] = useState<TD.ChatRoom[]>([]);
   // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId] = useStateWithResetter(-1);
+  const [focusedRoomId, setFocusedRoomId] = useState(-1);
 
   /**
    * チャットルーム内のメッセージのリスト
    * TODO: もっとマシな方法ないの
    */
-  const [messagesInRoom, setMessagesInRoom] = useStateWithResetter<{
+  const [messagesInRoom, setMessagesInRoom] = useState<{
     [roomId: number]: ChatRoomMessage[];
   }>({});
   /**
    * チャットルーム内のメンバーのマップ
    */
-  const [membersInRoom, setMembersInRoom] = useStateWithResetter<{
+  const [membersInRoom, setMembersInRoom] = useState<{
     [roomId: number]: TD.UserRelationMap;
   }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。

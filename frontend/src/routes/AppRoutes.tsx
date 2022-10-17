@@ -6,57 +6,60 @@ import { DevAuth } from '@/features/DevAuth/DevAuth';
 import {
   authFlowStateAtom,
   personalDataAtom,
-  socketAtom,
+  chatSocketAtom,
   storedCredentialAtom,
 } from '@/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { callSession } from '@/auth';
+import { verifyCredential } from '@/auth';
 
 export const AppRoutes = () => {
-  // ブラウザが保持しているクレデンシャル
-  const [mySocket] = useAtom(socketAtom);
-  const [storedCredential] = useAtom(storedCredentialAtom);
-  const [authState, setAuthState] = useAtom(authFlowStateAtom);
-  const setPersonalData = useAtom(personalDataAtom)[1];
+  // 「ソケット」
+  // 認証されていない場合はnull
+  const [mySocket] = useAtom(chatSocketAtom);
 
-  // 認証状態のチェック
-  useEffect(() => {
-    switch (authState) {
-      case 'Neutral': {
-        setAuthState('Validating');
-        break;
+  // 認証フローのチェックと状態遷移
+  {
+    const [storedCredential] = useAtom(storedCredentialAtom);
+    const [authState, setAuthState] = useAtom(authFlowStateAtom);
+    const setPersonalData = useAtom(personalDataAtom)[1];
+
+    useEffect(() => {
+      switch (authState) {
+        case 'Neutral': {
+          setAuthState('Validating');
+          break;
+        }
+        case 'Validating':
+          // GET /auth/session を呼んでローカルのクレデンシャルをユーザ情報に変換
+          verifyCredential(
+            storedCredential,
+            (user) => {
+              // ユーザ情報に変換できた場合の処理
+              setPersonalData(user);
+              setAuthState('Authenticated');
+            },
+            () => {
+              // 変換できなかった場合の処理
+              setPersonalData(null);
+              setAuthState('NotAuthenticated');
+            }
+          );
+          break;
+        case 'NotAuthenticated':
+          break;
       }
-      case 'Validating':
-        // GET /auth/session を呼んでユーザ情報を取得
-        callSession(
-          storedCredential,
-          (user) => {
-            setPersonalData(user);
-            setAuthState('Authenticated');
-          },
-          () => {
-            setPersonalData(null);
-            setAuthState('NotAuthenticated');
-          }
-        );
-        break;
-      case 'NotAuthenticated':
-        break;
-    }
-  }, [authState]);
+    }, [authState]);
+  }
 
   const authElement = <DevAuth />;
+  const guardElement = !mySocket ? authElement : null;
   const commonRoutes = [
     { path: '/', element: <Index /> },
-    { path: '/auth', element: authElement },
     { path: '/pong', element: <Pong /> },
+    { path: '/auth', element: authElement },
+    { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
   ];
-  if (mySocket) {
-    commonRoutes.push({ path: '/chat', element: <Chat mySocket={mySocket} /> });
-  } else {
-    commonRoutes.push({ path: '/chat', element: authElement });
-  }
   const routeElements = useRoutes([...commonRoutes]);
 
   return <>{routeElements}</>;

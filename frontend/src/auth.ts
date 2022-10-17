@@ -1,30 +1,52 @@
 import { AppCredential } from './hooks';
 
-const apiHost = `http://localhost:3000`;
+/**
+ * バックエンドサーバのドメイン
+ */
+const backendHost = `http://localhost:3000`;
 
+/**
+ * (全体)認証フロー状態
+ */
 export type AuthenticationFlowState =
   | 'Neutral'
   | 'Validating'
   | 'Authenticated'
   | 'NotAuthenticated';
 
+/**
+ * 42認証フロー状態
+ */
 export type FtAuthenticationFlowState =
   | 'Neutral'
   | 'NeutralAuthorizationCode'
   | 'ValidatingAuthorizationCode';
 
-export const urlLoginFt = `${apiHost}/auth/login_ft`;
+/**
+ * チャットWSのURL
+ */
+export const urlChatSocket = `${backendHost}/chat`;
 
-export const callSession = async (
+/**
+ * 42認証入口のURL
+ */
+export const urlLoginFt = `${backendHost}/auth/login_ft`;
+
+/**
+ * クレデンシャルデータを検証し, ユーザ情報に変換する.
+ * @param credential
+ * @param onSucceeded 変換成功時の処理
+ * @param onFailed 変換失敗時の処理
+ * @returns
+ */
+export const verifyCredential = async (
   credential: AppCredential | null,
   onSucceeded: (user: any) => void,
   onFailed: () => void
 ) => {
-  console.log({ credential });
   if (credential && credential.token) {
-    console.log(`calling cs`);
     try {
-      const result = await fetch(`${apiHost}/auth/session`, {
+      const result = await fetch(`${backendHost}/auth/session`, {
         method: 'GET',
         mode: 'cors',
         headers: {
@@ -32,7 +54,6 @@ export const callSession = async (
         },
       });
       const json = await result.json();
-      console.log('cs', json);
       if (json) {
         onSucceeded(json);
         return;
@@ -44,13 +65,19 @@ export const callSession = async (
   onFailed();
 };
 
-export const callCallbackFt = async (
+/**
+ * OAuth2の認可コードを検証し, アクセストークン(とユーザ情報)に変換する
+ * @param authCode
+ * @param onSucceeded 変換成功時の処理
+ * @param onFailed 変換失敗時の処理
+ * @returns
+ */
+export const verifyOAuth2AuthorizationCode = async (
   authCode: string,
   onSucceeded: (token: string, user: any) => void,
   onFailed: () => void
 ) => {
-  const url = `${apiHost}/auth/callback_ft?code=${authCode}`;
-  console.log(`calling cf`, url);
+  const url = `${backendHost}/auth/callback_ft?code=${authCode}`;
   const result = await fetch(url, {
     method: 'GET',
     mode: 'cors',
@@ -59,30 +86,33 @@ export const callCallbackFt = async (
   if (result.ok) {
     const { access_token, user } = (await result.json()) || {};
     if (access_token && typeof access_token === 'string') {
-      // アクセストークンが得られた
-      // -> 認証完了状態にする
       onSucceeded(access_token, user);
       return;
     }
   }
-  // アクセストークンがなかった
-  // クレデンシャルを破棄する
   onFailed();
 };
 
-export const callSelf = async (
+/**
+ * ユーザIDをアクセストークン(とユーザ情報)に変換する
+ * TODO: リリース時には無効化すること!!!
+ * @param userId
+ * @param onSucceeded 変換成功時の処理
+ * @param onFailed 変換失敗時の処理
+ * @returns
+ */
+export const loginBySelf = async (
   userId: string,
   onSucceeded: (token: string, user: any) => void,
   onFailed: () => void
 ) => {
-  const url = `${apiHost}/auth/self/${userId}`;
+  const url = `${backendHost}/auth/self/${userId}`;
   const result = await fetch(url, {
     method: 'GET',
     mode: 'cors',
   });
   if (result.ok) {
     const json = await result.json();
-    console.log('json', json);
     const { access_token: token, user } = json;
     onSucceeded(token, user);
     return;

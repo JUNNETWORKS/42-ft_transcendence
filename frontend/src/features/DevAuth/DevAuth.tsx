@@ -3,12 +3,19 @@ import {
   personalDataAtom,
   storedCredentialAtom,
 } from '@/atoms';
-import { callCallbackFt, FtAuthenticationFlowState } from '@/auth';
+import {
+  verifyOAuth2AuthorizationCode,
+  FtAuthenticationFlowState,
+} from '@/auth';
 import { useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { DevAuthenticated, DevAuthLogin, DevAuthValidating } from './AuthCard';
+import {
+  DevAuthenticatedCard,
+  DevAuthLoginCard,
+  DevAuthValidatingCard,
+} from '@/components/AuthCard';
 
 export const DevAuth = () => {
   const [authState, setAuthState] = useAtom(authFlowStateAtom);
@@ -32,21 +39,21 @@ export const DevAuth = () => {
   // 認可コード
   const [ftAuthCode] = useState(initialAuthCode);
 
-  const anonymizer = () => {
+  const anonymizeAuthFlow = () => {
     setStoredCredential(null);
     setPersonalData(null);
     setAuthState('NotAuthenticated');
     setFtAuthState('Neutral');
   };
 
-  const finalizer = (token: string, user: any) => {
+  const finalizeAuthFlow = (token: string, user: any) => {
     setStoredCredential({ token });
     setPersonalData(user);
     setFtAuthState('Neutral');
     setAuthState('Authenticated');
   };
 
-  // 認証状態のチェック
+  // 42認証フローのチェックと状態遷移
   useEffect(() => {
     switch (ftAuthState) {
       case 'Neutral': {
@@ -65,7 +72,11 @@ export const DevAuth = () => {
       }
       case 'ValidatingAuthorizationCode': {
         // -> 認可コード検証APIをコール
-        callCallbackFt(ftAuthCode, finalizer, anonymizer);
+        verifyOAuth2AuthorizationCode(
+          ftAuthCode,
+          finalizeAuthFlow,
+          anonymizeAuthFlow
+        );
         break;
       }
     }
@@ -75,17 +86,20 @@ export const DevAuth = () => {
     switch (ftAuthState) {
       case 'NeutralAuthorizationCode':
       case 'ValidatingAuthorizationCode':
-        return <DevAuthValidating />;
+        return <DevAuthValidatingCard />;
       default:
         switch (authState) {
           case 'Neutral':
           case 'Validating':
-            return <DevAuthValidating />;
+            return <DevAuthValidatingCard />;
           case 'Authenticated':
-            return <DevAuthenticated onLogout={anonymizer} />;
+            return <DevAuthenticatedCard onLogout={anonymizeAuthFlow} />;
           case 'NotAuthenticated':
             return (
-              <DevAuthLogin onSucceeded={finalizer} onFailed={anonymizer} />
+              <DevAuthLoginCard
+                onSucceeded={finalizeAuthFlow}
+                onFailed={anonymizeAuthFlow}
+              />
             );
         }
     }

@@ -106,6 +106,12 @@ export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }
 
+/**
+ * Promiseに内包されている型を返す
+ */
 export type Promised<P> = P extends Promise<infer E> ? E : never;
 
+/**
+ * Atomに内包されている型を返す
+ */
 export type Atommed<P> = P extends Atom<infer E> ? E : never;

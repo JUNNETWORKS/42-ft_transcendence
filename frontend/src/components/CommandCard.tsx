@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import * as TD from '../features/Chat/typedef';
-import { FTTextField, FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
 import { useStateWithResetter } from '../hooks';
 
 /**
