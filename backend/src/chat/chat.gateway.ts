@@ -23,7 +23,7 @@ import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
-import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
+import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -60,8 +60,8 @@ export class ChatGateway implements OnGatewayConnection {
     const userId = user.id;
     // [システムチャンネルへのjoin]
     //TODO チャットに依存しない機能になりそう
-    this.joinChannel(client, 'User', userId);
-    this.joinChannel(client, 'Global', 'global');
+    joinChannel(client, 'User', userId);
+    joinChannel(client, 'Global', 'global');
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
@@ -707,17 +707,6 @@ export class ChatGateway implements OnGatewayConnection {
       socks
     );
     this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);
-  }
-
-  //TODO ゲーム側にもつかえるので切り分けたい
-  private joinChannel(
-    @ConnectedSocket() client: Socket,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullRoomName = generateFullRoomName(roomType, roomName);
-    client.join(fullRoomName);
-    console.log(`client ${client.id} joined to ${fullRoomName}`);
   }
 
   private async sendResults(

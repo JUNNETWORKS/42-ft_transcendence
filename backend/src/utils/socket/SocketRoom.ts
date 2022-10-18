@@ -1,4 +1,5 @@
 import { RoomType } from 'src/types/RoomType';
+import { Socket } from 'socket.io';
 
 /**
  * システムが使うルーム名
@@ -16,4 +17,24 @@ export const generateFullRoomName = (
     Global: '%',
   }[roomType];
   return `${roomSuffix}${roomName}`;
+};
+
+/**
+ * Socketをルームに追加する
+ * @param client
+ * 対象のソケット
+ * @param roomType
+ * 参加するルームのタイプ
+ * @param roomName
+ * 参加するルームの名前
+ * @returns
+ */
+export const joinChannel = (
+  client: Socket,
+  roomType: RoomType,
+  roomName: string | number
+) => {
+  const fullRoomName = generateFullRoomName(roomType, roomName);
+  client.join(fullRoomName);
+  console.log(`client ${client.id} joined to ${fullRoomName}`);
 };
