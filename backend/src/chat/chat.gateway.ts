@@ -27,6 +27,7 @@ import {
   generateFullRoomName,
   joinChannel,
   usersLeave,
+  usersJoin,
 } from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
@@ -146,7 +147,11 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(
+      this.server,
+      user.id,
+      generateFullRoomName('ChatRoom', roomId)
+    );
 
     // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
@@ -266,7 +271,11 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(
+      this.server,
+      user.id,
+      generateFullRoomName('ChatRoom', roomId)
+    );
     // 入室したことを通知
     this.sendResults(
       'ft_join',
@@ -674,29 +683,6 @@ export class ChatGateway implements OnGatewayConnection {
   private socketsInUserChannel(userId: number) {
     const fullUserRoomName = generateFullRoomName('User', userId);
     return this.server.in(fullUserRoomName);
-  }
-
-  //TODO ゲーム側にもつかえるので切り分けたい
-  /**
-   * 指定したユーザIDに対応するクライアントを指定したルームにjoinさせる\
-   * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersJoin(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = generateFullRoomName('User', userId);
-    const fullChatRoomName = generateFullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `joining clients in ${fullUserRoomName} -> ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsJoin(fullChatRoomName);
   }
 
   private async sendResults(
