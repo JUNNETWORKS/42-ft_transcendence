@@ -12,6 +12,7 @@ import { RoomMemberDto } from 'src/chatrooms/dto/room-member.dto';
 import { ChatUserRelationEntity } from 'src/chatrooms/entities/chat-user-relation.entity';
 import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
 import { ChatMessageEntity } from 'src/chatrooms/entities/chat-message.entity';
+import { hash_password } from 'src/users/users.service';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
@@ -335,7 +336,7 @@ describe('/Chatrooms (e2e)', () => {
         .get('/chatrooms/999')
         .set('Accept', 'application/json');
 
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 
@@ -526,7 +527,7 @@ describe('/Chatrooms (e2e)', () => {
         .set('Accept', 'application/json')
         .send(body);
 
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 
@@ -612,7 +613,7 @@ describe('/Chatrooms (e2e)', () => {
       res = await request(app.getHttpServer())
         .get('/chatrooms/1')
         .set('Accept', 'application/json');
-      expect(res.status).toEqual(500);
+      expect(res.status).toEqual(400);
     });
   });
 
@@ -724,6 +725,7 @@ describe('/Chatrooms (e2e)', () => {
           displayName: 'test_user',
           email: 'test@test.com',
           intraId: 999,
+          password: hash_password('test_user'),
         },
       });
       const body: PostMessageDto = {
