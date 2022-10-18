@@ -12,6 +12,7 @@ import {
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import { verifyCredential } from '@/auth';
+import { UserView } from '@/features/User/User';
 
 export const AppRoutes = () => {
   // 「ソケット」
@@ -59,6 +60,7 @@ export const AppRoutes = () => {
     { path: '/pong', element: <Pong /> },
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
+    { path: '/user/:id', element: guardElement || <UserView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
 
