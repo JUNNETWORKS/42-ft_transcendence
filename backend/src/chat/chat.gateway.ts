@@ -23,6 +23,7 @@ import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
+import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -58,6 +59,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     const userId = user.id;
     // [システムチャンネルへのjoin]
+    //TODO チャットに依存しない機能になりそう
     this.joinChannel(client, 'User', userId);
     this.joinChannel(client, 'Global', 'global');
 
@@ -66,7 +68,7 @@ export class ChatGateway implements OnGatewayConnection {
       await this.chatRoomService.getRoomsJoining(userId)
     ).map((r) => r.chatRoom);
     const joiningRoomNames = joiningRooms.map((r) =>
-      this.fullRoomName('ChatRoom', r.id)
+      generateFullRoomName('ChatRoom', r.id)
     );
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
@@ -622,6 +624,7 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  //TODO 外部に出したい
   private async trapAuth(client: Socket) {
     if (client.handshake.auth) {
       const { token, sub } = client.handshake.auth;
@@ -656,29 +659,12 @@ export class ChatGateway implements OnGatewayConnection {
     return null;
   }
 
-  /**
-   * システムが使うルーム名
-   * @param roomType
-   * @param roomName
-   * @returns
-   */
-  private fullRoomName(
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const roomSuffix = {
-      ChatRoom: '#',
-      User: '$',
-      Global: '%',
-    }[roomType];
-    return `${roomSuffix}${roomName}`;
-  }
-
   private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
+    const fullUserRoomName = generateFullRoomName('User', userId);
     return this.server.in(fullUserRoomName);
   }
 
+  //TODO ゲーム側にもつかえるので切り分けたい
   /**
    * 指定したユーザIDに対応するクライアントを指定したルームにjoinさせる\
    * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
@@ -691,8 +677,8 @@ export class ChatGateway implements OnGatewayConnection {
     roomType: 'ChatRoom' | 'User' | 'Global',
     roomName: any
   ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
+    const fullUserRoomName = generateFullRoomName('User', userId);
+    const fullChatRoomName = generateFullRoomName(roomType, roomName);
     const socks = await this.server.in(fullUserRoomName).allSockets();
     console.log(
       `joining clients in ${fullUserRoomName} -> ${fullChatRoomName}`,
@@ -701,6 +687,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.server.in(fullUserRoomName).socketsJoin(fullChatRoomName);
   }
 
+  //TODO ゲーム側にもつかえるので切り分けたい
   /**
    * (英語としておかしいので名前を変えること)
    * @param userId
@@ -712,8 +699,8 @@ export class ChatGateway implements OnGatewayConnection {
     roomType: 'ChatRoom' | 'User' | 'Global',
     roomName: any
   ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
+    const fullUserRoomName = generateFullRoomName('User', userId);
+    const fullChatRoomName = generateFullRoomName(roomType, roomName);
     const socks = await this.server.in(fullUserRoomName).allSockets();
     console.log(
       `leaving clients in ${fullUserRoomName} from ${fullChatRoomName}`,
@@ -722,12 +709,13 @@ export class ChatGateway implements OnGatewayConnection {
     this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);
   }
 
+  //TODO ゲーム側にもつかえるので切り分けたい
   private joinChannel(
     @ConnectedSocket() client: Socket,
     roomType: 'ChatRoom' | 'User' | 'Global',
     roomName: any
   ) {
-    const fullRoomName = this.fullRoomName(roomType, roomName);
+    const fullRoomName = generateFullRoomName(roomType, roomName);
     client.join(fullRoomName);
     console.log(`client ${client.id} joined to ${fullRoomName}`);
   }
@@ -757,6 +745,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
   }
 
+  //TODO ゲーム側にもつかえるので切り分けたい
   /**
    * サーバからクライアントに向かってデータを流す
    * @param roomType
@@ -769,7 +758,7 @@ export class ChatGateway implements OnGatewayConnection {
     roomName: any,
     payload: any
   ) {
-    const fullName = this.fullRoomName(roomType, roomName);
+    const fullName = generateFullRoomName(roomType, roomName);
     const socks = await this.server.to(fullName).allSockets();
     console.log('sending downlink to:', fullName, op, payload, socks);
     this.server.to(fullName).emit(op, payload);
