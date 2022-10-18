@@ -74,3 +74,25 @@ export const usersLeave = async (
   console.log(`leaving clients in ${fullUserRoomName} from ${roomName}`, socks);
   server.in(fullUserRoomName).socketsLeave(roomName);
 };
+
+/**
+ * サーバからクライアントに向かってデータを流す
+ * @param server
+ * サーバー
+ * @param op
+ * イベント名
+ * @param roomName
+ * 対象の部屋名
+ * @param payload
+ * データ本体
+ */
+export const sendResultRoom = async (
+  server: Server,
+  op: string,
+  roomName: RoomName,
+  payload: any
+) => {
+  const socks = await server.to(roomName).allSockets();
+  console.log('sending downlink to:', roomName, op, payload, socks);
+  server.to(roomName).emit(op, payload);
+};

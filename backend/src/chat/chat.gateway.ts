@@ -28,6 +28,7 @@ import {
   joinChannel,
   usersLeave,
   usersJoin,
+  sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
@@ -696,36 +697,32 @@ export class ChatGateway implements OnGatewayConnection {
     }
   ) {
     if (typeof target.userId === 'number') {
-      await this.sendResultRoom(op, 'User', target.userId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName('User', target.userId),
+        payload
+      );
     }
     if (typeof target.roomId === 'number') {
-      await this.sendResultRoom(op, 'ChatRoom', target.roomId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName('ChatRoom', target.roomId),
+        payload
+      );
     }
     if (target.global) {
-      await this.sendResultRoom(op, 'Global', target.global, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName('Global', target.global),
+        payload
+      );
     }
     if (target.client) {
       console.log('sending downlink to client:', target.client.id, op, payload);
       target.client.emit(op, payload);
     }
-  }
-
-  //TODO ゲーム側にもつかえるので切り分けたい
-  /**
-   * サーバからクライアントに向かってデータを流す
-   * @param roomType
-   * @param roomName
-   * @param payload
-   */
-  private async sendResultRoom(
-    op: string,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any,
-    payload: any
-  ) {
-    const fullName = generateFullRoomName(roomType, roomName);
-    const socks = await this.server.to(fullName).allSockets();
-    console.log('sending downlink to:', fullName, op, payload, socks);
-    this.server.to(fullName).emit(op, payload);
   }
 }
