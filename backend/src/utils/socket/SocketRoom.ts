@@ -1,4 +1,4 @@
-import { RoomType } from 'src/types/RoomType';
+import { RoomType, RoomName } from 'src/types/RoomType';
 import { Socket } from 'socket.io';
 
 /**
@@ -29,12 +29,7 @@ export const generateFullRoomName = (
  * 参加するルームの名前
  * @returns
  */
-export const joinChannel = (
-  client: Socket,
-  roomType: RoomType,
-  roomName: string | number
-) => {
-  const fullRoomName = generateFullRoomName(roomType, roomName);
-  client.join(fullRoomName);
-  console.log(`client ${client.id} joined to ${fullRoomName}`);
+export const joinChannel = (client: Socket, roomName: RoomName) => {
+  client.join(roomName);
+  console.log(`client ${client.id} joined to ${roomName}`);
 };

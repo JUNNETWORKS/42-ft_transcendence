@@ -60,8 +60,8 @@ export class ChatGateway implements OnGatewayConnection {
     const userId = user.id;
     // [システムチャンネルへのjoin]
     //TODO チャットに依存しない機能になりそう
-    joinChannel(client, 'User', userId);
-    joinChannel(client, 'Global', 'global');
+    joinChannel(client, generateFullRoomName('User', userId));
+    joinChannel(client, generateFullRoomName('Global', 'global'));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
