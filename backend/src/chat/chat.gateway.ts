@@ -23,7 +23,11 @@ import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
-import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
+import {
+  generateFullRoomName,
+  joinChannel,
+  usersLeave,
+} from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -327,7 +331,11 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersLeave(user.id, 'ChatRoom', roomId);
+    await usersLeave(
+      this.server,
+      user.id,
+      generateFullRoomName('ChatRoom', roomId)
+    );
     this.sendResults(
       'ft_leave',
       {
@@ -445,7 +453,11 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersLeave(targetUser.id, 'ChatRoom', roomId);
+    await usersLeave(
+      this.server,
+      targetUser.id,
+      generateFullRoomName('ChatRoom', roomId)
+    );
     this.sendResults(
       'ft_kick',
       {
@@ -685,28 +697,6 @@ export class ChatGateway implements OnGatewayConnection {
       socks
     );
     this.server.in(fullUserRoomName).socketsJoin(fullChatRoomName);
-  }
-
-  //TODO ゲーム側にもつかえるので切り分けたい
-  /**
-   * (英語としておかしいので名前を変えること)
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersLeave(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = generateFullRoomName('User', userId);
-    const fullChatRoomName = generateFullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `leaving clients in ${fullUserRoomName} from ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);
   }
 
   private async sendResults(

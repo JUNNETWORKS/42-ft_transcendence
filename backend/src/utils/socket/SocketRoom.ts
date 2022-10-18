@@ -1,5 +1,5 @@
 import { RoomType, RoomName } from 'src/types/RoomType';
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 
 /**
  * システムが使うルーム名
@@ -32,4 +32,24 @@ export const generateFullRoomName = (
 export const joinChannel = (client: Socket, roomName: RoomName) => {
   client.join(roomName);
   console.log(`client ${client.id} joined to ${roomName}`);
+};
+
+//TODO (英語としておかしいので名前を変える)
+/**
+ * @param server
+ * サーバー
+ * @param userId
+ * 対象のユーザー
+ * @param roomName
+ * 対象の部屋名
+ */
+export const usersLeave = async (
+  server: Server,
+  userId: number,
+  roomName: RoomName
+) => {
+  const fullUserRoomName = generateFullRoomName('User', userId);
+  const socks = await server.in(fullUserRoomName).allSockets();
+  console.log(`leaving clients in ${fullUserRoomName} from ${roomName}`, socks);
+  server.in(fullUserRoomName).socketsLeave(roomName);
 };
