@@ -6,14 +6,13 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket } from 'socket.io';
-import { PlayerInput } from './game/game-state';
+import { PongMatchActionDTO } from './dto/pong-match-action';
 import { Match } from './game/match';
 
 // ========== WS: pong.matchmaking.start ==========
 // type MatchmakingEntry = {}
 
 // ========== WS: pong.match.action ==========
-type PlayerAction = PlayerInput;
 
 let match: Match | null = null;
 let matchIntervalID: NodeJS.Timer | null = null;
@@ -45,7 +44,7 @@ export class PongGateway {
   @SubscribeMessage('pong.match.action')
   receivePlayerAction(
     @ConnectedSocket() client: Socket,
-    @MessageBody() playerAction: PlayerAction
+    @MessageBody() playerAction: PongMatchActionDTO
   ) {
     if (!match) {
       match = new Match(client.id, client.id);
