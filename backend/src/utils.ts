@@ -18,20 +18,6 @@ export function pick<T extends object, U extends keyof T>(
   return d;
 }
 
-export function omit<T extends object, U extends keyof T>(
-  obj: T,
-  ...props: Array<Many<U>>
-): Omit<T, U> {
-  const d: any = {};
-  Object.keys(obj).forEach((key) => {
-    d[key] = (obj as any)[key];
-  });
-  props.forEach((key) => {
-    delete d[key];
-  });
-  return d;
-}
-
 /**
  * 配列`array`を, 「`array`の各要素に関数`value`を適用した値」を使って昇順にソートしたものを返す.\
  * 元の`array`は変更しない.
@@ -102,4 +88,18 @@ export function keyBy<T>(
 
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
+}
+
+export type Promised<P> = P extends Promise<infer E> ? E : never;
+
+export async function PromiseMap<T>(pmap: { [P in keyof T]: Promise<T[P]> }) {
+  const r: any = {};
+  await Promise.all(
+    Object.keys(pmap).map((key) =>
+      (async () => {
+        r[key] = await (pmap as any)[key];
+      })()
+    )
+  );
+  return r as T;
 }
