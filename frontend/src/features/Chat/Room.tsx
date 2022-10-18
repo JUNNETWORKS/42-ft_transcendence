@@ -6,6 +6,7 @@ import * as dayjs from 'dayjs';
 import * as RIFa from 'react-icons/fa';
 import * as RIIo from 'react-icons/im';
 import * as RIBS from 'react-icons/bs';
+import { Link } from 'react-router-dom';
 
 /**
  * メッセージを表示するコンポーネント
@@ -55,7 +56,6 @@ export const ChatRoomMemberCard = (
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
     member: TD.ChatUserRelation;
-    onClick?: (r: TD.ChatUserRelation) => void;
   } & TD.MemberOperations
 ) => {
   const areYouOwner = props.you?.userId === props.room.ownerId;
@@ -92,10 +92,10 @@ export const ChatRoomMemberCard = (
           flexShrink: 1,
           ...(isYou ? { fontWeight: 'bold' } : {}),
         }}
-        onClick={() => (props.onClick ? props.onClick(props.member) : null)}
       >
-        {userTypeCap()}
-        {props.member.user.displayName}
+        <Link to={`/user/${props.member.userId}`}>
+          {userTypeCap()} {props.member.user.displayName}
+        </Link>
       </div>
 
       {isNomminatable && (
