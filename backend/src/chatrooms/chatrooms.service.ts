@@ -125,10 +125,12 @@ export class ChatroomsService {
    * @returns
    */
   getRelation(chatRoomId: number, userId: number) {
-    return this.prisma.chatUserRelation.findFirst({
+    return this.prisma.chatUserRelation.findUnique({
       where: {
-        chatRoomId,
-        userId,
+        userId_chatRoomId: {
+          chatRoomId,
+          userId,
+        },
       },
       include: {
         chatRoom: true,
