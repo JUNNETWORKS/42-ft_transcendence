@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import * as TD from './typedef';
+import * as TD from '../../typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '../../components/FTBasicComponents';
 import * as dayjs from 'dayjs';

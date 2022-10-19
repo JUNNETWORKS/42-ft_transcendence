@@ -5,9 +5,9 @@ import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import {
   authFlowStateAtom,
-  personalDataAtom,
   chatSocketAtom,
   storedCredentialAtom,
+  userAtoms,
 } from '@/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
@@ -23,7 +23,7 @@ export const AppRoutes = () => {
   {
     const [storedCredential] = useAtom(storedCredentialAtom);
     const [authState, setAuthState] = useAtom(authFlowStateAtom);
-    const setPersonalData = useAtom(personalDataAtom)[1];
+    const setPersonalData = useAtom(userAtoms.personalDataAtom)[1];
 
     useEffect(() => {
       switch (authState) {

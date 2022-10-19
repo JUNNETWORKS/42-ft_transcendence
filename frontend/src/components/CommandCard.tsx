@@ -1,4 +1,4 @@
-import * as TD from '../features/Chat/typedef';
+import * as TD from '../typedef';
 import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
 import { useStateWithResetter } from '../hooks';
 

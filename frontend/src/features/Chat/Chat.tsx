@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from './typedef';
+import * as TD from '../../typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
 import { useAction } from '../../hooks';
 import { SayCard, OpenCard } from '../../components/CommandCard';
 import { useAtom } from 'jotai';
-import { personalDataAtom } from '@/atoms';
+import { userAtoms } from '@/atoms';
 
 /**
  *
@@ -16,28 +16,20 @@ import { personalDataAtom } from '@/atoms';
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   type ChatRoomMessage = TD.ChatRoomMessage;
   const { mySocket } = props;
-  const [personalData] = useAtom(personalDataAtom);
-  const userId = personalData ? personalData.id : -1;
-  // 見えているチャットルームの一覧
-  const [visibleRooms, setVisibleRooms] = useState<TD.ChatRoom[]>([]);
-  // join しているチャットルームの一覧
-  const [joiningRooms, setJoiningRooms] = useState<TD.ChatRoom[]>([]);
-  // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId] = useState(-1);
 
-  /**
-   * チャットルーム内のメッセージのリスト
-   * TODO: もっとマシな方法ないの
-   */
-  const [messagesInRoom, setMessagesInRoom] = useState<{
-    [roomId: number]: ChatRoomMessage[];
-  }>({});
-  /**
-   * チャットルーム内のメンバーのマップ
-   */
-  const [membersInRoom, setMembersInRoom] = useState<{
-    [roomId: number]: TD.UserRelationMap;
-  }>({});
+  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const userId = personalData ? personalData.id : -1;
+  const [visibleRooms, setVisibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
+  const [joiningRooms, setJoiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
+  const [focusedRoomId, setFocusedRoomId] = useAtom(
+    userAtoms.focusedRoomIdAtom
+  );
+  const [messagesInRoom, setMessagesInRoom] = useAtom(
+    userAtoms.messagesInRoomAtom
+  );
+  const [membersInRoom, setMembersInRoom] = useAtom(
+    userAtoms.membersInRoomAtom
+  );
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
