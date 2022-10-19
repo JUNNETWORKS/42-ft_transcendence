@@ -77,6 +77,7 @@ export const ChatRoomMemberCard = (
     }
     return '';
   };
+  const link_path = isYou ? '/auth' : `/user/${props.member.userId}`;
   return (
     <div
       style={{
@@ -93,7 +94,7 @@ export const ChatRoomMemberCard = (
           ...(isYou ? { fontWeight: 'bold' } : {}),
         }}
       >
-        <Link to={`/user/${props.member.userId}`}>
+        <Link className="block" to={link_path}>
           {userTypeCap()} {props.member.user.displayName}
         </Link>
       </div>
