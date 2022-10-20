@@ -70,6 +70,37 @@ export class UsersService {
     throw Error('something wrong');
   }
 
+  async findFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.findUnique({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async addFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.create({
+      data: {
+        userId,
+        targetUserId,
+      },
+    });
+  }
+
+  async removeFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.delete({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
   async findFriends(userId: number) {
     return this.prisma.friendRelation.findMany({
       where: {

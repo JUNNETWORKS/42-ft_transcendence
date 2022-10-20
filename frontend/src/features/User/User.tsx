@@ -1,55 +1,96 @@
-import { UserPersonalData } from '@/components/AuthCard';
-import { FTH1, FTH4 } from '@/components/FTBasicComponents';
+import { chatSocketAtom, userAtoms } from '@/atoms';
+import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
+import { useAction, usePersonalData } from '@/hooks';
+import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
+import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 
-type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
-const usePersonalData = (userId: number) => {
-  const [state, setState] = useState<FetchState>('Neutral');
-  const [personalData, setPersonalData] = useState<UserPersonalData | null>(
-    null
+const FollowButton = (props: { userId: number; isFriend: boolean }) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const command = {
+    follow: (targetId: number) => {
+      const data = {
+        userId: targetId,
+      };
+      console.log('ft_follow', data);
+      mySocket?.emit('ft_follow', data);
+    },
+    unfollow: (targetId: number) => {
+      const data = {
+        userId: targetId,
+      };
+      console.log('ft_unfollow', data);
+      mySocket?.emit('ft_unfollow', data);
+    },
+  };
+
+  type Phase = 'IsFriend' | 'IsNotFriend' | 'RunningUnfollow' | 'RunningFollow';
+  const [phase, setPhase] = useState<Phase>(
+    props.isFriend ? 'IsFriend' : 'IsNotFriend'
   );
+  const [setIsRunning, isRunning] = useAction(false, (running) => {
+    console.log('setIsRunning', running);
+    if (!running) {
+      return;
+    }
+    if (props.isFriend) {
+      // Unfollow
+      setPhase('RunningUnfollow');
+      command.unfollow(props.userId);
+    } else {
+      // Follow
+      setPhase('RunningFollow');
+      command.follow(props.userId);
+    }
+  });
+
+  const startRunning = () => {
+    if (isRunning) {
+      return;
+    }
+    setIsRunning(true);
+  };
 
   useEffect(() => {
-    switch (state) {
-      case 'Neutral':
-        if (personalData) {
-          setState('Fetched');
-        } else {
-          setState('Fetching');
-        }
-        break;
-      case 'Fetching':
-        (async () => {
-          try {
-            const result = await fetch(
-              `http://localhost:3000/users/${userId}`,
-              {
-                method: 'GET',
-                mode: 'cors',
-              }
-            );
-            if (result.ok) {
-              const user = await result.json();
-              setPersonalData(user);
-              setState('Fetched');
-              return;
-            }
-          } catch (e) {
-            console.error(e);
-          }
-          setState('Failed');
-        })();
-        break;
+    if (props.isFriend) {
+      setPhase('IsFriend');
+    } else {
+      setPhase('IsNotFriend');
     }
-  }, [state]);
-  return [state, personalData] as const;
+    setIsRunning(false);
+  }, [props.isFriend]);
+
+  const text = (() => {
+    switch (phase) {
+      case 'IsFriend':
+        return 'Unfollow';
+      case 'IsNotFriend':
+        return 'Follow';
+      case 'RunningFollow':
+        return 'Following...';
+      case 'RunningUnfollow':
+        return 'Unfollowing...';
+    }
+  })();
+
+  return (
+    <>
+      <FTButton disabled={isRunning} onClick={startRunning}>
+        {text}
+      </FTButton>
+    </>
+  );
 };
 
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
   const [fetchState, personalData] = usePersonalData(userId);
+  const [friends] = useAtom(userAtoms.friends);
+  // フレンドかどうか
+  console.log(userId, friends);
+  const isFriend = !!friends.find((f) => f.id === userId);
 
   const presentator = () => {
     switch (fetchState) {
@@ -59,14 +100,17 @@ export const UserView = () => {
             <>
               <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
                 {personalData.displayName}
+                {isFriend && <FaUserFriends className="inline" />}
               </FTH1>
               <div className="flex flex-col gap-2">
                 <FTH4>id</FTH4>
                 <div>{personalData.id}</div>
                 <FTH4>name</FTH4>
                 <div>{personalData.displayName}</div>
-                <FTH4>email</FTH4>
-                <div>{personalData.email}</div>
+
+                <div>
+                  <FollowButton userId={personalData.id} isFriend={isFriend} />
+                </div>
               </div>
             </>
           );

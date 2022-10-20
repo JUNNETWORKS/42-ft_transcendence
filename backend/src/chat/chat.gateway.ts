@@ -30,6 +30,8 @@ import {
   usersJoin,
   sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
+import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
+import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -629,6 +631,108 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         client,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_follow')
+  async handleFollow(
+    @MessageBody() data: OperationFollowDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_follow', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findFriend(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [TODO: すでにリレーションが存在していないことを確認]
+    if (rel.existing) {
+      console.log('** already being friend **');
+      return;
+    }
+
+    // [TODO: ハードリレーション更新]
+    await this.usersService.addFriend(user.id, targetId);
+
+    // フォロー**した**ことを通知
+    this.sendResults(
+      'ft_follow',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+    // フォロー**された**ことを通知
+    this.sendResults(
+      'ft_followed',
+      {
+        user: Utils.pick(user, 'id', 'displayName'),
+      },
+      {
+        userId: targetId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_unfollow')
+  async handleUnfollow(
+    @MessageBody() data: OperationUnfollowDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_unfollow', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findFriend(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [TODO: リレーションが存在していることを確認]
+    if (!rel.existing) {
+      console.log('** not being friend **');
+      return;
+    }
+
+    // [TODO: ハードリレーション更新]
+    await this.usersService.removeFriend(user.id, targetId);
+
+    // フォロー**した**ことを通知
+    this.sendResults(
+      'ft_unfollow',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+    // フォロー**された**ことを通知
+    this.sendResults(
+      'ft_unfollowed',
+      {
+        user: Utils.pick(user, 'id', 'displayName'),
+      },
+      {
+        userId: targetId,
       }
     );
   }

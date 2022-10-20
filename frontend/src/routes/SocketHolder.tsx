@@ -13,7 +13,7 @@ export const SocketHolder = () => {
   const [personalData] = useAtom(userAtoms.personalDataAtom);
   const setVisibleRooms = useAtom(userAtoms.visibleRoomsAtom)[1];
   const setJoiningRooms = useAtom(userAtoms.joiningRoomsAtom)[1];
-  const setFriends = useAtom(userAtoms.friends)[1];
+  const [friends, setFriends] = useAtom(userAtoms.friends);
   const setFocusedRoomId = useAtom(userAtoms.focusedRoomIdAtom)[1];
   const setMessagesInRoom = useAtom(userAtoms.messagesInRoomAtom)[1];
   const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
@@ -163,6 +163,26 @@ export const SocketHolder = () => {
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
       );
+    });
+
+    mySocket?.on('ft_follow', (data: TD.FollowResult) => {
+      console.log('catch follow');
+      if (!friends.find((f) => f.id === data.user.id)) {
+        setFriends((prev) => {
+          const next = [...prev, data.user];
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_unfollow', (data: TD.FollowResult) => {
+      console.log('catch unfollow');
+      if (friends.find((f) => f.id === data.user.id)) {
+        setFriends((prev) => {
+          const next = prev.filter((f) => f.id !== data.user.id);
+          return next;
+        });
+      }
     });
 
     return () => {

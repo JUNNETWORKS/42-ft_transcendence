@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { UserPersonalData } from './components/AuthCard';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -19,8 +20,8 @@ export function useStateWithResetter<T>(initial: T) {
  */
 export function useAction<T>(initialId: T, action: (id: T) => void) {
   const [actionId, setActionId] = useState<T>(initialId);
-  useEffect(() => action(actionId), [action, actionId]);
-  return [setActionId];
+  useEffect(() => action(actionId), [actionId]);
+  return [setActionId, actionId] as const;
 }
 
 export const useQuery = () => {
@@ -82,4 +83,48 @@ export const useStoredCredential = () => {
     });
   };
   return [getter, setter] as const;
+};
+
+type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
+export const usePersonalData = (userId: number) => {
+  const [state, setState] = useState<FetchState>('Neutral');
+  const [personalData, setPersonalData] = useState<UserPersonalData | null>(
+    null
+  );
+
+  useEffect(() => {
+    switch (state) {
+      case 'Neutral':
+        if (personalData) {
+          setState('Fetched');
+        } else {
+          setState('Fetching');
+        }
+        break;
+      case 'Fetching':
+        (async () => {
+          try {
+            // TODO: APIで都度取得するのではなくローカルのストアから取ってくる
+            const result = await fetch(
+              `http://localhost:3000/users/${userId}`,
+              {
+                method: 'GET',
+                mode: 'cors',
+              }
+            );
+            if (result.ok) {
+              const user = await result.json();
+              setPersonalData(user);
+              setState('Fetched');
+              return;
+            }
+          } catch (e) {
+            console.error(e);
+          }
+          setState('Failed');
+        })();
+        break;
+    }
+  }, [state]);
+  return [state, personalData] as const;
 };

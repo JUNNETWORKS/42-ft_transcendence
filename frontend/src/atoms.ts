@@ -1,4 +1,4 @@
-import { atom, useAtom } from 'jotai';
+import { atom } from 'jotai';
 import { UserPersonalData } from '@/components/AuthCard';
 import { AppCredential } from './hooks';
 import { io } from 'socket.io-client';
