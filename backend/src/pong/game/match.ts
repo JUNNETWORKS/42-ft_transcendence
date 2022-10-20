@@ -90,6 +90,12 @@ export class Match {
     };
   };
 
+  // ballとバーの位置を更新する
+  update = (): void => {
+    this.updateBall();
+    this.updateBar();
+  };
+
   // ball の位置を更新する
   updateBall = (): void => {
     // 左右の壁との判定
