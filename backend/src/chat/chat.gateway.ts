@@ -23,6 +23,13 @@ import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 import * as Utils from 'src/utils';
+import {
+  generateFullRoomName,
+  joinChannel,
+  usersLeave,
+  usersJoin,
+  sendResultRoom,
+} from 'src/utils/socket/SocketRoom';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -58,15 +65,16 @@ export class ChatGateway implements OnGatewayConnection {
     }
     const userId = user.id;
     // [システムチャンネルへのjoin]
-    this.joinChannel(client, 'User', userId);
-    this.joinChannel(client, 'Global', 'global');
+    //TODO チャットに依存しない機能になりそう
+    joinChannel(client, generateFullRoomName({ userId }));
+    joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
       await this.chatRoomService.getRoomsJoining(userId)
     ).map((r) => r.chatRoom);
     const joiningRoomNames = joiningRooms.map((r) =>
-      this.fullRoomName('ChatRoom', r.id)
+      generateFullRoomName({ roomId: r.id })
     );
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
@@ -140,7 +148,7 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
 
     // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
@@ -260,7 +268,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
     // 入室したことを通知
     this.sendResults(
       'ft_join',
@@ -325,7 +333,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersLeave(user.id, 'ChatRoom', roomId);
+    await usersLeave(this.server, user.id, generateFullRoomName({ roomId }));
     this.sendResults(
       'ft_leave',
       {
@@ -443,7 +451,11 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersLeave(targetUser.id, 'ChatRoom', roomId);
+    await usersLeave(
+      this.server,
+      targetUser.id,
+      generateFullRoomName({ roomId })
+    );
     this.sendResults(
       'ft_kick',
       {
@@ -622,6 +634,7 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  //TODO 外部に出したい
   private async trapAuth(client: Socket) {
     if (client.handshake.auth) {
       const { token, sub } = client.handshake.auth;
@@ -656,80 +669,9 @@ export class ChatGateway implements OnGatewayConnection {
     return null;
   }
 
-  /**
-   * システムが使うルーム名
-   * @param roomType
-   * @param roomName
-   * @returns
-   */
-  private fullRoomName(
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const roomSuffix = {
-      ChatRoom: '#',
-      User: '$',
-      Global: '%',
-    }[roomType];
-    return `${roomSuffix}${roomName}`;
-  }
-
   private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
+    const fullUserRoomName = generateFullRoomName({ userId });
     return this.server.in(fullUserRoomName);
-  }
-
-  /**
-   * 指定したユーザIDに対応するクライアントを指定したルームにjoinさせる\
-   * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersJoin(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `joining clients in ${fullUserRoomName} -> ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsJoin(fullChatRoomName);
-  }
-
-  /**
-   * (英語としておかしいので名前を変えること)
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersLeave(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `leaving clients in ${fullUserRoomName} from ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);
-  }
-
-  private joinChannel(
-    @ConnectedSocket() client: Socket,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullRoomName = this.fullRoomName(roomType, roomName);
-    client.join(fullRoomName);
-    console.log(`client ${client.id} joined to ${fullRoomName}`);
   }
 
   private async sendResults(
@@ -743,35 +685,32 @@ export class ChatGateway implements OnGatewayConnection {
     }
   ) {
     if (typeof target.userId === 'number') {
-      await this.sendResultRoom(op, 'User', target.userId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ userId: target.userId }),
+        payload
+      );
     }
     if (typeof target.roomId === 'number') {
-      await this.sendResultRoom(op, 'ChatRoom', target.roomId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ roomId: target.roomId }),
+        payload
+      );
     }
     if (target.global) {
-      await this.sendResultRoom(op, 'Global', target.global, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ global: target.global }),
+        payload
+      );
     }
     if (target.client) {
       console.log('sending downlink to client:', target.client.id, op, payload);
       target.client.emit(op, payload);
     }
-  }
-
-  /**
-   * サーバからクライアントに向かってデータを流す
-   * @param roomType
-   * @param roomName
-   * @param payload
-   */
-  private async sendResultRoom(
-    op: string,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any,
-    payload: any
-  ) {
-    const fullName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.to(fullName).allSockets();
-    console.log('sending downlink to:', fullName, op, payload, socks);
-    this.server.to(fullName).emit(op, payload);
   }
 }
