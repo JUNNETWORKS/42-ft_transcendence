@@ -53,10 +53,12 @@ export const verifyCredential = async (
           Authorization: `Bearer ${credential.token}`,
         },
       });
-      const json = await result.json();
-      if (json) {
-        onSucceeded(json);
-        return;
+      if (result.ok) {
+        const json = await result.json();
+        if (json) {
+          onSucceeded(json);
+          return;
+        }
       }
     } catch (e) {
       console.error(e);
