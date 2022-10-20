@@ -1,4 +1,4 @@
-import { GameSettings } from './game-settings';
+import { GameSettings } from './types/game-settings';
 import {
   Ball,
   Player,
@@ -11,8 +11,9 @@ import {
   FullRectangle,
   makeEdge,
   areRangesOverlap,
-} from './game-state';
+} from './types/game-state';
 
+// ゲームの状態､更新のみに責任を持つ｡
 export class Match {
   // field
   readonly fieldWidth = 1920;
@@ -31,11 +32,11 @@ export class Match {
   ball: Ball;
   players: [Player, Player];
 
-  constructor(sessionID1: string, sessionID2: string) {
+  constructor(playerID1: string, playerID2: string) {
     this.ball = this.regenerateBall();
     this.players = [
       {
-        id: sessionID1,
+        id: playerID1,
         side: 'left',
         score: 0,
         bar: {
@@ -54,7 +55,7 @@ export class Match {
         },
       },
       {
-        id: sessionID2,
+        id: playerID2,
         side: 'right',
         score: 0,
         bar: {
@@ -221,17 +222,13 @@ export class Match {
     this.ball.position.y += this.ballDy * this.ball.velocity.y;
   };
 
-  // sessionID のバーをdir方向に動かす
-  moveBar = (sessionID: string, input: PlayerInput): void => {
-    // const idx = this.getPlayerIdx(sessionID);
-    // if (idx < 0) {
-    //   return;
-    // }
-    // this.players[idx].input = input;
-    // デバッグ用に両方のプレイヤーに操作を反映する
-    for (let idx = 0; idx < 2; idx++) {
-      this.players[idx].input = input;
+  // playerID のバーをdir方向に動かす
+  moveBar = (playerID: string, input: PlayerInput): void => {
+    const idx = this.getPlayerIdx(playerID);
+    if (idx < 0) {
+      return;
     }
+    this.players[idx].input = input;
   };
 
   // 現在のプレイヤーのキー入力をもとにバーの位置を更新する
@@ -317,9 +314,9 @@ export class Match {
     };
   };
 
-  private getPlayerIdx = (sessionID: string): number => {
+  private getPlayerIdx = (playerID: string): number => {
     for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].id == sessionID) {
+      if (this.players[i].id == playerID) {
         return i;
       }
     }

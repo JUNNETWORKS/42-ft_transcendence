@@ -9,9 +9,6 @@ import { Socket } from 'socket.io';
 import { PongMatchActionDTO } from './dto/pong-match-action';
 import { Match } from './game/match';
 
-// ========== WS: pong.matchmaking.start ==========
-// type MatchmakingEntry = {}
-
 // ========== WS: pong.match.action ==========
 
 let match: Match | null = null;
