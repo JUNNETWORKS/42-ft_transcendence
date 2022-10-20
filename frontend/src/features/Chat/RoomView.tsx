@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import * as TD from '../../typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3 } from '../../components/FTBasicComponents';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import * as dayjs from 'dayjs';
 import * as RIFa from 'react-icons/fa';
 import * as RIIo from 'react-icons/im';

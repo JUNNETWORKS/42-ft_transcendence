@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from '../../typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3 } from '../../components/FTBasicComponents';
-import { ChatRoomView } from './Room';
-import { useAction } from '../../hooks';
-import { OpenCard } from '../../components/CommandCard';
+import { FTH3 } from '@/components/FTBasicComponents';
+import { ChatRoomView } from './RoomView';
+import { useAction } from '@/hooks';
+import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
 import { userAtoms } from '@/atoms';
+import { ChatRoomListView } from './RoomList';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {
@@ -232,62 +233,21 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         <div className="flex shrink grow flex-col border-2 border-solid border-white">
           <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
           <div className="flex shrink grow flex-col p-2">
-            {visibleRooms.map((data: TD.ChatRoom) => {
-              return (
-                /* クリックしたルームにフォーカスを当てる */
-                <div
-                  className="flex flex-row border-2 border-solid border-white p-[2px]"
-                  key={data.id}
-                >
-                  <div className="shrink-0 grow-0">
-                    {predicate.isJoiningTo(data.id) ? (
-                      <FTButton
-                        className="bg-white text-black hover:bg-black hover:text-white"
-                        style={{ width: '4em' }}
-                        onClick={() => command.leave(data.id)}
-                      >
-                        Leave
-                      </FTButton>
-                    ) : (
-                      <FTButton
-                        style={{ width: '4em' }}
-                        onClick={() => command.join(data.id)}
-                      >
-                        Join
-                      </FTButton>
-                    )}
-                  </div>
-                  <div
-                    className="grow p-[4px]"
-                    style={{
-                      flexBasis: '1px',
-                      cursor: predicate.isJoiningTo(data.id)
-                        ? 'pointer'
-                        : 'unset',
-                      fontWeight: predicate.isJoiningTo(data.id)
-                        ? 'bold'
-                        : 'normal',
-                      ...(predicate.isFocusingTo(data.id)
-                        ? { borderLeft: '12px solid teal' }
-                        : {}),
-                    }}
-                    onClick={() => {
-                      if (predicate.isJoiningTo(data.id)) {
-                        setFocusedRoomId(data.id);
-                        action.get_room_message(data.id);
-                        action.get_room_members(data.id);
-                      }
-                    }}
-                  >
-                    {data.id} / {data.roomName}{' '}
-                    {(() => {
-                      const n = store.count_message(data.id);
-                      return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-                    })()}
-                  </div>
-                </div>
-              );
-            })}
+            <ChatRoomListView
+              rooms={visibleRooms}
+              isJoiningTo={predicate.isJoiningTo}
+              isFocusingTo={predicate.isFocusingTo}
+              countMessages={store.count_message}
+              onJoin={command.join}
+              onLeave={command.leave}
+              onFocus={(roomId: number) => {
+                if (predicate.isJoiningTo(roomId)) {
+                  setFocusedRoomId(roomId);
+                  action.get_room_message(roomId);
+                  action.get_room_members(roomId);
+                }
+              }}
+            />
           </div>
         </div>
         <div className="border-2 border-solid border-white">
