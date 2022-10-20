@@ -22,7 +22,7 @@ export const generateFullRoomName = (roomArg: RoomArg): RoomName => {
     return addRoomTypePrefix('User', roomArg.userId);
   else if ('global' in roomArg)
     return addRoomTypePrefix('Global', roomArg.global);
-  return 'Error';
+  else throw new Error('Invalid RoomType');
 };
 
 /**
