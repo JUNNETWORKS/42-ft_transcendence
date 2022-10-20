@@ -1,9 +1,4 @@
-import {
-  authFlowStateAtom,
-  chatSocketAtom,
-  storedCredentialAtom,
-  userAtoms,
-} from '@/atoms';
+import { chatSocketAtom, userAtoms } from '@/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '../typedef';
