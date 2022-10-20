@@ -10,7 +10,6 @@ import { useAtom } from 'jotai';
 import { userAtoms } from '@/atoms';
 
 /**
- *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
@@ -221,72 +220,22 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
 
   return (
     <div
-      style={{
-        height: '50em',
-        padding: '2px',
-        border: '1px solid useFetcher',
-        display: 'flex',
-        flexDirection: 'row',
-        width: '100%',
-      }}
+      className="flex w-full flex-row border-2 border-solid border-white p-2"
+      style={{ height: '50em' }}
     >
-      <div
-        className="vertical left"
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink-0 grow-0 flex-col">
         {/* 見えているチャットルーム */}
-        <div
-          className="room-list"
-          style={{
-            border: '1px solid white',
-            flexGrow: 1,
-            flexShrink: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <FTH3
-            style={{
-              flexGrow: 0,
-              flexShrink: 0,
-            }}
-          >
-            ChatRooms
-          </FTH3>
-          <div
-            style={{
-              padding: '2px',
-              flexGrow: 1,
-              flexShrink: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
+        <div className="flex shrink grow flex-col border-2 border-solid border-white">
+          <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+          <div className="flex shrink grow flex-col p-2">
             {visibleRooms.map((data: TD.ChatRoom) => {
               return (
                 /* クリックしたルームにフォーカスを当てる */
                 <div
-                  className="room-list-element"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    padding: '2px',
-                    border: '1px solid white',
-                  }}
+                  className="flex flex-row border-2 border-solid border-white p-[2px]"
                   key={data.id}
                 >
-                  <div
-                    className="joining-button"
-                    style={{
-                      flexGrow: 0,
-                      flexBasis: 0,
-                    }}
-                  >
+                  <div className="shrink-0 grow-0">
                     {predicate.isJoiningTo(data.id) ? (
                       <FTButton
                         className="bg-white text-black hover:bg-black hover:text-white"
@@ -305,10 +254,9 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
                     )}
                   </div>
                   <div
+                    className="grow p-[4px]"
                     style={{
-                      flexGrow: 1,
-                      flexBasis: 1,
-                      padding: '4px',
+                      flexBasis: '1px',
                       cursor: predicate.isJoiningTo(data.id)
                         ? 'pointer'
                         : 'unset',
@@ -338,95 +286,32 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
             })}
           </div>
         </div>
-        <div
-          style={{
-            border: '1px solid white',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
+        <div className="border-2 border-solid border-white">
           <OpenCard sender={command.open} />
         </div>
       </div>
 
-      <div
-        className="vertical right"
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink grow flex-col">
         {/* 今フォーカスしているルーム */}
         {!!computed.focusedRoom && (
-          <div
-            className="room-main"
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              border: '1px solid white',
-              padding: '2px',
-              height: '100%',
-            }}
-          >
-            <div
-              className="room-left-pane"
-              style={{
-                flexGrow: 1,
-                flexShrink: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden',
-              }}
-            >
+          <div className="flex h-full flex-row border-2 border-solid border-white p-2">
+            <div className="flex h-full shrink grow flex-col overflow-hidden">
               {/* 今フォーカスしているルームのメッセージ */}
-              <div
-                className="room-message-list"
-                style={{
-                  border: '1px solid white',
-                  flexGrow: 1,
-                  flexShrink: 1,
-                  overflow: 'scroll',
-                }}
-              >
+              <div className="shrink grow overflow-scroll border-2 border-solid border-white">
                 {store
                   .room_messages(focusedRoomId)
                   .map((data: TD.ChatRoomMessage) => (
                     <ChatRoomMessageCard key={data.id} message={data} />
                   ))}
               </div>
-              <div
-                className="input-panel"
-                style={{
-                  padding: '2px',
-                  border: '1px solid white',
-                  flexGrow: 0,
-                  flexShrink: 0,
-                }}
-              >
+              <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
                 {/* 今フォーカスしているルームへの発言 */}
-                <div
-                  style={{
-                    padding: '2px',
-                    border: '1px solid white',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
+                <div className="flex flex-row border-2 border-solid border-white p-2">
                   <SayCard sender={command.say} />
                 </div>
               </div>
             </div>
-            <div
-              className="room-right-pane"
-              style={{
-                flexGrow: 0,
-                flexShrink: 0,
-                flexBasis: '20em',
-              }}
-            >
+            <div className="shrink-0 grow-0 basis-[20em]">
               <ChatRoomMembersList
                 you={computed.you}
                 room={computed.focusedRoom}

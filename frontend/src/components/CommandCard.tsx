@@ -28,23 +28,12 @@ export const SayCard = (props: {
 
   return (
     <>
-      <div
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          padding: '2px',
-        }}
-      >
+      <div className="shrink-0 grow-0 p-[2px]">
         <FTButton disabled={!computed.isSendable()} onClick={sender}>
           Send
         </FTButton>
       </div>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
+      <div className="shrink grow">
         <FTTextField
           autoComplete="off"
           value={content}

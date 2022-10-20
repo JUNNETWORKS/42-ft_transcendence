@@ -14,37 +14,17 @@ import { Link } from 'react-router-dom';
 export const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   return (
     <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '2px',
-        border: '1px solid useFetcher',
-        marginBottom: '12px',
-      }}
+      className="flex flex-col border-[1px] border-solid border-white p-2"
       key={props.message.id}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <div
-          style={{
-            margin: '1px',
-            padding: '0 4px',
-            color: 'black',
-            backgroundColor: 'white',
-          }}
-        >
+      <div className="flex flex-row">
+        <div className="m-[1px] bg-white px-[2px] py-0 text-black">
           {props.message.user.displayName}
         </div>
-        <div style={{ paddingRight: '4px' }}>
+        <div className="pr-[4px]">
           {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
         </div>
-        <div style={{ paddingRight: '4px' }}>
-          chatRoomId: {props.message.chatRoomId}
-        </div>
+        <div className="pr-[4px]">chatRoomId: {props.message.chatRoomId}</div>
       </div>
       <div>{props.message.content}</div>
     </div>
@@ -79,18 +59,11 @@ export const ChatRoomMemberCard = (
   };
   const link_path = isYou ? '/auth' : `/user/${props.member.userId}`;
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'row',
-      }}
-    >
+    <div className="flex flex-row">
       <div
-        className="room-member-element cursor-pointer hover:bg-teal-700"
+        className="shrink grow cursor-pointer hover:bg-teal-700"
         key={props.member.userId}
         style={{
-          flexGrow: 1,
-          flexShrink: 1,
           ...(isYou ? { fontWeight: 'bold' } : {}),
         }}
       >
@@ -165,28 +138,9 @@ export const ChatRoomMembersList = (
   };
 
   return (
-    <div
-      className="room-members"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
-      <FTH3
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-        }}
-      >
-        Members
-      </FTH3>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
+    <div className="flex h-full flex-col">
+      <FTH3 className="shrink-0 grow-0">Members</FTH3>
+      <div className="shrink grow">
         {computed.members.map((member) => {
           return (
             <div key={member.userId}>
