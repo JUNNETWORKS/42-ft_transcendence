@@ -13,6 +13,7 @@ export const SocketHolder = () => {
   const [personalData] = useAtom(userAtoms.personalDataAtom);
   const setVisibleRooms = useAtom(userAtoms.visibleRoomsAtom)[1];
   const setJoiningRooms = useAtom(userAtoms.joiningRoomsAtom)[1];
+  const setFriends = useAtom(userAtoms.friends)[1];
   const setFocusedRoomId = useAtom(userAtoms.focusedRoomIdAtom)[1];
   const setMessagesInRoom = useAtom(userAtoms.messagesInRoomAtom)[1];
   const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
@@ -24,6 +25,7 @@ export const SocketHolder = () => {
       console.log('catch connection', data);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
+      setFriends(data.friends);
     });
 
     mySocket?.on('ft_open', (data: TD.OpenResult) => {

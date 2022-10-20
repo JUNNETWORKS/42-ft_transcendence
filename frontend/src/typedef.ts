@@ -52,6 +52,7 @@ export type ConnectionResult = {
   displayName: string;
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
+  friends: User[];
 };
 
 export type OpenResult = ChatRoom;

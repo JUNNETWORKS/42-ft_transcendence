@@ -20,6 +20,8 @@ export const userAtoms = {
   visibleRoomsAtom: atom<TD.ChatRoom[]>([]),
   // join しているチャットルームの一覧
   joiningRoomsAtom: atom<TD.ChatRoom[]>([]),
+  // フレンドの一覧
+  friends: atom<TD.User[]>([]),
   // 今フォーカスしているチャットルームのID
   focusedRoomIdAtom: atom<number>(-1),
   /**
@@ -66,6 +68,7 @@ export const storedCredentialAtom = atom(
     set(userAtoms.personalDataAtom, null);
     set(userAtoms.visibleRoomsAtom, []);
     set(userAtoms.joiningRoomsAtom, []);
+    set(userAtoms.friends, []);
     set(userAtoms.focusedRoomIdAtom, -1);
     set(userAtoms.messagesInRoomAtom, {});
     set(userAtoms.membersInRoomAtom, {});

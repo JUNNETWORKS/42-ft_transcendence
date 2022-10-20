@@ -70,9 +70,8 @@ export class ChatGateway implements OnGatewayConnection {
     joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const joiningRooms = (
-      await this.chatRoomService.getRoomsJoining(userId)
-    ).map((r) => r.chatRoom);
+    const { visibleRooms, joiningRooms, friends } =
+      await this.usersService.collectStartingInfomations(userId);
     const joiningRoomNames = joiningRooms.map((r) =>
       generateFullRoomName({ roomId: r.id })
     );
@@ -98,7 +97,6 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
-    const visibleRooms = await this.chatRoomService.findMany({ take: 40 });
     this.sendResults(
       'ft_connection',
       {
@@ -110,6 +108,7 @@ export class ChatGateway implements OnGatewayConnection {
         joiningRooms: joiningRooms.map((r) =>
           Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
         ),
+        friends: friends.map((r) => Utils.pick(r, 'id', 'displayName')),
       },
       {
         client,
