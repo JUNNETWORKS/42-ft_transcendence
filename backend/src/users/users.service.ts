@@ -4,8 +4,8 @@ import { passwordConstants } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as Utils from 'src/utils';
-import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
+import * as Utils from '../utils';
+import { ChatroomsService } from '../chatrooms/chatrooms.service';
 
 @Injectable()
 export class UsersService {
