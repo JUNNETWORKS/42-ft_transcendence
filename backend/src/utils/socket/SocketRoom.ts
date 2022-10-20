@@ -1,4 +1,4 @@
-import { RoomType, RoomName } from 'src/types/RoomType';
+import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 import { Socket, Server } from 'socket.io';
 
 /**
@@ -7,16 +7,22 @@ import { Socket, Server } from 'socket.io';
  * @param roomName
  * @returns
  */
-export const generateFullRoomName = (
-  roomType: RoomType,
-  roomName: string | number
-) => {
-  const roomSuffix = {
+const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
+  const roomPrefix = {
     ChatRoom: '#',
     User: '$',
     Global: '%',
   }[roomType];
-  return `${roomSuffix}${roomName}`;
+  return `${roomPrefix}${roomName}`;
+};
+
+export const generateFullRoomName = (roomArg: RoomArg): RoomName => {
+  if ('roomId' in roomArg) return addRoomTypePrefix('ChatRoom', roomArg.roomId);
+  else if ('userId' in roomArg)
+    return addRoomTypePrefix('User', roomArg.userId);
+  else if ('global' in roomArg)
+    return addRoomTypePrefix('Global', roomArg.global);
+  return 'Error';
 };
 
 /**
@@ -49,7 +55,7 @@ export const usersJoin = async (
   userId: number,
   roomName: RoomName
 ) => {
-  const fullUserRoomName = generateFullRoomName('User', userId);
+  const fullUserRoomName = generateFullRoomName({ userId });
   const socks = await server.in(fullUserRoomName).allSockets();
   console.log(`joining clients in ${fullUserRoomName} -> ${roomName}`, socks);
   server.in(fullUserRoomName).socketsJoin(roomName);
@@ -69,7 +75,7 @@ export const usersLeave = async (
   userId: number,
   roomName: RoomName
 ) => {
-  const fullUserRoomName = generateFullRoomName('User', userId);
+  const fullUserRoomName = generateFullRoomName({ userId });
   const socks = await server.in(fullUserRoomName).allSockets();
   console.log(`leaving clients in ${fullUserRoomName} from ${roomName}`, socks);
   server.in(fullUserRoomName).socketsLeave(roomName);

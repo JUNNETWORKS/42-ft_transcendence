@@ -66,15 +66,15 @@ export class ChatGateway implements OnGatewayConnection {
     const userId = user.id;
     // [システムチャンネルへのjoin]
     //TODO チャットに依存しない機能になりそう
-    joinChannel(client, generateFullRoomName('User', userId));
-    joinChannel(client, generateFullRoomName('Global', 'global'));
+    joinChannel(client, generateFullRoomName({ userId }));
+    joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
       await this.chatRoomService.getRoomsJoining(userId)
     ).map((r) => r.chatRoom);
     const joiningRoomNames = joiningRooms.map((r) =>
-      generateFullRoomName('ChatRoom', r.id)
+      generateFullRoomName({ roomId: r.id })
     );
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
@@ -148,11 +148,7 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await usersJoin(
-      this.server,
-      user.id,
-      generateFullRoomName('ChatRoom', roomId)
-    );
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
 
     // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
@@ -272,11 +268,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersJoin(
-      this.server,
-      user.id,
-      generateFullRoomName('ChatRoom', roomId)
-    );
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
     // 入室したことを通知
     this.sendResults(
       'ft_join',
@@ -341,11 +333,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersLeave(
-      this.server,
-      user.id,
-      generateFullRoomName('ChatRoom', roomId)
-    );
+    await usersLeave(this.server, user.id, generateFullRoomName({ roomId }));
     this.sendResults(
       'ft_leave',
       {
@@ -466,7 +454,7 @@ export class ChatGateway implements OnGatewayConnection {
     await usersLeave(
       this.server,
       targetUser.id,
-      generateFullRoomName('ChatRoom', roomId)
+      generateFullRoomName({ roomId })
     );
     this.sendResults(
       'ft_kick',
@@ -682,7 +670,7 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = generateFullRoomName('User', userId);
+    const fullUserRoomName = generateFullRoomName({ userId });
     return this.server.in(fullUserRoomName);
   }
 
@@ -700,7 +688,7 @@ export class ChatGateway implements OnGatewayConnection {
       await sendResultRoom(
         this.server,
         op,
-        generateFullRoomName('User', target.userId),
+        generateFullRoomName({ userId: target.userId }),
         payload
       );
     }
@@ -708,7 +696,7 @@ export class ChatGateway implements OnGatewayConnection {
       await sendResultRoom(
         this.server,
         op,
-        generateFullRoomName('ChatRoom', target.roomId),
+        generateFullRoomName({ roomId: target.roomId }),
         payload
       );
     }
@@ -716,7 +704,7 @@ export class ChatGateway implements OnGatewayConnection {
       await sendResultRoom(
         this.server,
         op,
-        generateFullRoomName('Global', target.global),
+        generateFullRoomName({ global: target.global }),
         payload
       );
     }
