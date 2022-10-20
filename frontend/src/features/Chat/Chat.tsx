@@ -2,238 +2,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
-
-/**
- * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
- * @param initial
- * @returns
- */
-function useStateWithResetter<T>(initial: T) {
-  const [val, setter] = useState<T>(initial);
-  const resetter = () => setter(initial);
-  return [val, setter, resetter] as const;
-}
-
-/**
- * `id`の変化をトリガーとして何らかのアクションを行うフック
- * @param initialId `id`の初期値
- * @param action  `id`を受け取り, アクションを実行する関数
- */
-function useAction<T>(initialId: T, action: (id: T) => void) {
-  const [actionId, setActionId] = useState<T>(initialId);
-  useEffect(() => action(actionId), [action, actionId]);
-  return [setActionId];
-}
-
-type UserRelationMap = {
-  [userId: number]: TD.ChatUserRelation;
-};
-
-/**
- * メッセージを表示するコンポーネント
- */
-const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        padding: '2px',
-        border: '1px solid gray',
-      }}
-      key={props.message.id}
-    >
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        <div style={{ paddingRight: '4px' }}>
-          displayName: {props.message.user.displayName}
-        </div>
-        <div style={{ paddingRight: '4px' }}>
-          chatRoomId: {props.message.chatRoomId}
-        </div>
-        <div style={{ paddingRight: '4px' }}>
-          createdAt: {props.message.createdAt.toISOString()}
-        </div>
-      </div>
-      <div>{props.message.content}</div>
-    </div>
-  );
-};
-
-const ChatRoomMembersList = (props: {
-  userId: number;
-  members: UserRelationMap;
-}) => {
-  const computed = {
-    members: useMemo(() => {
-      const mems: TD.ChatUserRelation[] = [];
-      const you = props.members[props.userId];
-      if (you) {
-        mems.push(you);
-      }
-      Utils.keys(props.members).forEach((id) => {
-        const m = props.members[id];
-        if (props.userId === m.userId) {
-          return;
-        }
-        mems.push(m);
-      });
-      return mems;
-    }, [props.userId, props.members]),
-  };
-
-  return (
-    <div
-      className="room-members"
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
-      <h4
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-        }}
-      >
-        Members
-      </h4>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
-        {computed.members.map((member) => {
-          return (
-            <div className="room-member-element" key={member.userId}>
-              {member.user.displayName}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-/**
- * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
- */
-const SayCard = (props: { sender: (content: TD.SayArgument) => void }) => {
-  const [content, setContent, resetContent] = useStateWithResetter('');
-  const sender = () => {
-    // クライアント側バリデーション
-    if (!content.trim()) {
-      return;
-    }
-    props.sender(content);
-    resetContent();
-  };
-  const computed = {
-    isSendable: () => {
-      if (!content.trim()) {
-        return false;
-      }
-      return true;
-    },
-  };
-
-  return (
-    <>
-      <div
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          padding: '2px',
-        }}
-      >
-        <button disabled={!computed.isSendable()} onClick={sender}>
-          Send
-        </button>
-      </div>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
-        <input
-          id="input"
-          autoComplete="off"
-          value={content}
-          placeholder="発言内容"
-          onChange={(e) => setContent(e.target.value)}
-          style={{
-            display: 'block',
-            height: '100%',
-            width: '100%',
-            padding: '0',
-          }}
-        />
-      </div>
-    </>
-  );
-};
-
-/**
- * 新しく作成するチャットルームの情報を編集し, 外部に送出するコンポーネント
- * @param props
- * @returns
- */
-const OpenCard = (props: { sender: (argument: TD.OpenArgument) => void }) => {
-  const [roomName, setRoomName, resetRoomName] = useStateWithResetter('');
-  const sender = () => {
-    // クライアント側バリデーション
-    if (!roomName.trim()) {
-      return;
-    }
-    props.sender({
-      roomName,
-      roomType: 'PUBLIC',
-    });
-    resetRoomName();
-  };
-  return (
-    <div className="open-card">
-      <h4>Open</h4>
-      <input
-        id="input"
-        autoComplete="off"
-        placeholder="チャットルーム名"
-        value={roomName}
-        onChange={(e) => setRoomName(e.target.value)}
-      />
-      <button onClick={() => sender()}>Open</button>
-    </div>
-  );
-};
-
-const SelfCard = (props: {
-  currentUserIdStr: string;
-  sender: (userIdStr: string) => void;
-}) => {
-  const [userIdStr, setUserIdStr] = useState('');
-  return (
-    <div className="self-card">
-      <h4>Self</h4>
-      Current userId: {props.currentUserIdStr || '(none)'}
-      <br />
-      <input
-        id="input"
-        autoComplete="off"
-        placeholder="ユーザID"
-        value={userIdStr}
-        onChange={(e) => setUserIdStr(e.target.value)}
-      />
-      <button onClick={() => props.sender(userIdStr)}>Force Login</button>
-    </div>
-  );
-};
+import { FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
+import { useStateWithResetter, useAction, useEffectOnce } from './hooks';
+import { SayCard, OpenCard, SelfCard } from './CommandCard';
 
 /**
  *
@@ -289,6 +61,7 @@ export const Chat = () => {
     return [userIdStr, setter, mySocket] as const;
   };
   const [userIdStr, setUserIdStr, mySocket] = useSocket();
+  useEffectOnce(() => setUserIdStr('1'));
 
   const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
   // 見えているチャットルームの一覧
@@ -314,13 +87,13 @@ export const Chat = () => {
    */
   const [membersInRoom, setMembersInRoom, resetMembersInRoom] =
     useStateWithResetter<{
-      [roomId: number]: UserRelationMap;
+      [roomId: number]: TD.UserRelationMap;
     }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
     mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
-      console.log('catch connection');
+      console.log('catch connection', data);
       setUserId(data.userId);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
@@ -357,58 +130,92 @@ export const Chat = () => {
 
     mySocket?.on('ft_join', (data: TD.JoinResult) => {
       console.log('catch join', data);
-      if (userId > 0) {
-        const { chatRoom: room } = data.relation;
-        const user = data.user;
-        console.log(room, user);
-        if (user.id === userId) {
-          // 自分に関する通知
-          console.log('for self');
-          setJoiningRooms((prev) => {
-            const sameRoom = prev.find((r) => r.id === room.id);
-            if (sameRoom) {
-              return prev;
-            }
-            const newRoomList = [...prev];
-            newRoomList.push(room);
-            return newRoomList;
-          });
-        } else {
-          // 他人に関する通知
-          console.log('for other');
-          stateMutater.addMembersInRoom(room.id, { [user.id]: data.relation });
-        }
+      if (!(userId > 0)) {
+        return;
+      }
+      const { chatRoom: room } = data.relation;
+      const user = data.user;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          const sameRoom = prev.find((r) => r.id === room.id);
+          if (sameRoom) {
+            return prev;
+          }
+          const newRoomList = [...prev];
+          newRoomList.push(room);
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
 
     mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
       console.log('catch leave', data);
-      if (userId > 0) {
-        const { chatRoom: room } = data.relation;
-        const user = data.user;
-        console.log(room, user);
-        if (user.id === userId) {
-          // 自分に関する通知
-          console.log('for self');
-          setJoiningRooms((prev) => {
-            console.log(
-              predicate.isFocusingTo(room.id),
-              focusedRoomId,
-              room.id
-            );
-            stateMutater.unfocusRoom(room.id);
-            const newRoomList = prev.filter((r) => r.id !== room.id);
-            if (newRoomList.length === prev.length) {
-              return prev;
-            }
-            return newRoomList;
-          });
-        } else {
-          // 他人に関する通知
-          console.log('for other');
-          stateMutater.removeMembersInRoom(room.id, user.id);
-        }
+      if (!(userId > 0)) {
+        return;
       }
+      const { chatRoom: room } = data.relation;
+      const user = data.user;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
+          stateMutater.unfocusRoom(room.id);
+          const newRoomList = prev.filter((r) => r.id !== room.id);
+          if (newRoomList.length === prev.length) {
+            return prev;
+          }
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.removeMembersInRoom(room.id, user.id);
+      }
+    });
+
+    mySocket?.on('ft_kick', (data: TD.LeaveResult) => {
+      console.log('catch kick', data);
+      if (!(userId > 0)) {
+        return;
+      }
+      const { room, user } = data;
+      console.log(room, user);
+      if (user.id === userId) {
+        // 自分に関する通知
+        console.log('for self');
+        setJoiningRooms((prev) => {
+          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
+          stateMutater.unfocusRoom(room.id);
+          const newRoomList = prev.filter((r) => r.id !== room.id);
+          if (newRoomList.length === prev.length) {
+            return prev;
+          }
+          return newRoomList;
+        });
+      } else {
+        // 他人に関する通知
+        console.log('for other');
+        stateMutater.removeMembersInRoom(room.id, user.id);
+      }
+    });
+
+    mySocket?.on('ft_nomminate', (data: TD.NomminateResult) => {
+      console.log('catch nomminate', data);
+      if (!(userId > 0)) {
+        return;
+      }
+      const { relation, room, user } = data;
+      console.log(relation, room, user);
+      stateMutater.mergeMembersInRoom(room.id, { [user.id]: relation });
     });
 
     mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
@@ -425,7 +232,7 @@ export const Chat = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
-      stateMutater.addMembersInRoom(
+      stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
       );
@@ -443,7 +250,6 @@ export const Chat = () => {
     open: (args: TD.OpenArgument) => {
       const data = {
         ...args,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_open', data);
@@ -452,7 +258,6 @@ export const Chat = () => {
     join: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_join', data);
@@ -461,7 +266,6 @@ export const Chat = () => {
     leave: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(data);
       mySocket?.emit('ft_leave', data);
@@ -473,7 +277,6 @@ export const Chat = () => {
       }
       const data = {
         roomId: focusedRoomId,
-        callerId: 1,
         content,
       };
       console.log(data);
@@ -484,7 +287,6 @@ export const Chat = () => {
       const data = {
         roomId,
         take: 50,
-        callerId: 1,
       };
       console.log(['get_room_messages'], data);
       mySocket?.emit('ft_get_room_messages', data);
@@ -493,11 +295,52 @@ export const Chat = () => {
     get_room_members: (roomId: number) => {
       const data = {
         roomId,
-        callerId: 1,
       };
       console.log(['get_room_members'], data);
       mySocket?.emit('ft_get_room_members', data);
     },
+
+    nomminate: (member: TD.ChatUserRelation) => {
+      console.log('[nomminate]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_nomminate', data);
+    },
+
+    ban: (member: TD.ChatUserRelation) => {
+      console.log('[ban]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_ban', data);
+    },
+
+    kick: (member: TD.ChatUserRelation) => {
+      console.log('[kick]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_kick', data);
+    },
+
+    mute: (member: TD.ChatUserRelation) => {
+      console.log('[mute]', member);
+      const data = {
+        roomId: member.chatRoomId,
+        userId: member.userId,
+      };
+      mySocket?.emit('ft_mute', data);
+    },
+  };
+  const memberOperations: TD.MemberOperations = {
+    onNomminateClick: command.nomminate,
+    onBanClick: command.ban,
+    onKickClick: command.kick,
+    onMuteClick: command.mute,
   };
 
   /**
@@ -557,11 +400,11 @@ export const Chat = () => {
      * @param roomId
      * @param newMembers
      */
-    addMembersInRoom: (roomId: number, newMembers: UserRelationMap) => {
-      console.log(`addMembersInRoom(${roomId}, ${newMembers})`);
+    mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
+      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
-        console.log(`addMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: UserRelationMap } = {};
+        console.log(`mergeMembersInRoom -> setMembersInRoom`);
+        const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
         });
@@ -572,7 +415,9 @@ export const Chat = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
-        console.log(prev, next);
+        console.log('[newMembers]', newMembers);
+        console.log('[prev]', prev);
+        console.log('[next]', next);
         return next;
       });
     },
@@ -581,7 +426,7 @@ export const Chat = () => {
       console.log(`removeMembersInRoom(${roomId}, ${userId})`);
       setMembersInRoom((prev) => {
         console.log(`removeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: UserRelationMap } = {};
+        const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
         });
@@ -624,6 +469,20 @@ export const Chat = () => {
       () => visibleRooms.find((r) => r.id === focusedRoomId),
       [visibleRooms, focusedRoomId]
     ),
+
+    you: useMemo(() => {
+      if (!userId) {
+        return null;
+      }
+      if (!focusedRoomId) {
+        return null;
+      }
+      const us = membersInRoom[focusedRoomId];
+      if (!us) {
+        return null;
+      }
+      return us[userId];
+    }, [userId, focusedRoomId, membersInRoom]),
   };
 
   /**
@@ -681,9 +540,10 @@ export const Chat = () => {
       style={{
         height: '50em',
         padding: '2px',
-        border: '1px solid gray',
+        border: '1px solid useFetcher',
         display: 'flex',
         flexDirection: 'row',
+        width: '100%',
       }}
     >
       <div
@@ -699,22 +559,21 @@ export const Chat = () => {
         <div
           className="room-list"
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 1,
             flexShrink: 1,
             display: 'flex',
             flexDirection: 'column',
           }}
         >
-          <h3
+          <FTH3
             style={{
               flexGrow: 0,
               flexShrink: 0,
             }}
           >
-            ChatRooms {focusedRoomId}
-          </h3>
+            ChatRooms
+          </FTH3>
           <div
             style={{
               padding: '2px',
@@ -733,7 +592,7 @@ export const Chat = () => {
                     display: 'flex',
                     flexDirection: 'row',
                     padding: '2px',
-                    border: '1px solid gray',
+                    border: '1px solid white',
                   }}
                   key={data.id}
                 >
@@ -745,34 +604,39 @@ export const Chat = () => {
                     }}
                   >
                     {predicate.isJoiningTo(data.id) ? (
-                      <button
-                        style={{ width: '4em' }}
+                      <FTButton
+                        style={{
+                          width: '4em',
+                          color: 'black',
+                          backgroundColor: 'white',
+                        }}
                         onClick={() => command.leave(data.id)}
                       >
                         Leave
-                      </button>
+                      </FTButton>
                     ) : (
-                      <button
+                      <FTButton
                         style={{ width: '4em' }}
                         onClick={() => command.join(data.id)}
                       >
                         Join
-                      </button>
+                      </FTButton>
                     )}
                   </div>
                   <div
                     style={{
                       flexGrow: 1,
                       flexBasis: 1,
+                      padding: '4px',
                       cursor: predicate.isJoiningTo(data.id)
                         ? 'pointer'
                         : 'unset',
                       fontWeight: predicate.isJoiningTo(data.id)
                         ? 'bold'
                         : 'normal',
-                      backgroundColor: predicate.isFocusingTo(data.id)
-                        ? 'lightgreen'
-                        : 'unset',
+                      ...(predicate.isFocusingTo(data.id)
+                        ? { borderLeft: '12px solid teal' }
+                        : {}),
                     }}
                     onClick={() => {
                       if (predicate.isJoiningTo(data.id)) {
@@ -793,8 +657,7 @@ export const Chat = () => {
         </div>
         <div
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 0,
             flexShrink: 0,
           }}
@@ -803,8 +666,7 @@ export const Chat = () => {
         </div>
         <div
           style={{
-            padding: '2px',
-            border: '1px solid gray',
+            border: '1px solid white',
             flexGrow: 0,
             flexShrink: 0,
           }}
@@ -829,7 +691,7 @@ export const Chat = () => {
             style={{
               display: 'flex',
               flexDirection: 'row',
-              border: '1px solid gray',
+              border: '1px solid white',
               padding: '2px',
               height: '100%',
             }}
@@ -849,8 +711,7 @@ export const Chat = () => {
               <div
                 className="room-message-list"
                 style={{
-                  padding: '2px',
-                  border: '1px solid gray',
+                  border: '1px solid white',
                   flexGrow: 1,
                   flexShrink: 1,
                   overflow: 'scroll',
@@ -866,7 +727,7 @@ export const Chat = () => {
                 className="input-panel"
                 style={{
                   padding: '2px',
-                  border: '1px solid gray',
+                  border: '1px solid white',
                   flexGrow: 0,
                   flexShrink: 0,
                 }}
@@ -875,7 +736,7 @@ export const Chat = () => {
                 <div
                   style={{
                     padding: '2px',
-                    border: '1px solid gray',
+                    border: '1px solid white',
                     display: 'flex',
                     flexDirection: 'row',
                   }}
@@ -889,18 +750,20 @@ export const Chat = () => {
               style={{
                 flexGrow: 0,
                 flexShrink: 0,
-                flexBasis: '10em',
+                flexBasis: '20em',
               }}
             >
               <ChatRoomMembersList
-                userId={userId}
+                you={computed.you}
+                room={computed.focusedRoom}
                 members={store.room_members(focusedRoomId) || {}}
+                {...memberOperations}
               />
             </div>
           </div>
         )}
       </div>
-      <div
+      {/* <div
         style={{
           flexGrow: 0,
           flexShrink: 0,
@@ -909,14 +772,14 @@ export const Chat = () => {
         }}
       >
         <div>
-          <h4>visibleRoomList</h4>
+          <FTH4>visibleRoomList</FTH4>
           {JSON.stringify(visibleRooms)}
         </div>
         <div>
-          <h4>joiningRoomList</h4>
+          <FTH4>joiningRoomList</FTH4>
           {JSON.stringify(joiningRooms)}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

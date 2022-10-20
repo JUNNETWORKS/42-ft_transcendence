@@ -138,6 +138,52 @@ export class ChatroomsService {
     });
   }
 
+  getRelationWithUser(chatRoomId: number, userId: number) {
+    return this.prisma.chatUserRelation.findFirst({
+      where: {
+        chatRoomId,
+        userId,
+      },
+      include: {
+        chatRoom: true,
+        user: true,
+      },
+    });
+  }
+
+  getAttribute(chatRoomId: number, userId: number) {
+    return this.prisma.chatUserAttribute.findFirst({
+      where: {
+        chatRoomId,
+        userId,
+      },
+    });
+  }
+
+  upsertAttribute(
+    chatRoomId: number,
+    userId: number,
+    upArg: {
+      bannedEndAt?: Date;
+      mutedEndAt?: Date;
+    }
+  ) {
+    return this.prisma.chatUserAttribute.upsert({
+      where: {
+        userId_chatRoomId: {
+          chatRoomId,
+          userId,
+        },
+      },
+      create: {
+        chatRoomId,
+        userId,
+        ...upArg,
+      },
+      update: upArg,
+    });
+  }
+
   async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
     const { roomType, roomPassword } = updateRoomTypeDto;
     const res = await this.prisma.chatRoom.update({

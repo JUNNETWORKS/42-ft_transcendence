@@ -36,6 +36,10 @@ export type ChatRoomMessage = {
   content: string;
 };
 
+export type UserRelationMap = {
+  [userId: number]: ChatUserRelation;
+};
+
 // コマンド系
 
 export type SayArgument = string;
@@ -57,6 +61,12 @@ export type SayResult = ChatRoomMessage & {
 };
 
 export type JoinResult = {
+  relation: ChatUserRelationWithRoom;
+  room: ChatRoom;
+  user: User;
+};
+
+export type NomminateResult = {
   relation: ChatUserRelationWithRoom;
   room: ChatRoom;
   user: User;
@@ -101,4 +111,12 @@ export const Mapper = {
     }
     return r;
   },
+};
+
+// UI系
+export type MemberOperations = {
+  onNomminateClick?: (r: ChatUserRelation) => void;
+  onBanClick?: (r: ChatUserRelation) => void;
+  onMuteClick?: (r: ChatUserRelation) => void;
+  onKickClick?: (r: ChatUserRelation) => void;
 };

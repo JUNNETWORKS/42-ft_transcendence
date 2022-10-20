@@ -18,6 +18,26 @@ import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
+import * as Utils from 'src/utils';
+import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
+import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
+import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
+import {
+  generateFullRoomName,
+  joinChannel,
+  usersLeave,
+  usersJoin,
+  sendResultRoom,
+} from 'src/utils/socket/SocketRoom';
+
+const secondInMilliseconds = 1000;
+const minuteInSeconds = 60;
+
+const constants = {
+  banDuration: 5 * minuteInSeconds * secondInMilliseconds,
+  muteDuration: 5 * minuteInSeconds * secondInMilliseconds,
+};
 
 @WebSocketGateway({
   cors: true,
@@ -29,7 +49,7 @@ export class ChatGateway implements OnGatewayConnection {
 
   constructor(
     private readonly chatService: ChatService,
-    private readonly charRoomService: ChatroomsService,
+    private readonly chatRoomService: ChatroomsService,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService
   ) {}
@@ -45,15 +65,16 @@ export class ChatGateway implements OnGatewayConnection {
     }
     const userId = user.id;
     // [システムチャンネルへのjoin]
-    this.joinChannel(client, 'User', userId);
-    this.joinChannel(client, 'Global', 'global');
+    //TODO チャットに依存しない機能になりそう
+    joinChannel(client, generateFullRoomName({ userId }));
+    joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const joiningRooms = (
-      await this.charRoomService.getRoomsJoining(userId)
+      await this.chatRoomService.getRoomsJoining(userId)
     ).map((r) => r.chatRoom);
     const joiningRoomNames = joiningRooms.map((r) =>
-      this.fullRoomName('ChatRoom', r.id)
+      generateFullRoomName({ roomId: r.id })
     );
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
@@ -77,24 +98,18 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
-    const visibleRooms = await this.charRoomService.findMany({ take: 40 });
+    const visibleRooms = await this.chatRoomService.findMany({ take: 40 });
     this.sendResults(
       'ft_connection',
       {
         userId,
         displayName: user.displayName,
-        visibleRooms: visibleRooms.map((r) => ({
-          id: r.id,
-          roomName: r.roomName,
-          roomType: r.roomType,
-          updatedAt: r.updatedAt,
-        })),
-        joiningRooms: joiningRooms.map((r) => ({
-          id: r.id,
-          roomName: r.roomName,
-          roomType: r.roomType,
-          updatedAt: r.updatedAt,
-        })),
+        visibleRooms: visibleRooms.map((r) =>
+          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+        ),
+        joiningRooms: joiningRooms.map((r) =>
+          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+        ),
       },
       {
         client,
@@ -118,7 +133,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     data.callerId = user.id;
     // [TODO: パラメータが正しければチャットルームを作成する]
-    const createdRoom = await this.charRoomService.create({
+    const createdRoom = await this.chatRoomService.create({
       roomName: data.roomName,
       roomType: data.roomType,
       ownerId: user.id,
@@ -133,7 +148,7 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
 
     // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
@@ -165,11 +180,20 @@ export class ChatGateway implements OnGatewayConnection {
     // [TODO: 対象チャットルームの存在確認]
     // [TODO: 実行者がチャットルームで発言可能であることの確認]
     const roomId = data.roomId;
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const rel = await Utils.PromiseMap({
+      relation: this.chatRoomService.getRelation(roomId, user.id),
+      attr: this.chatRoomService.getAttribute(roomId, user.id),
+    });
+    const relation = rel.relation;
     if (!relation) {
       return;
     }
-    const chatRoom = relation.chatRoom;
+    // [TODO: mute状態かどうか]
+    const isMuted = rel.attr && rel.attr.mutedEndAt > new Date();
+    if (isMuted) {
+      console.log('** you are muted **');
+      return;
+    }
 
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
@@ -208,29 +232,43 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = data.roomId;
     // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
-    const room = await this.charRoomService.findOne(roomId);
 
+    const rel = await Utils.PromiseMap({
+      room: this.chatRoomService.findOne(roomId),
+      relation: this.chatRoomService.getRelation(roomId, user.id),
+      attr: this.chatRoomService.getAttribute(roomId, user.id),
+    });
+
+    const room = rel.room;
     // [TODO: 実行者が対象チャットルームに入室できることを確認]
     {
-      const relation = await this.charRoomService.getRelation(roomId, user.id);
+      const relation = rel.relation;
       if (relation) {
         return;
       }
     }
+    // [TODO: 実行者がbanされていないことを確認]
+    if (rel.attr && rel.attr.bannedEndAt > new Date()) {
+      console.log('** you are banned **');
+      return;
+    }
 
     // [TODO: ハードリレーション更新]
-    const member = await this.charRoomService.addMember(roomId, {
+    const member = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
     });
     console.log('member', member);
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const relation = await this.chatRoomService.getRelationWithUser(
+      roomId,
+      user.id
+    );
     if (!relation) {
       return;
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersJoin(user.id, 'ChatRoom', roomId);
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
     // 入室したことを通知
     this.sendResults(
       'ft_join',
@@ -251,7 +289,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // チャットルームの内容を通知
-    const messages = await this.charRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages({
       roomId,
       take: 50,
     });
@@ -285,17 +323,17 @@ export class ChatGateway implements OnGatewayConnection {
     // [TODO: 退出対象のチャットルームが存在していることを確認]
     // [TODO: 実行者が対象チャットルームに入室していることを確認]
     const roomId = data.roomId;
-    const relation = await this.charRoomService.getRelation(roomId, user.id);
+    const relation = await this.chatRoomService.getRelation(roomId, user.id);
     if (!relation) {
       return;
     }
     const chatRoom = relation.chatRoom;
 
     // [TODO: ハードリレーション更新]
-    await this.charRoomService.removeMember(roomId, user.id);
+    await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.usersLeave(user.id, 'ChatRoom', roomId);
+    await usersLeave(this.server, user.id, generateFullRoomName({ roomId }));
     this.sendResults(
       'ft_leave',
       {
@@ -316,6 +354,227 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  @SubscribeMessage('ft_nomminate')
+  async handleNomminate(
+    @MessageBody() data: OperationNomminateDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerNomminatableTarget(
+        room,
+        rels.caller,
+        rels.target
+      )
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットリレーションの `memberType` を `ADMIN` に更新する]
+    await this.chatRoomService.updateMember(roomId, {
+      ...rels.target,
+      memberType: 'ADMIN',
+    });
+    const newRel = await this.chatRoomService.getRelationWithUser(
+      roomId,
+      targetId
+    );
+    console.log('[newRel]', newRel);
+
+    this.sendResults(
+      'ft_nomminate',
+      {
+        relation: newRel,
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_kick')
+  async handleKick(
+    @MessageBody() data: OperationKickDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: 対象者がjoinしているか？]
+    const roomId = data.roomId;
+    const rels = await this.chatService.getCallerAndTargetRelation(
+      roomId,
+      user.id,
+      data.userId
+    );
+    console.log('targetRelation', rels.targetRelation);
+    console.log('callerRelation', rels.callerRelation);
+    if (!rels.targetRelation || !rels.callerRelation) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.targetRelation.chatRoom;
+    if (
+      !this.chatService.isCallerKickableTarget(
+        room,
+        rels.callerRelation,
+        rels.targetRelation
+      )
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.targetRelation.user;
+    // [TODO: ハードリレーション更新]
+    await this.chatRoomService.removeMember(roomId, targetUser.id);
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
+    await usersLeave(
+      this.server,
+      targetUser.id,
+      generateFullRoomName({ roomId })
+    );
+    this.sendResults(
+      'ft_kick',
+      {
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+        userId: targetUser.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_ban')
+  async handleBan(
+    @MessageBody() data: OperationBanDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+      targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerBannableTarget(room, rels.caller, rels.target)
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットのChatUserAttributeの `bannedEndAt` を更新する]
+    // なければ新規に作る
+    const prolongedBannedEndAt = new Date(Date.now() + constants.banDuration);
+    console.log('[old attr]', rels.targetAttr);
+    const attr = await this.chatRoomService.upsertAttribute(roomId, targetId, {
+      bannedEndAt: prolongedBannedEndAt,
+    });
+    console.log(prolongedBannedEndAt);
+    console.log('[new attr]', attr);
+
+    this.sendResults(
+      'ft_ban',
+      {
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_mute')
+  async handleMute(
+    @MessageBody() data: OperationMuteDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    // [TODO: 送信者がjoinしているか？]
+    // [TODO: ターゲットがjoinしているか？]
+    const roomId = data.roomId;
+    const callerId = user.id;
+    const targetId = data.userId;
+    const rels = await Utils.PromiseMap({
+      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      target: this.chatRoomService.getRelationWithUser(roomId, targetId),
+      targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
+    });
+    if (!rels.caller || !rels.target) {
+      return;
+    }
+    // [TODO: 送信者がADMINまたはオーナーか？]
+    const room = rels.target.chatRoom;
+    if (
+      !this.chatService.isCallerMutableTarget(room, rels.caller, rels.target)
+    ) {
+      console.warn("fail: caller doesn't have a right for the operation.");
+      return;
+    }
+    const targetUser = rels.target.user;
+    // [TODO: ターゲットのChatUserAttributeの `mutedEndAt` を更新する]
+    // なければ新規に作る
+    const prolongedMutedEndAt = new Date(Date.now() + constants.muteDuration);
+    console.log('[old attr]', rels.targetAttr);
+    const attr = await this.chatRoomService.upsertAttribute(roomId, targetId, {
+      mutedEndAt: prolongedMutedEndAt,
+    });
+    console.log(prolongedMutedEndAt);
+    console.log('[new attr]', attr);
+
+    this.sendResults(
+      'ft_mute',
+      {
+        room: Utils.pick(room, 'id', 'roomName'),
+        user: Utils.pick(targetUser, 'id', 'displayName'),
+      },
+      {
+        roomId,
+      }
+    );
+  }
+
   /**
    * @param data
    * @param client
@@ -330,7 +589,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    const messages = await this.charRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
       take: data.take,
     });
@@ -362,7 +621,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    const members = await this.charRoomService.getMembers(data.roomId);
+    const members = await this.chatRoomService.getMembers(data.roomId);
     this.sendResults(
       'ft_get_room_members',
       {
@@ -375,6 +634,7 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
+  //TODO 外部に出したい
   private async trapAuth(client: Socket) {
     if (client.handshake.auth) {
       const { token, sub } = client.handshake.auth;
@@ -409,80 +669,9 @@ export class ChatGateway implements OnGatewayConnection {
     return null;
   }
 
-  /**
-   * システムが使うルーム名
-   * @param roomType
-   * @param roomName
-   * @returns
-   */
-  private fullRoomName(
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const roomSuffix = {
-      ChatRoom: '#',
-      User: '$',
-      Global: '%',
-    }[roomType];
-    return `${roomSuffix}${roomName}`;
-  }
-
   private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
+    const fullUserRoomName = generateFullRoomName({ userId });
     return this.server.in(fullUserRoomName);
-  }
-
-  /**
-   * 指定したユーザIDに対応するクライアントを指定したルームにjoinさせる\
-   * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersJoin(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `joining clients in ${fullUserRoomName} -> ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsJoin(fullChatRoomName);
-  }
-
-  /**
-   * (英語としておかしいので名前を変えること)
-   * @param userId
-   * @param roomType
-   * @param roomName
-   */
-  private async usersLeave(
-    userId: number,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullUserRoomName = this.fullRoomName('User', userId);
-    const fullChatRoomName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.in(fullUserRoomName).allSockets();
-    console.log(
-      `leaving clients in ${fullUserRoomName} from ${fullChatRoomName}`,
-      socks
-    );
-    this.server.in(fullUserRoomName).socketsLeave(fullChatRoomName);
-  }
-
-  private joinChannel(
-    @ConnectedSocket() client: Socket,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any
-  ) {
-    const fullRoomName = this.fullRoomName(roomType, roomName);
-    client.join(fullRoomName);
-    console.log(`client ${client.id} joined to ${fullRoomName}`);
   }
 
   private async sendResults(
@@ -496,35 +685,32 @@ export class ChatGateway implements OnGatewayConnection {
     }
   ) {
     if (typeof target.userId === 'number') {
-      await this.sendResultRoom(op, 'User', target.userId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ userId: target.userId }),
+        payload
+      );
     }
     if (typeof target.roomId === 'number') {
-      await this.sendResultRoom(op, 'ChatRoom', target.roomId, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ roomId: target.roomId }),
+        payload
+      );
     }
     if (target.global) {
-      await this.sendResultRoom(op, 'Global', target.global, payload);
+      await sendResultRoom(
+        this.server,
+        op,
+        generateFullRoomName({ global: target.global }),
+        payload
+      );
     }
     if (target.client) {
       console.log('sending downlink to client:', target.client.id, op, payload);
       target.client.emit(op, payload);
     }
-  }
-
-  /**
-   * サーバからクライアントに向かってデータを流す
-   * @param roomType
-   * @param roomName
-   * @param payload
-   */
-  private async sendResultRoom(
-    op: string,
-    roomType: 'ChatRoom' | 'User' | 'Global',
-    roomName: any,
-    payload: any
-  ) {
-    const fullName = this.fullRoomName(roomType, roomName);
-    const socks = await this.server.to(fullName).allSockets();
-    console.log('sending downlink to:', fullName, op, payload, socks);
-    this.server.to(fullName).emit(op, payload);
   }
 }
