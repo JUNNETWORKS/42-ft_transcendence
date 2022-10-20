@@ -3,33 +3,14 @@ import { io } from 'socket.io-client';
 import * as TD from '../../typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '../../components/FTBasicComponents';
-import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
+import { ChatRoomView } from './Room';
 import { useAction } from '../../hooks';
-import { SayCard, OpenCard } from '../../components/CommandCard';
+import { OpenCard } from '../../components/CommandCard';
 import { useAtom } from 'jotai';
 import { userAtoms } from '@/atoms';
 
-/**
- * @returns チャットインターフェースコンポーネント
- */
-export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
-  const { mySocket } = props;
-
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
-  const [visibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
-  const [joiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
-  const [messagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(userAtoms.membersInRoomAtom);
-  const [focusedRoomId, setFocusedRoomId] = useAtom(
-    userAtoms.focusedRoomIdAtom
-  );
-  const userId = personalData ? personalData.id : -1;
-  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
-
-  /**
-   * チャットコマンド
-   */
-  const command = {
+function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
+  return {
     open: (args: TD.OpenArgument) => {
       const data = {
         ...args,
@@ -119,6 +100,29 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
       mySocket?.emit('ft_mute', data);
     },
   };
+}
+
+/**
+ * @returns チャットインターフェースコンポーネント
+ */
+export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
+
+  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [visibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
+  const [messagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(userAtoms.membersInRoomAtom);
+  const [focusedRoomId, setFocusedRoomId] = useAtom(
+    userAtoms.focusedRoomIdAtom
+  );
+  const userId = personalData ? personalData.id : -1;
+  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
+
+  /**
+   * チャットコマンド
+   */
+  const command = makeCommand(mySocket, focusedRoomId);
   const memberOperations: TD.MemberOperations = {
     onNomminateClick: command.nomminate,
     onBanClick: command.ban,
@@ -294,32 +298,14 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
       <div className="flex shrink grow flex-col">
         {/* 今フォーカスしているルーム */}
         {!!computed.focusedRoom && (
-          <div className="flex h-full flex-row border-2 border-solid border-white p-2">
-            <div className="flex h-full shrink grow flex-col overflow-hidden">
-              {/* 今フォーカスしているルームのメッセージ */}
-              <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-                {store
-                  .room_messages(focusedRoomId)
-                  .map((data: TD.ChatRoomMessage) => (
-                    <ChatRoomMessageCard key={data.id} message={data} />
-                  ))}
-              </div>
-              <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
-                {/* 今フォーカスしているルームへの発言 */}
-                <div className="flex flex-row border-2 border-solid border-white p-2">
-                  <SayCard sender={command.say} />
-                </div>
-              </div>
-            </div>
-            <div className="shrink-0 grow-0 basis-[20em]">
-              <ChatRoomMembersList
-                you={computed.you}
-                room={computed.focusedRoom}
-                members={store.room_members(focusedRoomId) || {}}
-                {...memberOperations}
-              />
-            </div>
-          </div>
+          <ChatRoomView
+            room={computed.focusedRoom}
+            memberOperations={memberOperations}
+            you={computed.you}
+            say={command.say}
+            room_messages={store.room_messages}
+            room_members={store.room_members}
+          />
         )}
       </div>
     </div>

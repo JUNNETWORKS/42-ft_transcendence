@@ -7,11 +7,12 @@ import * as RIFa from 'react-icons/fa';
 import * as RIIo from 'react-icons/im';
 import * as RIBS from 'react-icons/bs';
 import { Link } from 'react-router-dom';
+import { SayCard } from '@/components/CommandCard';
 
 /**
  * メッセージを表示するコンポーネント
  */
-export const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
+const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
@@ -31,7 +32,7 @@ export const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   );
 };
 
-export const ChatRoomMemberCard = (
+const ChatRoomMemberCard = (
   props: {
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
@@ -112,7 +113,17 @@ export const ChatRoomMemberCard = (
   );
 };
 
-export const ChatRoomMembersList = (
+const ChatRoomMessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+  return (
+    <>
+      {props.messages.map((data: TD.ChatRoomMessage) => (
+        <ChatRoomMessageCard key={data.id} message={data} />
+      ))}
+    </>
+  );
+};
+
+const ChatRoomMembersList = (
   props: {
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
@@ -151,6 +162,40 @@ export const ChatRoomMembersList = (
             </div>
           );
         })}
+      </div>
+    </div>
+  );
+};
+
+export const ChatRoomView = (props: {
+  room: TD.ChatRoom;
+  memberOperations: TD.MemberOperations;
+  you: TD.ChatUserRelation | null;
+  say: (content: string) => void;
+  room_messages: (roomId: number) => TD.ChatRoomMessage[];
+  room_members: (roomId: number) => TD.UserRelationMap | null;
+}) => {
+  return (
+    <div className="flex h-full flex-row border-2 border-solid border-white p-2">
+      <div className="flex h-full shrink grow flex-col overflow-hidden">
+        {/* 今フォーカスしているルームのメッセージ */}
+        <div className="shrink grow overflow-scroll border-2 border-solid border-white">
+          <ChatRoomMessagesList messages={props.room_messages(props.room.id)} />
+        </div>
+        <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
+          {/* 今フォーカスしているルームへの発言 */}
+          <div className="flex flex-row border-2 border-solid border-white p-2">
+            <SayCard sender={props.say} />
+          </div>
+        </div>
+      </div>
+      <div className="shrink-0 grow-0 basis-[20em]">
+        <ChatRoomMembersList
+          you={props.you}
+          room={props.room}
+          members={props.room_members(props.room.id) || {}}
+          {...props.memberOperations}
+        />
       </div>
     </div>
   );
