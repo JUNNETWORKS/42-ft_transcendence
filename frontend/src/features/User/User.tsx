@@ -79,13 +79,17 @@ const FollowButton = (props: { userId: number; isFriend: boolean }) => {
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
-  const [fetchState, personalData] = usePersonalData(userId);
+  const [fetchState, personalData, setUserId] = usePersonalData(userId);
   const [friends] = useAtom(userAtoms.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
 
+  useEffect(() => {
+    setUserId(userId);
+  }, [userId]);
+
   const presentator = (() => {
-    console.log(userId, friends);
+    console.log(userId, fetchState);
     switch (fetchState) {
       case 'Fetched': {
         if (personalData) {

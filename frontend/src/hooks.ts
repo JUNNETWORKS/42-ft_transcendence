@@ -86,13 +86,22 @@ export const useStoredCredential = () => {
 };
 
 type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
-export const usePersonalData = (userId: number) => {
+export const usePersonalData = (id: number) => {
+  const [userId, setUserId] = useState(id);
   const [state, setState] = useState<FetchState>('Neutral');
   const [personalData, setPersonalData] = useState<UserPersonalData | null>(
     null
   );
 
   useEffect(() => {
+    setPersonalData(null);
+    setState('Neutral');
+  }, [userId]);
+
+  useEffect(() => {
+    if (!(userId > 0)) {
+      return;
+    }
     switch (state) {
       case 'Neutral':
         if (personalData) {
@@ -126,5 +135,5 @@ export const usePersonalData = (userId: number) => {
         break;
     }
   }, [state]);
-  return [state, personalData] as const;
+  return [state, personalData, setUserId] as const;
 };
