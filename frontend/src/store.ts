@@ -139,3 +139,8 @@ export const useUserData = (id: number) => {
   }, [state]);
   return [userData, state, setUserId] as const;
 };
+
+export const useUserDataReadOnly = (id: number) => {
+  const [usersStore] = useAtom(objectStoreAtoms.users);
+  return usersStore[id];
+};
