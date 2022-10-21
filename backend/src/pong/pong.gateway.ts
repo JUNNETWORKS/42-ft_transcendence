@@ -16,7 +16,6 @@ const match: OnlineMatch = new OnlineMatch();
 @WebSocketGateway({ cors: true, namespace: '/pong' })
 export class PongGateway {
   private wsServer!: Server;
-
   private readonly logger = new Logger('Match WS');
 
   afterInit(server: Server) {

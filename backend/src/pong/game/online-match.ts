@@ -1,6 +1,7 @@
 import { Match } from './match';
 import { Server, Socket } from 'socket.io';
 import { PlayerInput } from './types/game-state';
+import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
@@ -22,7 +23,7 @@ export class OnlineMatch {
 
       if (this.wsServer) {
         this.wsServer
-          .to(this.generateRoomID())
+          .to(generateFullRoomName({ matchId: this.ID }))
           .emit('pong.match.state', this.match.getState());
       }
     }, 16.66); // 60fps
@@ -31,7 +32,7 @@ export class OnlineMatch {
   // マッチのWSルームに観戦者として参加｡
   // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
   joinAsSpectator = (client: Socket) => {
-    client.join(this.generateRoomID());
+    client.join(generateFullRoomName({ matchId: this.ID }));
   };
 
   // マッチにプレイヤーとして参加 (先着2名)
@@ -68,11 +69,6 @@ export class OnlineMatch {
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
   moveBar = (playerID: string, playerAction: PlayerInput) => {
     this.match.moveBar(playerID, playerAction);
-  };
-
-  // WSルームIDを取得
-  generateRoomID = () => {
-    return `Match#${this.ID}`;
   };
 
   // ゲームを終了

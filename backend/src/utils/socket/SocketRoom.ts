@@ -10,6 +10,7 @@ import { Socket, Server } from 'socket.io';
 const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
   const roomPrefix = {
     ChatRoom: '#',
+    Match: 'Match#',
     User: '$',
     Global: '%',
   }[roomType];
@@ -18,6 +19,7 @@ const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
 
 export const generateFullRoomName = (roomArg: RoomArg): RoomName => {
   if ('roomId' in roomArg) return addRoomTypePrefix('ChatRoom', roomArg.roomId);
+  if ('matchId' in roomArg) return addRoomTypePrefix('Match', roomArg.matchId);
   else if ('userId' in roomArg)
     return addRoomTypePrefix('User', roomArg.userId);
   else if ('global' in roomArg)
