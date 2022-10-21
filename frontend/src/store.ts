@@ -17,7 +17,6 @@ export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
 
   const addOne = (data: TD.User) => {
-    // setUsersStore((prev) => ({ ...prev, [data.id]: Utils.datifyObject(data, "time") }));
     const d = Utils.datifyObject(data);
     setUsersStore((prev) => ({ ...prev, [data.id]: d }));
   };
@@ -31,11 +30,21 @@ export const useUpdateUser = () => {
   };
   const updateOne = (userId: number, part: Partial<TD.User>) => {
     const d = usersStore[userId];
-    if (!usersStore[userId]) {
+    if (!d) {
       return;
     }
     const p = Utils.datifyObject(part, 'time');
     setUsersStore((prev) => ({ ...prev, [userId]: { ...d, ...p } }));
+  };
+  const offlinate = (userId: number) => {
+    const d = usersStore[userId];
+    if (!d) {
+      return;
+    }
+    setUsersStore((prev) => ({
+      ...prev,
+      [userId]: { ...Utils.omit(d, 'time') },
+    }));
   };
   const delOne = (userId: number) => {
     setUsersStore((prev) => {
@@ -56,6 +65,7 @@ export const useUpdateUser = () => {
     addMany,
     updateOne,
     delOne,
+    offlinate,
   };
 };
 
