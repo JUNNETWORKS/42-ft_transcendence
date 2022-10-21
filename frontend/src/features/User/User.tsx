@@ -6,6 +6,7 @@ import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
+import * as dayjs from 'dayjs';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -105,6 +106,12 @@ export const UserView = () => {
                 <div>{personalData.id}</div>
                 <FTH4>name</FTH4>
                 <div>{personalData.displayName}</div>
+                <FTH4>heartbeat time</FTH4>
+                <div>
+                  {personalData.time
+                    ? dayjs(personalData.time).format('MM/DD HH:mm:ss')
+                    : 'offline'}
+                </div>
 
                 <div>
                   <FollowButton userId={personalData.id} isFriend={isFriend} />

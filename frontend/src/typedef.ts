@@ -5,6 +5,7 @@ import * as Utils from '@/utils';
 export type User = {
   id: number;
   displayName: string;
+  time?: Date;
 };
 
 export type ChatRoom = {

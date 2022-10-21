@@ -3,6 +3,7 @@ import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '../typedef';
 import * as Utils from '@/utils';
+import { useUpdateUser } from '@/store';
 
 export const SocketHolder = () => {
   // 「ソケット」
@@ -19,6 +20,8 @@ export const SocketHolder = () => {
   const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
   const userId = personalData ? personalData.id : -1;
 
+  const userUpdator = useUpdateUser();
+
   useEffect(() => {
     console.log('mySocket?', !!mySocket);
     mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
@@ -26,6 +29,7 @@ export const SocketHolder = () => {
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
       setFriends(data.friends);
+      userUpdator.addMany(data.friends);
     });
 
     mySocket?.on('ft_open', (data: TD.OpenResult) => {

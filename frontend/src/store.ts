@@ -1,6 +1,7 @@
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import * as TD from './typedef';
+import * as Utils from './utils';
 
 // オブジェクトストア
 
@@ -16,12 +17,14 @@ export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
 
   const addOne = (data: TD.User) => {
+    // setUsersStore((prev) => ({ ...prev, [data.id]: Utils.datifyObject(data, "time") }));
     setUsersStore((prev) => ({ ...prev, [data.id]: data }));
   };
   const addMany = (data: TD.User[]) => {
+    const ds = data.map((d) => Utils.datifyObject(d, 'time'));
     setUsersStore((prev) => {
       const next = { ...prev };
-      data.forEach((d) => (next[d.id] = d));
+      ds.forEach((d) => (next[d.id] = d));
       return next;
     });
   };
