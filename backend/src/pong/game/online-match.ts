@@ -9,21 +9,23 @@ import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 // - setInterval() で作成されるTimerIDの保持
 export class OnlineMatch {
   // マッチID
-  private ID: string;
-  private match: Match;
-  private gameStateSyncTimer: NodeJS.Timer;
+  private readonly ID: string;
+  private readonly roomName: string;
+  private readonly match: Match;
+  private readonly gameStateSyncTimer: NodeJS.Timer;
   // TODO: 本来はコンストラクタで渡されるのでnullにはならない｡
   wsServer: Server | null;
 
   constructor() {
     this.ID = 'MatchID';
+    this.roomName = generateFullRoomName({ matchId: this.ID });
     this.match = new Match('', '');
     this.gameStateSyncTimer = setInterval(() => {
       this.match.update();
 
       if (this.wsServer) {
         this.wsServer
-          .to(generateFullRoomName({ matchId: this.ID }))
+          .to(this.roomName)
           .emit('pong.match.state', this.match.getState());
       }
     }, 16.66); // 60fps
@@ -32,7 +34,7 @@ export class OnlineMatch {
   // マッチのWSルームに観戦者として参加｡
   // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
   joinAsSpectator = (client: Socket) => {
-    client.join(generateFullRoomName({ matchId: this.ID }));
+    client.join(this.roomName);
   };
 
   // マッチにプレイヤーとして参加 (先着2名)
