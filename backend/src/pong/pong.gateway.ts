@@ -21,12 +21,16 @@ export class PongGateway {
 
   afterInit(server: Server) {
     this.wsServer = server;
-    // 本来
+    // 本来はOnlineMatchのコンストラクタで渡す
     match.wsServer = server;
   }
 
   onApplicationBootstrap() {
     return;
+  }
+
+  onApplicationShutdown() {
+    match.close();
   }
 
   handleConnection(client: Socket) {

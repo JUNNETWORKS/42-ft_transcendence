@@ -74,4 +74,9 @@ export class OnlineMatch {
   generateRoomID = () => {
     return `Match#${this.ID}`;
   };
+
+  // ゲームを終了
+  close = () => {
+    clearInterval(this.gameStateSyncTimer);
+  };
 }
