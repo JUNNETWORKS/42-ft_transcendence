@@ -58,7 +58,7 @@ const ChatRoomMemberCard = (
     }
     return '';
   };
-  const link_path = isYou ? '/auth' : `/user/${props.member.userId}`;
+  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
   return (
     <div className="flex flex-row">
       <div

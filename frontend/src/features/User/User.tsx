@@ -45,13 +45,6 @@ const FollowButton = (props: { userId: number; isFriend: boolean }) => {
     }
   });
 
-  const startRunning = () => {
-    if (isRunning) {
-      return;
-    }
-    setIsRunning(true);
-  };
-
   useEffect(() => {
     if (props.isFriend) {
       setPhase('IsFriend');
@@ -76,7 +69,7 @@ const FollowButton = (props: { userId: number; isFriend: boolean }) => {
 
   return (
     <>
-      <FTButton disabled={isRunning} onClick={startRunning}>
+      <FTButton disabled={isRunning} onClick={() => setIsRunning(true)}>
         {text}
       </FTButton>
     </>
@@ -89,10 +82,10 @@ export const UserView = () => {
   const [fetchState, personalData] = usePersonalData(userId);
   const [friends] = useAtom(userAtoms.friends);
   // フレンドかどうか
-  console.log(userId, friends);
   const isFriend = !!friends.find((f) => f.id === userId);
 
-  const presentator = () => {
+  const presentator = (() => {
+    console.log(userId, friends);
     switch (fetchState) {
       case 'Fetched': {
         if (personalData) {
@@ -123,12 +116,12 @@ export const UserView = () => {
         return <>{fetchState}</>;
     }
     return <></>;
-  };
+  })();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
       <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {presentator()}
+        {presentator}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { chatSocketAtom } from '@/atoms';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
+import { MyPageView } from '@/features/User/MyPage';
 import { SocketHolder } from './SocketHolder';
 import { AuthChecker } from './AuthChecker';
 
@@ -19,6 +20,7 @@ export const AppRoutes = () => {
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
+    { path: '/me/*', element: <MyPageView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
 
