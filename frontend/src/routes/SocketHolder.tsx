@@ -32,6 +32,16 @@ export const SocketHolder = () => {
       userUpdator.addMany(data.friends);
     });
 
+    mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {
+      console.log('catch heartbeat', data);
+      userUpdator.updateOne(data.userId, { time: data.time });
+    });
+
+    mySocket?.on('ft_offline', (data: TD.HeartbeatResult) => {
+      console.log('catch offline', data);
+      userUpdator.offlinate(data.userId);
+    });
+
     mySocket?.on('ft_open', (data: TD.OpenResult) => {
       console.log('catch open');
       console.log(data);

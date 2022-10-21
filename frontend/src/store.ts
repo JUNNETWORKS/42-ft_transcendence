@@ -18,7 +18,8 @@ export const useUpdateUser = () => {
 
   const addOne = (data: TD.User) => {
     // setUsersStore((prev) => ({ ...prev, [data.id]: Utils.datifyObject(data, "time") }));
-    setUsersStore((prev) => ({ ...prev, [data.id]: data }));
+    const d = Utils.datifyObject(data);
+    setUsersStore((prev) => ({ ...prev, [data.id]: d }));
   };
   const addMany = (data: TD.User[]) => {
     const ds = data.map((d) => Utils.datifyObject(d, 'time'));
@@ -27,6 +28,14 @@ export const useUpdateUser = () => {
       ds.forEach((d) => (next[d.id] = d));
       return next;
     });
+  };
+  const updateOne = (userId: number, part: Partial<TD.User>) => {
+    const d = usersStore[userId];
+    if (!usersStore[userId]) {
+      return;
+    }
+    const p = Utils.datifyObject(part, 'time');
+    setUsersStore((prev) => ({ ...prev, [userId]: { ...d, ...p } }));
   };
   const delOne = (userId: number) => {
     setUsersStore((prev) => {
@@ -45,6 +54,7 @@ export const useUpdateUser = () => {
     usersStore,
     addOne,
     addMany,
+    updateOne,
     delOne,
   };
 };

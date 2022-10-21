@@ -56,6 +56,15 @@ export type ConnectionResult = {
   friends: User[];
 };
 
+export type HeartbeatResult = {
+  userId: number;
+  time: Date;
+};
+
+export type OfflineResult = {
+  userId: number;
+};
+
 export type OpenResult = ChatRoom;
 
 export type SayResult = ChatRoomMessage & {
