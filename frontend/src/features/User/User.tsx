@@ -1,6 +1,7 @@
 import { chatSocketAtom, userAtoms } from '@/atoms';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { useAction, usePersonalData } from '@/hooks';
+import { useAction } from '@/hooks';
+import { useUserData } from '@/store';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { FaUserFriends } from 'react-icons/fa';
@@ -79,7 +80,7 @@ const FollowButton = (props: { userId: number; isFriend: boolean }) => {
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
-  const [fetchState, personalData, setUserId] = usePersonalData(userId);
+  const [personalData, fetchState, setUserId] = useUserData(userId);
   const [friends] = useAtom(userAtoms.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
