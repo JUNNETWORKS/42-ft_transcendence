@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
 import { jwtConstants } from 'src/auth/auth.constants';
 import { Socket } from 'socket.io';
+
 export type LoginResult = {
   access_token: string;
   user: any;
