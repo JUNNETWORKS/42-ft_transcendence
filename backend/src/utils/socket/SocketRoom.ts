@@ -10,7 +10,7 @@ import { Socket, Server } from 'socket.io';
 const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
   const roomPrefix = {
     ChatRoom: '#',
-    Match: 'Match#',
+    Match: '%',
     User: '$',
     Global: '%',
   }[roomType];
