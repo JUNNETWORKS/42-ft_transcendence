@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
+import { jwtConstants } from 'src/auth/auth.constants';
+import { Socket } from 'socket.io';
 
 export type LoginResult = {
   access_token: string;
@@ -58,5 +60,39 @@ export class AuthService {
       }),
       user,
     };
+  }
+
+  async trapAuth(client: Socket) {
+    if (client.handshake.auth) {
+      const { token, sub } = client.handshake.auth;
+      // token による認証
+      if (token) {
+        const verified = this.jwtService.verify(token, {
+          secret: jwtConstants.secret,
+        });
+        // console.log(verified);
+        const decoded = this.jwtService.decode(token);
+        if (decoded && typeof decoded === 'object') {
+          const sub = decoded['sub'];
+          if (sub) {
+            const userId = parseInt(sub);
+            const user = await this.usersService.findOne(userId);
+            if (user) {
+              return user;
+            }
+          }
+        }
+      }
+      // subによる認証スキップ
+      // TODO: 提出時には絶対に除去すること!!!!
+      if (sub) {
+        const userId = parseInt(sub);
+        const user = await this.usersService.findOne(userId);
+        if (user) {
+          return user;
+        }
+      }
+    }
+    return null;
   }
 }
