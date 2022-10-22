@@ -40,13 +40,13 @@ export class OnlineMatch {
 
   // マッチのWSルームに観戦者として参加｡
   // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
-  joinAsSpectator = (client: Socket) => {
+  joinAsSpectator(client: Socket) {
     joinChannel(client, this.roomName);
-  };
+  }
 
   // マッチにプレイヤーとして参加 (先着2名)
   // TODO: 2人プレイのテスト用で作成している関数｡後で消す｡
-  joinAsPlayer = (client: Socket) => {
+  joinAsPlayer(client: Socket) {
     if (
       this.match.players[0].id === client.id ||
       this.match.players[1].id === client.id
@@ -62,10 +62,10 @@ export class OnlineMatch {
       this.match.players[1].id = client.id;
       console.log(`session#${client.id} has joined as player2!\n`);
     }
-  };
+  }
 
   // プレイヤーが退出した際の処理
-  leave = (client: Socket) => {
+  leave(client: Socket) {
     if (this.match.players[0].id === client.id) {
       console.log(`player1#${client.id} has left!\n`);
       this.match.players[0].id = '';
@@ -73,15 +73,15 @@ export class OnlineMatch {
       console.log(`player2#${client.id} has left!\n`);
       this.match.players[1].id = '';
     }
-  };
+  }
 
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
-  moveBar = (playerID: string, playerAction: PlayerInput) => {
+  moveBar(playerID: string, playerAction: PlayerInput) {
     this.match.moveBar(playerID, playerAction);
-  };
+  }
 
   // ゲームを終了
-  close = () => {
+  close() {
     clearInterval(this.gameStateSyncTimer);
-  };
+  }
 }
