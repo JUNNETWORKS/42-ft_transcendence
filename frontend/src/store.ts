@@ -121,7 +121,7 @@ export const useUserData = (id: number) => {
             );
             if (result.ok) {
               const user = await result.json();
-              setUsersStore({ ...usersStore, [user.id]: user });
+              setUsersStore((prev) => ({ ...prev, [user.id]: user }));
               if (userId === user.id) {
                 setState('Fetched');
               } else {

@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
+import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -98,6 +99,9 @@ export const UserView = () => {
           return (
             <>
               <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
+                <div className="inline-block align-text-bottom">
+                  <OnlineStatusDot key={personalData.id} user={personalData} />
+                </div>
                 {personalData.displayName}
                 {isFriend && <FaUserFriends className="inline" />}
               </FTH1>

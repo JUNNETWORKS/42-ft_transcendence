@@ -3,23 +3,16 @@ import { useAtom } from 'jotai';
 import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';
 import { UserView } from './User';
-import { VscCircleFilled } from 'react-icons/vsc';
 import { useUserDataReadOnly } from '@/store';
+import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 
 const FriendListItem = (props: { user: TD.User }) => {
-  const user = useUserDataReadOnly(props.user.id) || props.user;
-  const onlineStatusColor = (user: TD.User) => {
-    if (user.time) {
-      return 'text-green-500';
-    } else {
-      return 'text-slate-500';
-    }
-  };
+  const user = useUserDataReadOnly(props.user.id);
   return (
     <div className="hover:bg-white hover:text-black">
       <Link className="flex flex-row" to={`./user/${user.id}`}>
         <div className={`shrink-0 grow-0 self-center`}>
-          <VscCircleFilled className={onlineStatusColor(user)} />
+          <OnlineStatusDot user={props.user} />
         </div>
         <div className="shrink grow">{user.displayName}</div>
       </Link>
