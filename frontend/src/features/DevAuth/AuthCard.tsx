@@ -6,15 +6,10 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
+import { UserPersonalData } from '@/types';
 import { useState } from 'react';
 
 const apiHost = `http://localhost:3000`;
-
-export type UserPersonalData = {
-  id: number;
-  email: string;
-  displayName: string;
-};
 
 const FtAuthForm = () => (
   <form method="POST" action={`${apiHost}/auth/login_ft`}>
