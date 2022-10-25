@@ -8,6 +8,7 @@ import {
   Vector2d,
   Rectangle,
   FullRectangle,
+  PongWinner,
 } from './types/game-state';
 
 // ゲームの状態､更新のみに責任を持つ｡
@@ -25,11 +26,15 @@ export class Match {
   readonly barLeftX = this.fieldWidth * 0.1;
   readonly barRightX = this.fieldWidth * 0.9;
   readonly barDy = 10;
+  //rule
+  readonly maxScore = 15;
 
   ball: Ball;
   players: [Player, Player];
+  winner: PongWinner;
 
   constructor(playerID1: string, playerID2: string) {
+    this.winner = 'none';
     this.ball = this.regenerateBall();
     this.players = [
       {
@@ -89,25 +94,40 @@ export class Match {
 
   // ballとバーの位置を更新する
   update = (): void => {
-    this.updateBall();
+    const roundWinner = this.roundWinnerExists();
+    if (roundWinner === 'none') {
+      this.updateBall();
+    } else {
+      this.updateScore(roundWinner);
+      this.ball = this.regenerateBall();
+    }
     this.updateBar();
+  };
+
+  roundWinnerExists = (): PongWinner => {
+    // 左右の壁との判定
+    if (this.ball.position.x <= 0) {
+      // right の勝ち
+      return 'right';
+    } else if (this.ball.position.x >= this.fieldWidth) {
+      // left の勝ち
+      return 'left';
+    } else {
+      return 'none';
+    }
+  };
+
+  //ゲームのスコア、勝敗を管理する
+  updateScore = (side: PlayerSide) => {
+    const sideIndex = this.getPlayerIdxBySide(side);
+    this.players[sideIndex].score++;
+    if (this.players[sideIndex].score >= this.maxScore) {
+      this.winner = side;
+    }
   };
 
   // ball の位置を更新する
   updateBall = (): void => {
-    // 左右の壁との判定
-    if (this.ball.position.x <= 0) {
-      // right の勝ち
-      this.players[this.getPlayerIdxBySide('right')].score++;
-      this.ball = this.regenerateBall();
-      return;
-    } else if (this.ball.position.x >= this.fieldWidth) {
-      // left の勝ち
-      this.players[this.getPlayerIdxBySide('left')].score++;
-      this.ball = this.regenerateBall();
-      return;
-    }
-
     let newVelocity: Vector2d = JSON.parse(JSON.stringify(this.ball.velocity));
     const newBallPos: Vector2d = JSON.parse(JSON.stringify(this.ball.position));
     newBallPos.x += this.ball.velocity.x * this.ballDx;

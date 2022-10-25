@@ -28,12 +28,22 @@ export class OnlineMatch {
       this.match.update();
 
       if (this.wsServer) {
-        sendResultRoom(
-          this.wsServer,
-          'pong.match.state',
-          this.roomName,
-          this.match.getState()
-        );
+        if (this.match.winner === 'none') {
+          sendResultRoom(
+            this.wsServer,
+            'pong.match.state',
+            this.roomName,
+            this.match.getState()
+          );
+        } else {
+          sendResultRoom(
+            this.wsServer,
+            'pong.match.finish',
+            this.roomName,
+            this.match.winner
+          );
+          this.close();
+        }
       }
     }, 16.66); // 60fps
   }

@@ -37,3 +37,5 @@ export type PlayerInput = {
   up: boolean;
   down: boolean;
 };
+
+export type PongWinner = PlayerSide | 'none';
