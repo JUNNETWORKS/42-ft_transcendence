@@ -39,3 +39,8 @@ export type PlayerInput = {
 };
 
 export type PongWinner = PlayerSide | 'none';
+
+export type MatchResult = {
+  winner: Player;
+  loser: Player;
+};

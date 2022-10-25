@@ -1,11 +1,12 @@
 import { Match } from './match';
 import { Server, Socket } from 'socket.io';
-import { PlayerInput } from './types/game-state';
+import { MatchResult, PlayerInput } from './types/game-state';
 import {
   generateFullRoomName,
   joinChannel,
   sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
+import { SIDE_INDEX } from './constants/match-constants';
 
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
@@ -36,11 +37,16 @@ export class OnlineMatch {
             this.match.getState()
           );
         } else {
+          const loserSide = this.match.winner === 'right' ? 'left' : 'right';
+          const result: MatchResult = {
+            winner: this.match.players[SIDE_INDEX[this.match.winner]],
+            loser: this.match.players[SIDE_INDEX[loserSide]],
+          };
           sendResultRoom(
             this.wsServer,
             'pong.match.finish',
             this.roomName,
-            this.match.winner
+            result
           );
           this.close();
         }
