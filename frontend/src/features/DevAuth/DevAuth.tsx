@@ -1,4 +1,4 @@
-import { authFlowStateAtom, storedCredentialAtom, userAtoms } from '@/atoms';
+import { authAtom, storedCredentialAtom } from '@/atoms/auth';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
@@ -14,9 +14,9 @@ import {
 } from '@/components/AuthCard';
 
 export const DevAuth = () => {
-  const [authState, setAuthState] = useAtom(authFlowStateAtom);
+  const [authState, setAuthState] = useAtom(authAtom.authFlowState);
   const setStoredCredential = useAtom(storedCredentialAtom)[1];
-  const setPersonalData = useAtom(userAtoms.personalDataAtom)[1];
+  const setPersonalData = useAtom(authAtom.personalDataAtom)[1];
 
   const query = useQuery();
   const navigation = useNavigate();

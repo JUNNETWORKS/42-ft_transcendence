@@ -1,13 +1,14 @@
-import { chatSocketAtom, userAtoms } from '@/atoms';
+import { chatSocketAtom } from '@/atoms/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAction } from '@/hooks';
-import { useUserData } from '@/store';
+import { useUserData } from '@/atoms/store';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import { structureAtom } from '@/atoms/structure';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -83,7 +84,7 @@ export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
   const [personalData, fetchState, setUserId] = useUserData(userId);
-  const [friends] = useAtom(userAtoms.friends);
+  const [friends] = useAtom(structureAtom.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
 

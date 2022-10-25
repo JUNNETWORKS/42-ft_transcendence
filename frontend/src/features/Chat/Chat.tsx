@@ -7,8 +7,9 @@ import { ChatRoomView } from './RoomView';
 import { useAction } from '@/hooks';
 import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
-import { userAtoms } from '@/atoms';
+import { authAtom } from '@/atoms/auth';
 import { ChatRoomListView } from './RoomList';
+import { structureAtom } from '@/atoms/structure';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {
@@ -109,13 +110,13 @@ function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
 
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
-  const [visibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
-  const [joiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
-  const [messagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(userAtoms.membersInRoomAtom);
+  const [personalData] = useAtom(authAtom.personalDataAtom);
+  const [visibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const [messagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(structureAtom.membersInRoomAtom);
   const [focusedRoomId, setFocusedRoomId] = useAtom(
-    userAtoms.focusedRoomIdAtom
+    structureAtom.focusedRoomIdAtom
   );
   const userId = personalData ? personalData.id : -1;
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。

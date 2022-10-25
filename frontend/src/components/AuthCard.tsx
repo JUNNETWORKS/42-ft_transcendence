@@ -1,4 +1,4 @@
-import { userAtoms } from '@/atoms';
+import { authAtom } from '@/atoms/auth';
 import { loginByPassword, loginBySelf, urlLoginFt } from '@/auth';
 import {
   FTH1,
@@ -226,7 +226,7 @@ export const DevAuthLoginCard = (props: {
  * 認証済み状態で表示されるUI
  */
 export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [personalData] = useAtom(authAtom.personalDataAtom);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>

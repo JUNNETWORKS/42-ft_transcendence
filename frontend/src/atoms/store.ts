@@ -1,11 +1,11 @@
 import { atom, useAtom } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import * as TD from './typedef';
-import * as Utils from './utils';
+import * as TD from '../typedef';
+import * as Utils from '../utils';
 
 // オブジェクトストア
 
-export const objectStoreAtoms = {
+export const storeAtoms = {
   users: atom<{ [id: number]: TD.User }>({}),
   rooms: atom<{ [id: number]: TD.ChatRoom }>({}),
 };
@@ -14,7 +14,7 @@ export const objectStoreAtoms = {
  * usersストアを更新するための関数を提供するフック
  */
 export const useUpdateUser = () => {
-  const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
+  const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
 
   const addOne = (data: TD.User) => {
     const d = Utils.datifyObject(data);
@@ -77,7 +77,7 @@ type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
 export const useUserData = (id: number) => {
   const [userId, setUserId] = useState(id);
   const [state, setState] = useState<FetchState>('Neutral');
-  const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
+  const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
   const userData = useMemo(
     () => usersStore[userId] || null,
     [usersStore, userId]
@@ -141,6 +141,6 @@ export const useUserData = (id: number) => {
 };
 
 export const useUserDataReadOnly = (id: number) => {
-  const [usersStore] = useAtom(objectStoreAtoms.users);
+  const [usersStore] = useAtom(storeAtoms.users);
   return usersStore[id];
 };

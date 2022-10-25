@@ -1,9 +1,10 @@
-import { chatSocketAtom, userAtoms } from '@/atoms';
+import { authAtom, chatSocketAtom } from '@/atoms/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '../typedef';
 import * as Utils from '@/utils';
-import { useUpdateUser } from '@/store';
+import { useUpdateUser } from '@/atoms/store';
+import { structureAtom } from '@/atoms/structure';
 
 export const SocketHolder = () => {
   // 「ソケット」
@@ -11,13 +12,13 @@ export const SocketHolder = () => {
   const [mySocket] = useAtom(chatSocketAtom);
 
   // 認証フローのチェックと状態遷移
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
-  const setVisibleRooms = useAtom(userAtoms.visibleRoomsAtom)[1];
-  const setJoiningRooms = useAtom(userAtoms.joiningRoomsAtom)[1];
-  const [friends, setFriends] = useAtom(userAtoms.friends);
-  const setFocusedRoomId = useAtom(userAtoms.focusedRoomIdAtom)[1];
-  const setMessagesInRoom = useAtom(userAtoms.messagesInRoomAtom)[1];
-  const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
+  const [personalData] = useAtom(authAtom.personalDataAtom);
+  const setVisibleRooms = useAtom(structureAtom.visibleRoomsAtom)[1];
+  const setJoiningRooms = useAtom(structureAtom.joiningRoomsAtom)[1];
+  const [friends, setFriends] = useAtom(structureAtom.friends);
+  const setFocusedRoomId = useAtom(structureAtom.focusedRoomIdAtom)[1];
+  const setMessagesInRoom = useAtom(structureAtom.messagesInRoomAtom)[1];
+  const setMembersInRoom = useAtom(structureAtom.membersInRoomAtom)[1];
   const userId = personalData ? personalData.id : -1;
 
   const userUpdator = useUpdateUser();

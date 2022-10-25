@@ -1,6 +1,6 @@
 import * as TD from '@/typedef';
 import { VscCircleFilled } from 'react-icons/vsc';
-import { useUserDataReadOnly } from '@/store';
+import { useUserDataReadOnly } from '@/atoms/store';
 import { useEffect, useState } from 'react';
 
 const activeTimeMs = 60 * 1000;

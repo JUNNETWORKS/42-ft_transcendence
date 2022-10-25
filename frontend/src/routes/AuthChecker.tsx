@@ -1,13 +1,15 @@
-import { authFlowStateAtom, storedCredentialAtom, userAtoms } from '@/atoms';
+import { authAtom, storedCredentialAtom } from '@/atoms/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import { verifyCredential } from '@/auth';
 
+/**
+ * 認証状態の状態遷移
+ */
 export const AuthChecker = () => {
-  // 認証フローのチェックと状態遷移
   const [storedCredential] = useAtom(storedCredentialAtom);
-  const [authState, setAuthState] = useAtom(authFlowStateAtom);
-  const setPersonalData = useAtom(userAtoms.personalDataAtom)[1];
+  const [authState, setAuthState] = useAtom(authAtom.authFlowState);
+  const setPersonalData = useAtom(authAtom.personalDataAtom)[1];
 
   useEffect(() => {
     switch (authState) {
