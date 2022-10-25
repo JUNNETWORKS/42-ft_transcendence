@@ -9,7 +9,7 @@ import { verifyCredential } from '@/auth';
 export const AuthChecker = () => {
   const [storedCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
-  const setPersonalData = useAtom(authAtom.personalDataAtom)[1];
+  const setPersonalData = useAtom(authAtom.personalData)[1];
 
   useEffect(() => {
     switch (authState) {

@@ -5,7 +5,7 @@ import { Link, useRoutes } from 'react-router-dom';
 import { FriendsView } from './FriendsView';
 
 export const MyPageView = () => {
-  const [personalData] = useAtom(authAtom.personalDataAtom);
+  const [personalData] = useAtom(authAtom.personalData);
 
   const presentator = !personalData ? (
     <></>

@@ -12,7 +12,7 @@ export const SocketHolder = () => {
   const [mySocket] = useAtom(chatSocketAtom);
 
   // 認証フローのチェックと状態遷移
-  const [personalData] = useAtom(authAtom.personalDataAtom);
+  const [personalData] = useAtom(authAtom.personalData);
   const setVisibleRooms = useAtom(structureAtom.visibleRoomsAtom)[1];
   const setJoiningRooms = useAtom(structureAtom.joiningRoomsAtom)[1];
   const [friends, setFriends] = useAtom(structureAtom.friends);

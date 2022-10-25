@@ -110,7 +110,7 @@ function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
 
-  const [personalData] = useAtom(authAtom.personalDataAtom);
+  const [personalData] = useAtom(authAtom.personalData);
   const [visibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
   const [joiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const [messagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);

@@ -1,6 +1,8 @@
 import { atom } from 'jotai';
 import * as TD from '../typedef';
 
+// オブジェクトストラクチャー
+
 export const structureAtom = {
   // 見えているチャットルームの一覧
   visibleRoomsAtom: atom<TD.ChatRoom[]>([]),

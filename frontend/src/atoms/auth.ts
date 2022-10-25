@@ -1,16 +1,22 @@
-import { atom } from 'jotai';
-import { UserPersonalData } from '@/components/AuthCard';
-import { AppCredential } from '../hooks';
+import { atom, useAtom } from 'jotai';
 import { io } from 'socket.io-client';
 import { AuthenticationFlowState, urlChatSocket } from '../auth';
 import { structureAtom } from './structure';
+
+// 認証情報
+
+type UserPersonalData = {
+  id: number;
+  email: string;
+  displayName: string;
+};
 
 export const authAtom = {
   authFlowState: atom<AuthenticationFlowState>('Neutral'),
   /**
    * ユーザデータのAtom
    */
-  personalDataAtom: atom<UserPersonalData | null>(null),
+  personalData: atom<UserPersonalData | null>(null),
 };
 
 const credentialKey = 'ft_transcendence_credential';
@@ -20,6 +26,10 @@ const credentialKey = 'ft_transcendence_credential';
 const storedCredentialStrAtom = atom<string>(
   localStorage.getItem(credentialKey) || ''
 );
+
+export type AppCredential = {
+  token: string;
+};
 
 /**
  * ローカルに保存されているクレデンシャルのオブジェクトデータのAtom
@@ -40,7 +50,7 @@ export const storedCredentialAtom = atom(
   // クレデンシャルデータの更新
   (get, set, newCredential: AppCredential | null) => {
     // 破棄・変更のいずれの場合も, ユーザに紐づく情報(atom)はすべて破棄する
-    set(authAtom.personalDataAtom, null);
+    set(authAtom.personalData, null);
     set(structureAtom.visibleRoomsAtom, []);
     set(structureAtom.joiningRoomsAtom, []);
     set(structureAtom.friends, []);
@@ -76,3 +86,25 @@ const chatSocketFromCredential = (credential: AppCredential | null) => {
 export const chatSocketAtom = atom((get) =>
   chatSocketFromCredential(get(storedCredentialAtom))
 );
+
+export const useLogout = () => {
+  const setAuthState = useAtom(authAtom.authFlowState)[1];
+  const setStoredCredential = useAtom(storedCredentialAtom)[1];
+  const setPersonalData = useAtom(authAtom.personalData)[1];
+  return () => {
+    setStoredCredential(null);
+    setPersonalData(null);
+    setAuthState('NotAuthenticated');
+  };
+};
+
+export const useLoginLocal = () => {
+  const setAuthState = useAtom(authAtom.authFlowState)[1];
+  const setStoredCredential = useAtom(storedCredentialAtom)[1];
+  const setPersonalData = useAtom(authAtom.personalData)[1];
+  return (token: string, user: any) => {
+    setStoredCredential({ token });
+    setPersonalData(user);
+    setAuthState('Authenticated');
+  };
+};

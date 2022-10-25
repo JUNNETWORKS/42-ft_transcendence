@@ -1,4 +1,4 @@
-import { AppCredential } from './hooks';
+import { AppCredential } from './atoms/auth';
 
 /**
  * バックエンドサーバのドメイン

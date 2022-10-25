@@ -1,4 +1,4 @@
-import { authAtom, storedCredentialAtom } from '@/atoms/auth';
+import { authAtom, useLoginLocal, useLogout } from '@/atoms/auth';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
@@ -14,9 +14,7 @@ import {
 } from '@/components/AuthCard';
 
 export const DevAuth = () => {
-  const [authState, setAuthState] = useAtom(authAtom.authFlowState);
-  const setStoredCredential = useAtom(storedCredentialAtom)[1];
-  const setPersonalData = useAtom(authAtom.personalDataAtom)[1];
+  const [authState] = useAtom(authAtom.authFlowState);
 
   const query = useQuery();
   const navigation = useNavigate();
@@ -34,19 +32,17 @@ export const DevAuth = () => {
     useState<FtAuthenticationFlowState>(initialFlowState);
   // 認可コード
   const [ftAuthCode] = useState(initialAuthCode);
+  const loginLocal = useLoginLocal();
+  const logout = useLogout();
 
   const anonymizeAuthFlow = () => {
-    setStoredCredential(null);
-    setPersonalData(null);
-    setAuthState('NotAuthenticated');
+    logout();
     setFtAuthState('Neutral');
   };
 
   const finalizeAuthFlow = (token: string, user: any) => {
-    setStoredCredential({ token });
-    setPersonalData(user);
+    loginLocal(token, user);
     setFtAuthState('Neutral');
-    setAuthState('Authenticated');
   };
 
   // 42認証フローのチェックと状態遷移
