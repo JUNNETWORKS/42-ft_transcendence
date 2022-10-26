@@ -37,6 +37,13 @@ export class OnlineMatch {
             this.match.getState()
           );
         } else {
+          sendResultRoom(
+            this.wsServer,
+            'pong.match.state',
+            this.roomName,
+            this.match.getState()
+          );
+
           const loserSide = this.match.winner === 'right' ? 'left' : 'right';
           const result: MatchResult = {
             winner: this.match.players[SIDE_INDEX[this.match.winner]],
