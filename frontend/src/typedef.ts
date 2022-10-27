@@ -8,10 +8,12 @@ export type User = {
   time?: Date;
 };
 
+type RoomType = 'PUBLIC' | 'PRIVATE' | 'LOCKED' | 'DM';
+
 export type ChatRoom = {
   id: number;
   roomName: string;
-  roomType: string;
+  roomType: RoomType;
   ownerId: number;
   createdAt: Date;
   updatedAt: Date;
