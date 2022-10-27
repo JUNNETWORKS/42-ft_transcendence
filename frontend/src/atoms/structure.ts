@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import * as TD from '../typedef';
+import { storeAtoms } from './store';
 
 // オブジェクトストラクチャー
 
@@ -24,4 +25,15 @@ export const structureAtom = {
   membersInRoomAtom: atom<{
     [roomId: number]: TD.UserRelationMap;
   }>({}),
+};
+
+export const dataAtom = {
+  visibleRoomsAtom: atom((get) => get(structureAtom.visibleRoomsAtom)),
+  joiningRoomsAtom: atom((get) => get(structureAtom.joiningRoomsAtom)),
+  friends: atom((get) => {
+    const us = get(storeAtoms.users);
+    return get(structureAtom.friends).map((f) => us[f.id] || f);
+  }),
+  messagesInRoomAtom: atom((get) => get(structureAtom.messagesInRoomAtom)),
+  membersInRoomAtom: atom((get) => get(structureAtom.membersInRoomAtom)),
 };

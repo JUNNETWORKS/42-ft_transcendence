@@ -8,7 +8,7 @@ import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { structureAtom } from '@/atoms/structure';
+import { dataAtom } from '@/atoms/structure';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -84,7 +84,7 @@ export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
   const [personalData, fetchState, setUserId] = useUserData(userId);
-  const [friends] = useAtom(structureAtom.friends);
+  const [friends] = useAtom(dataAtom.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
 

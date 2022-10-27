@@ -9,7 +9,7 @@ import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
 import { authAtom } from '@/atoms/auth';
 import { ChatRoomListView } from './RoomList';
-import { structureAtom } from '@/atoms/structure';
+import { dataAtom, structureAtom } from '@/atoms/structure';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {
@@ -111,10 +111,10 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
 
   const [personalData] = useAtom(authAtom.personalData);
-  const [visibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
-  const [joiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
-  const [messagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(structureAtom.membersInRoomAtom);
+  const [visibleRooms] = useAtom(dataAtom.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
+  const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [focusedRoomId, setFocusedRoomId] = useAtom(
     structureAtom.focusedRoomIdAtom
   );
