@@ -8,7 +8,9 @@ export type User = {
   time?: Date;
 };
 
-type RoomType = 'PUBLIC' | 'PRIVATE' | 'LOCKED' | 'DM';
+export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
+export const RoomTypes = [...RoomTypesSelectable, 'DM'] as const;
+export type RoomType = typeof RoomTypes[number];
 
 export type ChatRoom = {
   id: number;

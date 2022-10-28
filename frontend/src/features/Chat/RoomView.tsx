@@ -3,11 +3,9 @@ import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import * as dayjs from 'dayjs';
-import * as RIFa from 'react-icons/fa';
-import * as RIIo from 'react-icons/im';
-import * as RIBS from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
+import { Icons } from '@/icons';
 
 /**
  * メッセージを表示するコンポーネント
@@ -52,9 +50,9 @@ const ChatRoomMemberCard = (
 
   const userTypeCap = () => {
     if (isOwner) {
-      return <RIFa.FaCrown style={{ display: 'inline' }} />;
+      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
     } else if (isAdmin) {
-      return <RIFa.FaCog style={{ display: 'inline' }} />;
+      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
     }
     return '';
   };
@@ -79,7 +77,7 @@ const ChatRoomMemberCard = (
             props.onNomminateClick ? props.onNomminateClick(props.member) : null
           }
         >
-          <RIFa.FaUserCog />
+          <Icons.Chat.Operation.Nomminate />
         </FTButton>
       )}
       {isBannable && (
@@ -88,7 +86,7 @@ const ChatRoomMemberCard = (
             props.onBanClick ? props.onBanClick(props.member) : null
           }
         >
-          <RIFa.FaBan />
+          <Icons.Chat.Operation.Ban />
         </FTButton>
       )}
       {isKickable && (
@@ -97,7 +95,7 @@ const ChatRoomMemberCard = (
             props.onKickClick ? props.onKickClick(props.member) : null
           }
         >
-          <RIIo.ImExit />
+          <Icons.Chat.Operation.Kick />
         </FTButton>
       )}
       {isMutable && (
@@ -106,7 +104,7 @@ const ChatRoomMemberCard = (
             props.onMuteClick ? props.onMuteClick(props.member) : null
           }
         >
-          <RIBS.BsMicMute />
+          <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
     </div>

@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
@@ -10,6 +10,9 @@ import { useAtom } from 'jotai';
 import { authAtom } from '@/atoms/auth';
 import { ChatRoomListView } from './RoomList';
 import { dataAtom, structureAtom } from '@/atoms/structure';
+import { Listbox } from '@headlessui/react';
+import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {
@@ -104,6 +107,61 @@ function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   };
 }
 
+const RoomFilterOptions = ['VISIBLE', 'JOINED', 'YOURS'] as const;
+type RoomFilterOption = typeof RoomFilterOptions[number];
+
+const ChatRoomFilter = (props: {
+  selected: RoomFilterOption;
+  setSelected: (next: RoomFilterOption) => void;
+}) => {
+  const icon = (option: RoomFilterOption) => {
+    switch (option) {
+      case 'VISIBLE':
+        return <Icons.Chat.Visible />;
+      case 'JOINED':
+        return <Icons.Chat.Joined />;
+      case 'YOURS':
+        return <Icons.Chat.Yours />;
+    }
+  };
+  const roomTypes = RoomFilterOptions.map((t) => ({
+    roomType: t,
+    icon: icon(t),
+  }));
+  const selectedType = roomTypes.find((rt) => rt.roomType === props.selected)!;
+
+  return (
+    <>
+      <Listbox
+        value={selectedType}
+        onChange={(next: { roomType: RoomFilterOption; icon: any }) =>
+          props.setSelected(next.roomType)
+        }
+      >
+        <Listbox.Button>
+          Showing
+          <InlineIcon icon={selectedType.icon} />
+          {selectedType.roomType}
+        </Listbox.Button>
+        <Listbox.Options className="bg-black">
+          {roomTypes.map((item) => {
+            return (
+              <Listbox.Option
+                className="cursor-pointer p-[2px] text-center hover:bg-teal-800"
+                key={item.roomType}
+                value={item}
+              >
+                <InlineIcon icon={item.icon} />
+                {item.roomType}
+              </Listbox.Option>
+            );
+          })}
+        </Listbox.Options>
+      </Listbox>
+    </>
+  );
+};
+
 /**
  * @returns チャットインターフェースコンポーネント
  */
@@ -119,6 +177,23 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     structureAtom.focusedRoomIdAtom
   );
   const userId = personalData ? personalData.id : -1;
+  const [selected, setSelected] = useState<RoomFilterOption>(
+    RoomFilterOptions[0]
+  );
+
+  const filteredRooms = (() => {
+    switch (selected) {
+      case 'VISIBLE':
+        return visibleRooms;
+      case 'YOURS':
+        return visibleRooms.filter((r) => r.ownerId === personalData?.id);
+      case 'JOINED':
+        return visibleRooms.filter(
+          (r) => !!joiningRooms.find((rr) => rr.id === r.id)
+        );
+    }
+  })();
+
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   /**
@@ -233,9 +308,15 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         {/* 見えているチャットルーム */}
         <div className="flex shrink grow flex-col border-2 border-solid border-white">
           <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+          <div className="shrink-0 grow-0 p-2 text-center">
+            <ChatRoomFilter
+              selected={selected}
+              setSelected={(next) => setSelected(next)}
+            />
+          </div>
           <div className="flex shrink grow flex-col p-2">
             <ChatRoomListView
-              rooms={visibleRooms}
+              rooms={filteredRooms}
               isJoiningTo={predicate.isJoiningTo}
               isFocusingTo={predicate.isFocusingTo}
               countMessages={store.count_message}

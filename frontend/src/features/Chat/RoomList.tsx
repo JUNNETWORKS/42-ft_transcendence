@@ -1,9 +1,8 @@
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton } from '@/components/FTBasicComponents';
-import { FaUserSecret, FaLock } from 'react-icons/fa';
-import { MdPublic } from 'react-icons/md';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
 
 const ChatRoomShiftButton = (props: {
   isJoined: boolean;
@@ -37,11 +36,11 @@ const ChatRoomListItem = (props: {
   const roomTypeIcon = (() => {
     switch (props.room.roomType) {
       case 'PUBLIC':
-        return <InlineIcon icon={<MdPublic />} />;
+        return <InlineIcon icon={<Icons.Chat.Public />} />;
       case 'PRIVATE':
-        return <InlineIcon icon={<FaUserSecret />} />;
+        return <InlineIcon icon={<Icons.Chat.Private />} />;
       case 'LOCKED':
-        return <InlineIcon icon={<FaLock />} />;
+        return <InlineIcon icon={<Icons.Chat.Locked />} />;
       default:
         return <></>;
     }

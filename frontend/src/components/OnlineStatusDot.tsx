@@ -1,7 +1,7 @@
 import * as TD from '@/typedef';
-import { VscCircleFilled } from 'react-icons/vsc';
 import { useUserDataReadOnly } from '@/atoms/store';
 import { useEffect, useState } from 'react';
+import { Icons } from '@/icons';
 
 const activeTimeMs = 60 * 1000;
 
@@ -26,5 +26,5 @@ export const OnlineStatusDot = (props: { user: TD.User }) => {
     }, 1000);
     return () => clearInterval(timer);
   }, [now, user]);
-  return <VscCircleFilled className={color} />;
+  return <Icons.User.StatusDot className={color} />;
 };

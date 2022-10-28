@@ -4,11 +4,11 @@ import { useAction } from '@/hooks';
 import { useUserData } from '@/atoms/store';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
-import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { dataAtom } from '@/atoms/structure';
+import { Icons } from '@/icons';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -104,7 +104,7 @@ export const UserView = () => {
                   <OnlineStatusDot key={personalData.id} user={personalData} />
                 </div>
                 {personalData.displayName}
-                {isFriend && <FaUserFriends className="inline" />}
+                {isFriend && <Icons.User.Friend className="inline" />}
               </FTH1>
               <div className="flex flex-col gap-2">
                 <FTH4>id</FTH4>
