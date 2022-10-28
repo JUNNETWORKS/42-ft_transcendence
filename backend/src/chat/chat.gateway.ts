@@ -15,11 +15,11 @@ import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { ChatService } from './chat.service';
-import * as Utils from 'src/utils';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
+import * as Utils from 'src/utils';
 import {
   generateFullRoomName,
   joinChannel,

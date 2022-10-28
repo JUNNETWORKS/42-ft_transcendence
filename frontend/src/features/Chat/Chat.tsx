@@ -2,10 +2,10 @@ import { useEffect, useState, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3, FTH4 } from './FTBasicComponents';
+import { FTButton, FTH3, FTH4 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction, useEffectOnce } from './hooks';
-import { SayCard, OpenCard, SelfCard } from './CommandCard';
+import { useStateWithResetter, useAction, useEffectOnce } from '../../hooks';
+import { SayCard, OpenCard, SelfCard } from '../../components/CommandCard';
 
 /**
  *
@@ -45,9 +45,11 @@ export const Chat = () => {
               auth: (cb) => {
                 cb({
                   // 本当はアクセストークンをここに記載する
+                  token:
+                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1NzE0NDc5LjIxNCwiZXhwIjoxNjY4MzA2NDc5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.YUQgpOc5xJvwYN4mRQyRTS4XSXBdx2EZL2SOLBI8Gw4',
                   // token: "some_access_token"
                   // 開発中はここにuserIdを書いてもよい
-                  sub: userId,
+                  // sub: userId,
                 });
               },
             });
@@ -605,11 +607,8 @@ export const Chat = () => {
                   >
                     {predicate.isJoiningTo(data.id) ? (
                       <FTButton
-                        style={{
-                          width: '4em',
-                          color: 'black',
-                          backgroundColor: 'white',
-                        }}
+                        className="bg-white text-black hover:bg-black hover:text-white"
+                        style={{ width: '4em' }}
                         onClick={() => command.leave(data.id)}
                       >
                         Leave

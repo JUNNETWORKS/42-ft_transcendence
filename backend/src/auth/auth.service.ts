@@ -4,6 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
 import { jwtConstants } from 'src/auth/auth.constants';
 import { Socket } from 'socket.io';
+import * as Utils from 'src/utils';
 
 export type LoginResult = {
   access_token: string;
@@ -20,6 +21,7 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     console.log(email, pass);
     const user = await this.usersService.findByEmail(email);
+    console.log(user);
     if (user) {
       return user;
     }
@@ -53,13 +55,16 @@ export class AuthService {
       sub: user.id,
       iat,
     };
-    return {
+    const u = await this.usersService.findOne(user.id);
+    const result = {
       access_token: this.jwtService.sign(payload, {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user,
+      user: Utils.pick(u!, 'id', 'displayName', 'email'),
     };
+    console.log(`[login]`, result);
+    return result;
   }
 
   async trapAuth(client: Socket) {
