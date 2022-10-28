@@ -140,7 +140,7 @@ const ChatRoomFilter = (props: {
       >
         <Listbox.Button>
           Showing
-          <InlineIcon icon={selectedType.icon} />
+          <InlineIcon i={selectedType.icon} />
           {selectedType.roomType}
         </Listbox.Button>
         <Listbox.Options className="bg-black">
@@ -151,7 +151,7 @@ const ChatRoomFilter = (props: {
                 key={item.roomType}
                 value={item}
               >
-                <InlineIcon icon={item.icon} />
+                <InlineIcon i={item.icon} />
                 {item.roomType}
               </Listbox.Option>
             );

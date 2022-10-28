@@ -36,11 +36,11 @@ const ChatRoomListItem = (props: {
   const roomTypeIcon = (() => {
     switch (props.room.roomType) {
       case 'PUBLIC':
-        return <InlineIcon icon={<Icons.Chat.Public />} />;
+        return <InlineIcon i={<Icons.Chat.Public />} />;
       case 'PRIVATE':
-        return <InlineIcon icon={<Icons.Chat.Private />} />;
+        return <InlineIcon i={<Icons.Chat.Private />} />;
       case 'LOCKED':
-        return <InlineIcon icon={<Icons.Chat.Locked />} />;
+        return <InlineIcon i={<Icons.Chat.Locked />} />;
       default:
         return <></>;
     }

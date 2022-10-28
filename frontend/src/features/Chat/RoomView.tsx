@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -6,6 +6,9 @@ import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
+import { Modal } from '@/components/Modal';
+import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
+import { InlineIcon } from '@/hocs/InlineIcon';
 
 /**
  * メッセージを表示するコンポーネント
@@ -173,28 +176,59 @@ export const ChatRoomView = (props: {
   room_messages: (roomId: number) => TD.ChatRoomMessage[];
   room_members: (roomId: number) => TD.UserRelationMap | null;
 }) => {
+  const isOwner = props.room.ownerId === props.you?.userId;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+  console.log(props);
   return (
-    <div className="flex h-full flex-row border-2 border-solid border-white p-2">
-      <div className="flex h-full shrink grow flex-col overflow-hidden">
-        {/* 今フォーカスしているルームのメッセージ */}
-        <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-          <ChatRoomMessagesList messages={props.room_messages(props.room.id)} />
-        </div>
-        <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
-          {/* 今フォーカスしているルームへの発言 */}
-          <div className="flex flex-row border-2 border-solid border-white p-2">
-            <SayCard sender={props.say} />
+    <>
+      <Modal closeModal={closeModal} isOpen={isOpen}>
+        <ChatRoomSettingCard room={props.room} onCancel={closeModal} />
+      </Modal>
+
+      <div className="flex h-full flex-row border-2 border-solid border-white p-2">
+        <div className="flex h-full shrink grow flex-col overflow-hidden">
+          {/* タイトルバー */}
+          <FTH3>
+            <InlineIcon i={<RoomTypeIcon roomType={props.room.roomType} />} />
+            {props.room.roomName}
+            {!isOwner ? (
+              <></>
+            ) : (
+              <FTButton onClick={openModal}>
+                <Icons.Setting className="inline" />
+              </FTButton>
+            )}
+          </FTH3>
+          {/* 今フォーカスしているルームのメッセージ */}
+          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
+            <ChatRoomMessagesList
+              messages={props.room_messages(props.room.id)}
+            />
+          </div>
+          <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
+            {/* 今フォーカスしているルームへの発言 */}
+            <div className="flex flex-row border-2 border-solid border-white p-2">
+              <SayCard sender={props.say} />
+            </div>
           </div>
         </div>
+        <div className="shrink-0 grow-0 basis-[20em]">
+          <ChatRoomMembersList
+            you={props.you}
+            room={props.room}
+            members={props.room_members(props.room.id) || {}}
+            {...props.memberOperations}
+          />
+        </div>
       </div>
-      <div className="shrink-0 grow-0 basis-[20em]">
-        <ChatRoomMembersList
-          you={props.you}
-          room={props.room}
-          members={props.room_members(props.room.id) || {}}
-          {...props.memberOperations}
-        />
-      </div>
-    </div>
+    </>
   );
 };
