@@ -29,21 +29,14 @@ export class OnlineMatch {
       this.match.update();
 
       if (this.wsServer) {
-        if (this.match.winner === 'none') {
-          sendResultRoom(
-            this.wsServer,
-            'pong.match.state',
-            this.roomName,
-            this.match.getState()
-          );
-        } else {
-          sendResultRoom(
-            this.wsServer,
-            'pong.match.state',
-            this.roomName,
-            this.match.getState()
-          );
+        sendResultRoom(
+          this.wsServer,
+          'pong.match.state',
+          this.roomName,
+          this.match.getState()
+        );
 
+        if (this.match.winner !== 'none') {
           const loserSide = this.match.winner === 'right' ? 'left' : 'right';
           const result: MatchResult = {
             winner: this.match.players[SIDE_INDEX[this.match.winner]],
