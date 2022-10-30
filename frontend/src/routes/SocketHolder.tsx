@@ -1,7 +1,7 @@
 import { authAtom, chatSocketAtom } from '@/atoms/auth';
 import { useAtom, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
-import * as TD from '../typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { useUpdateRoom, useUpdateUser } from '@/atoms/store';
 import { structureAtom } from '@/atoms/structure';

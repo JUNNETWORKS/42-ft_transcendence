@@ -2,6 +2,7 @@ import { authAtom, storedCredentialAtom } from '@/atoms/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import { verifyCredential } from '@/auth';
+import { useUpdateUser } from '@/atoms/store';
 
 /**
  * 認証状態の状態遷移
@@ -10,7 +11,7 @@ export const AuthChecker = () => {
   const [storedCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
   const setPersonalData = useAtom(authAtom.personalData)[1];
-
+  const { addOne } = useUpdateUser();
   useEffect(() => {
     switch (authState) {
       case 'Neutral': {
@@ -24,6 +25,7 @@ export const AuthChecker = () => {
           (user) => {
             // ユーザ情報に変換できた場合の処理
             setPersonalData(user);
+            addOne(user);
             setAuthState('Authenticated');
           },
           () => {

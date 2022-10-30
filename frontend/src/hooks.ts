@@ -1,5 +1,7 @@
+import { useAtom } from 'jotai';
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { storedCredentialAtom } from './atoms/auth';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -95,7 +97,7 @@ export const useFetch = (
  * API呼び出しフック(useFetchをラップしたもの)
  */
 export const useAPI = (
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   endpoint: string,
   option: {
     payload?: () => any;
@@ -104,21 +106,25 @@ export const useAPI = (
   }
 ) => {
   const { payload, onFetched, onFailed } = option;
+  const [credential] = useAtom(storedCredentialAtom);
 
   return useFetch(
-    () =>
-      fetch(`http://localhost:3000${endpoint}`, {
+    () => {
+      const headers: HeadersInit = {};
+      if (payload) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
+      if (credential) {
+        headers['Authorization'] = `Bearer ${credential.token}`;
+      }
+      return fetch(`http://localhost:3000${endpoint}`, {
         method,
+        headers,
         mode: 'cors',
-        ...(payload
-          ? {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(payload()),
-            }
-          : {}),
-      }),
+        ...payloadPart,
+      });
+    },
     (res) =>
       (async () => {
         try {
