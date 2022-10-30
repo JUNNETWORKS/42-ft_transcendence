@@ -22,7 +22,7 @@ export const AppRoutes = () => {
   {
     const [storedCredential] = useAtom(storedCredentialAtom);
     const [authState, setAuthState] = useAtom(authFlowStateAtom);
-    const setPersonalData = useAtom(personalDataAtom)[1];
+    const [, setPersonalData] = useAtom(personalDataAtom);
 
     useEffect(() => {
       switch (authState) {
