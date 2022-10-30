@@ -11,7 +11,7 @@ import {
   DevAuthenticatedCard,
   DevAuthLoginCard,
   DevAuthValidatingCard,
-} from '@/components/AuthCard';
+} from '@/features/DevAuth/AuthCard';
 
 export const DevAuth = () => {
   const [authState] = useAtom(authAtom.authFlowState);
