@@ -27,13 +27,23 @@ export const structureAtom = {
   }>({}),
 };
 
+function filterBy<T extends { id: number }>(
+  list: T[],
+  map: { [K: number]: T }
+): T[] {
+  return list.map((f) => map[f.id] || f);
+}
+
 export const dataAtom = {
-  visibleRoomsAtom: atom((get) => get(structureAtom.visibleRoomsAtom)),
-  joiningRoomsAtom: atom((get) => get(structureAtom.joiningRoomsAtom)),
-  friends: atom((get) => {
-    const us = get(storeAtoms.users);
-    return get(structureAtom.friends).map((f) => us[f.id] || f);
-  }),
+  visibleRoomsAtom: atom((get) =>
+    filterBy(get(structureAtom.visibleRoomsAtom), get(storeAtoms.rooms))
+  ),
+  joiningRoomsAtom: atom((get) =>
+    filterBy(get(structureAtom.joiningRoomsAtom), get(storeAtoms.rooms))
+  ),
+  friends: atom((get) =>
+    filterBy(get(structureAtom.friends), get(storeAtoms.users))
+  ),
   messagesInRoomAtom: atom((get) => get(structureAtom.messagesInRoomAtom)),
   membersInRoomAtom: atom((get) => get(structureAtom.membersInRoomAtom)),
 };

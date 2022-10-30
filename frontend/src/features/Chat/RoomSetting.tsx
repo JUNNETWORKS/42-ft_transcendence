@@ -1,10 +1,12 @@
+import { useUpdateRoom } from '@/atoms/store';
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useAPI, useFetch } from '@/hooks';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { Listbox } from '@headlessui/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { roomErrors } from './room.validator';
 
 type RoomTypeIconProps = {
@@ -73,14 +75,24 @@ const RoomTypeListBox = ({ selected, setSelected }: RoomTypeListProps) => {
 type Props = {
   room: TD.ChatRoom;
   onCancel: () => void;
+  onSucceeded?: () => void;
 };
 
-export const ChatRoomSettingCard = ({ room, onCancel }: Props) => {
+export const ChatRoomSettingCard = ({ room, onCancel, onSucceeded }: Props) => {
   const [roomName, setRoomName] = useState(room.roomName);
   const [roomType, setRoomType] = useState<TD.RoomType>(room.roomType);
   const [roomPassword, setRoomPassword] = useState('');
-
   const errors = roomErrors(roomName, roomType, roomPassword);
+  const { updateOne } = useUpdateRoom();
+  const [state, submit] = useAPI('PUT', `/chatrooms/${room.id}`, {
+    payload: () => ({ roomName, roomType, roomPassword }),
+    onFetched: (json) => {
+      updateOne(room.id, json as TD.ChatRoom);
+      if (onSucceeded) {
+        onSucceeded();
+      }
+    },
+  });
 
   return (
     <>
@@ -130,7 +142,11 @@ export const ChatRoomSettingCard = ({ room, onCancel }: Props) => {
           <FTButton className="mr-2" onClick={onCancel}>
             Cancel
           </FTButton>
-          <FTButton className="mr-2 disabled:opacity-50" disabled={errors.some}>
+          <FTButton
+            className="mr-2 disabled:opacity-50"
+            disabled={errors.some || state !== 'Neutral'}
+            onClick={submit}
+          >
             <InlineIcon i={<Icons.Save />} />
             Save
           </FTButton>

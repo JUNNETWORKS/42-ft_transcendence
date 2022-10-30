@@ -190,7 +190,12 @@ export const ChatRoomView = (props: {
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
-        <ChatRoomSettingCard room={props.room} onCancel={closeModal} />
+        <ChatRoomSettingCard
+          key={props.room.id}
+          room={props.room}
+          onSucceeded={closeModal}
+          onCancel={closeModal}
+        />
       </Modal>
 
       <div className="flex h-full flex-row border-2 border-solid border-white p-2">

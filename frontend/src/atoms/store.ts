@@ -21,9 +21,9 @@ export const useUpdateUser = () => {
     setUsersStore((prev) => ({ ...prev, [data.id]: d }));
   };
   const addMany = (data: TD.User[]) => {
-    const ds = data.map((d) => Utils.datifyObject(d, 'time'));
     setUsersStore((prev) => {
       const next = { ...prev };
+      const ds = data.map((d) => Utils.datifyObject(d, 'time'));
       ds.forEach((d) => (next[d.id] = d));
       return next;
     });
@@ -143,4 +143,30 @@ export const useUserData = (id: number) => {
 export const useUserDataReadOnly = (id: number) => {
   const [usersStore] = useAtom(storeAtoms.users);
   return usersStore[id];
+};
+
+export const useUpdateRoom = () => {
+  const [roomStore, setRoomsStore] = useAtom(storeAtoms.rooms);
+  const addOne = (data: TD.ChatRoom) => {
+    setRoomsStore((prev) => ({ ...prev, [data.id]: data }));
+  };
+  const addMany = (data: TD.ChatRoom[]) => {
+    setRoomsStore((prev) => {
+      const next = { ...prev };
+      data.forEach((d) => (next[d.id] = d));
+      return next;
+    });
+  };
+  const updateOne = (roomId: number, part: Partial<TD.ChatRoom>) => {
+    const d = roomStore[roomId];
+    if (!d) {
+      return;
+    }
+    setRoomsStore((prev) => ({ ...prev, [roomId]: { ...d, ...part } }));
+  };
+  return {
+    addOne,
+    addMany,
+    updateOne,
+  };
 };
