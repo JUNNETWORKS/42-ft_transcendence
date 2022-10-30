@@ -6,6 +6,7 @@ import {
   joinChannel,
   sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
+import { v4 as uuidv4 } from 'uuid';
 
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
@@ -17,11 +18,11 @@ export class OnlineMatch {
   private readonly roomName: string;
   private readonly match: Match;
   private readonly gameStateSyncTimer: NodeJS.Timer;
-  // TODO: 本来はコンストラクタで渡されるのでnullにはならない｡
-  wsServer: Server | null;
+  private readonly wsServer: Server;
 
-  constructor() {
-    this.ID = 'MatchID';
+  constructor(wsServer: Server) {
+    this.wsServer = wsServer;
+    this.ID = uuidv4();
     this.roomName = generateFullRoomName({ matchId: this.ID });
     this.match = new Match('', '');
     this.gameStateSyncTimer = setInterval(() => {
@@ -83,5 +84,14 @@ export class OnlineMatch {
   // ゲームを終了
   close() {
     clearInterval(this.gameStateSyncTimer);
+  }
+
+  getMatchID() {
+    return this.ID;
+  }
+
+  // プレイヤーとして参加しているユーザーを返す
+  getPlayerIDs() {
+    return [this.match.players[0].id, this.match.players[1].id];
   }
 }
