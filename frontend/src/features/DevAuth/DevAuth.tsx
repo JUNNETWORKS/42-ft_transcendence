@@ -2,7 +2,7 @@ import {
   authFlowStateAtom,
   personalDataAtom,
   storedCredentialAtom,
-} from '@/atoms';
+} from '@/stores/atoms';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,

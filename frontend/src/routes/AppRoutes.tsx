@@ -8,7 +8,7 @@ import {
   personalDataAtom,
   chatSocketAtom,
   storedCredentialAtom,
-} from '@/atoms';
+} from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import { verifyCredential } from '@/auth';

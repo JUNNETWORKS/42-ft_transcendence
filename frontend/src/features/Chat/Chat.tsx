@@ -7,7 +7,7 @@ import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
 import { useAction } from '../../hooks';
 import { SayCard, OpenCard } from '../../components/CommandCard';
 import { useAtom } from 'jotai';
-import { personalDataAtom } from '@/atoms';
+import { personalDataAtom } from '@/stores/atoms';
 
 /**
  *

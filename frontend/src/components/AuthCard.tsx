@@ -1,4 +1,4 @@
-import { personalDataAtom } from '@/atoms';
+import { personalDataAtom } from '@/stores/atoms';
 import { loginBySelf, urlLoginFt } from '@/auth';
 import {
   FTH1,

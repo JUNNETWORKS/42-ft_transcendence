@@ -1,6 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 
+export type AppCredential = {
+  token: string;
+};
+
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
  * @param initial

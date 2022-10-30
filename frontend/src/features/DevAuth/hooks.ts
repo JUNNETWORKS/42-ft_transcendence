@@ -1,8 +1,5 @@
+import { AppCredential } from '@/hooks';
 import { useState, useMemo } from 'react';
-
-export type AppCredential = {
-  token: string;
-};
 
 /**
  * `localStorage`**など**に保存されているクレデンシャル情報を取得・更新するフック。
