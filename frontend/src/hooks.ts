@@ -72,6 +72,11 @@ export const useFetch = (
     }
   }, [state]);
   const submit = () => setState('Fetching');
+  const neutralize = () => {
+    if (state !== 'Fetching') {
+      setState('Neutral');
+    }
+  };
 
   return [
     /**
@@ -82,6 +87,7 @@ export const useFetch = (
      * 実行すると, 次の副作用タイミングで fetch 処理をキックする
      */
     submit,
+    neutralize,
   ] as const;
 };
 
