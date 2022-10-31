@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
+import { jwtConstants } from 'src/auth/auth.constants';
+import { Socket } from 'socket.io';
+import * as Utils from 'src/utils';
 
 export type LoginResult = {
   access_token: string;
@@ -18,6 +21,7 @@ export class AuthService {
   async validateUser(email: string, pass: string): Promise<any> {
     console.log(email, pass);
     const user = await this.usersService.findByEmail(email);
+    console.log(user);
     if (user) {
       return user;
     }
@@ -51,12 +55,49 @@ export class AuthService {
       sub: user.id,
       iat,
     };
-    return {
+    const u = await this.usersService.findOne(user.id);
+    const result = {
       access_token: this.jwtService.sign(payload, {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user,
+      user: Utils.pick(u!, 'id', 'displayName', 'email'),
     };
+    console.log(`[login]`, result);
+    return result;
+  }
+
+  async trapAuth(client: Socket) {
+    if (client.handshake.auth) {
+      const { token, sub } = client.handshake.auth;
+      // token による認証
+      if (token) {
+        const verified = this.jwtService.verify(token, {
+          secret: jwtConstants.secret,
+        });
+        // console.log(verified);
+        const decoded = this.jwtService.decode(token);
+        if (decoded && typeof decoded === 'object') {
+          const sub = decoded['sub'];
+          if (sub) {
+            const userId = parseInt(sub);
+            const user = await this.usersService.findOne(userId);
+            if (user) {
+              return user;
+            }
+          }
+        }
+      }
+      // subによる認証スキップ
+      // TODO: 提出時には絶対に除去すること!!!!
+      if (sub) {
+        const userId = parseInt(sub);
+        const user = await this.usersService.findOne(userId);
+        if (user) {
+          return user;
+        }
+      }
+    }
+    return null;
   }
 }

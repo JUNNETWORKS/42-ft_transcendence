@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import * as TD from './typedef';
+import * as TD from '../features/Chat/typedef';
 import { FTTextField, FTButton, FTH3, FTH4 } from './FTBasicComponents';
-import { useStateWithResetter } from './hooks';
+import { useStateWithResetter } from '../hooks';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント

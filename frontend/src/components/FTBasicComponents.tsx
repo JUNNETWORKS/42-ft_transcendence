@@ -3,7 +3,7 @@ import {
   styleH3,
   styleH4,
   styleButtonCommon,
-} from './styles';
+} from '../features/Chat/styles';
 
 export const FTTextField = (
   props: React.DetailedHTMLProps<
@@ -31,10 +31,63 @@ export const FTButton = (
 ) => {
   return (
     <button
+      className="hover:bg-white hover:text-black disabled:opacity-50"
       {...{ ...props }}
       style={{
         ...(props.style || {}),
         ...styleButtonCommon,
+      }}
+    />
+  );
+};
+
+export const FTSubmit = (
+  props: React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+  >
+) => {
+  return (
+    <input
+      {...{ ...props }}
+      type="submit"
+      style={{
+        ...(props.style || {}),
+        ...styleButtonCommon,
+      }}
+    />
+  );
+};
+
+export const FTH1 = (
+  props: React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLHeadingElement>,
+    HTMLHeadingElement
+  >
+) => {
+  return (
+    <h1
+      {...{ ...props }}
+      style={{
+        ...styleH3,
+        ...(props.style || {}),
+      }}
+    />
+  );
+};
+
+export const FTH2 = (
+  props: React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLHeadingElement>,
+    HTMLHeadingElement
+  >
+) => {
+  return (
+    <h2
+      {...{ ...props }}
+      style={{
+        ...styleH3,
+        ...(props.style || {}),
       }}
     />
   );
@@ -50,8 +103,8 @@ export const FTH3 = (
     <h3
       {...{ ...props }}
       style={{
-        ...(props.style || {}),
         ...styleH3,
+        ...(props.style || {}),
       }}
     />
   );
@@ -67,8 +120,8 @@ export const FTH4 = (
     <h4
       {...{ ...props }}
       style={{
-        ...(props.style || {}),
         ...styleH4,
+        ...(props.style || {}),
       }}
     />
   );
