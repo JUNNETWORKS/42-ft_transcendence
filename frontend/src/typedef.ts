@@ -52,6 +52,7 @@ export type ConnectionResult = {
   displayName: string;
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
+  friends: User[];
 };
 
 export type OpenResult = ChatRoom;
@@ -86,6 +87,14 @@ export type GetRoomMessagesResult = {
 export type GetRoomMembersResult = {
   id: number;
   members: ChatUserRelation[];
+};
+
+export type FollowResult = {
+  user: User;
+};
+
+export type UnfollowResult = {
+  user: User;
 };
 
 export const Mapper = {

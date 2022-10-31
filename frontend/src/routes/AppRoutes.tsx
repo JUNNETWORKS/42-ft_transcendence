@@ -3,33 +3,20 @@ import { Chat } from '@/features/Chat/Chat';
 import { Pong } from '@/features/Pong/components/Pong';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { useState } from 'react';
-import { UserPersonalData } from '@/features/DevAuth/AuthCard';
-import { useStoredCredential } from '@/features/DevAuth/hooks';
+import { chatSocketAtom } from '@/stores/atoms';
+import { useAtom } from 'jotai';
+import { UserView } from '@/features/User/User';
 
 export const AppRoutes = () => {
-  // ブラウザが保持しているクレデンシャル
-  const [storedCredential, setStoredCredential] = useStoredCredential();
-  // パーソナルデータ
-  const [personalData, setPersonalData] = useState<UserPersonalData | null>(
-    null
-  );
-
+  const [mySocket] = useAtom(chatSocketAtom);
+  const authElement = <DevAuth />;
+  const guardElement = !mySocket ? authElement : null;
   const commonRoutes = [
-    { path: '/chat', element: <Chat /> },
     { path: '/', element: <Index /> },
-    {
-      path: '/auth',
-      element: (
-        <DevAuth
-          storedCredential={storedCredential}
-          setStoredCredential={setStoredCredential}
-          personalData={personalData}
-          setPersonalData={setPersonalData}
-        />
-      ),
-    },
     { path: '/pong', element: <Pong /> },
+    { path: '/auth', element: authElement },
+    { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
+    { path: '/user/:id', element: guardElement || <UserView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
 

@@ -1,3 +1,5 @@
+import { userAtoms } from '@/stores/atoms';
+import { loginByPassword, loginBySelf, urlLoginFt } from './auth';
 import {
   FTH1,
   FTH3,
@@ -6,41 +8,35 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
-import { UserPersonalData } from '@/types';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 
-const apiHost = `http://localhost:3000`;
+export type UserPersonalData = {
+  id: number;
+  email: string;
+  displayName: string;
+};
 
+/**
+ * 42認証用のフォーム
+ * ボタンが1つあるだけ
+ */
 const FtAuthForm = () => (
-  <form method="POST" action={`${apiHost}/auth/login_ft`}>
+  <form method="POST" action={urlLoginFt}>
     <FTSubmit className="hover:bg-white hover:text-black" value="Login" />
   </form>
 );
 
+/**
+ * 自己申告認証用のフォーム
+ */
 const SelfAuthForm = (props: {
-  finalizer: (token: string, user: any) => void;
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
-  type Phase = 'Ready' | 'NotReady' | 'Working';
-  // 状態遷移
-  // - ボタン押せる
-  // - ボタン押せない
-  // - ボタン押してる
-  const [phase, setPhase] = useState<Phase>('NotReady');
-
-  const sender = async (s: string) => {
-    const url = `${apiHost}/auth/self/${s}`;
-    const result = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-    });
-    if (result.ok) {
-      const json = await result.json();
-      console.log('json', json);
-      const { access_token: token, user } = json;
-      props.finalizer(token, user);
-    }
-  };
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
 
   const validator = (s: string) => {
     if (!s) {
@@ -58,20 +54,15 @@ const SelfAuthForm = (props: {
 
   const click = async () => {
     try {
-      setPhase('Working');
-      await sender(userIdStr);
+      setPhase('Fetching');
+      await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
-    setPhase('Ready');
+    setPhase('Neutral');
   };
 
-  const errorMessage = (() => {
-    if (phase === 'Working') {
-      return null;
-    }
-    return validator(userIdStr);
-  })();
+  const errorMessage = validator(userIdStr);
 
   return (
     <>
@@ -82,7 +73,10 @@ const SelfAuthForm = (props: {
         value={userIdStr}
         onChange={(e) => setUserIdStr(e.target.value)}
       />
-      <FTButton disabled={!!errorMessage} onClick={() => click()}>
+      <FTButton
+        disabled={!!errorMessage || phase === 'Fetching'}
+        onClick={() => click()}
+      >
         Force Login
       </FTButton>
       <div>{errorMessage}</div>
@@ -90,8 +84,90 @@ const SelfAuthForm = (props: {
   );
 };
 
-export const DevAuthLogin = (props: {
-  finalizer: (token: string, user: any) => void;
+/**
+ * メアド+パスワード認証
+ */
+const PasswordAuthForm = (props: {
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
+}) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
+
+  const validateEmail = (s: string) => {
+    const trimmed = s.trim();
+    if (!trimmed) {
+      return 'empty?';
+    }
+    const emailRegExp = /^[^@]+?@[^@]+$/;
+    const m = trimmed.match(emailRegExp);
+    if (!m) {
+      return 'not a valid email?';
+    }
+    return null;
+  };
+  const validatePassword = (s: string) => {
+    const trimmed = s.trim();
+    if (!trimmed) {
+      return 'empty?';
+    }
+    return null;
+  };
+
+  const click = async () => {
+    try {
+      setPhase('Fetching');
+      await loginByPassword(email, password, props.onSucceeded, props.onFailed);
+    } catch (e) {
+      console.error(e);
+    }
+    setPhase('Neutral');
+  };
+
+  const emailErrorMessage = validateEmail(email);
+  const passwordErrorMessage = validatePassword(password);
+  const isValid = !emailErrorMessage && !passwordErrorMessage;
+
+  return (
+    <div className="grid grid-flow-row justify-center">
+      <div>
+        <FTTextField
+          className="border-2"
+          autoComplete="off"
+          placeholder="メールアドレス"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <div>{emailErrorMessage || '　'}</div>
+      </div>
+      <div>
+        <FTTextField
+          className="border-2"
+          autoComplete="off"
+          placeholder="パスワード"
+          value={password}
+          type="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div>{passwordErrorMessage || '　'}</div>
+      </div>
+      <div>
+        <FTButton disabled={!isValid || phase === 'Fetching'} onClick={click}>
+          Login
+        </FTButton>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * 各種認証フォームをまとめたUI
+ */
+export const DevAuthLoginCard = (props: {
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
 }) => {
   return (
     <>
@@ -104,34 +180,47 @@ export const DevAuthLogin = (props: {
         <div className="text-center">
           <FtAuthForm />
         </div>
+
+        <FTH3>By Email / Password</FTH3>
+        <div>
+          <PasswordAuthForm
+            onSucceeded={props.onSucceeded}
+            onFailed={props.onFailed}
+          />
+        </div>
+
         <FTH3>By Self</FTH3>
         <div className="text-center">
-          <SelfAuthForm finalizer={props.finalizer} />
+          <SelfAuthForm
+            onSucceeded={props.onSucceeded}
+            onFailed={props.onFailed}
+          />
         </div>
-        <FTH3>By Email / Password</FTH3>
-        <div></div>
       </div>
     </>
   );
 };
 
-export const DevAuthenticated = (props: {
-  personalData: UserPersonalData;
-  onLogout?: () => void;
-}) => {
+/**
+ * 認証済み状態で表示されるUI
+ */
+export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
+  const [personalData] = useAtom(userAtoms.personalDataAtom);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         You&apos;re Authenticated.
       </FTH1>
-      <div className="flex flex-col gap-2">
-        <FTH4>id</FTH4>
-        <div>{props.personalData.id}</div>
-        <FTH4>name</FTH4>
-        <div>{props.personalData.displayName}</div>
-        <FTH4>email</FTH4>
-        <div>{props.personalData.email}</div>
-      </div>
+      {personalData && (
+        <div className="flex flex-col gap-2">
+          <FTH4>id</FTH4>
+          <div>{personalData.id}</div>
+          <FTH4>name</FTH4>
+          <div>{personalData.displayName}</div>
+          <FTH4>email</FTH4>
+          <div>{personalData.email}</div>
+        </div>
+      )}
       <br />
       <div className="flex flex-col gap-2">
         <FTH4>Logout?</FTH4>
@@ -149,7 +238,10 @@ export const DevAuthenticated = (props: {
   );
 };
 
-export const DevAuthValidating = () => {
+/**
+ * 各種検証作業中に表示されるUI
+ */
+export const DevAuthValidatingCard = () => {
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>

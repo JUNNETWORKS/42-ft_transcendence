@@ -1,448 +1,41 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from './typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3, FTH4 } from '../../components/FTBasicComponents';
-import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction, useEffectOnce } from '../../hooks';
-import { SayCard, OpenCard, SelfCard } from '../../components/CommandCard';
+import { FTH3 } from '@/components/FTBasicComponents';
+import { ChatRoomView } from './RoomView';
+import { OpenCard } from '@/components/CommandCard';
+import { useAtom } from 'jotai';
+import { userAtoms } from '@/stores/atoms';
+import { ChatRoomListView } from './RoomList';
+import { makeCommand } from './command';
 
 /**
- *
  * @returns チャットインターフェースコンポーネント
  */
-export const Chat = () => {
-  type ChatRoomMessage = TD.ChatRoomMessage;
-  const useSocket = () => {
-    const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(
-      null
-    );
-    const [userIdStr, setUserIdStr] = useState('');
-    const setter = (str: string) => {
-      setUserIdStr((prev) => {
-        if (prev === str.trim()) {
-          return prev;
-        }
-        const next = str.trim();
-        if (!next) {
-          return prev;
-        }
-        const userId = parseInt(next);
-        if (userId > 0) {
-          setMySocket((prev) => {
-            prev?.disconnect();
-            // すべてのstateをリセット
+export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
 
-            resetUserId();
-            resetVisibleRooms();
-            resetJoiningRooms();
-            resetFocusedRoomId();
-            resetMessagesInRoom();
-            resetMembersInRoom();
-            action.get_room_members(0);
-            action.get_room_message(0);
-            const socket = io('http://localhost:3000/chat', {
-              auth: (cb) => {
-                cb({
-                  // 本当はアクセストークンをここに記載する
-                  token:
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1NzE0NDc5LjIxNCwiZXhwIjoxNjY4MzA2NDc5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.YUQgpOc5xJvwYN4mRQyRTS4XSXBdx2EZL2SOLBI8Gw4',
-                  // token: "some_access_token"
-                  // 開発中はここにuserIdを書いてもよい
-                  // sub: userId,
-                });
-              },
-            });
-            return socket;
-          });
-          return next;
-        }
-        return prev;
-      });
-    };
-    return [userIdStr, setter, mySocket] as const;
-  };
-  const [userIdStr, setUserIdStr, mySocket] = useSocket();
-  useEffectOnce(() => setUserIdStr('1'));
-
-  const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
-  // 見えているチャットルームの一覧
-  const [visibleRooms, setVisibleRooms, resetVisibleRooms] =
-    useStateWithResetter<TD.ChatRoom[]>([]);
-  // join しているチャットルームの一覧
-  const [joiningRooms, setJoiningRooms, resetJoiningRooms] =
-    useStateWithResetter<TD.ChatRoom[]>([]);
-  // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId, resetFocusedRoomId] =
-    useStateWithResetter(-1);
-
-  /**
-   * チャットルーム内のメッセージのリスト
-   * TODO: もっとマシな方法ないの
-   */
-  const [messagesInRoom, setMessagesInRoom, resetMessagesInRoom] =
-    useStateWithResetter<{
-      [roomId: number]: ChatRoomMessage[];
-    }>({});
-  /**
-   * チャットルーム内のメンバーのマップ
-   */
-  const [membersInRoom, setMembersInRoom, resetMembersInRoom] =
-    useStateWithResetter<{
-      [roomId: number]: TD.UserRelationMap;
-    }>({});
+  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [visibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
+  const [messagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(userAtoms.membersInRoomAtom);
+  const [focusedRoomId, setFocusedRoomId] = useAtom(
+    userAtoms.focusedRoomIdAtom
+  );
+  const userId = personalData ? personalData.id : -1;
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
-
-  useEffect(() => {
-    mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
-      console.log('catch connection', data);
-      setUserId(data.userId);
-      setJoiningRooms(data.joiningRooms);
-      setVisibleRooms(data.visibleRooms);
-    });
-
-    mySocket?.on('ft_open', (data: TD.OpenResult) => {
-      console.log('catch open');
-      console.log(data);
-      const room: TD.ChatRoom = {
-        ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setVisibleRooms((prev) => {
-        const next = [...prev];
-        next.push(room);
-        return next;
-      });
-      if (room.ownerId === userId) {
-        setJoiningRooms((prev) => {
-          const next = [...prev];
-          next.push(room);
-          return next;
-        });
-      }
-    });
-
-    mySocket?.on('ft_say', (data: TD.SayResult) => {
-      const message = TD.Mapper.chatRoomMessage(data);
-      console.log('catch say');
-      const roomId = data.chatRoomId;
-      stateMutater.addMessagesToRoom(roomId, [message]);
-    });
-
-    mySocket?.on('ft_join', (data: TD.JoinResult) => {
-      console.log('catch join', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { chatRoom: room } = data.relation;
-      const user = data.user;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          const sameRoom = prev.find((r) => r.id === room.id);
-          if (sameRoom) {
-            return prev;
-          }
-          const newRoomList = [...prev];
-          newRoomList.push(room);
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
-      }
-    });
-
-    mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
-      console.log('catch leave', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { chatRoom: room } = data.relation;
-      const user = data.user;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
-          stateMutater.unfocusRoom(room.id);
-          const newRoomList = prev.filter((r) => r.id !== room.id);
-          if (newRoomList.length === prev.length) {
-            return prev;
-          }
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.removeMembersInRoom(room.id, user.id);
-      }
-    });
-
-    mySocket?.on('ft_kick', (data: TD.LeaveResult) => {
-      console.log('catch kick', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { room, user } = data;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
-          stateMutater.unfocusRoom(room.id);
-          const newRoomList = prev.filter((r) => r.id !== room.id);
-          if (newRoomList.length === prev.length) {
-            return prev;
-          }
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.removeMembersInRoom(room.id, user.id);
-      }
-    });
-
-    mySocket?.on('ft_nomminate', (data: TD.NomminateResult) => {
-      console.log('catch nomminate', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { relation, room, user } = data;
-      console.log(relation, room, user);
-      stateMutater.mergeMembersInRoom(room.id, { [user.id]: relation });
-    });
-
-    mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
-      console.log('catch get_room_messages');
-      const { id, messages } = data;
-      console.log(id, !!messages);
-      stateMutater.addMessagesToRoom(
-        id,
-        messages.map(TD.Mapper.chatRoomMessage)
-      );
-    });
-
-    mySocket?.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
-      console.log('catch get_room_members');
-      const { id, members } = data;
-      console.log(id, members);
-      stateMutater.mergeMembersInRoom(
-        id,
-        Utils.keyBy(members, (a) => `${a.userId}`)
-      );
-    });
-
-    return () => {
-      mySocket?.removeAllListeners();
-    };
-  });
 
   /**
    * チャットコマンド
    */
-  const command = {
-    open: (args: TD.OpenArgument) => {
-      const data = {
-        ...args,
-      };
-      console.log(data);
-      mySocket?.emit('ft_open', data);
-    },
-
-    join: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_join', data);
-    },
-
-    leave: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_leave', data);
-    },
-
-    say: (content: string) => {
-      if (!focusedRoomId) {
-        return;
-      }
-      const data = {
-        roomId: focusedRoomId,
-        content,
-      };
-      console.log(data);
-      mySocket?.emit('ft_say', data);
-    },
-
-    get_room_messages: (roomId: number) => {
-      const data = {
-        roomId,
-        take: 50,
-      };
-      console.log(['get_room_messages'], data);
-      mySocket?.emit('ft_get_room_messages', data);
-    },
-
-    get_room_members: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(['get_room_members'], data);
-      mySocket?.emit('ft_get_room_members', data);
-    },
-
-    nomminate: (member: TD.ChatUserRelation) => {
-      console.log('[nomminate]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_nomminate', data);
-    },
-
-    ban: (member: TD.ChatUserRelation) => {
-      console.log('[ban]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_ban', data);
-    },
-
-    kick: (member: TD.ChatUserRelation) => {
-      console.log('[kick]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_kick', data);
-    },
-
-    mute: (member: TD.ChatUserRelation) => {
-      console.log('[mute]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_mute', data);
-    },
-  };
+  const command = makeCommand(mySocket, focusedRoomId);
   const memberOperations: TD.MemberOperations = {
     onNomminateClick: command.nomminate,
     onBanClick: command.ban,
     onKickClick: command.kick,
     onMuteClick: command.mute,
-  };
-
-  /**
-   * ステート変更処理のラッパ
-   */
-  const stateMutater = {
-    // 指定したルームにフォーカス(フロントエンドで中身を表示)する
-    focusRoom: (roomId: number) => {
-      setFocusedRoomId((prev) => {
-        if (predicate.isFocusingTo(roomId)) {
-          // すでにフォーカスしている
-          console.log('[focusRoom] stay');
-          return prev;
-        }
-        // メッセージがないなら取得する
-        action.get_room_message(roomId);
-        // メンバー情報がないなら取得する
-        action.get_room_members(roomId);
-        return roomId;
-      });
-    },
-
-    // ルームへのフォーカスをやめる
-    unfocusRoom: (roomId: number) =>
-      setFocusedRoomId((prev) => {
-        console.log('unfocusing..');
-        if (prev === roomId) {
-          return -1;
-        } else {
-          return prev;
-        }
-      }),
-
-    // チャットルームにメッセージを追加する
-    // (メッセージは投稿時刻の昇順になる)
-    addMessagesToRoom: (roomId: number, newMessages: TD.ChatRoomMessage[]) => {
-      setMessagesInRoom((prev) => {
-        const next: { [roomId: number]: ChatRoomMessage[] } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = [...prev[key]];
-        });
-        if (!next[roomId]) {
-          next[roomId] = [];
-        }
-        const messages = next[roomId];
-        messages.push(...newMessages);
-        next[roomId] = Utils.sortBy(
-          Utils.uniqBy(messages, (m) => m.id),
-          (m) => m.createdAt
-        );
-        return next;
-      });
-    },
-
-    /**
-     * チャットルームにメンバーをマージする
-     * @param roomId
-     * @param newMembers
-     */
-    mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
-      setMembersInRoom((prev) => {
-        console.log(`mergeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: TD.UserRelationMap } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = prev[key] ? { ...prev[key] } : {};
-        });
-        if (!next[roomId]) {
-          next[roomId] = {};
-        }
-        const members = next[roomId];
-        Utils.keys(newMembers).forEach((key) => {
-          members[key] = newMembers[key];
-        });
-        console.log('[newMembers]', newMembers);
-        console.log('[prev]', prev);
-        console.log('[next]', next);
-        return next;
-      });
-    },
-
-    removeMembersInRoom: (roomId: number, userId: number) => {
-      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
-      setMembersInRoom((prev) => {
-        console.log(`removeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: TD.UserRelationMap } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = prev[key] ? { ...prev[key] } : {};
-        });
-        const members = next[roomId];
-        if (!members) {
-          return next;
-        }
-        console.log('removing member', userId, 'from', members);
-        delete members[userId];
-        console.log('members', members);
-        console.log(prev, next);
-        return next;
-      });
-    },
   };
 
   /**
@@ -491,21 +84,21 @@ export const Chat = () => {
    * 保持しているデータに対する参照
    */
   const store = {
-    count_message: (roomId: number) => {
+    countMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms) {
         return undefined;
       }
       return ms.length;
     },
-    room_messages: (roomId: number) => {
+    roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return [];
       }
       return ms;
     },
-    room_members: (roomId: number) => {
+    roomMembers: (roomId: number) => {
       const ms = membersInRoom[roomId];
       if (!ms) {
         return null;
@@ -519,266 +112,69 @@ export const Chat = () => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: useAction(0, (roomId) => {
+    get_room_message: (roomId: number) => {
       if (roomId > 0) {
-        if (!Utils.isfinite(store.count_message(roomId))) {
+        if (!Utils.isfinite(store.countMessages(roomId))) {
           command.get_room_messages(roomId);
         }
       }
-    })[0],
+    },
 
-    get_room_members: useAction(0, (roomId) => {
+    get_room_members: (roomId: number) => {
       if (roomId > 0) {
-        const mems = store.room_members(roomId);
+        const mems = store.roomMembers(roomId);
         if (!mems) {
           command.get_room_members(roomId);
         }
       }
-    })[0],
+    },
   };
 
   return (
     <div
-      style={{
-        height: '50em',
-        padding: '2px',
-        border: '1px solid useFetcher',
-        display: 'flex',
-        flexDirection: 'row',
-        width: '100%',
-      }}
+      className="flex w-full flex-row border-2 border-solid border-white p-2"
+      style={{ height: '50em' }}
     >
-      <div
-        className="vertical left"
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink-0 grow-0 flex-col">
         {/* 見えているチャットルーム */}
-        <div
-          className="room-list"
-          style={{
-            border: '1px solid white',
-            flexGrow: 1,
-            flexShrink: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <FTH3
-            style={{
-              flexGrow: 0,
-              flexShrink: 0,
-            }}
-          >
-            ChatRooms
-          </FTH3>
-          <div
-            style={{
-              padding: '2px',
-              flexGrow: 1,
-              flexShrink: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {visibleRooms.map((data: TD.ChatRoom) => {
-              return (
-                /* クリックしたルームにフォーカスを当てる */
-                <div
-                  className="room-list-element"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    padding: '2px',
-                    border: '1px solid white',
-                  }}
-                  key={data.id}
-                >
-                  <div
-                    className="joining-button"
-                    style={{
-                      flexGrow: 0,
-                      flexBasis: 0,
-                    }}
-                  >
-                    {predicate.isJoiningTo(data.id) ? (
-                      <FTButton
-                        className="bg-white text-black hover:bg-black hover:text-white"
-                        style={{ width: '4em' }}
-                        onClick={() => command.leave(data.id)}
-                      >
-                        Leave
-                      </FTButton>
-                    ) : (
-                      <FTButton
-                        style={{ width: '4em' }}
-                        onClick={() => command.join(data.id)}
-                      >
-                        Join
-                      </FTButton>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      flexGrow: 1,
-                      flexBasis: 1,
-                      padding: '4px',
-                      cursor: predicate.isJoiningTo(data.id)
-                        ? 'pointer'
-                        : 'unset',
-                      fontWeight: predicate.isJoiningTo(data.id)
-                        ? 'bold'
-                        : 'normal',
-                      ...(predicate.isFocusingTo(data.id)
-                        ? { borderLeft: '12px solid teal' }
-                        : {}),
-                    }}
-                    onClick={() => {
-                      if (predicate.isJoiningTo(data.id)) {
-                        stateMutater.focusRoom(data.id);
-                      }
-                    }}
-                  >
-                    {data.id} / {data.roomName}{' '}
-                    {(() => {
-                      const n = store.count_message(data.id);
-                      return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-                    })()}
-                  </div>
-                </div>
-              );
-            })}
+        <div className="flex shrink grow flex-col border-2 border-solid border-white">
+          <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+          <div className="flex shrink grow flex-col p-2">
+            <ChatRoomListView
+              rooms={visibleRooms}
+              isJoiningTo={predicate.isJoiningTo}
+              isFocusingTo={predicate.isFocusingTo}
+              countMessages={store.countMessages}
+              onJoin={command.join}
+              onLeave={command.leave}
+              onFocus={(roomId: number) => {
+                if (predicate.isJoiningTo(roomId)) {
+                  setFocusedRoomId(roomId);
+                  action.get_room_message(roomId);
+                  action.get_room_members(roomId);
+                }
+              }}
+            />
           </div>
         </div>
-        <div
-          style={{
-            border: '1px solid white',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
+        <div className="border-2 border-solid border-white">
           <OpenCard sender={command.open} />
-        </div>
-        <div
-          style={{
-            border: '1px solid white',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
-          <SelfCard currentUserIdStr={userIdStr} sender={setUserIdStr} />
         </div>
       </div>
 
-      <div
-        className="vertical right"
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink grow flex-col">
         {/* 今フォーカスしているルーム */}
         {!!computed.focusedRoom && (
-          <div
-            className="room-main"
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              border: '1px solid white',
-              padding: '2px',
-              height: '100%',
-            }}
-          >
-            <div
-              className="room-left-pane"
-              style={{
-                flexGrow: 1,
-                flexShrink: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden',
-              }}
-            >
-              {/* 今フォーカスしているルームのメッセージ */}
-              <div
-                className="room-message-list"
-                style={{
-                  border: '1px solid white',
-                  flexGrow: 1,
-                  flexShrink: 1,
-                  overflow: 'scroll',
-                }}
-              >
-                {store
-                  .room_messages(focusedRoomId)
-                  .map((data: TD.ChatRoomMessage) => (
-                    <ChatRoomMessageCard key={data.id} message={data} />
-                  ))}
-              </div>
-              <div
-                className="input-panel"
-                style={{
-                  padding: '2px',
-                  border: '1px solid white',
-                  flexGrow: 0,
-                  flexShrink: 0,
-                }}
-              >
-                {/* 今フォーカスしているルームへの発言 */}
-                <div
-                  style={{
-                    padding: '2px',
-                    border: '1px solid white',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <SayCard sender={command.say} />
-                </div>
-              </div>
-            </div>
-            <div
-              className="room-right-pane"
-              style={{
-                flexGrow: 0,
-                flexShrink: 0,
-                flexBasis: '20em',
-              }}
-            >
-              <ChatRoomMembersList
-                you={computed.you}
-                room={computed.focusedRoom}
-                members={store.room_members(focusedRoomId) || {}}
-                {...memberOperations}
-              />
-            </div>
-          </div>
+          <ChatRoomView
+            room={computed.focusedRoom}
+            memberOperations={memberOperations}
+            you={computed.you}
+            say={command.say}
+            roomMessages={store.roomMessages}
+            roomMembers={store.roomMembers}
+          />
         )}
       </div>
-      {/* <div
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          flexBasis: '20em',
-          overflow: 'scroll',
-        }}
-      >
-        <div>
-          <FTH4>visibleRoomList</FTH4>
-          {JSON.stringify(visibleRooms)}
-        </div>
-        <div>
-          <FTH4>joiningRoomList</FTH4>
-          {JSON.stringify(joiningRooms)}
-        </div>
-      </div> */}
     </div>
   );
 };
