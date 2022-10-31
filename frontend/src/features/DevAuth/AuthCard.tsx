@@ -1,5 +1,5 @@
 import { personalDataAtom } from '@/stores/atoms';
-import { loginBySelf, urlLoginFt } from '@/auth';
+import { loginBySelf, urlLoginFt } from '@/features/DevAuth/auth';
 import {
   FTH1,
   FTH3,

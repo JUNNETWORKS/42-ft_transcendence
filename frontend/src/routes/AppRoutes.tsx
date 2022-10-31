@@ -11,7 +11,7 @@ import {
 } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/auth';
+import { verifyCredential } from '@/features/DevAuth/auth';
 
 export const AppRoutes = () => {
   // 「ソケット」
