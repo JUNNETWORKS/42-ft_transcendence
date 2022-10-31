@@ -1,5 +1,3 @@
-import * as TD from '@/typedef';
-
 const validateDisplayName = (s: string) => {
   const trimmed = s.trim();
   if (!trimmed) {
