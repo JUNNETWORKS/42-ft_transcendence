@@ -43,7 +43,7 @@ const AnonymousCard = () => {
         className="flex w-72 cursor-pointer gap-x-6 bg-secondary"
         onClick={() => navigation('/auth')}
       >
-        LOGIN
+        <p className="flex w-72 items-center justify-center text-5xl">LOGIN</p>
       </div>
     </>
   );

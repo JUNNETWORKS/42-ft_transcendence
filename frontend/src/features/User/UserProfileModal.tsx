@@ -1,6 +1,7 @@
 import { authAtom } from '@/atoms/auth';
 import { useUpdateUser } from '@/atoms/store';
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
+import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
@@ -21,10 +22,11 @@ type InnerProp = Prop & {
   setPhase: (phase: Phase) => void;
 };
 
-const Edit = ({ user, setPhase, onClose }: InnerProp) => {
+const EditDisplayName = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [displayName, setDisplayName] = useState(user.displayName);
-  const errors = displayNameErrors(displayName);
+  const validationErrors = displayNameErrors(displayName);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
   const [state, submit] = useAPI('PATCH', `/me`, {
     payload: () => ({ displayName }),
@@ -32,7 +34,18 @@ const Edit = ({ user, setPhase, onClose }: InnerProp) => {
       const u = json as TD.User;
       updateOne(u.id, u);
       setPersonalData({ ...personalData!, ...u });
+      setNetErrors({});
       setPhase('Display');
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+          if (typeof json === 'object') {
+            setNetErrors(json);
+          }
+        });
+      }
     },
   });
   return (
@@ -49,7 +62,9 @@ const Edit = ({ user, setPhase, onClose }: InnerProp) => {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
             />
-            <div>{errors.displayName || '　'}</div>
+            <div className="text-red-400">
+              {validationErrors.displayName || netErrors.displayName || '　'}
+            </div>
           </div>
         </div>
       </div>
@@ -63,7 +78,7 @@ const Edit = ({ user, setPhase, onClose }: InnerProp) => {
         </FTButton>
         <FTButton
           className="mr-2 disabled:opacity-50"
-          disabled={errors.some || state !== 'Neutral'}
+          disabled={validationErrors.some || state === 'Fetching'}
           onClick={submit}
         >
           <InlineIcon i={<Icons.Save />} />
@@ -110,19 +125,21 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
 
 export const UserProfileModal = ({ user, onClose }: Prop) => {
   const [phase, setPhase] = useState<Phase>('Display');
-  const presentator = (() => {
+  const presentator = () => {
     switch (phase) {
       case 'Display':
         return <Display user={user} setPhase={setPhase} onClose={onClose} />;
       case 'Edit':
-        return <Edit user={user} setPhase={setPhase} onClose={onClose} />;
+        return (
+          <EditDisplayName user={user} setPhase={setPhase} onClose={onClose} />
+        );
       case 'EditPassword':
         return <></>;
     }
-  })();
+  };
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-      {presentator}
+      {presentator()}
     </div>
   );
 };

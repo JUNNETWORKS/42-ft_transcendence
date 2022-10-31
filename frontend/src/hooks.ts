@@ -2,6 +2,7 @@ import { useAtom } from 'jotai';
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { storedCredentialAtom } from './atoms/auth';
+import { APIError } from './errors/APIError';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -51,27 +52,19 @@ export const useFetch = (
     const doFetch = async () => {
       try {
         const result = await fetcher();
-        if (result.ok) {
-          setState('Fetched');
-          onFetched(result);
+        if (!result.ok) {
+          throw new APIError(result.statusText, result);
         }
+        setState('Fetched');
+        onFetched(result);
       } catch (e) {
-        console.error(e);
         setState('Failed');
         if (onFailed) {
           onFailed(e);
         }
       }
     };
-    try {
-      doFetch();
-    } catch (e) {
-      console.error(e);
-      setState('Failed');
-      if (onFailed) {
-        onFailed(e);
-      }
-    }
+    doFetch();
   }, [state]);
   const submit = () => setState('Fetching');
   const neutralize = () => {
