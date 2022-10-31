@@ -15,7 +15,7 @@ export type Vector2d = {
 };
 
 export type Player = {
-  id: string; // WebSocket ID
+  id: number; // User.id
   side: PlayerSide; // ゲームの右左どちら側か
   score: number; // 現在のスコア
   bar: Rectangle;

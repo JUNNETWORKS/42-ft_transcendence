@@ -24,7 +24,7 @@ export class OnlineMatch {
     this.wsServer = wsServer;
     this.ID = uuidv4();
     this.roomName = generateFullRoomName({ matchId: this.ID });
-    this.match = new Match('', '');
+    this.match = new Match(0, 0);
     this.gameStateSyncTimer = setInterval(() => {
       this.match.update();
 
@@ -47,37 +47,37 @@ export class OnlineMatch {
 
   // マッチにプレイヤーとして参加 (先着2名)
   // TODO: 2人プレイのテスト用で作成している関数｡後で消す｡
-  joinAsPlayer(client: Socket) {
+  joinAsPlayer(playerID: number) {
     if (
-      this.match.players[0].id === client.id ||
-      this.match.players[1].id === client.id
+      this.match.players[0].id === playerID ||
+      this.match.players[1].id === playerID
     ) {
       // すでにプレイヤーとして参加済み
       return;
     }
 
-    if (this.match.players[0].id === '') {
-      console.log(`session#${client.id} has joined as player1!\n`);
-      this.match.players[0].id = client.id;
-    } else if (this.match.players[1].id === '') {
-      this.match.players[1].id = client.id;
-      console.log(`session#${client.id} has joined as player2!\n`);
+    if (this.match.players[0].id === 0) {
+      console.log(`session#${playerID} has joined as player1!\n`);
+      this.match.players[0].id = playerID;
+    } else if (this.match.players[1].id === 0) {
+      this.match.players[1].id = playerID;
+      console.log(`session#${playerID} has joined as player2!\n`);
     }
   }
 
   // プレイヤーが退出した際の処理
-  leave(client: Socket) {
-    if (this.match.players[0].id === client.id) {
-      console.log(`player1#${client.id} has left!\n`);
-      this.match.players[0].id = '';
-    } else if (this.match.players[1].id === client.id) {
-      console.log(`player2#${client.id} has left!\n`);
-      this.match.players[1].id = '';
+  leave(playerID: number) {
+    if (this.match.players[0].id === playerID) {
+      console.log(`player1#${playerID} has left!\n`);
+      this.match.players[0].id = 0;
+    } else if (this.match.players[1].id === playerID) {
+      console.log(`player2#${playerID} has left!\n`);
+      this.match.players[1].id = 0;
     }
   }
 
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
-  moveBar(playerID: string, playerAction: PlayerInput) {
+  moveBar(playerID: number, playerAction: PlayerInput) {
     this.match.moveBar(playerID, playerAction);
   }
 
