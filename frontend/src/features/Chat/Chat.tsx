@@ -1,102 +1,49 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { io } from 'socket.io-client';
 import * as TD from './typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3, FTH4 } from '../../components/FTBasicComponents';
+import { FTButton, FTH3 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useStateWithResetter, useAction, useEffectOnce } from '../../hooks';
-import { SayCard, OpenCard, SelfCard } from '../../components/CommandCard';
+import { useAction } from '../../hooks';
+import { SayCard, OpenCard } from '../../components/CommandCard';
+import { useAtom } from 'jotai';
+import { personalDataAtom } from '@/stores/atoms';
 
 /**
  *
  * @returns チャットインターフェースコンポーネント
  */
-export const Chat = () => {
+export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   type ChatRoomMessage = TD.ChatRoomMessage;
-  const useSocket = () => {
-    const [mySocket, setMySocket] = useState<ReturnType<typeof io> | null>(
-      null
-    );
-    const [userIdStr, setUserIdStr] = useState('');
-    const setter = (str: string) => {
-      setUserIdStr((prev) => {
-        if (prev === str.trim()) {
-          return prev;
-        }
-        const next = str.trim();
-        if (!next) {
-          return prev;
-        }
-        const userId = parseInt(next);
-        if (userId > 0) {
-          setMySocket((prev) => {
-            prev?.disconnect();
-            // すべてのstateをリセット
-
-            resetUserId();
-            resetVisibleRooms();
-            resetJoiningRooms();
-            resetFocusedRoomId();
-            resetMessagesInRoom();
-            resetMembersInRoom();
-            action.get_room_members(0);
-            action.get_room_message(0);
-            const socket = io('http://localhost:3000/chat', {
-              auth: (cb) => {
-                cb({
-                  // 本当はアクセストークンをここに記載する
-                  token:
-                    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Inlva2F3YWRhQHN0dWRlbnQuNDJ0b2t5by5qcCIsInN1YiI6NSwiaWF0IjoxNjY1NzE0NDc5LjIxNCwiZXhwIjoxNjY4MzA2NDc5LCJhdWQiOiJ0cmExMDAwIiwiaXNzIjoidHJhMTAwMCJ9.YUQgpOc5xJvwYN4mRQyRTS4XSXBdx2EZL2SOLBI8Gw4',
-                  // token: "some_access_token"
-                  // 開発中はここにuserIdを書いてもよい
-                  // sub: userId,
-                });
-              },
-            });
-            return socket;
-          });
-          return next;
-        }
-        return prev;
-      });
-    };
-    return [userIdStr, setter, mySocket] as const;
-  };
-  const [userIdStr, setUserIdStr, mySocket] = useSocket();
-  useEffectOnce(() => setUserIdStr('1'));
-
-  const [userId, setUserId, resetUserId] = useStateWithResetter(-1);
+  const { mySocket } = props;
+  const [personalData] = useAtom(personalDataAtom);
+  const userId = personalData ? personalData.id : -1;
   // 見えているチャットルームの一覧
-  const [visibleRooms, setVisibleRooms, resetVisibleRooms] =
-    useStateWithResetter<TD.ChatRoom[]>([]);
+  const [visibleRooms, setVisibleRooms] = useState<TD.ChatRoom[]>([]);
   // join しているチャットルームの一覧
-  const [joiningRooms, setJoiningRooms, resetJoiningRooms] =
-    useStateWithResetter<TD.ChatRoom[]>([]);
+  const [joiningRooms, setJoiningRooms] = useState<TD.ChatRoom[]>([]);
   // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId, resetFocusedRoomId] =
-    useStateWithResetter(-1);
+  const [focusedRoomId, setFocusedRoomId] = useState(-1);
 
   /**
    * チャットルーム内のメッセージのリスト
    * TODO: もっとマシな方法ないの
    */
-  const [messagesInRoom, setMessagesInRoom, resetMessagesInRoom] =
-    useStateWithResetter<{
-      [roomId: number]: ChatRoomMessage[];
-    }>({});
+  const [messagesInRoom, setMessagesInRoom] = useState<{
+    [roomId: number]: ChatRoomMessage[];
+  }>({});
   /**
    * チャットルーム内のメンバーのマップ
    */
-  const [membersInRoom, setMembersInRoom, resetMembersInRoom] =
-    useStateWithResetter<{
-      [roomId: number]: TD.UserRelationMap;
-    }>({});
+  const [membersInRoom, setMembersInRoom] = useState<{
+    [roomId: number]: TD.UserRelationMap;
+  }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   useEffect(() => {
+    console.log('mySocket?', !!mySocket);
     mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
       console.log('catch connection', data);
-      setUserId(data.userId);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
     });
@@ -663,15 +610,6 @@ export const Chat = () => {
         >
           <OpenCard sender={command.open} />
         </div>
-        <div
-          style={{
-            border: '1px solid white',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
-          <SelfCard currentUserIdStr={userIdStr} sender={setUserIdStr} />
-        </div>
       </div>
 
       <div
@@ -762,23 +700,6 @@ export const Chat = () => {
           </div>
         )}
       </div>
-      {/* <div
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          flexBasis: '20em',
-          overflow: 'scroll',
-        }}
-      >
-        <div>
-          <FTH4>visibleRoomList</FTH4>
-          {JSON.stringify(visibleRooms)}
-        </div>
-        <div>
-          <FTH4>joiningRoomList</FTH4>
-          {JSON.stringify(joiningRooms)}
-        </div>
-      </div> */}
     </div>
   );
 };

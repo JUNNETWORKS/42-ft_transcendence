@@ -1,3 +1,5 @@
+import { personalDataAtom } from '@/stores/atoms';
+import { loginBySelf, urlLoginFt } from '@/features/DevAuth/auth';
 import {
   FTH1,
   FTH3,
@@ -6,41 +8,39 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
-import { UserPersonalData } from '@/types';
+import { useAtom } from 'jotai';
 import { useState } from 'react';
 
-const apiHost = `http://localhost:3000`;
+export type UserPersonalData = {
+  id: number;
+  email: string;
+  displayName: string;
+};
 
+/**
+ * 42認証用のフォーム
+ * ボタンが1つあるだけ
+ */
 const FtAuthForm = () => (
-  <form method="POST" action={`${apiHost}/auth/login_ft`}>
+  <form method="POST" action={urlLoginFt}>
     <FTSubmit className="hover:bg-white hover:text-black" value="Login" />
   </form>
 );
 
+/**
+ * 自己申告認証用のフォーム
+ */
 const SelfAuthForm = (props: {
-  finalizer: (token: string, user: any) => void;
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
   type Phase = 'Ready' | 'NotReady' | 'Working';
-  // 状態遷移
+  // 内部状態
   // - ボタン押せる
   // - ボタン押せない
   // - ボタン押してる
   const [phase, setPhase] = useState<Phase>('NotReady');
-
-  const sender = async (s: string) => {
-    const url = `${apiHost}/auth/self/${s}`;
-    const result = await fetch(url, {
-      method: 'GET',
-      mode: 'cors',
-    });
-    if (result.ok) {
-      const json = await result.json();
-      console.log('json', json);
-      const { access_token: token, user } = json;
-      props.finalizer(token, user);
-    }
-  };
 
   const validator = (s: string) => {
     if (!s) {
@@ -59,7 +59,7 @@ const SelfAuthForm = (props: {
   const click = async () => {
     try {
       setPhase('Working');
-      await sender(userIdStr);
+      await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
@@ -90,8 +90,12 @@ const SelfAuthForm = (props: {
   );
 };
 
-export const DevAuthLogin = (props: {
-  finalizer: (token: string, user: any) => void;
+/**
+ * 各種認証フォームをまとめたUI
+ */
+export const DevAuthLoginCard = (props: {
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
 }) => {
   return (
     <>
@@ -106,7 +110,10 @@ export const DevAuthLogin = (props: {
         </div>
         <FTH3>By Self</FTH3>
         <div className="text-center">
-          <SelfAuthForm finalizer={props.finalizer} />
+          <SelfAuthForm
+            onSucceeded={props.onSucceeded}
+            onFailed={props.onFailed}
+          />
         </div>
         <FTH3>By Email / Password</FTH3>
         <div></div>
@@ -115,23 +122,26 @@ export const DevAuthLogin = (props: {
   );
 };
 
-export const DevAuthenticated = (props: {
-  personalData: UserPersonalData;
-  onLogout?: () => void;
-}) => {
+/**
+ * 認証済み状態で表示されるUI
+ */
+export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
+  const [personalData] = useAtom(personalDataAtom);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         You&apos;re Authenticated.
       </FTH1>
-      <div className="flex flex-col gap-2">
-        <FTH4>id</FTH4>
-        <div>{props.personalData.id}</div>
-        <FTH4>name</FTH4>
-        <div>{props.personalData.displayName}</div>
-        <FTH4>email</FTH4>
-        <div>{props.personalData.email}</div>
-      </div>
+      {personalData && (
+        <div className="flex flex-col gap-2">
+          <FTH4>id</FTH4>
+          <div>{personalData.id}</div>
+          <FTH4>name</FTH4>
+          <div>{personalData.displayName}</div>
+          <FTH4>email</FTH4>
+          <div>{personalData.email}</div>
+        </div>
+      )}
       <br />
       <div className="flex flex-col gap-2">
         <FTH4>Logout?</FTH4>
@@ -149,7 +159,10 @@ export const DevAuthenticated = (props: {
   );
 };
 
-export const DevAuthValidating = () => {
+/**
+ * 各種検証作業中に表示されるUI
+ */
+export const DevAuthValidatingCard = () => {
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
