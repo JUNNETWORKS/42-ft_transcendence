@@ -1,5 +1,5 @@
-import { personalDataAtom } from '@/atoms';
-import { loginByPassword, loginBySelf, urlLoginFt } from '@/auth';
+import { personalDataAtom } from '@/stores/atoms';
+import { loginByPassword, loginBySelf, urlLoginFt } from './auth';
 import {
   FTH1,
   FTH3,
@@ -42,7 +42,7 @@ const SelfAuthForm = (props: {
   // - ボタン押してる
   const [phase, setPhase] = useState<Phase>('NotReady');
 
-  const validateUserIdStr = (s: string) => {
+  const validator = (s: string) => {
     if (!s) {
       return 'empty?';
     }
@@ -70,7 +70,7 @@ const SelfAuthForm = (props: {
     if (phase === 'Working') {
       return null;
     }
-    return validateUserIdStr(userIdStr);
+    return validator(userIdStr);
   })();
 
   return (
