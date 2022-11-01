@@ -1,4 +1,4 @@
-import { UserPersonalData } from '@/components/AuthCard';
+import { UserPersonalData } from '@/features/DevAuth/AuthCard';
 import { FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
