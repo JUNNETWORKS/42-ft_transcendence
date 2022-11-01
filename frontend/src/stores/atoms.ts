@@ -1,9 +1,12 @@
 import { atom } from 'jotai';
-import { UserPersonalData } from '@/components/AuthCard';
-import { AppCredential } from './hooks';
+import { UserPersonalData } from '@/features/DevAuth/AuthCard';
+import { AppCredential } from '@/hooks';
 import { io } from 'socket.io-client';
-import { AuthenticationFlowState, urlChatSocket } from './auth';
-import * as TD from './typedef';
+import {
+  AuthenticationFlowState,
+  urlChatSocket,
+} from '@/features/DevAuth/auth';
+import * as TD from '@/typedef';
 
 /**
  * 認証フロー状態のAtom

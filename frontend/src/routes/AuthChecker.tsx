@@ -1,7 +1,11 @@
-import { authFlowStateAtom, storedCredentialAtom, userAtoms } from '@/atoms';
+import {
+  authFlowStateAtom,
+  storedCredentialAtom,
+  userAtoms,
+} from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/auth';
+import { verifyCredential } from '@/features/DevAuth/auth';
 
 export const AuthChecker = () => {
   // 認証フローのチェックと状態遷移

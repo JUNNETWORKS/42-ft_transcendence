@@ -3,7 +3,7 @@ import {
   chatSocketFromCredential,
   storedCredentialAtom,
   userAtoms,
-} from '@/atoms';
+} from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '../typedef';
