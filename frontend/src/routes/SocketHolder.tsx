@@ -1,4 +1,9 @@
-import { chatSocketAtom, userAtoms } from '@/atoms';
+import {
+  chatSocketAtom,
+  chatSocketFromCredential,
+  storedCredentialAtom,
+  userAtoms,
+} from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '../typedef';
@@ -8,17 +13,25 @@ import { useUpdateUser } from '@/store';
 export const SocketHolder = () => {
   // 「ソケット」
   // 認証されていない場合はnull
-  const [mySocket] = useAtom(chatSocketAtom);
+  const [mySocket, setMySocket] = useAtom(chatSocketAtom);
+  const [credential] = useAtom(storedCredentialAtom);
 
   // 認証フローのチェックと状態遷移
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [userId] = useAtom(userAtoms.userIdAtom);
   const setVisibleRooms = useAtom(userAtoms.visibleRoomsAtom)[1];
   const setJoiningRooms = useAtom(userAtoms.joiningRoomsAtom)[1];
   const [friends, setFriends] = useAtom(userAtoms.friends);
   const setFocusedRoomId = useAtom(userAtoms.focusedRoomIdAtom)[1];
   const setMessagesInRoom = useAtom(userAtoms.messagesInRoomAtom)[1];
   const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
-  const userId = personalData ? personalData.id : -1;
+
+  useEffect(() => {
+    if (mySocket) {
+      mySocket.close();
+    }
+    setMySocket(chatSocketFromCredential(credential));
+    // personalData を監視すると名前などの変更に反応するので, userId を監視する
+  }, [userId]);
 
   const userUpdator = useUpdateUser();
 

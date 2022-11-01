@@ -1,4 +1,4 @@
-import { userAtoms } from '@/atoms';
+import { userAtoms } from '@/stores/atoms';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAtom } from 'jotai';
 import { Link, useRoutes } from 'react-router-dom';

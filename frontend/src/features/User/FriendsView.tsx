@@ -1,4 +1,4 @@
-import { userAtoms } from '@/atoms';
+import { userAtoms } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';

@@ -1,4 +1,4 @@
-import { chatSocketAtom, userAtoms } from '@/atoms';
+import { chatSocketAtom, userAtoms } from '@/stores/atoms';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAction } from '@/hooks';
 import { useUserData } from '@/store';

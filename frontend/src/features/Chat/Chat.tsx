@@ -7,7 +7,7 @@ import { ChatRoomView } from './RoomView';
 import { useAction } from '@/hooks';
 import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
-import { userAtoms } from '@/atoms';
+import { userAtoms } from '@/stores/atoms';
 import { ChatRoomListView } from './RoomList';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {

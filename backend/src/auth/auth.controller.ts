@@ -6,6 +6,7 @@ import {
   Request,
   Param,
   ParseIntPipe,
+  HttpException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -36,7 +37,10 @@ export class AuthController {
   @Get('session')
   async session(@Request() req: any) {
     const user = await this.usersService.findOne(req.user.id);
-    return Utils.pick(user!, 'id', 'displayName', 'email');
+    if (!user) {
+      throw new HttpException('No User', 401);
+    }
+    return Utils.pick(user, 'id', 'displayName', 'email');
   }
 
   @UseGuards(FtAuthGuard)

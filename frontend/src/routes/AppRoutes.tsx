@@ -3,12 +3,10 @@ import { Chat } from '@/features/Chat/Chat';
 import { Pong } from '@/features/Pong/components/Pong';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { chatSocketAtom } from '@/atoms';
+import { chatSocketAtom } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
 import { MyPageView } from '@/features/User/MyPage';
-import { SocketHolder } from './SocketHolder';
-import { AuthChecker } from './AuthChecker';
 
 export const AppRoutes = () => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -24,11 +22,5 @@ export const AppRoutes = () => {
   ];
   const routeElements = useRoutes([...commonRoutes]);
 
-  return (
-    <>
-      <AuthChecker />
-      <SocketHolder />
-      {routeElements}
-    </>
-  );
+  return <>{routeElements}</>;
 };

@@ -1,4 +1,4 @@
-import { GameSettings } from './game-settings';
+import { GameSettings } from './types/game-settings';
 import {
   Ball,
   Player,
@@ -7,12 +7,10 @@ import {
   PlayerSide,
   Vector2d,
   Rectangle,
-  makeFullRectangle,
   FullRectangle,
-  makeEdge,
-  areRangesOverlap,
-} from './game-state';
+} from './types/game-state';
 
+// ゲームの状態､更新のみに責任を持つ｡
 export class Match {
   // field
   readonly fieldWidth = 1920;
@@ -31,11 +29,11 @@ export class Match {
   ball: Ball;
   players: [Player, Player];
 
-  constructor(sessionID1: string, sessionID2: string) {
+  constructor(playerID1: string, playerID2: string) {
     this.ball = this.regenerateBall();
     this.players = [
       {
-        id: sessionID1,
+        id: playerID1,
         side: 'left',
         score: 0,
         bar: {
@@ -54,7 +52,7 @@ export class Match {
         },
       },
       {
-        id: sessionID2,
+        id: playerID2,
         side: 'right',
         score: 0,
         bar: {
@@ -87,6 +85,12 @@ export class Match {
       position,
       velocity,
     };
+  };
+
+  // ballとバーの位置を更新する
+  update = (): void => {
+    this.updateBall();
+    this.updateBar();
   };
 
   // ball の位置を更新する
@@ -221,17 +225,13 @@ export class Match {
     this.ball.position.y += this.ballDy * this.ball.velocity.y;
   };
 
-  // sessionID のバーをdir方向に動かす
-  moveBar = (sessionID: string, input: PlayerInput): void => {
-    // const idx = this.getPlayerIdx(sessionID);
-    // if (idx < 0) {
-    //   return;
-    // }
-    // this.players[idx].input = input;
-    // デバッグ用に両方のプレイヤーに操作を反映する
-    for (let idx = 0; idx < 2; idx++) {
-      this.players[idx].input = input;
+  // playerID のバーをdir方向に動かす
+  moveBar = (playerID: string, input: PlayerInput): void => {
+    const idx = this.getPlayerIdx(playerID);
+    if (idx < 0) {
+      return;
     }
+    this.players[idx].input = input;
   };
 
   // 現在のプレイヤーのキー入力をもとにバーの位置を更新する
@@ -317,9 +317,9 @@ export class Match {
     };
   };
 
-  private getPlayerIdx = (sessionID: string): number => {
+  private getPlayerIdx = (playerID: string): number => {
     for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].id == sessionID) {
+      if (this.players[i].id == playerID) {
         return i;
       }
     }
@@ -351,4 +351,65 @@ export class Match {
     }
     return false;
   };
+}
+
+function makeFullRectangle(rect: Rectangle): FullRectangle {
+  return {
+    topLeft: {
+      ...rect.topLeft,
+    },
+    bottomRight: {
+      ...rect.bottomRight,
+    },
+    topRight: {
+      x: rect.bottomRight.x,
+      y: rect.topLeft.y,
+    },
+    bottomLeft: {
+      x: rect.topLeft.x,
+      y: rect.bottomRight.y,
+    },
+  };
+}
+
+/**
+ * FullRectangle から, 上下左右のうち指定した辺を表す要素数2の配列を返す
+ * (ただしx成分かy成分のみ)
+ * @param rect
+ * @param xy
+ * @param dir
+ * @returns
+ */
+function makeEdge(
+  rect: FullRectangle,
+  xy: 'x' | 'y',
+  dir: 'top' | 'bottom' | 'left' | 'right'
+): [number, number] {
+  switch (dir) {
+    case 'top':
+      return sort2array([rect.topLeft[xy], rect.topRight[xy]]);
+    case 'bottom':
+      return sort2array([rect.bottomLeft[xy], rect.bottomRight[xy]]);
+    case 'left':
+      return sort2array([rect.topLeft[xy], rect.bottomLeft[xy]]);
+    case 'right':
+      return sort2array([rect.topRight[xy], rect.bottomRight[xy]]);
+  }
+}
+
+/**
+ * 2つの区間`range1`, `range2`が共通部分を持つかどうか(exclusive)を返す
+ * @param range1
+ * @param range2
+ * @returns
+ */
+function areRangesOverlap(range1: [number, number], range2: [number, number]) {
+  return !(range1[1] < range2[0] || range2[1] < range1[0]);
+}
+
+function sort2array<T>(arr2: [T, T]): [T, T] {
+  if (arr2[0] > arr2[1]) {
+    return [arr2[1], arr2[0]];
+  }
+  return [...arr2];
 }
