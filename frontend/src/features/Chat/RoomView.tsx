@@ -186,7 +186,7 @@ export const ChatRoomView = (props: {
   const openModal = () => {
     setIsOpen(true);
   };
-  console.log(props);
+  const TypeIcon = RoomTypeIcon[props.room.roomType];
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
@@ -202,7 +202,7 @@ export const ChatRoomView = (props: {
         <div className="flex h-full shrink grow flex-col overflow-hidden">
           {/* タイトルバー */}
           <FTH3>
-            <InlineIcon i={<RoomTypeIcon roomType={props.room.roomType} />} />
+            <InlineIcon i={<TypeIcon />} />
             {props.room.roomName}
             {!isOwner ? (
               <></>
