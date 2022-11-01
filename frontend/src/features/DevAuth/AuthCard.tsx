@@ -35,12 +35,8 @@ const SelfAuthForm = (props: {
   onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
-  type Phase = 'Ready' | 'NotReady' | 'Working';
-  // 内部状態
-  // - ボタン押せる
-  // - ボタン押せない
-  // - ボタン押してる
-  const [phase, setPhase] = useState<Phase>('NotReady');
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
 
   const validator = (s: string) => {
     if (!s) {
@@ -58,20 +54,15 @@ const SelfAuthForm = (props: {
 
   const click = async () => {
     try {
-      setPhase('Working');
+      setPhase('Fetching');
       await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
-    setPhase('Ready');
+    setPhase('Neutral');
   };
 
-  const errorMessage = (() => {
-    if (phase === 'Working') {
-      return null;
-    }
-    return validator(userIdStr);
-  })();
+  const errorMessage = validator(userIdStr);
 
   return (
     <>
@@ -82,7 +73,10 @@ const SelfAuthForm = (props: {
         value={userIdStr}
         onChange={(e) => setUserIdStr(e.target.value)}
       />
-      <FTButton disabled={!!errorMessage} onClick={() => click()}>
+      <FTButton
+        disabled={!!errorMessage || phase === 'Fetching'}
+        onClick={() => click()}
+      >
         Force Login
       </FTButton>
       <div>{errorMessage}</div>
@@ -99,12 +93,8 @@ const PasswordAuthForm = (props: {
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  type Phase = 'Ready' | 'NotReady' | 'Working';
-  // 内部状態
-  // - ボタン押せる
-  // - ボタン押せない
-  // - ボタン押してる
-  const [phase, setPhase] = useState<Phase>('NotReady');
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
 
   const validateEmail = (s: string) => {
     const trimmed = s.trim();
@@ -128,28 +118,17 @@ const PasswordAuthForm = (props: {
 
   const click = async () => {
     try {
-      setPhase('Working');
+      setPhase('Fetching');
       await loginByPassword(email, password, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
-    setPhase('Ready');
+    setPhase('Neutral');
   };
 
-  const emailErrorMessage = (() => {
-    if (phase === 'Working') {
-      return null;
-    }
-    return validateEmail(email);
-  })();
-  const passwordErrorMessage = (() => {
-    if (phase === 'Working') {
-      return null;
-    }
-    return validatePassword(password);
-  })();
-
-  const isClickable = !!emailErrorMessage || !!passwordErrorMessage;
+  const emailErrorMessage = validateEmail(email);
+  const passwordErrorMessage = validatePassword(password);
+  const isValid = !emailErrorMessage && !passwordErrorMessage;
 
   return (
     <div className="grid grid-flow-row justify-center">
@@ -175,7 +154,7 @@ const PasswordAuthForm = (props: {
         <div>{passwordErrorMessage || '　'}</div>
       </div>
       <div>
-        <FTButton disabled={isClickable} onClick={click}>
+        <FTButton disabled={!isValid || phase === 'Fetching'} onClick={click}>
           Login
         </FTButton>
       </div>
