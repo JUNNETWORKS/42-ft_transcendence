@@ -1,20 +1,28 @@
-import { atom, useAtom } from 'jotai';
-import { UserPersonalData } from '@/components/AuthCard';
-import { AppCredential } from './hooks';
+import { atom } from 'jotai';
+import { UserPersonalData } from '@/features/DevAuth/AuthCard';
+import { AppCredential } from '@/hooks';
 import { io } from 'socket.io-client';
-import { AuthenticationFlowState, urlChatSocket } from './auth';
-import * as TD from './typedef';
+import {
+  AuthenticationFlowState,
+  urlChatSocket,
+} from '@/features/DevAuth/auth';
+import * as TD from '@/typedef';
 
 /**
  * 認証フロー状態のAtom
  */
 export const authFlowStateAtom = atom<AuthenticationFlowState>('Neutral');
 
+const personalDataAtom = atom<UserPersonalData | null>(null);
 export const userAtoms = {
   /**
    * ユーザデータのAtom
    */
-  personalDataAtom: atom<UserPersonalData | null>(null),
+  personalDataAtom,
+  userIdAtom: atom<number>((get) => {
+    const pd: UserPersonalData | null = get(personalDataAtom);
+    return pd ? pd.id : -1;
+  }),
 
   // 見えているチャットルームの一覧
   visibleRoomsAtom: atom<TD.ChatRoom[]>([]),
@@ -82,7 +90,7 @@ export const storedCredentialAtom = atom(
   }
 );
 
-const chatSocketFromCredential = (credential: AppCredential | null) => {
+export const chatSocketFromCredential = (credential: AppCredential | null) => {
   if (!credential) {
     return null;
   }
@@ -95,6 +103,4 @@ const chatSocketFromCredential = (credential: AppCredential | null) => {
 /**
  * ユーザに紐づくチャットWSのAtom
  */
-export const chatSocketAtom = atom((get) =>
-  chatSocketFromCredential(get(storedCredentialAtom))
-);
+export const chatSocketAtom = atom<ReturnType<typeof io> | null>(null);
