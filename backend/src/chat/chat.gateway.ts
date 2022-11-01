@@ -1,4 +1,3 @@
-import { JwtService } from '@nestjs/jwt';
 import {
   MessageBody,
   ConnectedSocket,
@@ -8,7 +7,6 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { jwtConstants } from 'src/auth/auth.constants';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members';
 import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message';
@@ -32,6 +30,7 @@ import {
 } from 'src/utils/socket/SocketRoom';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
+import { AuthService } from 'src/auth/auth.service';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -52,8 +51,8 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
-    private readonly jwtService: JwtService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly authService: AuthService
   ) {}
 
   /**
@@ -61,7 +60,7 @@ export class ChatGateway implements OnGatewayConnection {
    * @param client
    */
   async handleConnection(@ConnectedSocket() client: Socket) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -128,7 +127,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationOpenDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -173,7 +172,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationSayDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -224,7 +223,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationJoinDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -316,7 +315,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationLeaveDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -360,7 +359,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationNomminateDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -418,7 +417,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationKickDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -475,7 +474,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationBanDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -528,7 +527,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationMuteDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -585,7 +584,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationGetRoomMessageDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -617,7 +616,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationGetRoomMembersDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -640,7 +639,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationFollowDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -691,7 +690,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationUnfollowDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.trapAuth(client);
+    const user = await this.authService.trapAuth(client);
     if (!user) {
       return;
     }
@@ -735,41 +734,6 @@ export class ChatGateway implements OnGatewayConnection {
         userId: targetId,
       }
     );
-  }
-
-  //TODO 外部に出したい
-  private async trapAuth(client: Socket) {
-    if (client.handshake.auth) {
-      const { token, sub } = client.handshake.auth;
-      // token による認証
-      if (token) {
-        const verified = this.jwtService.verify(token, {
-          secret: jwtConstants.secret,
-        });
-        // console.log(verified);
-        const decoded = this.jwtService.decode(token);
-        if (decoded && typeof decoded === 'object') {
-          const sub = decoded['sub'];
-          if (sub) {
-            const userId = parseInt(sub);
-            const user = await this.usersService.findOne(userId);
-            if (user) {
-              return user;
-            }
-          }
-        }
-      }
-      // subによる認証スキップ
-      // TODO: 提出時には絶対に除去すること!!!!
-      if (sub) {
-        const userId = parseInt(sub);
-        const user = await this.usersService.findOne(userId);
-        if (user) {
-          return user;
-        }
-      }
-    }
-    return null;
   }
 
   private socketsInUserChannel(userId: number) {
