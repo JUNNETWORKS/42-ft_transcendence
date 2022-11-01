@@ -1,5 +1,9 @@
 export const jwtConstants = {
-  secret: process.env.AUTH_JWT_SECRET,
+  secret: process.env.AUTH_JWT_SECRET!,
+};
+
+export const passwordConstants = {
+  secret: process.env.AUTH_HMAC_SECRET!,
 };
 
 export const ftConstants = {
@@ -8,9 +12,9 @@ export const ftConstants = {
   // 認可コードをアクセストークンに交換するためのURL
   tokenURL: 'https://api.intra.42.fr/oauth/token',
   // TODO: .envファイルに出す
-  clientID: process.env.AUTH_FT_CLIENT_ID,
+  clientID: process.env.AUTH_FT_CLIENT_ID!,
   // TODO: .envファイルに出す
-  clientSecret: process.env.AUTH_FT_CLIENT_SECRET,
+  clientSecret: process.env.AUTH_FT_CLIENT_SECRET!,
   // callbackURL: 'http://localhost:3000/auth/callback_ft',
   callbackURL: 'http://localhost:5173/auth',
 };

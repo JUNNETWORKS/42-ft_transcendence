@@ -27,4 +27,7 @@ export class CreateUserDto {
   @IsInt()
   @ApiProperty()
   intraId!: number;
+
+  @IsString()
+  password!: string;
 }

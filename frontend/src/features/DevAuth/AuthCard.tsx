@@ -1,5 +1,5 @@
 import { personalDataAtom } from '@/stores/atoms';
-import { loginBySelf, urlLoginFt } from '@/features/DevAuth/auth';
+import { loginByPassword, loginBySelf, urlLoginFt } from './auth';
 import {
   FTH1,
   FTH3,
@@ -35,12 +35,8 @@ const SelfAuthForm = (props: {
   onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
-  type Phase = 'Ready' | 'NotReady' | 'Working';
-  // 内部状態
-  // - ボタン押せる
-  // - ボタン押せない
-  // - ボタン押してる
-  const [phase, setPhase] = useState<Phase>('NotReady');
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
 
   const validator = (s: string) => {
     if (!s) {
@@ -58,20 +54,15 @@ const SelfAuthForm = (props: {
 
   const click = async () => {
     try {
-      setPhase('Working');
+      setPhase('Fetching');
       await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
     } catch (e) {
       console.error(e);
     }
-    setPhase('Ready');
+    setPhase('Neutral');
   };
 
-  const errorMessage = (() => {
-    if (phase === 'Working') {
-      return null;
-    }
-    return validator(userIdStr);
-  })();
+  const errorMessage = validator(userIdStr);
 
   return (
     <>
@@ -82,11 +73,92 @@ const SelfAuthForm = (props: {
         value={userIdStr}
         onChange={(e) => setUserIdStr(e.target.value)}
       />
-      <FTButton disabled={!!errorMessage} onClick={() => click()}>
+      <FTButton
+        disabled={!!errorMessage || phase === 'Fetching'}
+        onClick={() => click()}
+      >
         Force Login
       </FTButton>
       <div>{errorMessage}</div>
     </>
+  );
+};
+
+/**
+ * メアド+パスワード認証
+ */
+const PasswordAuthForm = (props: {
+  onSucceeded: (token: string, user: any) => void;
+  onFailed: () => void;
+}) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  type Phase = 'Neutral' | 'Fetching';
+  const [phase, setPhase] = useState<Phase>('Neutral');
+
+  const validateEmail = (s: string) => {
+    const trimmed = s.trim();
+    if (!trimmed) {
+      return 'empty?';
+    }
+    const emailRegExp = /^[^@]+?@[^@]+$/;
+    const m = trimmed.match(emailRegExp);
+    if (!m) {
+      return 'not a valid email?';
+    }
+    return null;
+  };
+  const validatePassword = (s: string) => {
+    const trimmed = s.trim();
+    if (!trimmed) {
+      return 'empty?';
+    }
+    return null;
+  };
+
+  const click = async () => {
+    try {
+      setPhase('Fetching');
+      await loginByPassword(email, password, props.onSucceeded, props.onFailed);
+    } catch (e) {
+      console.error(e);
+    }
+    setPhase('Neutral');
+  };
+
+  const emailErrorMessage = validateEmail(email);
+  const passwordErrorMessage = validatePassword(password);
+  const isValid = !emailErrorMessage && !passwordErrorMessage;
+
+  return (
+    <div className="grid grid-flow-row justify-center">
+      <div>
+        <FTTextField
+          className="border-2"
+          autoComplete="off"
+          placeholder="メールアドレス"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <div>{emailErrorMessage || '　'}</div>
+      </div>
+      <div>
+        <FTTextField
+          className="border-2"
+          autoComplete="off"
+          placeholder="パスワード"
+          value={password}
+          type="password"
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <div>{passwordErrorMessage || '　'}</div>
+      </div>
+      <div>
+        <FTButton disabled={!isValid || phase === 'Fetching'} onClick={click}>
+          Login
+        </FTButton>
+      </div>
+    </div>
   );
 };
 
@@ -108,6 +180,15 @@ export const DevAuthLoginCard = (props: {
         <div className="text-center">
           <FtAuthForm />
         </div>
+
+        <FTH3>By Email / Password</FTH3>
+        <div>
+          <PasswordAuthForm
+            onSucceeded={props.onSucceeded}
+            onFailed={props.onFailed}
+          />
+        </div>
+
         <FTH3>By Self</FTH3>
         <div className="text-center">
           <SelfAuthForm
@@ -115,8 +196,6 @@ export const DevAuthLoginCard = (props: {
             onFailed={props.onFailed}
           />
         </div>
-        <FTH3>By Email / Password</FTH3>
-        <div></div>
       </div>
     </>
   );

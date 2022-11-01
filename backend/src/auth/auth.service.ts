@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { hash_password, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
 import { jwtConstants } from 'src/auth/auth.constants';
@@ -18,12 +18,17 @@ export class AuthService {
     private jwtService: JwtService
   ) {}
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    console.log(email, pass);
+  async validateUser(email: string, password: string): Promise<any> {
+    console.log(email, password);
     const user = await this.usersService.findByEmail(email);
     console.log(user);
     if (user) {
-      return user;
+      const hashed = hash_password(password);
+      if (user.password === hashed) {
+        console.log('succeeded');
+        return user;
+      }
+      console.log('FAIL');
     }
     return null;
   }
@@ -33,7 +38,10 @@ export class AuthService {
    * いなければ登録して返す.
    * @returns Promise\<User\>
    */
-  async retrieveUser(intraId: number, data: Omit<UserMinimum, 'intraId'>) {
+  async retrieveUser(
+    intraId: number,
+    data: Omit<UserMinimum, 'intraId' | 'password'>
+  ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
       // ユーザがいた -> そのまま返す
@@ -44,7 +52,11 @@ export class AuthService {
     data.displayName = await this.usersService.findUniqueNameByPrefix(
       data.displayName
     );
-    const createdUser = await this.usersService.create({ intraId, ...data });
+    const createdUser = await this.usersService.create({
+      intraId,
+      ...data,
+      password: '',
+    });
     return createdUser;
   }
 
