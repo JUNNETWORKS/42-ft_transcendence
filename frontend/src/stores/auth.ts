@@ -1,6 +1,9 @@
 import { atom, useAtom } from 'jotai';
 import { io } from 'socket.io-client';
-import { AuthenticationFlowState, urlChatSocket } from '../auth';
+import {
+  AuthenticationFlowState,
+  urlChatSocket,
+} from '@/features/DevAuth/auth';
 import { structureAtom } from './structure';
 
 // 認証情報
@@ -70,7 +73,7 @@ export const storedCredentialAtom = atom(
   }
 );
 
-const chatSocketFromCredential = (credential: AppCredential | null) => {
+export const chatSocketFromCredential = (credential: AppCredential | null) => {
   if (!credential) {
     return null;
   }

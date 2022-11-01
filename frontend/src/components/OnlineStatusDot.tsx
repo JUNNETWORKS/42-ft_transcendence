@@ -1,5 +1,5 @@
 import * as TD from '@/typedef';
-import { useUserDataReadOnly } from '@/atoms/store';
+import { useUserDataReadOnly } from '@/stores/store';
 import { useEffect, useState } from 'react';
 import { Icons } from '@/icons';
 

@@ -3,7 +3,7 @@ import {
   styleH3,
   styleH4,
   styleButtonCommon,
-} from '../features/Chat/styles';
+} from './styles';
 
 export const FTTextField = (
   props: React.DetailedHTMLProps<

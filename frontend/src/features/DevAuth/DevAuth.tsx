@@ -1,8 +1,8 @@
-import { authAtom, useLoginLocal, useLogout } from '@/atoms/auth';
+import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
-} from '@/auth';
+} from './auth';
 import { useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
@@ -11,7 +11,7 @@ import {
   DevAuthenticatedCard,
   DevAuthLoginCard,
   DevAuthValidatingCard,
-} from '@/components/AuthCard';
+} from './AuthCard';
 
 export const DevAuth = () => {
   const [authState] = useAtom(authAtom.authFlowState);

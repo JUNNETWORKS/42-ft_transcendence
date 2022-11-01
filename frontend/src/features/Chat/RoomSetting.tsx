@@ -1,4 +1,4 @@
-import { useUpdateRoom } from '@/atoms/store';
+import { useUpdateRoom } from '@/stores/store';
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI, useFetch } from '@/hooks';

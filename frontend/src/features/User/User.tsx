@@ -1,13 +1,13 @@
-import { chatSocketAtom } from '@/atoms/auth';
+import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAction } from '@/hooks';
-import { useUserData } from '@/atoms/store';
+import { useUserData } from '@/stores/store';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { dataAtom } from '@/atoms/structure';
+import { dataAtom } from '@/stores/structure';
 import { Icons } from '@/icons';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
