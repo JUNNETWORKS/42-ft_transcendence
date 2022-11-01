@@ -20,6 +20,6 @@ import { FtStrategy } from './ft.strategy';
       signOptions: { expiresIn: '30d' },
     }),
   ],
-  exports: [AuthService, JwtModule],
+  exports: [AuthService],
 })
 export class AuthModule {}

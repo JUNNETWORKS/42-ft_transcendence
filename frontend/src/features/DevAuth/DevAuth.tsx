@@ -2,11 +2,11 @@ import {
   authFlowStateAtom,
   personalDataAtom,
   storedCredentialAtom,
-} from '@/atoms';
+} from '@/stores/atoms';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
-} from '@/auth';
+} from './auth';
 import { useQuery } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
@@ -15,12 +15,12 @@ import {
   DevAuthenticatedCard,
   DevAuthLoginCard,
   DevAuthValidatingCard,
-} from '@/components/AuthCard';
+} from './AuthCard';
 
 export const DevAuth = () => {
   const [authState, setAuthState] = useAtom(authFlowStateAtom);
-  const setStoredCredential = useAtom(storedCredentialAtom)[1];
-  const setPersonalData = useAtom(personalDataAtom)[1];
+  const [, setStoredCredential] = useAtom(storedCredentialAtom);
+  const [, setPersonalData] = useAtom(personalDataAtom);
 
   const query = useQuery();
   const navigation = useNavigate();

@@ -1,4 +1,4 @@
-import { AppCredential } from './hooks';
+import { AppCredential } from '@/hooks';
 
 /**
  * バックエンドサーバのドメイン
@@ -53,12 +53,10 @@ export const verifyCredential = async (
           Authorization: `Bearer ${credential.token}`,
         },
       });
-      if (result.ok) {
-        const json = await result.json();
-        if (json) {
-          onSucceeded(json);
-          return;
-        }
+      const json = await result.json();
+      if (json) {
+        onSucceeded(json);
+        return;
       }
     } catch (e) {
       console.error(e);
@@ -112,33 +110,6 @@ export const loginBySelf = async (
   const result = await fetch(url, {
     method: 'GET',
     mode: 'cors',
-  });
-  if (result.ok) {
-    const json = await result.json();
-    const { access_token: token, user } = json;
-    onSucceeded(token, user);
-    return;
-  }
-  onFailed();
-};
-
-export const loginByPassword = async (
-  email: string,
-  password: string,
-  onSucceeded: (token: string, user: any) => void,
-  onFailed: () => void
-) => {
-  const url = `${backendHost}/auth/login`;
-  const result = await fetch(url, {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      email,
-      password,
-    }),
   });
   if (result.ok) {
     const json = await result.json();

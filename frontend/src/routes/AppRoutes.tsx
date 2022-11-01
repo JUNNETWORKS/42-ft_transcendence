@@ -8,10 +8,10 @@ import {
   personalDataAtom,
   chatSocketAtom,
   storedCredentialAtom,
-} from '@/atoms';
+} from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/auth';
+import { verifyCredential } from '@/features/DevAuth/auth';
 
 export const AppRoutes = () => {
   // 「ソケット」
@@ -22,7 +22,7 @@ export const AppRoutes = () => {
   {
     const [storedCredential] = useAtom(storedCredentialAtom);
     const [authState, setAuthState] = useAtom(authFlowStateAtom);
-    const setPersonalData = useAtom(personalDataAtom)[1];
+    const [, setPersonalData] = useAtom(personalDataAtom);
 
     useEffect(() => {
       switch (authState) {
