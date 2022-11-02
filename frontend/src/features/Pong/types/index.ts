@@ -50,3 +50,8 @@ export type PlayerInput = {
   up: boolean;
   down: boolean;
 };
+
+export type GameResult = {
+  winner: Player;
+  loser: Player;
+};
