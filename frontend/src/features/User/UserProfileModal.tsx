@@ -1,5 +1,5 @@
-import { authAtom } from '@/atoms/auth';
-import { useUpdateUser } from '@/atoms/store';
+import { authAtom } from '@/stores/auth';
+import { useUpdateUser } from '@/stores/store';
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';

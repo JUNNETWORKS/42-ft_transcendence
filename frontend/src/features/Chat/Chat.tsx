@@ -7,9 +7,9 @@ import { ChatRoomView } from './RoomView';
 import { useAction } from '@/hooks';
 import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
-import { authAtom } from '@/atoms/auth';
+import { authAtom } from '@/stores/auth';
 import { ChatRoomListView } from './RoomList';
-import { dataAtom, structureAtom } from '@/atoms/structure';
+import { dataAtom, structureAtom } from '@/stores/structure';
 import { Listbox } from '@headlessui/react';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
@@ -109,50 +109,46 @@ function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
 
 const RoomFilterOptions = ['VISIBLE', 'JOINED', 'YOURS'] as const;
 type RoomFilterOption = typeof RoomFilterOptions[number];
+const RoomFilterOptionIcon = {
+  VISIBLE: Icons.Chat.Visible,
+  JOINED: Icons.Chat.Joined,
+  YOURS: Icons.Chat.Yours,
+};
 
 const ChatRoomFilter = (props: {
   selected: RoomFilterOption;
   setSelected: (next: RoomFilterOption) => void;
 }) => {
-  const icon = (option: RoomFilterOption) => {
-    switch (option) {
-      case 'VISIBLE':
-        return <Icons.Chat.Visible />;
-      case 'JOINED':
-        return <Icons.Chat.Joined />;
-      case 'YOURS':
-        return <Icons.Chat.Yours />;
-    }
-  };
-  const roomTypes = RoomFilterOptions.map((t) => ({
-    roomType: t,
-    icon: icon(t),
+  const filterOptions = RoomFilterOptions.map((t) => ({
+    option: t,
+    icon: RoomFilterOptionIcon[t],
   }));
-  const selectedType = roomTypes.find((rt) => rt.roomType === props.selected)!;
-
+  const SelectedType = filterOptions.find(
+    (rt) => rt.option === props.selected
+  )!;
   return (
     <>
       <Listbox
-        value={selectedType}
-        onChange={(next: { roomType: RoomFilterOption; icon: any }) =>
-          props.setSelected(next.roomType)
+        value={SelectedType}
+        onChange={(next: { option: RoomFilterOption; icon: any }) =>
+          props.setSelected(next.option)
         }
       >
         <Listbox.Button>
           Showing
-          <InlineIcon i={selectedType.icon} />
-          {selectedType.roomType}
+          <InlineIcon i={<SelectedType.icon />} />
+          {SelectedType.option}
         </Listbox.Button>
         <Listbox.Options className="bg-black">
-          {roomTypes.map((item) => {
+          {filterOptions.map((Item) => {
             return (
               <Listbox.Option
                 className="cursor-pointer p-[2px] text-center hover:bg-teal-800"
-                key={item.roomType}
-                value={item}
+                key={Item.option}
+                value={Item}
               >
-                <InlineIcon i={item.icon} />
-                {item.roomType}
+                <InlineIcon i={<Item.icon />} />
+                {Item.option}
               </Listbox.Option>
             );
           })}

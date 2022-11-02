@@ -1,4 +1,4 @@
-import { AppCredential } from './atoms/auth';
+import { AppCredential } from '@/stores/auth';
 
 /**
  * バックエンドサーバのドメイン

@@ -1,13 +1,13 @@
-import { chatSocketAtom } from '@/atoms/auth';
+import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAction, useAPI } from '@/hooks';
-import { useUpdateUser, useUserDataReadOnly } from '@/atoms/store';
+import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { dataAtom } from '@/atoms/structure';
+import { dataAtom } from '@/stores/structure';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 

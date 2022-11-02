@@ -2,7 +2,7 @@ import { Modal } from './Modal';
 import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { useState } from 'react';
 import { useAtom } from 'jotai';
-import { authAtom } from '@/atoms/auth';
+import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
 import { useNavigate } from 'react-router-dom';
 

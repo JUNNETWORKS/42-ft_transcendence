@@ -1,5 +1,5 @@
-import { authAtom } from '@/atoms/auth';
-import { urlLoginFt } from '@/auth';
+import { authAtom } from '@/stores/auth';
+import { urlLoginFt } from './auth';
 import {
   FTH1,
   FTH3,

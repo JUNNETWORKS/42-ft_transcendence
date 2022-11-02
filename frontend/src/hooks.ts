@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import { useEffect, useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { storedCredentialAtom } from './atoms/auth';
+import { storedCredentialAtom } from '@/stores/auth';
 import { APIError } from './errors/APIError';
 
 /**
