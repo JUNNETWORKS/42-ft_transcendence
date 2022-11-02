@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Player, GameState, GameSettings } from '../types';
+import { Player, GameState, GameSettings, GameResult } from '../types';
 import { io, Socket } from 'socket.io-client';
+import { Modal } from '@/components/Modal';
 
 // ========================================
 // Canvas
@@ -114,6 +115,7 @@ const redrawGame = (
 export const Pong: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
+  const [matchResult, setMatchResult] = useState<GameResult | null>(null);
 
   const gameSettings: GameSettings = {
     field: { width: 1920, height: 1080 },
@@ -130,6 +132,9 @@ export const Pong: React.FC = () => {
       if (canvasRef.current) {
         redrawGame(canvasRef.current, gameSettings, gameState);
       }
+    });
+    socketRef.current.on('pong.match.finish', (gameResult: GameResult) => {
+      setMatchResult(gameResult);
     });
 
     // add event listeners
@@ -153,11 +158,24 @@ export const Pong: React.FC = () => {
   }, []);
 
   return (
-    <canvas
-      id="pong"
-      ref={canvasRef}
-      width={gameSettings.field.width}
-      height={gameSettings.field.height}
-    />
+    <>
+      <Modal
+        isOpen={matchResult !== null}
+        //TODO タイトルへ戻る処理？
+        closeModal={() => {
+          console.log('test');
+        }}
+      >
+        <div className="flex items-center justify-center">
+          <p className="text-lg">{matchResult?.winner.id} win</p>
+        </div>
+      </Modal>
+      <canvas
+        id="pong"
+        ref={canvasRef}
+        width={gameSettings.field.width}
+        height={gameSettings.field.height}
+      />
+    </>
   );
 };
