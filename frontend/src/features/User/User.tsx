@@ -46,6 +46,27 @@ const usePersonalData = (userId: number) => {
   return [state, personalData] as const;
 };
 
+type UserCardProp = {
+  personalData: UserPersonalData;
+};
+const UserCard = ({ personalData }: UserCardProp) => {
+  return (
+    <>
+      <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
+        {personalData.displayName}
+      </FTH1>
+      <div className="flex flex-col gap-2">
+        <FTH4>id</FTH4>
+        <div>{personalData.id}</div>
+        <FTH4>name</FTH4>
+        <div>{personalData.displayName}</div>
+        <FTH4>email</FTH4>
+        <div>{personalData.email}</div>
+      </div>
+    </>
+  );
+};
+
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
@@ -55,21 +76,7 @@ export const UserView = () => {
     switch (fetchState) {
       case 'Fetched': {
         if (personalData) {
-          return (
-            <>
-              <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-                {personalData.displayName}
-              </FTH1>
-              <div className="flex flex-col gap-2">
-                <FTH4>id</FTH4>
-                <div>{personalData.id}</div>
-                <FTH4>name</FTH4>
-                <div>{personalData.displayName}</div>
-                <FTH4>email</FTH4>
-                <div>{personalData.email}</div>
-              </div>
-            </>
-          );
+          return <UserCard personalData={personalData} />;
         }
         return <>{fetchState}</>;
       }
