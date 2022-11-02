@@ -1,32 +1,18 @@
-import { useUpdateRoom } from '@/atoms/store';
+import { useUpdateRoom } from '@/stores/store';
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
-import { useAPI, useFetch } from '@/hooks';
+import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
-import * as Utils from '@/utils';
 import { Listbox } from '@headlessui/react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { roomErrors } from './room.validator';
 
-type RoomTypeIconProps = {
-  roomType: TD.RoomType;
-};
-
-export const RoomTypeIcon = ({ roomType }: RoomTypeIconProps) => {
-  const icon = (option: TD.RoomType) => {
-    switch (option) {
-      case 'PUBLIC':
-        return <Icons.Chat.Public />;
-      case 'PRIVATE':
-        return <Icons.Chat.Private />;
-      case 'LOCKED':
-        return <Icons.Chat.Locked />;
-      case 'DM':
-        return <Icons.Chat.DM />;
-    }
-  };
-  return icon(roomType);
+export const RoomTypeIcon = {
+  PUBLIC: Icons.Chat.Public,
+  PRIVATE: Icons.Chat.Private,
+  LOCKED: Icons.Chat.Locked,
+  DM: Icons.Chat.DM,
 };
 
 type RoomTypeListProps = {
@@ -37,35 +23,33 @@ type RoomTypeListProps = {
 const RoomTypeListBox = ({ selected, setSelected }: RoomTypeListProps) => {
   const roomTypes = TD.RoomTypesSelectable.map((t) => ({
     roomType: t,
-    icon: <RoomTypeIcon roomType={t} />,
+    icon: RoomTypeIcon[t],
   }));
-  const selectedType = roomTypes.find((rt) => rt.roomType === selected)!;
+  const SelectedType = roomTypes.find((rt) => rt.roomType === selected)!;
 
   return (
     <>
       <Listbox
-        value={selectedType}
+        value={SelectedType}
         onChange={(next: { roomType: TD.RoomType; icon: any }) =>
           setSelected(next.roomType)
         }
       >
         <Listbox.Button className="w-[9em] border-2 pl-2 pr-4 text-center">
-          <InlineIcon i={selectedType.icon} />
-          {selectedType.roomType}
+          <InlineIcon i={<SelectedType.icon />} />
+          {SelectedType.roomType}
         </Listbox.Button>
         <Listbox.Options className="absolute overflow-auto bg-black">
-          {roomTypes.map((item) => {
-            return (
-              <Listbox.Option
-                className="cursor-pointer bg-black p-[2px] hover:bg-teal-800"
-                key={item.roomType}
-                value={item}
-              >
-                <InlineIcon i={item.icon} />
-                {item.roomType}
-              </Listbox.Option>
-            );
-          })}
+          {roomTypes.map((Item) => (
+            <Listbox.Option
+              className="cursor-pointer bg-black p-[2px] hover:bg-teal-800"
+              key={Item.roomType}
+              value={Item}
+            >
+              <InlineIcon i={<Item.icon />} />
+              {Item.roomType}
+            </Listbox.Option>
+          ))}
         </Listbox.Options>
       </Listbox>
     </>

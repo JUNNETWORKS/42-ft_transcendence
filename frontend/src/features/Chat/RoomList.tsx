@@ -3,6 +3,7 @@ import * as Utils from '@/utils';
 import { FTButton } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
+import { RoomTypeIcon } from './RoomSetting';
 
 const ChatRoomShiftButton = (props: {
   isJoined: boolean;
@@ -33,18 +34,7 @@ const ChatRoomListItem = (props: {
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {
-  const roomTypeIcon = (() => {
-    switch (props.room.roomType) {
-      case 'PUBLIC':
-        return <InlineIcon i={<Icons.Chat.Public />} />;
-      case 'PRIVATE':
-        return <InlineIcon i={<Icons.Chat.Private />} />;
-      case 'LOCKED':
-        return <InlineIcon i={<Icons.Chat.Locked />} />;
-      default:
-        return <></>;
-    }
-  })();
+  const TypeIcon = RoomTypeIcon[props.room.roomType];
 
   return (
     <>
@@ -65,7 +55,7 @@ const ChatRoomListItem = (props: {
         }}
         onClick={() => props.onFocus(props.room.id)}
       >
-        {roomTypeIcon}
+        <InlineIcon i={<TypeIcon />} />
         {props.room.roomName}{' '}
         {(() => {
           const n = props.nMessages;

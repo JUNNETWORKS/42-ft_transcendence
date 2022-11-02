@@ -1,7 +1,7 @@
-import { authAtom, storedCredentialAtom } from '@/atoms/auth';
+import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/auth';
+import { verifyCredential } from '@/features/DevAuth/auth';
 
 /**
  * 認証状態の状態遷移
