@@ -78,14 +78,9 @@ export const UserView = () => {
         if (personalData) {
           return <UserCard personalData={personalData} />;
         }
-        return <>{fetchState}</>;
       }
-      case 'Neutral':
-        return <>{fetchState}</>;
-      case 'Fetching':
-        return <>{fetchState}</>;
     }
-    return <></>;
+    return <p>{fetchState}</p>;
   };
 
   return (
