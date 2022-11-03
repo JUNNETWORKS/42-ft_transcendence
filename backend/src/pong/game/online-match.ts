@@ -6,7 +6,6 @@ import {
   joinChannel,
   sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
-import { SIDE_INDEX } from './constants/match-constants';
 
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
@@ -39,8 +38,8 @@ export class OnlineMatch {
         if (this.match.winner !== 'none') {
           const loserSide = this.match.winner === 'right' ? 'left' : 'right';
           const result: MatchResult = {
-            winner: this.match.players[SIDE_INDEX[this.match.winner]],
-            loser: this.match.players[SIDE_INDEX[loserSide]],
+            winner: this.match.players[Match.sideIndex[this.match.winner]],
+            loser: this.match.players[Match.sideIndex[loserSide]],
           };
           sendResultRoom(
             this.wsServer,

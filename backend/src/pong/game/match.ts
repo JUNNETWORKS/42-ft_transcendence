@@ -1,4 +1,3 @@
-import { SIDE_INDEX } from './constants/match-constants';
 import { GameSettings } from './types/game-settings';
 import {
   Ball,
@@ -29,6 +28,11 @@ export class Match {
   static readonly barDy = 10;
   //rule
   static readonly maxScore = 15;
+
+  static readonly sideIndex = {
+    left: 0,
+    right: 1,
+  };
 
   ball: Ball;
   players: [Player, Player];
@@ -120,9 +124,9 @@ export class Match {
 
   //ゲームのスコア、勝敗を管理する
   updateScore = (side: PlayerSide) => {
-    const sideIndex = SIDE_INDEX[side];
-    this.players[sideIndex].score++;
-    if (this.players[sideIndex].score >= Match.maxScore) {
+    const index = Match.sideIndex[side];
+    this.players[index].score++;
+    if (this.players[index].score >= Match.maxScore) {
       this.winner = side;
     }
   };
