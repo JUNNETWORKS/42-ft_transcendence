@@ -45,28 +45,25 @@ export const useFetch = (
 ) => {
   type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
   const [state, setState] = useState<FetchState>('Neutral');
-  useEffect(() => {
-    if (state !== 'Fetching') {
+  const submit = async () => {
+    if (state === 'Fetching') {
       return;
     }
-    const doFetch = async () => {
-      try {
-        const result = await fetcher();
-        if (!result.ok) {
-          throw new APIError(result.statusText, result);
-        }
-        setState('Fetched');
-        onFetched(result);
-      } catch (e) {
-        setState('Failed');
-        if (onFailed) {
-          onFailed(e);
-        }
+    setState('Fetching');
+    try {
+      const result = await fetcher();
+      if (!result.ok) {
+        throw new APIError(result.statusText, result);
       }
-    };
-    doFetch();
-  }, [state]);
-  const submit = () => setState('Fetching');
+      setState('Fetched');
+      onFetched(result);
+    } catch (e) {
+      setState('Failed');
+      if (onFailed) {
+        onFailed(e);
+      }
+    }
+  };
   const neutralize = () => {
     if (state !== 'Fetching') {
       setState('Neutral');
