@@ -40,5 +40,5 @@ export const AuthChecker = () => {
     }
   }, [authState]);
 
-  return <></>;
+  return null;
 };

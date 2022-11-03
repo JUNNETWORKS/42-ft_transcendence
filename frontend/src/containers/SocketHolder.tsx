@@ -262,5 +262,5 @@ export const SocketHolder = () => {
     },
   };
 
-  return <></>;
+  return null;
 };

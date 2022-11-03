@@ -1,7 +1,7 @@
 import { AppRoutes } from '@/routes/AppRoutes';
 import { AppProvider } from '@/providers/AppProvider';
-import { AuthChecker } from './routes/AuthChecker';
-import { SocketHolder } from './routes/SocketHolder';
+import { AuthChecker } from '@/containers/AuthChecker';
+import { SocketHolder } from '@/containers/SocketHolder';
 import '../index.css';
 
 export const App = () => {
