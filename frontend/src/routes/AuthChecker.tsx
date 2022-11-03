@@ -11,7 +11,7 @@ export const AuthChecker = () => {
   // 認証フローのチェックと状態遷移
   const [storedCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authFlowStateAtom);
-  const setPersonalData = useAtom(userAtoms.personalDataAtom)[1];
+  const [, setPersonalData] = useAtom(userAtoms.personalDataAtom);
 
   useEffect(() => {
     switch (authState) {
