@@ -15,7 +15,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
     const messages = (() => {
-      if (exception.meta) {
+      if (exception.meta && exception.meta.target) {
         // { [フィールド名]: "エラー名" } というmapを作って返す
         const errorMap = Utils.mapValues(
           Utils.keyBy(exception.meta.target as string[], (t) => t),

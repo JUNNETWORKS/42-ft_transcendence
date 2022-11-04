@@ -41,6 +41,15 @@ export class MeController {
   @UseFilters(PrismaExceptionFilter)
   async enableTwoFa(@Request() req: any) {
     const id = req.user.id;
-    return this.usersService.enableTwoFa(id);
+    const qrcode = await this.usersService.enableTwoFa(id);
+    return { qrcode };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('twoFa/disable')
+  @UseFilters(PrismaExceptionFilter)
+  async disableTwoFa(@Request() req: any) {
+    const id = req.user.id;
+    return this.usersService.disableTwoFa(id);
   }
 }

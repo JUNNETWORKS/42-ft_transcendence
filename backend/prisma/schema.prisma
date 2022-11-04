@@ -16,6 +16,7 @@ model User {
   displayName       String              @unique
   intraId           Int                 @unique
   password          String
+  isEnabled2FA      Boolean             @default(false)
   chatMessage       ChatMessage[]
   joinedRoom        ChatUserRelation[]
   ownedRoom         ChatRoom[]

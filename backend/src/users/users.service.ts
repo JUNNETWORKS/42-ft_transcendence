@@ -144,21 +144,49 @@ export class UsersService {
   async enableTwoFa(id: number) {
     const secret = authenticator.generateSecret();
     console.log('secret:', secret);
-    await this.prisma.totpSecret.upsert({
-      where: {
-        userId: id,
-      },
-      create: {
-        userId: id,
-        secret,
-      },
-      update: {
-        userId: id,
-        secret,
-      },
-    });
-    const qrcode = await this.authService.generateQrCode(id, secret);
-    console.log(qrcode);
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.upsert({
+        where: {
+          userId: id,
+        },
+        create: {
+          userId: id,
+          secret,
+        },
+        update: {
+          userId: id,
+          secret,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: true,
+        },
+      }),
+    ]);
+    return await this.authService.generateQrCode(id, secret);
+  }
+
+  async disableTwoFa(id: number) {
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.delete({
+        where: {
+          userId: id,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: false,
+        },
+      }),
+    ]);
+    return;
   }
 }
 
