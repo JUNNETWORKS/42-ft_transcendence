@@ -16,17 +16,6 @@ export function useStateWithResetter<T>(initial: T) {
   return [val, setter, resetter] as const;
 }
 
-/**
- * `id`の変化をトリガーとして何らかのアクションを行うフック
- * @param initialId `id`の初期値
- * @param action  `id`を受け取り, アクションを実行する関数
- */
-export function useAction<T>(initialId: T, action: (id: T) => void) {
-  const [actionId, setActionId] = useState<T>(initialId);
-  useEffect(() => action(actionId), [action, actionId]);
-  return [setActionId];
-}
-
 export const useQuery = () => {
   const { search } = useLocation();
   return useMemo(() => new URLSearchParams(search), [search]);
