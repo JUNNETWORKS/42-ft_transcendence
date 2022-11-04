@@ -5,7 +5,7 @@ import {
 } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/features/DevAuth/auth';
+import { verifyCredential } from './auth';
 
 export const AuthChecker = () => {
   // 認証フローのチェックと状態遷移
