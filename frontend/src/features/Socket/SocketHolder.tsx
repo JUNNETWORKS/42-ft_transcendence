@@ -6,7 +6,7 @@ import {
 } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import * as TD from '../typedef';
+import * as TD from '../../typedef';
 import * as Utils from '@/utils';
 
 export const SocketHolder = () => {
