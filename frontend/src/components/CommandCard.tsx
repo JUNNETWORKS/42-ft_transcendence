@@ -28,34 +28,18 @@ export const SayCard = (props: {
 
   return (
     <>
-      <div
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          padding: '2px',
-        }}
-      >
+      <div className="shrink-0 grow-0 p-[2px]">
         <FTButton disabled={!computed.isSendable()} onClick={sender}>
           Send
         </FTButton>
       </div>
-      <div
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-        }}
-      >
+      <div className="shrink grow">
         <FTTextField
+          className="block h-full w-full p-0"
           autoComplete="off"
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
-          style={{
-            display: 'block',
-            height: '100%',
-            width: '100%',
-            padding: '0',
-          }}
         />
       </div>
     </>
@@ -84,7 +68,7 @@ export const OpenCard = (props: {
   };
 
   return (
-    <div className="open-card">
+    <div>
       <FTH4>Open</FTH4>
       <FTTextField
         autoComplete="off"

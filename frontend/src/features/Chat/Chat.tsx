@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from '../../typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { FTButton, FTH3 } from '../../components/FTBasicComponents';
-import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
-import { useAction } from '../../hooks';
-import { SayCard, OpenCard } from '../../components/CommandCard';
+import { FTH3 } from '@/components/FTBasicComponents';
+import { ChatRoomView } from './RoomView';
+import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
 import { userAtoms } from '@/stores/atoms';
+import { ChatRoomListView } from './RoomList';
+import { makeCommand } from './command';
 
 /**
- *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
@@ -30,96 +30,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   /**
    * チャットコマンド
    */
-  const command = {
-    open: (args: TD.OpenArgument) => {
-      const data = {
-        ...args,
-      };
-      console.log(data);
-      mySocket?.emit('ft_open', data);
-    },
-
-    join: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_join', data);
-    },
-
-    leave: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_leave', data);
-    },
-
-    say: (content: string) => {
-      if (!focusedRoomId) {
-        return;
-      }
-      const data = {
-        roomId: focusedRoomId,
-        content,
-      };
-      console.log(data);
-      mySocket?.emit('ft_say', data);
-    },
-
-    get_room_messages: (roomId: number) => {
-      const data = {
-        roomId,
-        take: 50,
-      };
-      console.log(['get_room_messages'], data);
-      mySocket?.emit('ft_get_room_messages', data);
-    },
-
-    get_room_members: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(['get_room_members'], data);
-      mySocket?.emit('ft_get_room_members', data);
-    },
-
-    nomminate: (member: TD.ChatUserRelation) => {
-      console.log('[nomminate]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_nomminate', data);
-    },
-
-    ban: (member: TD.ChatUserRelation) => {
-      console.log('[ban]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_ban', data);
-    },
-
-    kick: (member: TD.ChatUserRelation) => {
-      console.log('[kick]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_kick', data);
-    },
-
-    mute: (member: TD.ChatUserRelation) => {
-      console.log('[mute]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_mute', data);
-    },
-  };
+  const command = makeCommand(mySocket, focusedRoomId);
   const memberOperations: TD.MemberOperations = {
     onNomminateClick: command.nomminate,
     onBanClick: command.ban,
@@ -173,21 +84,21 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
    * 保持しているデータに対する参照
    */
   const store = {
-    count_message: (roomId: number) => {
+    countMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms) {
         return undefined;
       }
       return ms.length;
     },
-    room_messages: (roomId: number) => {
+    roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return [];
       }
       return ms;
     },
-    room_members: (roomId: number) => {
+    roomMembers: (roomId: number) => {
       const ms = membersInRoom[roomId];
       if (!ms) {
         return null;
@@ -201,240 +112,67 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: useAction(0, (roomId) => {
+    get_room_message: (roomId: number) => {
       if (roomId > 0) {
-        if (!Utils.isfinite(store.count_message(roomId))) {
+        if (!Utils.isfinite(store.countMessages(roomId))) {
           command.get_room_messages(roomId);
         }
       }
-    })[0],
+    },
 
-    get_room_members: useAction(0, (roomId) => {
+    get_room_members: (roomId: number) => {
       if (roomId > 0) {
-        const mems = store.room_members(roomId);
+        const mems = store.roomMembers(roomId);
         if (!mems) {
           command.get_room_members(roomId);
         }
       }
-    })[0],
+    },
   };
 
   return (
     <div
-      style={{
-        height: '50em',
-        padding: '2px',
-        border: '1px solid useFetcher',
-        display: 'flex',
-        flexDirection: 'row',
-        width: '100%',
-      }}
+      className="flex w-full flex-row border-2 border-solid border-white p-2"
+      style={{ height: '50em' }}
     >
-      <div
-        className="vertical left"
-        style={{
-          flexGrow: 0,
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink-0 grow-0 flex-col">
         {/* 見えているチャットルーム */}
-        <div
-          className="room-list"
-          style={{
-            border: '1px solid white',
-            flexGrow: 1,
-            flexShrink: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          <FTH3
-            style={{
-              flexGrow: 0,
-              flexShrink: 0,
-            }}
-          >
-            ChatRooms
-          </FTH3>
-          <div
-            style={{
-              padding: '2px',
-              flexGrow: 1,
-              flexShrink: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-          >
-            {visibleRooms.map((data: TD.ChatRoom) => {
-              return (
-                /* クリックしたルームにフォーカスを当てる */
-                <div
-                  className="room-list-element"
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    padding: '2px',
-                    border: '1px solid white',
-                  }}
-                  key={data.id}
-                >
-                  <div
-                    className="joining-button"
-                    style={{
-                      flexGrow: 0,
-                      flexBasis: 0,
-                    }}
-                  >
-                    {predicate.isJoiningTo(data.id) ? (
-                      <FTButton
-                        className="bg-white text-black hover:bg-black hover:text-white"
-                        style={{ width: '4em' }}
-                        onClick={() => command.leave(data.id)}
-                      >
-                        Leave
-                      </FTButton>
-                    ) : (
-                      <FTButton
-                        style={{ width: '4em' }}
-                        onClick={() => command.join(data.id)}
-                      >
-                        Join
-                      </FTButton>
-                    )}
-                  </div>
-                  <div
-                    style={{
-                      flexGrow: 1,
-                      flexBasis: 1,
-                      padding: '4px',
-                      cursor: predicate.isJoiningTo(data.id)
-                        ? 'pointer'
-                        : 'unset',
-                      fontWeight: predicate.isJoiningTo(data.id)
-                        ? 'bold'
-                        : 'normal',
-                      ...(predicate.isFocusingTo(data.id)
-                        ? { borderLeft: '12px solid teal' }
-                        : {}),
-                    }}
-                    onClick={() => {
-                      if (predicate.isJoiningTo(data.id)) {
-                        setFocusedRoomId(data.id);
-                        action.get_room_message(data.id);
-                        action.get_room_members(data.id);
-                      }
-                    }}
-                  >
-                    {data.id} / {data.roomName}{' '}
-                    {(() => {
-                      const n = store.count_message(data.id);
-                      return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-                    })()}
-                  </div>
-                </div>
-              );
-            })}
+        <div className="flex shrink grow flex-col border-2 border-solid border-white">
+          <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+          <div className="flex shrink grow flex-col p-2">
+            <ChatRoomListView
+              rooms={visibleRooms}
+              isJoiningTo={predicate.isJoiningTo}
+              isFocusingTo={predicate.isFocusingTo}
+              countMessages={store.countMessages}
+              onJoin={command.join}
+              onLeave={command.leave}
+              onFocus={(roomId: number) => {
+                if (predicate.isJoiningTo(roomId)) {
+                  setFocusedRoomId(roomId);
+                  action.get_room_message(roomId);
+                  action.get_room_members(roomId);
+                }
+              }}
+            />
           </div>
         </div>
-        <div
-          style={{
-            border: '1px solid white',
-            flexGrow: 0,
-            flexShrink: 0,
-          }}
-        >
+        <div className="border-2 border-solid border-white">
           <OpenCard sender={command.open} />
         </div>
       </div>
 
-      <div
-        className="vertical right"
-        style={{
-          flexGrow: 1,
-          flexShrink: 1,
-          display: 'flex',
-          flexDirection: 'column',
-        }}
-      >
+      <div className="flex shrink grow flex-col">
         {/* 今フォーカスしているルーム */}
         {!!computed.focusedRoom && (
-          <div
-            className="room-main"
-            style={{
-              display: 'flex',
-              flexDirection: 'row',
-              border: '1px solid white',
-              padding: '2px',
-              height: '100%',
-            }}
-          >
-            <div
-              className="room-left-pane"
-              style={{
-                flexGrow: 1,
-                flexShrink: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-                overflow: 'hidden',
-              }}
-            >
-              {/* 今フォーカスしているルームのメッセージ */}
-              <div
-                className="room-message-list"
-                style={{
-                  border: '1px solid white',
-                  flexGrow: 1,
-                  flexShrink: 1,
-                  overflow: 'scroll',
-                }}
-              >
-                {store
-                  .room_messages(focusedRoomId)
-                  .map((data: TD.ChatRoomMessage) => (
-                    <ChatRoomMessageCard key={data.id} message={data} />
-                  ))}
-              </div>
-              <div
-                className="input-panel"
-                style={{
-                  padding: '2px',
-                  border: '1px solid white',
-                  flexGrow: 0,
-                  flexShrink: 0,
-                }}
-              >
-                {/* 今フォーカスしているルームへの発言 */}
-                <div
-                  style={{
-                    padding: '2px',
-                    border: '1px solid white',
-                    display: 'flex',
-                    flexDirection: 'row',
-                  }}
-                >
-                  <SayCard sender={command.say} />
-                </div>
-              </div>
-            </div>
-            <div
-              className="room-right-pane"
-              style={{
-                flexGrow: 0,
-                flexShrink: 0,
-                flexBasis: '20em',
-              }}
-            >
-              <ChatRoomMembersList
-                you={computed.you}
-                room={computed.focusedRoom}
-                members={store.room_members(focusedRoomId) || {}}
-                {...memberOperations}
-              />
-            </div>
-          </div>
+          <ChatRoomView
+            room={computed.focusedRoom}
+            memberOperations={memberOperations}
+            you={computed.you}
+            say={command.say}
+            roomMessages={store.roomMessages}
+            roomMembers={store.roomMembers}
+          />
         )}
       </div>
     </div>
