@@ -137,24 +137,36 @@ export const Pong: React.FC = () => {
       setMatchResult(gameResult);
     });
 
-    // add event listeners
-    window.addEventListener('keydown', (e) => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       socketRef.current?.emit('pong.match.action', {
         up: e.key === 'w' || e.key === 'ArrowUp',
         down: e.key === 's' || e.key === 'ArrowDown',
       });
-    });
-    window.addEventListener('keyup', (e) => {
+    };
+
+    const handleKeyUp = () => {
       socketRef.current?.emit('pong.match.action', {
         up: false,
         down: false,
       });
-    });
-    window.addEventListener('resize', (e) => {
+    };
+
+    const handleResize = () => {
       if (canvasRef.current) {
         resizeCanvas(canvasRef.current, gameSettings);
       }
-    });
+    };
+
+    // add event listeners
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (
