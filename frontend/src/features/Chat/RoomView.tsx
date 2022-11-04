@@ -183,15 +183,15 @@ export const ChatRoomView = (props: {
   memberOperations: TD.MemberOperations;
   you: TD.ChatUserRelation | null;
   say: (content: string) => void;
-  room_messages: (roomId: number) => TD.ChatRoomMessage[];
-  room_members: (roomId: number) => TD.UserRelationMap | null;
+  roomMessages: (roomId: number) => TD.ChatRoomMessage[];
+  roomMembers: (roomId: number) => TD.UserRelationMap | null;
 }) => {
   return (
     <div className="flex h-full flex-row border-2 border-solid border-white p-2">
       <div className="flex h-full shrink grow flex-col overflow-hidden">
         {/* 今フォーカスしているルームのメッセージ */}
         <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-          <MessagesList messages={props.room_messages(props.room.id)} />
+          <MessagesList messages={props.roomMessages(props.room.id)} />
         </div>
         <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
           {/* 今フォーカスしているルームへの発言 */}
@@ -204,7 +204,7 @@ export const ChatRoomView = (props: {
         <MembersList
           you={props.you}
           room={props.room}
-          members={props.room_members(props.room.id) || {}}
+          members={props.roomMembers(props.room.id) || {}}
           {...props.memberOperations}
         />
       </div>
