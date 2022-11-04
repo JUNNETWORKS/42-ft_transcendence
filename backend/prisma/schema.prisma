@@ -26,6 +26,12 @@ model User {
   blockedUser       BlockRelation[]     @relation("blockedUser")
 }
 
+model TotpSecret {
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique
+  secret String
+}
+
 model FriendRelation {
   user         User @relation(name: "followingUser", fields: [userId], references: [id])
   userId       Int

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { passwordConstants } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
@@ -6,10 +6,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as Utils from '../utils';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import { authenticator } from 'otplib';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @Inject(forwardRef(() => AuthService))
+    private authService: AuthService,
     private prisma: PrismaService,
     private chatRoomService: ChatroomsService
   ) {}
@@ -135,6 +139,26 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async enableTwoFa(id: number) {
+    const secret = authenticator.generateSecret();
+    console.log('secret:', secret);
+    await this.prisma.totpSecret.upsert({
+      where: {
+        userId: id,
+      },
+      create: {
+        userId: id,
+        secret,
+      },
+      update: {
+        userId: id,
+        secret,
+      },
+    });
+    const qrcode = await this.authService.generateQrCode(id, secret);
+    console.log(qrcode);
   }
 }
 

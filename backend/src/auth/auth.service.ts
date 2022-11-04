@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { hash_password, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import { UserMinimum } from '../users/entities/user.entity';
-import { jwtConstants } from 'src/auth/auth.constants';
+import { jwtConstants } from './auth.constants';
 import { Socket } from 'socket.io';
-import * as Utils from 'src/utils';
+import * as Utils from '../utils';
+import { authenticator } from 'otplib';
+import { toDataURL } from 'qrcode';
 
 export type LoginResult = {
   access_token: string;
@@ -14,6 +16,7 @@ export type LoginResult = {
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
     private jwtService: JwtService
   ) {}
@@ -111,5 +114,10 @@ export class AuthService {
       }
     }
     return null;
+  }
+
+  async generateQrCode(userId: number, secret: string) {
+    const otpPath = authenticator.keyuri(userId.toString(), 'tra', secret);
+    return await toDataURL(otpPath);
   }
 }

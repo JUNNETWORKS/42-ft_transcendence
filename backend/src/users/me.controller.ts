@@ -35,4 +35,12 @@ export class MeController {
     // -> unique 制約に任せる
     return this.usersService.update(id, updateUserDto);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('twoFa/enable')
+  @UseFilters(PrismaExceptionFilter)
+  async enableTwoFa(@Request() req: any) {
+    const id = req.user.id;
+    return this.usersService.enableTwoFa(id);
+  }
 }
