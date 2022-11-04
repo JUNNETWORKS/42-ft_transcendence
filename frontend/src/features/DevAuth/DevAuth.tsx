@@ -1,6 +1,6 @@
 import {
+  userAtoms,
   authFlowStateAtom,
-  personalDataAtom,
   storedCredentialAtom,
 } from '@/stores/atoms';
 import {
@@ -20,7 +20,7 @@ import {
 export const DevAuth = () => {
   const [authState, setAuthState] = useAtom(authFlowStateAtom);
   const [, setStoredCredential] = useAtom(storedCredentialAtom);
-  const [, setPersonalData] = useAtom(personalDataAtom);
+  const [, setPersonalData] = useAtom(userAtoms.personalDataAtom);
 
   const query = useQuery();
   const navigation = useNavigate();

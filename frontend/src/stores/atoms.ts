@@ -6,16 +6,43 @@ import {
   AuthenticationFlowState,
   urlChatSocket,
 } from '@/features/DevAuth/auth';
+import * as TD from '@/typedef';
 
 /**
  * 認証フロー状態のAtom
  */
 export const authFlowStateAtom = atom<AuthenticationFlowState>('Neutral');
 
-/**
- * ユーザデータのAtom
- */
-export const personalDataAtom = atom<UserPersonalData | null>(null);
+const personalDataAtom = atom<UserPersonalData | null>(null);
+export const userAtoms = {
+  /**
+   * ユーザデータのAtom
+   */
+  personalDataAtom,
+  userIdAtom: atom<number>((get) => {
+    const pd: UserPersonalData | null = get(personalDataAtom);
+    return pd ? pd.id : -1;
+  }),
+
+  // 見えているチャットルームの一覧
+  visibleRoomsAtom: atom<TD.ChatRoom[]>([]),
+  // join しているチャットルームの一覧
+  joiningRoomsAtom: atom<TD.ChatRoom[]>([]),
+  // 今フォーカスしているチャットルームのID
+  focusedRoomIdAtom: atom<number>(-1),
+  /**
+   * チャットルーム内のメッセージのリスト
+   */
+  messagesInRoomAtom: atom<{
+    [roomId: number]: TD.ChatRoomMessage[];
+  }>({}),
+  /**
+   * チャットルーム内のメンバーのマップ
+   */
+  membersInRoomAtom: atom<{
+    [roomId: number]: TD.UserRelationMap;
+  }>({}),
+};
 
 const credentialKey = 'ft_transcendence_credential';
 /**
@@ -41,11 +68,21 @@ export const storedCredentialAtom = atom(
     }
     return null;
   },
+  // クレデンシャルデータの更新
   (get, set, newCredential: AppCredential | null) => {
+    // 破棄・変更のいずれの場合も, ユーザに紐づく情報(atom)はすべて破棄する
+    set(userAtoms.personalDataAtom, null);
+    set(userAtoms.visibleRoomsAtom, []);
+    set(userAtoms.joiningRoomsAtom, []);
+    set(userAtoms.focusedRoomIdAtom, -1);
+    set(userAtoms.messagesInRoomAtom, {});
+    set(userAtoms.membersInRoomAtom, {});
     if (!newCredential) {
+      // データを破棄する場合
       localStorage.removeItem(credentialKey);
       set(storedCredentialStrAtom, '');
     } else {
+      // データを変更する場合
       const s = JSON.stringify(newCredential);
       localStorage.setItem(credentialKey, s);
       set(storedCredentialStrAtom, s);
@@ -53,7 +90,7 @@ export const storedCredentialAtom = atom(
   }
 );
 
-const chatSocketFromCredential = (credential: AppCredential | null) => {
+export const chatSocketFromCredential = (credential: AppCredential | null) => {
   if (!credential) {
     return null;
   }
@@ -66,6 +103,4 @@ const chatSocketFromCredential = (credential: AppCredential | null) => {
 /**
  * ユーザに紐づくチャットWSのAtom
  */
-export const chatSocketAtom = atom((get) =>
-  chatSocketFromCredential(get(storedCredentialAtom))
-);
+export const chatSocketAtom = atom<ReturnType<typeof io> | null>(null);

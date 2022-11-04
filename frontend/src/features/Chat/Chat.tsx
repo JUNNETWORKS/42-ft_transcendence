@@ -1,196 +1,31 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from './typedef';
+import * as TD from '../../typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '../../components/FTBasicComponents';
 import { ChatRoomMembersList, ChatRoomMessageCard } from './Room';
 import { useAction } from '../../hooks';
 import { SayCard, OpenCard } from '../../components/CommandCard';
 import { useAtom } from 'jotai';
-import { personalDataAtom } from '@/stores/atoms';
+import { userAtoms } from '@/stores/atoms';
 
 /**
  *
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
-  type ChatRoomMessage = TD.ChatRoomMessage;
   const { mySocket } = props;
-  const [personalData] = useAtom(personalDataAtom);
+
+  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [visibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
+  const [messagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(userAtoms.membersInRoomAtom);
+  const [focusedRoomId, setFocusedRoomId] = useAtom(
+    userAtoms.focusedRoomIdAtom
+  );
   const userId = personalData ? personalData.id : -1;
-  // 見えているチャットルームの一覧
-  const [visibleRooms, setVisibleRooms] = useState<TD.ChatRoom[]>([]);
-  // join しているチャットルームの一覧
-  const [joiningRooms, setJoiningRooms] = useState<TD.ChatRoom[]>([]);
-  // 今フォーカスしているチャットルームのID
-  const [focusedRoomId, setFocusedRoomId] = useState(-1);
-
-  /**
-   * チャットルーム内のメッセージのリスト
-   * TODO: もっとマシな方法ないの
-   */
-  const [messagesInRoom, setMessagesInRoom] = useState<{
-    [roomId: number]: ChatRoomMessage[];
-  }>({});
-  /**
-   * チャットルーム内のメンバーのマップ
-   */
-  const [membersInRoom, setMembersInRoom] = useState<{
-    [roomId: number]: TD.UserRelationMap;
-  }>({});
   // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
-
-  useEffect(() => {
-    console.log('mySocket?', !!mySocket);
-    mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
-      console.log('catch connection', data);
-      setJoiningRooms(data.joiningRooms);
-      setVisibleRooms(data.visibleRooms);
-    });
-
-    mySocket?.on('ft_open', (data: TD.OpenResult) => {
-      console.log('catch open');
-      console.log(data);
-      const room: TD.ChatRoom = {
-        ...data,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      setVisibleRooms((prev) => {
-        const next = [...prev];
-        next.push(room);
-        return next;
-      });
-      if (room.ownerId === userId) {
-        setJoiningRooms((prev) => {
-          const next = [...prev];
-          next.push(room);
-          return next;
-        });
-      }
-    });
-
-    mySocket?.on('ft_say', (data: TD.SayResult) => {
-      const message = TD.Mapper.chatRoomMessage(data);
-      console.log('catch say');
-      const roomId = data.chatRoomId;
-      stateMutater.addMessagesToRoom(roomId, [message]);
-    });
-
-    mySocket?.on('ft_join', (data: TD.JoinResult) => {
-      console.log('catch join', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { chatRoom: room } = data.relation;
-      const user = data.user;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          const sameRoom = prev.find((r) => r.id === room.id);
-          if (sameRoom) {
-            return prev;
-          }
-          const newRoomList = [...prev];
-          newRoomList.push(room);
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
-      }
-    });
-
-    mySocket?.on('ft_leave', (data: TD.LeaveResult) => {
-      console.log('catch leave', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { chatRoom: room } = data.relation;
-      const user = data.user;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
-          stateMutater.unfocusRoom(room.id);
-          const newRoomList = prev.filter((r) => r.id !== room.id);
-          if (newRoomList.length === prev.length) {
-            return prev;
-          }
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.removeMembersInRoom(room.id, user.id);
-      }
-    });
-
-    mySocket?.on('ft_kick', (data: TD.LeaveResult) => {
-      console.log('catch kick', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { room, user } = data;
-      console.log(room, user);
-      if (user.id === userId) {
-        // 自分に関する通知
-        console.log('for self');
-        setJoiningRooms((prev) => {
-          console.log(predicate.isFocusingTo(room.id), focusedRoomId, room.id);
-          stateMutater.unfocusRoom(room.id);
-          const newRoomList = prev.filter((r) => r.id !== room.id);
-          if (newRoomList.length === prev.length) {
-            return prev;
-          }
-          return newRoomList;
-        });
-      } else {
-        // 他人に関する通知
-        console.log('for other');
-        stateMutater.removeMembersInRoom(room.id, user.id);
-      }
-    });
-
-    mySocket?.on('ft_nomminate', (data: TD.NomminateResult) => {
-      console.log('catch nomminate', data);
-      if (!(userId > 0)) {
-        return;
-      }
-      const { relation, room, user } = data;
-      console.log(relation, room, user);
-      stateMutater.mergeMembersInRoom(room.id, { [user.id]: relation });
-    });
-
-    mySocket?.on('ft_get_room_messages', (data: TD.GetRoomMessagesResult) => {
-      console.log('catch get_room_messages');
-      const { id, messages } = data;
-      console.log(id, !!messages);
-      stateMutater.addMessagesToRoom(
-        id,
-        messages.map(TD.Mapper.chatRoomMessage)
-      );
-    });
-
-    mySocket?.on('ft_get_room_members', (data: TD.GetRoomMembersResult) => {
-      console.log('catch get_room_members');
-      const { id, members } = data;
-      console.log(id, members);
-      stateMutater.mergeMembersInRoom(
-        id,
-        Utils.keyBy(members, (a) => `${a.userId}`)
-      );
-    });
-
-    return () => {
-      mySocket?.removeAllListeners();
-    };
-  });
 
   /**
    * チャットコマンド
@@ -290,106 +125,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     onBanClick: command.ban,
     onKickClick: command.kick,
     onMuteClick: command.mute,
-  };
-
-  /**
-   * ステート変更処理のラッパ
-   */
-  const stateMutater = {
-    // 指定したルームにフォーカス(フロントエンドで中身を表示)する
-    focusRoom: (roomId: number) => {
-      setFocusedRoomId((prev) => {
-        if (predicate.isFocusingTo(roomId)) {
-          // すでにフォーカスしている
-          console.log('[focusRoom] stay');
-          return prev;
-        }
-        // メッセージがないなら取得する
-        action.get_room_message(roomId);
-        // メンバー情報がないなら取得する
-        action.get_room_members(roomId);
-        return roomId;
-      });
-    },
-
-    // ルームへのフォーカスをやめる
-    unfocusRoom: (roomId: number) =>
-      setFocusedRoomId((prev) => {
-        console.log('unfocusing..');
-        if (prev === roomId) {
-          return -1;
-        } else {
-          return prev;
-        }
-      }),
-
-    // チャットルームにメッセージを追加する
-    // (メッセージは投稿時刻の昇順になる)
-    addMessagesToRoom: (roomId: number, newMessages: TD.ChatRoomMessage[]) => {
-      setMessagesInRoom((prev) => {
-        const next: { [roomId: number]: ChatRoomMessage[] } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = [...prev[key]];
-        });
-        if (!next[roomId]) {
-          next[roomId] = [];
-        }
-        const messages = next[roomId];
-        messages.push(...newMessages);
-        next[roomId] = Utils.sortBy(
-          Utils.uniqBy(messages, (m) => m.id),
-          (m) => m.createdAt
-        );
-        return next;
-      });
-    },
-
-    /**
-     * チャットルームにメンバーをマージする
-     * @param roomId
-     * @param newMembers
-     */
-    mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
-      setMembersInRoom((prev) => {
-        console.log(`mergeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: TD.UserRelationMap } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = prev[key] ? { ...prev[key] } : {};
-        });
-        if (!next[roomId]) {
-          next[roomId] = {};
-        }
-        const members = next[roomId];
-        Utils.keys(newMembers).forEach((key) => {
-          members[key] = newMembers[key];
-        });
-        console.log('[newMembers]', newMembers);
-        console.log('[prev]', prev);
-        console.log('[next]', next);
-        return next;
-      });
-    },
-
-    removeMembersInRoom: (roomId: number, userId: number) => {
-      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
-      setMembersInRoom((prev) => {
-        console.log(`removeMembersInRoom -> setMembersInRoom`);
-        const next: { [roomId: number]: TD.UserRelationMap } = {};
-        Utils.keys(prev).forEach((key) => {
-          next[key] = prev[key] ? { ...prev[key] } : {};
-        });
-        const members = next[roomId];
-        if (!members) {
-          return next;
-        }
-        console.log('removing member', userId, 'from', members);
-        delete members[userId];
-        console.log('members', members);
-        console.log(prev, next);
-        return next;
-      });
-    },
   };
 
   /**
@@ -586,7 +321,9 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
                     }}
                     onClick={() => {
                       if (predicate.isJoiningTo(data.id)) {
-                        stateMutater.focusRoom(data.id);
+                        setFocusedRoomId(data.id);
+                        action.get_room_message(data.id);
+                        action.get_room_members(data.id);
                       }
                     }}
                   >
