@@ -9,6 +9,7 @@ import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { dataAtom } from '@/stores/structure';
 
 /**
  * メッセージを表示するコンポーネント
@@ -178,6 +179,7 @@ export const ChatRoomView = (props: {
 }) => {
   const isOwner = props.room.ownerId === props.you?.userId;
   const [isOpen, setIsOpen] = useState(false);
+  const [members] = dataAtom.useMembersInRoom(props.room.id);
 
   const closeModal = () => {
     setIsOpen(false);
@@ -229,7 +231,7 @@ export const ChatRoomView = (props: {
           <ChatRoomMembersList
             you={props.you}
             room={props.room}
-            members={props.room_members(props.room.id) || {}}
+            members={members}
             {...props.memberOperations}
           />
         </div>

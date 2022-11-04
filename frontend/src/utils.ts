@@ -20,6 +20,20 @@ export function pick<T extends object, U extends keyof T>(
   return d;
 }
 
+export function pickBy<T extends object>(
+  obj: T,
+  predicate: (val: T[keyof T], key: keyof T) => boolean
+): Partial<T> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    const val = (obj as any)[key];
+    if (predicate(val, key as keyof T)) {
+      d[key] = val;
+    }
+  });
+  return d;
+}
+
 export function omit<T extends object, U extends keyof T>(
   obj: T,
   ...props: Array<Many<U>>
@@ -30,6 +44,20 @@ export function omit<T extends object, U extends keyof T>(
   });
   props.forEach((key) => {
     delete d[key];
+  });
+  return d;
+}
+
+export function omitBy<T extends object>(
+  obj: T,
+  predicate: (val: T[keyof T], key: keyof T) => boolean
+): Partial<T> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    const val = (obj as any)[key];
+    if (!predicate(val, key as keyof T)) {
+      d[key] = val;
+    }
   });
   return d;
 }
