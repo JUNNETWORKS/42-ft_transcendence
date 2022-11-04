@@ -759,7 +759,7 @@ export class ChatGateway implements OnGatewayConnection {
     return this.server.in(fullUserRoomName);
   }
 
-  private async sendResults(
+  async sendResults(
     op: string,
     payload: any,
     target: {
