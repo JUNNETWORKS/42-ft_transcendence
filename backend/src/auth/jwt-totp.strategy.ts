@@ -6,7 +6,7 @@ import { jwtConstants } from './auth.constants';
 // Strategy をどこからインポートするかが重要
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtTotpStrategy extends PassportStrategy(Strategy, 'jwt-totp') {
   constructor() {
     super({
       // `Authorization: Bearer xxx`
@@ -25,10 +25,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // 主張 = ペイロードの中身
     // 検証 = 署名が正しいことの確認
     // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
-    if (payload.next) {
-      console.log('required 2fa');
-      throw new UnauthorizedException('required 2fa');
+    if (payload.next !== 'totp') {
+      console.log('invalid');
+      throw new UnauthorizedException('invalid');
     }
-    return { email: payload.email, id: payload.sub };
+    return { secretId: payload.secretId };
   }
 }

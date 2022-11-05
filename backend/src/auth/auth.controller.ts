@@ -18,6 +18,7 @@ import { LoginResultEntity } from './entities/auth.entity';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 import { verifyOtpDto } from './dto/verify-opt.dto';
+import { JwtTotpAuthGuard } from './jwt-totp-auth.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -73,6 +74,7 @@ export class AuthController {
     return this.authService.login(user!);
   }
 
+  @UseGuards(JwtTotpAuthGuard)
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
     console.log(dto);

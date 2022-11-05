@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 
 export type LoginResult = {
   access_token: string;
-  user: any;
+  user?: any;
 };
 
 @Injectable()
@@ -74,6 +74,24 @@ export class AuthService {
       iat,
     };
     const u = await this.usersService.findOne(user.id);
+    if (u?.isEnabled2FA) {
+      const secretId = await this.prisma.totpSecret.findUnique({
+        where: {
+          userId: user.id,
+        },
+      });
+      const result = {
+        required2fa: true,
+        access_token: this.jwtService.sign(
+          { secretId: secretId?.id, next: 'totp', iat },
+          {
+            issuer: process.env.JWT_ISSUER,
+            audience: process.env.JWT_AUDIENCE,
+          }
+        ),
+      };
+      return result;
+    }
     const result = {
       access_token: this.jwtService.sign(payload, {
         issuer: process.env.JWT_ISSUER,
