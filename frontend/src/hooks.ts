@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { UserPersonalData } from './types';
 
@@ -11,17 +11,6 @@ export function useStateWithResetter<T>(initial: T) {
   const [val, setter] = useState<T>(initial);
   const resetter = () => setter(initial);
   return [val, setter, resetter] as const;
-}
-
-/**
- * `id`の変化をトリガーとして何らかのアクションを行うフック
- * @param initialId `id`の初期値
- * @param action  `id`を受け取り, アクションを実行する関数
- */
-export function useAction<T>(initialId: T, action: (id: T) => void) {
-  const [actionId, setActionId] = useState<T>(initialId);
-  useEffect(() => action(actionId), [actionId]);
-  return [setActionId, actionId] as const;
 }
 
 export const useQuery = () => {
@@ -91,40 +80,42 @@ export const usePersonalData = (userId: number) => {
   const [personalData, setPersonalData] = useState<UserPersonalData | null>(
     null
   );
-
+  const fetchUrl = useRef('');
   useEffect(() => {
-    switch (state) {
-      case 'Neutral':
-        if (personalData) {
-          setState('Fetched');
-        } else {
-          setState('Fetching');
-        }
-        break;
-      case 'Fetching':
-        (async () => {
-          try {
-            // TODO: APIで都度取得するのではなくローカルのストアから取ってくる
-            const result = await fetch(
-              `http://localhost:3000/users/${userId}`,
-              {
-                method: 'GET',
-                mode: 'cors',
-              }
-            );
-            if (result.ok) {
-              const user = await result.json();
-              setPersonalData(user);
-              setState('Fetched');
-              return;
-            }
-          } catch (e) {
-            console.error(e);
-          }
-          setState('Failed');
-        })();
-        break;
+    // もうこのユーザのデータがあるなら終了
+    const url = `http://localhost:3000/users/${userId}`;
+    if (personalData && personalData.id === userId) {
+      setState('Fetched');
+      return;
     }
-  }, [state]);
+    // もうこのユーザのfetchが走っているなら終了
+    if (fetchUrl.current === url) {
+      return;
+    }
+    // 念の為データを破棄し, stateを変えてfetch開始
+    fetchUrl.current = url;
+    setPersonalData(null);
+    setState('Fetching');
+    (async () => {
+      try {
+        const result = await fetch(fetchUrl.current, {
+          method: 'GET',
+          mode: 'cors',
+        });
+        if (result.ok) {
+          const user = await result.json();
+          // fetch中にユーザIDが切り替わっていた場合は結果を捨てる
+          if (fetchUrl.current === url) {
+            setPersonalData(user);
+            setState('Fetched');
+          }
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+      }
+      setState('Failed');
+    })();
+  }, [userId, personalData]);
   return [state, personalData] as const;
 };

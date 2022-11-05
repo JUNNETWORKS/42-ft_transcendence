@@ -6,7 +6,7 @@ import {
 } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import * as TD from '../typedef';
+import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
 export const SocketHolder = () => {
@@ -17,12 +17,12 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [userId] = useAtom(userAtoms.userIdAtom);
-  const setVisibleRooms = useAtom(userAtoms.visibleRoomsAtom)[1];
-  const setJoiningRooms = useAtom(userAtoms.joiningRoomsAtom)[1];
+  const [, setVisibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
+  const [, setJoiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
   const [friends, setFriends] = useAtom(userAtoms.friends);
-  const setFocusedRoomId = useAtom(userAtoms.focusedRoomIdAtom)[1];
-  const setMessagesInRoom = useAtom(userAtoms.messagesInRoomAtom)[1];
-  const setMembersInRoom = useAtom(userAtoms.membersInRoomAtom)[1];
+  const [, setFocusedRoomId] = useAtom(userAtoms.focusedRoomIdAtom);
+  const [, setMessagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
+  const [, setMembersInRoom] = useAtom(userAtoms.membersInRoomAtom);
 
   useEffect(() => {
     if (mySocket) {
@@ -284,5 +284,5 @@ export const SocketHolder = () => {
     },
   };
 
-  return <></>;
+  return null;
 };

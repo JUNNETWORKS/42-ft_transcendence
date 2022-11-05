@@ -4,104 +4,11 @@ import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTH3 } from '@/components/FTBasicComponents';
 import { ChatRoomView } from './RoomView';
-import { useAction } from '@/hooks';
 import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
 import { userAtoms } from '@/stores/atoms';
 import { ChatRoomListView } from './RoomList';
-
-function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
-  return {
-    open: (args: TD.OpenArgument) => {
-      const data = {
-        ...args,
-      };
-      console.log(data);
-      mySocket?.emit('ft_open', data);
-    },
-
-    join: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_join', data);
-    },
-
-    leave: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(data);
-      mySocket?.emit('ft_leave', data);
-    },
-
-    say: (content: string) => {
-      if (!focusedRoomId) {
-        return;
-      }
-      const data = {
-        roomId: focusedRoomId,
-        content,
-      };
-      console.log(data);
-      mySocket?.emit('ft_say', data);
-    },
-
-    get_room_messages: (roomId: number) => {
-      const data = {
-        roomId,
-        take: 50,
-      };
-      console.log(['get_room_messages'], data);
-      mySocket?.emit('ft_get_room_messages', data);
-    },
-
-    get_room_members: (roomId: number) => {
-      const data = {
-        roomId,
-      };
-      console.log(['get_room_members'], data);
-      mySocket?.emit('ft_get_room_members', data);
-    },
-
-    nomminate: (member: TD.ChatUserRelation) => {
-      console.log('[nomminate]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_nomminate', data);
-    },
-
-    ban: (member: TD.ChatUserRelation) => {
-      console.log('[ban]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_ban', data);
-    },
-
-    kick: (member: TD.ChatUserRelation) => {
-      console.log('[kick]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_kick', data);
-    },
-
-    mute: (member: TD.ChatUserRelation) => {
-      console.log('[mute]', member);
-      const data = {
-        roomId: member.chatRoomId,
-        userId: member.userId,
-      };
-      mySocket?.emit('ft_mute', data);
-    },
-  };
-}
+import { makeCommand } from './command';
 
 /**
  * @returns チャットインターフェースコンポーネント
@@ -177,21 +84,21 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
    * 保持しているデータに対する参照
    */
   const store = {
-    count_message: (roomId: number) => {
+    countMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms) {
         return undefined;
       }
       return ms.length;
     },
-    room_messages: (roomId: number) => {
+    roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return [];
       }
       return ms;
     },
-    room_members: (roomId: number) => {
+    roomMembers: (roomId: number) => {
       const ms = membersInRoom[roomId];
       if (!ms) {
         return null;
@@ -205,22 +112,22 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: useAction(0, (roomId) => {
+    get_room_message: (roomId: number) => {
       if (roomId > 0) {
-        if (!Utils.isfinite(store.count_message(roomId))) {
+        if (!Utils.isfinite(store.countMessages(roomId))) {
           command.get_room_messages(roomId);
         }
       }
-    })[0],
+    },
 
-    get_room_members: useAction(0, (roomId) => {
+    get_room_members: (roomId: number) => {
       if (roomId > 0) {
-        const mems = store.room_members(roomId);
+        const mems = store.roomMembers(roomId);
         if (!mems) {
           command.get_room_members(roomId);
         }
       }
-    })[0],
+    },
   };
 
   return (
@@ -237,7 +144,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
               rooms={visibleRooms}
               isJoiningTo={predicate.isJoiningTo}
               isFocusingTo={predicate.isFocusingTo}
-              countMessages={store.count_message}
+              countMessages={store.countMessages}
               onJoin={command.join}
               onLeave={command.leave}
               onFocus={(roomId: number) => {
@@ -263,8 +170,8 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
             memberOperations={memberOperations}
             you={computed.you}
             say={command.say}
-            room_messages={store.room_messages}
-            room_members={store.room_members}
+            roomMessages={store.roomMessages}
+            roomMembers={store.roomMembers}
           />
         )}
       </div>
