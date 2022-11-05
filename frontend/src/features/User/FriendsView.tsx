@@ -8,6 +8,9 @@ import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 
 const FriendListItem = (props: { user: TD.User }) => {
   const user = useUserDataReadOnly(props.user.id);
+  if (!user) {
+    return null;
+  }
   return (
     <div className="hover:bg-white hover:text-black">
       <Link className="flex flex-row" to={`./user/${user.id}`}>
