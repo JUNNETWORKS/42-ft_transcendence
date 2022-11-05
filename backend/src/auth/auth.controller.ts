@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   HttpException,
+  Body,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -16,6 +17,7 @@ import { FtAuthGuard } from './ft-auth.guard';
 import { LoginResultEntity } from './entities/auth.entity';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
+import { verifyOtpDto } from './dto/verify-opt.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -69,5 +71,13 @@ export class AuthController {
     const user = await this.usersService.findOne(id);
     console.log('user', user);
     return this.authService.login(user!);
+  }
+
+  @Post('otp')
+  async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
+    console.log(dto);
+    console.log(req.body);
+    const isValid = await this.authService.verifyOtp(dto);
+    return { isValid };
   }
 }

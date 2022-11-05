@@ -7,6 +7,8 @@ import { Socket } from 'socket.io';
 import * as Utils from '../utils';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
+import { verifyOtpDto } from './dto/verify-opt.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 export type LoginResult = {
   access_token: string;
@@ -18,7 +20,8 @@ export class AuthService {
   constructor(
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private prisma: PrismaService
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -43,7 +46,7 @@ export class AuthService {
    */
   async retrieveUser(
     intraId: number,
-    data: Omit<UserMinimum, 'intraId' | 'password'>
+    data: Omit<UserMinimum, 'intraId' | 'password' | 'isEnabled2FA'>
   ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
@@ -119,5 +122,16 @@ export class AuthService {
   async generateQrCode(userId: number, secret: string) {
     const otpPath = authenticator.keyuri(userId.toString(), 'tra', secret);
     return await toDataURL(otpPath);
+  }
+
+  async verifyOtp(verifyOtpDto: verifyOtpDto) {
+    const secret = await this.prisma.totpSecret.findFirst({
+      where: {
+        userId: verifyOtpDto.userId,
+      },
+    });
+    if (!secret) return;
+    const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
+    return isValid;
   }
 }
