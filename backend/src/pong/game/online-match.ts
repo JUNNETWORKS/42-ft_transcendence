@@ -3,8 +3,9 @@ import { Server, Socket } from 'socket.io';
 import { PlayerInput } from './types/game-state';
 import {
   generateFullRoomName,
-  joinChannel,
   sendResultRoom,
+  usersJoin,
+  usersLeave,
 } from 'src/utils/socket/SocketRoom';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -20,11 +21,13 @@ export class OnlineMatch {
   private readonly gameStateSyncTimer: NodeJS.Timer;
   private readonly wsServer: Server;
 
-  constructor(wsServer: Server) {
+  constructor(wsServer: Server, userID1: number, userID2: number) {
     this.wsServer = wsServer;
     this.ID = uuidv4();
     this.roomName = generateFullRoomName({ matchId: this.ID });
-    this.match = new Match(0, 0);
+    this.match = new Match(userID1, userID2);
+    this.joinAsSpectator(userID1);
+    this.joinAsSpectator(userID2);
     this.gameStateSyncTimer = setInterval(() => {
       this.match.update();
 
@@ -41,39 +44,16 @@ export class OnlineMatch {
 
   // マッチのWSルームに観戦者として参加｡
   // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
-  joinAsSpectator(client: Socket) {
-    joinChannel(client, this.roomName);
+  joinAsSpectator(userID: number) {
+    usersJoin(this.wsServer, userID, this.roomName);
   }
 
-  // マッチにプレイヤーとして参加 (先着2名)
-  // TODO: 2人プレイのテスト用で作成している関数｡後で消す｡
-  joinAsPlayer(playerID: number) {
-    if (
-      this.match.players[0].id === playerID ||
-      this.match.players[1].id === playerID
-    ) {
-      // すでにプレイヤーとして参加済み
-      return;
+  // ユーザーが退出した際の処理
+  leave(userID: number) {
+    if (userID in this.match.players) {
+      // TODO: ユーザーがプレイヤーだった場合ゲームを終了させる
     }
-
-    if (this.match.players[0].id === 0) {
-      console.log(`session#${playerID} has joined as player1!\n`);
-      this.match.players[0].id = playerID;
-    } else if (this.match.players[1].id === 0) {
-      this.match.players[1].id = playerID;
-      console.log(`session#${playerID} has joined as player2!\n`);
-    }
-  }
-
-  // プレイヤーが退出した際の処理
-  leave(playerID: number) {
-    if (this.match.players[0].id === playerID) {
-      console.log(`player1#${playerID} has left!\n`);
-      this.match.players[0].id = 0;
-    } else if (this.match.players[1].id === playerID) {
-      console.log(`player2#${playerID} has left!\n`);
-      this.match.players[1].id = 0;
-    }
+    usersLeave(this.wsServer, userID, this.roomName);
   }
 
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
