@@ -66,7 +66,7 @@ export class AuthService {
     return createdUser;
   }
 
-  async login(user: any): Promise<LoginResult> {
+  async login(user: any, completedTwoFa = false): Promise<LoginResult> {
     const iat = Date.now() / 1000;
     const payload = {
       email: user.email,
@@ -74,7 +74,7 @@ export class AuthService {
       iat,
     };
     const u = await this.usersService.findOne(user.id);
-    if (u?.isEnabled2FA) {
+    if (u?.isEnabled2FA && !completedTwoFa) {
       const secretId = await this.prisma.totpSecret.findUnique({
         where: {
           userId: user.id,
@@ -142,10 +142,10 @@ export class AuthService {
     return await toDataURL(otpPath);
   }
 
-  async verifyOtp(verifyOtpDto: verifyOtpDto) {
+  async verifyOtp(secretId: number, verifyOtpDto: verifyOtpDto) {
     const secret = await this.prisma.totpSecret.findFirst({
       where: {
-        userId: verifyOtpDto.userId,
+        id: secretId,
       },
     });
     if (!secret) return;

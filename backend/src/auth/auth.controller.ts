@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   HttpException,
   Body,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -19,13 +20,15 @@ import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 import { verifyOtpDto } from './dto/verify-opt.dto';
 import { JwtTotpAuthGuard } from './jwt-totp-auth.guard';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly prisma: PrismaService
   ) {}
 
   // TODO: 削除
@@ -78,8 +81,16 @@ export class AuthController {
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
     console.log(dto);
-    console.log(req.body);
-    const isValid = await this.authService.verifyOtp(dto);
-    return { isValid };
+    console.log(req.user);
+    const isValid = await this.authService.verifyOtp(req.user.secretId, dto);
+    if (!isValid) {
+      throw new UnauthorizedException();
+    }
+    const user = await this.prisma.totpSecret.findUnique({
+      where: {
+        id: req.user.secretId,
+      },
+    });
+    return this.authService.login(user, true);
   }
 }
