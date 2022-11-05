@@ -19,6 +19,7 @@ export const SocketHolder = () => {
   const [userId] = useAtom(userAtoms.userIdAtom);
   const [, setVisibleRooms] = useAtom(userAtoms.visibleRoomsAtom);
   const [, setJoiningRooms] = useAtom(userAtoms.joiningRoomsAtom);
+  const [friends, setFriends] = useAtom(userAtoms.friends);
   const [, setFocusedRoomId] = useAtom(userAtoms.focusedRoomIdAtom);
   const [, setMessagesInRoom] = useAtom(userAtoms.messagesInRoomAtom);
   const [, setMembersInRoom] = useAtom(userAtoms.membersInRoomAtom);
@@ -37,6 +38,7 @@ export const SocketHolder = () => {
       console.log('catch connection', data);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
+      setFriends(data.friends);
     });
 
     mySocket?.on('ft_open', (data: TD.OpenResult) => {
@@ -174,6 +176,26 @@ export const SocketHolder = () => {
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
       );
+    });
+
+    mySocket?.on('ft_follow', (data: TD.FollowResult) => {
+      console.log('catch follow');
+      if (!friends.find((f) => f.id === data.user.id)) {
+        setFriends((prev) => {
+          const next = [...prev, data.user];
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_unfollow', (data: TD.FollowResult) => {
+      console.log('catch unfollow');
+      if (friends.find((f) => f.id === data.user.id)) {
+        setFriends((prev) => {
+          const next = prev.filter((f) => f.id !== data.user.id);
+          return next;
+        });
+      }
     });
 
     return () => {

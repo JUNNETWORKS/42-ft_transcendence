@@ -4,10 +4,15 @@ import { passwordConstants } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import * as Utils from '../utils';
+import { ChatroomsService } from '../chatrooms/chatrooms.service';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private chatRoomService: ChatroomsService
+  ) {}
 
   create(createUserDto: CreateUserDto) {
     return this.prisma.user.create({ data: createUserDto });
@@ -63,6 +68,62 @@ export class UsersService {
     }
     // ここには到達しないはず
     throw Error('something wrong');
+  }
+
+  async findFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.findUnique({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async addFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.create({
+      data: {
+        userId,
+        targetUserId,
+      },
+    });
+  }
+
+  async removeFriend(userId: number, targetUserId: number) {
+    return this.prisma.friendRelation.delete({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async findFriends(userId: number) {
+    return this.prisma.friendRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        targetUser: true,
+      },
+    });
+  }
+
+  /**
+   * ログイン時の初期表示用の情報をかき集める
+   * @param id
+   */
+  async collectStartingInfomations(id: number) {
+    return Utils.PromiseMap({
+      visibleRooms: this.chatRoomService.findMany({ take: 40 }),
+      joiningRooms: this.chatRoomService
+        .getRoomsJoining(id)
+        .then((rs) => rs.map((r) => r.chatRoom)),
+      friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
+    });
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {

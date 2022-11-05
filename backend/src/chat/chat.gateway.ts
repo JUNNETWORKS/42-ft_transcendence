@@ -14,6 +14,7 @@ import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
+import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
@@ -27,6 +28,8 @@ import {
   usersJoin,
   sendResultRoom,
 } from 'src/utils/socket/SocketRoom';
+import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
+import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 import { AuthService } from 'src/auth/auth.service';
 
 const secondInMilliseconds = 1000;
@@ -48,6 +51,7 @@ export class ChatGateway implements OnGatewayConnection {
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
+    private readonly usersService: UsersService,
     private readonly authService: AuthService
   ) {}
 
@@ -67,9 +71,8 @@ export class ChatGateway implements OnGatewayConnection {
     joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const joiningRooms = (
-      await this.chatRoomService.getRoomsJoining(userId)
-    ).map((r) => r.chatRoom);
+    const { visibleRooms, joiningRooms, friends } =
+      await this.usersService.collectStartingInfomations(userId);
     const joiningRoomNames = joiningRooms.map((r) =>
       generateFullRoomName({ roomId: r.id })
     );
@@ -95,7 +98,6 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
-    const visibleRooms = await this.chatRoomService.findMany({ take: 40 });
     this.sendResults(
       'ft_connection',
       {
@@ -107,6 +109,7 @@ export class ChatGateway implements OnGatewayConnection {
         joiningRooms: joiningRooms.map((r) =>
           Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
         ),
+        friends: friends.map((r) => Utils.pick(r, 'id', 'displayName')),
       },
       {
         client,
@@ -627,6 +630,108 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         client,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_follow')
+  async handleFollow(
+    @MessageBody() data: OperationFollowDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_follow', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findFriend(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [TODO: すでにリレーションが存在していないことを確認]
+    if (rel.existing) {
+      console.log('** already being friend **');
+      return;
+    }
+
+    // [TODO: ハードリレーション更新]
+    await this.usersService.addFriend(user.id, targetId);
+
+    // フォロー**した**ことを通知
+    this.sendResults(
+      'ft_follow',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+    // フォロー**された**ことを通知
+    this.sendResults(
+      'ft_followed',
+      {
+        user: Utils.pick(user, 'id', 'displayName'),
+      },
+      {
+        userId: targetId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_unfollow')
+  async handleUnfollow(
+    @MessageBody() data: OperationUnfollowDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_unfollow', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findFriend(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [TODO: リレーションが存在していることを確認]
+    if (!rel.existing) {
+      console.log('** not being friend **');
+      return;
+    }
+
+    // [TODO: ハードリレーション更新]
+    await this.usersService.removeFriend(user.id, targetId);
+
+    // フォロー**した**ことを通知
+    this.sendResults(
+      'ft_unfollow',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+    // フォロー**された**ことを通知
+    this.sendResults(
+      'ft_unfollowed',
+      {
+        user: Utils.pick(user, 'id', 'displayName'),
+      },
+      {
+        userId: targetId,
       }
     );
   }
