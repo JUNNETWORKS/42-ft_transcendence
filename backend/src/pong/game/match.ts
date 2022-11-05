@@ -1,4 +1,3 @@
-import { SIDE_INDEX } from './constants/match-constants';
 import { GameSettings } from './types/game-settings';
 import {
   Ball,
@@ -15,20 +14,25 @@ import {
 // ゲームの状態､更新のみに責任を持つ｡
 export class Match {
   // field
-  readonly fieldWidth = 1920;
-  readonly fieldHeight = 1080;
+  static readonly fieldWidth = 1920;
+  static readonly fieldHeight = 1080;
   // ball
-  readonly ballRadius = 6;
-  readonly ballDx = 10;
-  readonly ballDy = 10;
+  static readonly ballRadius = 6;
+  static readonly ballDx = 10;
+  static readonly ballDy = 10;
   // bar
-  readonly barHeight = this.fieldHeight / 8;
-  readonly barWidth = this.fieldWidth * 0.01;
-  readonly barLeftX = this.fieldWidth * 0.1;
-  readonly barRightX = this.fieldWidth * 0.9;
-  readonly barDy = 10;
+  static readonly barHeight = Match.fieldHeight / 8;
+  static readonly barWidth = Match.fieldWidth * 0.01;
+  static readonly barLeftX = Match.fieldWidth * 0.1;
+  static readonly barRightX = Match.fieldWidth * 0.9;
+  static readonly barDy = 10;
   //rule
-  readonly maxScore = 15;
+  static readonly maxScore = 15;
+
+  static readonly sideIndex = {
+    left: 0,
+    right: 1,
+  };
 
   ball: Ball;
   players: [Player, Player];
@@ -44,12 +48,12 @@ export class Match {
         score: 0,
         bar: {
           topLeft: {
-            x: this.barLeftX - this.barWidth / 2,
-            y: this.fieldHeight / 2 - this.barHeight / 2,
+            x: Match.barLeftX - Match.barWidth / 2,
+            y: Match.fieldHeight / 2 - Match.barHeight / 2,
           },
           bottomRight: {
-            x: this.barLeftX + this.barWidth / 2,
-            y: this.fieldHeight / 2 + this.barHeight / 2,
+            x: Match.barLeftX + Match.barWidth / 2,
+            y: Match.fieldHeight / 2 + Match.barHeight / 2,
           },
         },
         input: {
@@ -63,12 +67,12 @@ export class Match {
         score: 0,
         bar: {
           topLeft: {
-            x: this.barRightX - this.barWidth / 2,
-            y: this.fieldHeight / 2 - this.barHeight / 2,
+            x: Match.barRightX - Match.barWidth / 2,
+            y: Match.fieldHeight / 2 - Match.barHeight / 2,
           },
           bottomRight: {
-            x: this.barRightX + this.barWidth / 2,
-            y: this.fieldHeight / 2 + this.barHeight / 2,
+            x: Match.barRightX + Match.barWidth / 2,
+            y: Match.fieldHeight / 2 + Match.barHeight / 2,
           },
         },
         input: {
@@ -82,7 +86,7 @@ export class Match {
   // 中央からランダムな方向へボールを飛ばす
   regenerateBall = (): Ball => {
     const rad = Math.random() * (2 * Math.PI);
-    const position = { x: this.fieldWidth / 2, y: this.fieldHeight / 2 };
+    const position = { x: Match.fieldWidth / 2, y: Match.fieldHeight / 2 };
     const velocity = { x: Math.cos(rad), y: Math.sin(rad) };
     if (velocity.x < 0) {
       velocity.x = -velocity.x;
@@ -110,7 +114,7 @@ export class Match {
     if (this.ball.position.x <= 0) {
       // right の勝ち
       return 'right';
-    } else if (this.ball.position.x >= this.fieldWidth) {
+    } else if (this.ball.position.x >= Match.fieldWidth) {
       // left の勝ち
       return 'left';
     } else {
@@ -120,9 +124,9 @@ export class Match {
 
   //ゲームのスコア、勝敗を管理する
   updateScore = (side: PlayerSide) => {
-    const sideIndex = SIDE_INDEX[side];
-    this.players[sideIndex].score++;
-    if (this.players[sideIndex].score >= this.maxScore) {
+    const index = Match.sideIndex[side];
+    this.players[index].score++;
+    if (this.players[index].score >= Match.maxScore) {
       this.winner = side;
     }
   };
@@ -131,18 +135,18 @@ export class Match {
   updateBall = (): void => {
     let newVelocity: Vector2d = JSON.parse(JSON.stringify(this.ball.velocity));
     const newBallPos: Vector2d = JSON.parse(JSON.stringify(this.ball.position));
-    newBallPos.x += this.ball.velocity.x * this.ballDx;
-    newBallPos.y += this.ball.velocity.y * this.ballDy;
+    newBallPos.x += this.ball.velocity.x * Match.ballDx;
+    newBallPos.y += this.ball.velocity.y * Match.ballDy;
 
     // バーとの判定
     const newBallRect: Rectangle = {
       topLeft: {
-        x: newBallPos.x - this.ballRadius,
-        y: newBallPos.y - this.ballRadius,
+        x: newBallPos.x - Match.ballRadius,
+        y: newBallPos.y - Match.ballRadius,
       },
       bottomRight: {
-        x: newBallPos.x + this.ballRadius,
-        y: newBallPos.y + this.ballRadius,
+        x: newBallPos.x + Match.ballRadius,
+        y: newBallPos.y + Match.ballRadius,
       },
     };
     const velocityMag = Math.sqrt(
@@ -235,15 +239,15 @@ export class Match {
 
     // 上下の壁との判定
     if (
-      newBallPos.y - this.ballRadius <= 0 ||
-      newBallPos.y + this.ballRadius >= this.fieldHeight
+      newBallPos.y - Match.ballRadius <= 0 ||
+      newBallPos.y + Match.ballRadius >= Match.fieldHeight
     ) {
       newVelocity = { x: this.ball.velocity.x, y: this.ball.velocity.y * -1 };
     }
 
     this.ball.velocity = newVelocity;
-    this.ball.position.x += this.ballDx * this.ball.velocity.x;
-    this.ball.position.y += this.ballDy * this.ball.velocity.y;
+    this.ball.position.x += Match.ballDx * this.ball.velocity.x;
+    this.ball.position.y += Match.ballDy * this.ball.velocity.y;
   };
 
   // playerID のバーをdir方向に動かす
@@ -264,42 +268,45 @@ export class Match {
       // y=0 がフィールド上部である点に注意
       let dy = 0;
       if (input.down) {
-        dy = Math.min(this.fieldHeight - player.bar.bottomRight.y, this.barDy);
+        dy = Math.min(
+          Match.fieldHeight - player.bar.bottomRight.y,
+          Match.barDy
+        );
       } else if (input.up) {
-        dy = Math.max(-player.bar.topLeft.y, -this.barDy);
+        dy = Math.max(-player.bar.topLeft.y, -Match.barDy);
       }
 
       // ボールにバーがめり込まない場合のみバーを移動させる
       const ballRectangle: Rectangle = {
         topLeft: {
-          x: this.ball.position.x - this.ballRadius,
-          y: this.ball.position.y - this.ballRadius,
+          x: this.ball.position.x - Match.ballRadius,
+          y: this.ball.position.y - Match.ballRadius,
         },
         bottomRight: {
-          x: this.ball.position.x + this.ballRadius,
-          y: this.ball.position.y + this.ballRadius,
+          x: this.ball.position.x + Match.ballRadius,
+          y: this.ball.position.y + Match.ballRadius,
         },
       };
       const nextBallRectangle: Rectangle = {
         topLeft: {
           x:
             this.ball.position.x +
-            this.ball.velocity.x * this.ballDx -
-            this.ballRadius,
+            this.ball.velocity.x * Match.ballDx -
+            Match.ballRadius,
           y:
             this.ball.position.y +
-            this.ball.velocity.y * this.ballDy -
-            this.ballRadius,
+            this.ball.velocity.y * Match.ballDy -
+            Match.ballRadius,
         },
         bottomRight: {
           x:
             this.ball.position.x +
-            this.ball.velocity.x * this.ballDx +
-            this.ballRadius,
+            this.ball.velocity.x * Match.ballDx +
+            Match.ballRadius,
           y:
             this.ball.position.y +
-            this.ball.velocity.y * this.ballDy +
-            this.ballRadius,
+            this.ball.velocity.y * Match.ballDy +
+            Match.ballRadius,
         },
       };
       // TODO: Node17以上にアップグレードして､structuredClone()を使えるようにする｡
@@ -327,13 +334,13 @@ export class Match {
   getSettings = (): GameSettings => {
     return {
       field: {
-        width: this.fieldWidth,
-        height: this.fieldWidth,
+        width: Match.fieldWidth,
+        height: Match.fieldWidth,
       },
       ball: {
-        radius: this.ballRadius,
-        dx: this.ballDx,
-        dy: this.ballDy,
+        radius: Match.ballRadius,
+        dx: Match.ballDx,
+        dy: Match.ballDy,
       },
     };
   };
