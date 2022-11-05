@@ -9,7 +9,7 @@ import { UserPersonalData } from '@/types';
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
   if (!mySocket) {
-    return <></>;
+    return null;
   }
   const command = {
     follow: (targetId: number) => {
