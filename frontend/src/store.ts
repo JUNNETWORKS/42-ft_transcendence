@@ -18,7 +18,7 @@ export const useUpdateUser = () => {
 
   const addOne = (data: TD.User) => {
     const d = Utils.datifyObject(data);
-    setUsersStore((prev) => ({ ...prev, [data.id]: d }));
+    setUsersStore((prev) => ({ [data.id]: d, ...prev }));
   };
   const addMany = (data: TD.User[]) => {
     const ds = data.map((d) => Utils.datifyObject(d, 'time'));

@@ -195,6 +195,7 @@ export const SocketHolder = () => {
     mySocket?.on('ft_follow', (data: TD.FollowResult) => {
       console.log('catch follow');
       if (!friends.find((f) => f.id === data.user.id)) {
+        userUpdator.addOne(data.user);
         setFriends((prev) => {
           const next = [...prev, data.user];
           return next;
