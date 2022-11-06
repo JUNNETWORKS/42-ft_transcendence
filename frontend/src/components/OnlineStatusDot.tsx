@@ -19,12 +19,11 @@ export const OnlineStatusDot = (props: { user: TD.User }) => {
     }
   };
   const [color, setColor] = useState(onlineStatusColor(user));
-  const [now] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => {
       setColor(onlineStatusColor(user));
     }, 1000);
     return () => clearInterval(timer);
-  }, [now, user]);
+  }, [user]);
   return <VscCircleFilled className={color} />;
 };
