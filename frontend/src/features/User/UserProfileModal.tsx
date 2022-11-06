@@ -23,12 +23,59 @@ type InnerProp = Prop & {
   setPhase: (phase: Phase) => void;
 };
 
+const urlGA = {
+  play: 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=ja&gl=US',
+  appstore: 'https://apps.apple.com/jp/app/google-authenticator/id388497605',
+};
+
+/**
+ * 2FA用のQRコードをユーザに表示するコンポーネント
+ */
 const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
   return (
-    <div>
-      <div>
-        <img src={props.qrcode} />
+    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+      <h3>二要素認証用QRコード</h3>
+      <ul className="list-disc">
+        <li>
+          このQRコードは機密性の高いものです。
+          <span className="text-red-400">
+            画像として保存することはお控えください。
+          </span>
+        </li>
+        <li>
+          お使いのスマートフォンにて Google Authenticator アプリを起動し,
+          下記QRコードをスキャンしてください。
+        </li>
+      </ul>
+      <div className="flex flex-row justify-center">
+        <p className="block p-2">インストール:</p>
+        <a
+          className="block p-2 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+          href={urlGA.play}
+        >
+          Google Play
+        </a>
+        <a
+          className="block p-2 underline"
+          target="_blank"
+          rel="noopener noreferrer"
+          href={urlGA.play}
+        >
+          App Store
+        </a>
       </div>
+      <div className="text-center">
+        <img className="inline" src={props.qrcode} />
+      </div>
+      <ul className="list-disc">
+        <li>
+          <span className="text-red-400">
+            スキャンが完了したら直ちにCloseボタンを押してこの画面を閉じてください。
+          </span>
+        </li>
+      </ul>
       <FTButton onClick={props.onClose}>Close</FTButton>
     </div>
   );
@@ -146,12 +193,15 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
   if (!personalData) {
     return null;
   }
+  const closeModal = () => {
+    if (confirm('QRコードのスキャンは完了しましたか？')) {
+      setQrcode(null);
+    }
+  };
   return (
     <>
-      <Modal closeModal={() => setQrcode(null)} isOpen={!!qrcode}>
-        {qrcode && (
-          <QrcodeCard qrcode={qrcode} onClose={() => setQrcode(null)} />
-        )}
+      <Modal closeModal={closeModal} isOpen={!!qrcode}>
+        {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <div className="flex gap-8">
         <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
