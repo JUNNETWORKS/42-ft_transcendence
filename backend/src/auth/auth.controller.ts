@@ -9,6 +9,7 @@ import {
   HttpException,
   Body,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -80,15 +81,21 @@ export class AuthController {
   @UseGuards(JwtTotpAuthGuard)
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
-    console.log(dto);
-    console.log(req.user);
     const isValid = await this.authService.verifyOtp(req.user.secretId, dto);
     if (!isValid) {
       throw new UnauthorizedException();
     }
-    const user = await this.prisma.totpSecret.findUnique({
+    const topt = await this.prisma.totpSecret.findUnique({
       where: {
         id: req.user.secretId,
+      },
+    });
+    if (!topt) {
+      throw new BadRequestException();
+    }
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id: topt.userId,
       },
     });
     return this.authService.login(user, true);

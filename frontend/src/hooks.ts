@@ -90,6 +90,7 @@ export const useAPI = (
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   endpoint: string,
   option: {
+    credential?: { token: string };
     payload?: () => any;
     onFailed?: (error: unknown) => void;
   } & ({ onFetched: (json: unknown) => void } | { onFinished: () => void })
@@ -103,8 +104,9 @@ export const useAPI = (
         headers['Content-Type'] = 'application/json';
       }
       const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
-      if (credential) {
-        headers['Authorization'] = `Bearer ${credential.token}`;
+      const usedCredential = option.credential || credential;
+      if (usedCredential) {
+        headers['Authorization'] = `Bearer ${usedCredential.token}`;
       }
       return fetch(`http://localhost:3000${endpoint}`, {
         method,
