@@ -46,7 +46,7 @@ export class AuthService {
    */
   async retrieveUser(
     intraId: number,
-    data: Omit<UserMinimum, 'intraId' | 'password' | 'isEnabled2FA'>
+    data: Pick<UserMinimum, 'displayName' | 'email'>
   ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {

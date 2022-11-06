@@ -1,4 +1,9 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+} from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { passwordConstants } from '../auth/auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
@@ -130,7 +135,10 @@ export class UsersService {
     });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  update(
+    id: number,
+    updateUserDto: UpdateUserDto & { isEnabledAvatar?: boolean }
+  ) {
     return this.prisma.user.update({
       where: { id },
       data: updateUserDto,
@@ -139,6 +147,33 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async upsertAvatar(userId: number, avatarDataURL: string) {
+    const m = avatarDataURL.match(/^data:([^;]+);([^,]+),(.*)$/);
+    if (!m) {
+      throw new BadRequestException('unexpected dataurl format');
+    }
+    const [, mime, encoding, data] = m;
+    const buffer = Buffer.from(data, 'base64');
+    console.log(buffer);
+
+    const result = await this.prisma.userAvatar.upsert({
+      where: {
+        userId,
+      },
+      create: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+      update: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+    });
+    return Utils.pick(result, 'id', 'userId', 'mime');
   }
 
   async enableTwoFa(id: number) {

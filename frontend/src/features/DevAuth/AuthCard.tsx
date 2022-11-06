@@ -7,12 +7,11 @@ import {
   FTButton,
   FTSubmit,
   FTTextField,
-  FTH2,
 } from '@/components/FTBasicComponents';
 import { useAPI } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { passwordErrors, selfErrors } from './auth.validator';
+import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
 
 export const TotpAuthForm = (props: {
@@ -21,6 +20,8 @@ export const TotpAuthForm = (props: {
   onClose: () => void;
 }) => {
   const [otp, setOtp] = useState('');
+  const validationErrors = totpErrors(otp);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const [state, submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
     payload: () => ({ otp }),
@@ -32,13 +33,20 @@ export const TotpAuthForm = (props: {
       if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
+          setNetErrors(json);
         });
       }
     },
   });
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-      <h2 className="text-2xl">Input Onetime Password</h2>
+      <h3>ワンタイムパスワードが必要です</h3>
+      <ul className="list-disc">
+        <li>
+          お使いのスマートフォンにて Google Authenticator アプリを起動し,
+          表示されるワンタイムパスワードを入力してください。
+        </li>
+      </ul>
       <div>
         <FTTextField
           className="w-full"
@@ -46,9 +54,13 @@ export const TotpAuthForm = (props: {
           placeholder="ワンタイムパスワード"
           onChange={(e) => setOtp(e.target.value)}
         />
+        <div>{validationErrors.totp || netErrors.totp || '　'}</div>
       </div>
       <div>
-        <FTButton disabled={state === 'Fetching'} onClick={submit}>
+        <FTButton
+          disabled={validationErrors.some || state === 'Fetching'}
+          onClick={submit}
+        >
           Login
         </FTButton>
       </div>

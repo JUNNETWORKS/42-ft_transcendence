@@ -15,6 +15,9 @@ export class UserEntity implements User {
   isEnabled2FA!: boolean;
 
   @ApiProperty()
+  isEnabledAvatar!: boolean;
+
+  @ApiProperty()
   intraId!: number;
 
   @ApiProperty()
