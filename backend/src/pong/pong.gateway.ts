@@ -12,7 +12,7 @@ import { WaitingQueues } from './game/waiting-queues';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { WaitingQueue } from './game/waiting-queue';
 import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create.dto';
-import { generateMatchID } from './game/utils';
+import { generateQueueID } from './game/utils';
 import { AuthService } from 'src/auth/auth.service';
 
 @WebSocketGateway({ cors: true, namespace: '/pong' })
@@ -58,14 +58,14 @@ export class PongGateway {
   ) {
     if (data.queueType === 'private') {
       // プライベートマッチ用の待機キューを作成する｡
-      const matchID = generateMatchID();
-      const queue = new WaitingQueue(matchID, this.ongoingMatches, {
+      const queueID = generateQueueID();
+      const queue = new WaitingQueue(queueID, this.ongoingMatches, {
         maxWaiters: 2,
       }); // TODO: タイムアウトと最大人数を設定する
       this.waitingQueues.appendQueue(queue);
       // クライアントに待機キュー作成完了通知を送信
       client.emit('pong.match_making.created', {
-        id: matchID,
+        id: queueID,
       });
     }
   }
