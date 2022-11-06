@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as TD from './typedef';
 import * as Utils from './utils';
 
@@ -121,7 +121,7 @@ export const useUserData = (userId: number) => {
       }
       setState('Failed');
     })();
-  }, [userId, personalData]);
+  }, [userId, personalData, usersStore]);
   return [state, personalData] as const;
 };
 

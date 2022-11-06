@@ -37,7 +37,7 @@ export const FriendsView = () => {
   const [friends] = useAtom(userAtoms.friends);
 
   const friendsRoutes = [
-    { path: '/', element: <></> },
+    { path: '/', element: null },
     { path: '/user/:id', element: <UserView /> },
   ];
   const routeElements = useRoutes([...friendsRoutes]);
