@@ -13,9 +13,7 @@ export class OngoingMatches {
 
   createMatch(userID1: number, userID2: number) {
     const match = new OnlineMatch(this.wsServer, userID1, userID2);
-    if (match.getMatchID() in this.matches === false) {
-      this.matches.set(match.getMatchID(), match);
-    }
+    // TODO: プレイヤーにマッチが開始されたことを通知する
   }
 
   moveBar(playerID: number, playerAction: PlayerInput) {
