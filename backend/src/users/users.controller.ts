@@ -7,12 +7,20 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
+  UseFilters,
+  Res,
+  Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PrismaExceptionFilter } from 'src/filters/prisma';
+import * as express from 'express';
+import * as dayjs from 'dayjs';
 
 @Controller('users')
 @ApiTags('users')
@@ -30,6 +38,24 @@ export class UsersController {
   @ApiOkResponse({ type: UserEntity, isArray: true })
   findAll() {
     return this.usersService.findAll();
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Get(':id/avatar')
+  async getAvatar(
+    @Res() res: express.Response,
+    @Param('id', ParseIntPipe) id: number
+  ) {
+    const { mime, avatar, lastModified } = await this.usersService.getAvatar(
+      id
+    );
+    res.set({
+      'Content-Type': mime,
+      'Last-Modified': dayjs(lastModified).format(
+        'ddd, DD MMM YYYY HH:mm:ss [GMT]'
+      ),
+    });
+    avatar.getStream().pipe(res);
   }
 
   @Get(':id')

@@ -29,10 +29,11 @@ model User {
 }
 
 model UserAvatar {
-  id     Int    @id @default(autoincrement())
-  userId Int    @unique
-  mime   String
-  avatar Bytes
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  mime         String
+  avatar       Bytes
+  lastModified DateTime @default(now()) @updatedAt
 }
 
 model TotpSecret {

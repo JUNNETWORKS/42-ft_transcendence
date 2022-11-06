@@ -3,6 +3,8 @@ import {
   forwardRef,
   Inject,
   Injectable,
+  NotFoundException,
+  StreamableFile,
 } from '@nestjs/common';
 import { createHmac } from 'crypto';
 import { passwordConstants } from '../auth/auth.constants';
@@ -222,6 +224,23 @@ export class UsersService {
       }),
     ]);
     return;
+  }
+
+  async getAvatar(id: number) {
+    const avatar = await this.prisma.userAvatar.findUnique({
+      where: {
+        userId: id,
+      },
+    });
+    console.log(avatar);
+    if (!avatar) {
+      throw new NotFoundException('avatar is not found');
+    }
+    return {
+      mime: avatar.mime,
+      avatar: new StreamableFile(avatar.avatar),
+      lastModified: avatar.lastModified,
+    };
   }
 }
 
