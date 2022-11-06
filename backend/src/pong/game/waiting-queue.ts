@@ -8,6 +8,7 @@ export type WaitingQueueConfig = {
 // マッチメイキングの待機キュー
 export class WaitingQueue {
   // Queueを識別するための文字列｡他のQueueと重複してはいけない｡
+  // このIDは招待リンクなどに使われる
   public readonly id: string;
   // 待機キューの最大人数
   private readonly maxWaiterCount: number;
