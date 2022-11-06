@@ -46,7 +46,7 @@ export class AuthController {
     if (!user) {
       throw new HttpException('No User', 401);
     }
-    return Utils.pick(user, 'id', 'displayName', 'email');
+    return Utils.pick(user, 'id', 'displayName', 'email', 'isEnabled2FA');
   }
 
   @UseGuards(FtAuthGuard)
