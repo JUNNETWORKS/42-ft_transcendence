@@ -6,6 +6,7 @@ export type User = {
   id: number;
   displayName: string;
   time?: Date;
+  isEnabledAvatar: boolean;
 };
 
 export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;

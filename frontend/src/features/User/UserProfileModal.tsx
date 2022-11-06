@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
 import { useDropzone } from 'react-dropzone';
+import { UserAvatar } from '@/components/UserAvater';
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
@@ -206,7 +207,7 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <div className="flex gap-8">
-        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <UserAvatar user={user} className="h-24 w-24" />
         <div className="flex flex-col justify-around">
           <div className="text-2xl">Id: {user.id}</div>
           <div className="text-2xl">{displayName}</div>
@@ -360,7 +361,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
   return (
     <>
       <div className="flex gap-8">
-        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <UserAvatar user={user} className="h-24 w-24" />
         <div className="flex flex-col justify-around">
           <p className="text-2xl">Id: {user.id}</p>
           <p className="text-2xl">Name: {user.displayName}</p>

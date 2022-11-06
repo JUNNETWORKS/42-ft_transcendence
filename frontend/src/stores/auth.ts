@@ -13,6 +13,7 @@ type UserPersonalData = {
   email: string;
   displayName: string;
   isEnabled2FA: boolean;
+  isEnabledAvatar: boolean;
 };
 
 export const authAtom = {

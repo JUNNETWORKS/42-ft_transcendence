@@ -5,6 +5,7 @@ import { useAtom } from 'jotai';
 import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
 import { useNavigate } from 'react-router-dom';
+import { UserAvatar } from './UserAvater';
 
 type UserCardProp = {
   user: TD.User;
@@ -21,11 +22,7 @@ const UserCard = ({ user }: UserCardProp) => {
         className="flex w-72 cursor-pointer gap-x-6 bg-secondary"
         onClick={() => setIsOpen(true)}
       >
-        <img
-          src="/Kizaru.png"
-          alt="CurrentUserProfileImage"
-          className="m-3 h-14 w-14"
-        />
+        <UserAvatar user={user} />
         <div className="flex flex-1 items-center text-2xl">
           {user.displayName}
         </div>
