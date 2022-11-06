@@ -6,12 +6,12 @@ import {
 } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
-import { PongMatchActionDTO } from './dto/pong-match-action';
+import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { OngoingMatches } from './game/ongoing-matches';
 import { WaitingQueues } from './game/waiting-queues';
-import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry';
+import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { WaitingQueue } from './game/waiting-queue';
-import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create';
+import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create.dto';
 import { generateMatchID } from './game/utils';
 import { AuthService } from 'src/auth/auth.service';
 
