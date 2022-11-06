@@ -97,9 +97,8 @@ export class AuthService {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(u!, 'id', 'displayName', 'email'),
+      user: Utils.pick(u!, 'id', 'displayName', 'email', 'isEnabled2FA'),
     };
-    console.log(`[login]`, result);
     return result;
   }
 
