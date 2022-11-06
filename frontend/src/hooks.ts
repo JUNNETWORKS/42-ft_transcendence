@@ -91,13 +91,11 @@ export const useAPI = (
   endpoint: string,
   option: {
     payload?: () => any;
-    onFetched: (json: unknown) => void;
     onFailed?: (error: unknown) => void;
-  }
+  } & ({ onFetched: (json: unknown) => void } | { onFinished: () => void })
 ) => {
-  const { payload, onFetched, onFailed } = option;
+  const { payload, onFailed } = option;
   const [credential] = useAtom(storedCredentialAtom);
-
   return useFetch(
     () => {
       const headers: HeadersInit = {};
@@ -118,8 +116,12 @@ export const useAPI = (
     (res) =>
       (async () => {
         try {
-          const json = await res.json();
-          onFetched(json);
+          if ('onFetched' in option) {
+            const json = await res.json();
+            option.onFetched(json);
+            return;
+          }
+          option.onFinished();
         } catch (e) {
           console.error(e);
           if (onFailed) {

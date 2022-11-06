@@ -34,6 +34,42 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
   );
 };
 
+const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
+  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
+    onFinished: () => {
+      setPersonalData({ ...personalData!, isEnabled2FA: false });
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+        });
+      }
+    },
+  });
+  if (!personalData) {
+    return null;
+  }
+  return (
+    <div>
+      <p>Enabled.</p>
+
+      <FTButton
+        className="mr-2 disabled:opacity-50"
+        disabled={state === 'Fetching'}
+        onClick={() => {
+          if (confirm('really disable 2FA?')) {
+            submit();
+          }
+        }}
+      >
+        Disable 2FA
+      </FTButton>
+    </div>
+  );
+};
+
 type Enable2FACardProp = InnerProp & { onSucceeded: (qrcode: string) => void };
 
 const Enable2FACard = ({
@@ -123,7 +159,9 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
           <div className="text-2xl">Id: {user.id}</div>
           <div className="text-2xl">{displayName}</div>
           <h3 className="text-2xl">2FA</h3>
-          {personalData.isEnabled2FA ? null : (
+          {personalData.isEnabled2FA ? (
+            <Disable2FACard user={user} setPhase={setPhase} onClose={onClose} />
+          ) : (
             <Enable2FACard
               user={user}
               setPhase={setPhase}
