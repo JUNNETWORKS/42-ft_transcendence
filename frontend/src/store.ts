@@ -1,5 +1,5 @@
 import { atom, useAtom } from 'jotai';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as TD from './typedef';
 import * as Utils from './utils';
 
@@ -15,57 +15,73 @@ export const objectStoreAtoms = {
  */
 export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
-
-  const addOne = (data: TD.User) => {
-    const d = Utils.datifyObject(data);
-    setUsersStore((prev) => ({ [data.id]: d, ...prev }));
-  };
-  const addMany = (data: TD.User[]) => {
-    const ds = data.map((d) => Utils.datifyObject(d, 'time'));
-    setUsersStore((prev) => {
-      const next = { ...prev };
-      ds.forEach((d) => (next[d.id] = d));
-      return next;
-    });
-  };
-  const updateOne = (userId: number, part: Partial<TD.User>) => {
-    const d = usersStore[userId];
-    if (!d) {
-      return;
-    }
-    const p = Utils.datifyObject(part, 'time');
-    setUsersStore((prev) => ({ ...prev, [userId]: { ...d, ...p } }));
-  };
-  const offlinate = (userId: number) => {
-    const d = usersStore[userId];
-    if (!d) {
-      return;
-    }
-    setUsersStore((prev) => ({
-      ...prev,
-      [userId]: { ...Utils.omit(d, 'time') },
-    }));
-  };
-  const delOne = (userId: number) => {
-    setUsersStore((prev) => {
-      const next: typeof prev = {};
-      for (const id in prev) {
-        if ((id as any) !== userId) {
-          next[id] = prev[id];
-        }
-      }
-      return next;
-    });
+  const updater = {
+    addOne: useCallback(
+      (data: TD.User) => {
+        const d = Utils.datifyObject(data);
+        setUsersStore((prev) => ({ [data.id]: d, ...prev }));
+      },
+      [setUsersStore]
+    ),
+    addMany: useCallback(
+      (data: TD.User[]) => {
+        const ds = data.map((d) => Utils.datifyObject(d, 'time'));
+        setUsersStore((prev) => {
+          const next = { ...prev };
+          ds.forEach((d) => (next[d.id] = d));
+          return next;
+        });
+      },
+      [setUsersStore]
+    ),
+    updateOne: useCallback(
+      (userId: number, part: Partial<TD.User>) => {
+        setUsersStore((prev) => {
+          const d = prev[userId];
+          if (!d) {
+            return prev;
+          }
+          const p = Utils.datifyObject(part, 'time');
+          return { ...prev, [userId]: { ...d, ...p } };
+        });
+      },
+      [setUsersStore]
+    ),
+    offlinate: useCallback(
+      (userId: number) => {
+        setUsersStore((prev) => {
+          const d = prev[userId];
+          if (!d) {
+            return prev;
+          }
+          return {
+            ...prev,
+            [userId]: { ...Utils.omit(d, 'time') },
+          };
+        });
+      },
+      [setUsersStore]
+    ),
+    delOne: useCallback(
+      (userId: number) => {
+        setUsersStore((prev) => {
+          const next: typeof prev = {};
+          for (const id in prev) {
+            if ((id as any) !== userId) {
+              next[id] = prev[id];
+            }
+          }
+          return next;
+        });
+      },
+      [setUsersStore]
+    ),
   };
   // delMany はいらんだろ
 
   return {
     usersStore,
-    addOne,
-    addMany,
-    updateOne,
-    delOne,
-    offlinate,
+    ...updater,
   };
 };
 
@@ -76,15 +92,13 @@ type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
  */
 export const useUserData = (userId: number) => {
   const [state, setState] = useState<FetchState>('Neutral');
-  const [usersStore] = useAtom(objectStoreAtoms.users);
-  const [personalData, setPersonalData] = useState<TD.User | null>(
-    usersStore[userId] || null
-  );
+  const { usersStore, addOne } = useUpdateUser();
+  const userData = useUserDataReadOnly(userId);
   const fetchUrl = useRef('');
   useEffect(() => {
     // もうこのユーザのデータがあるなら終了
     const url = `http://localhost:3000/users/${userId}`;
-    if (personalData && personalData.id === userId) {
+    if (userData && userData.id === userId) {
       setState('Fetched');
       return;
     }
@@ -95,11 +109,9 @@ export const useUserData = (userId: number) => {
     // 念の為データを破棄し, stateを変えてfetch開始
     fetchUrl.current = url;
     if (usersStore[userId]) {
-      setPersonalData(usersStore[userId]);
       setState('Fetched');
       return;
     }
-    setPersonalData(null);
     setState('Fetching');
     (async () => {
       try {
@@ -111,7 +123,7 @@ export const useUserData = (userId: number) => {
           const user = await result.json();
           // fetch中にユーザIDが切り替わっていた場合は結果を捨てる
           if (fetchUrl.current === url) {
-            setPersonalData(user);
+            addOne(user);
             setState('Fetched');
           }
           return;
@@ -121,8 +133,8 @@ export const useUserData = (userId: number) => {
       }
       setState('Failed');
     })();
-  }, [userId, personalData, usersStore]);
-  return [state, personalData] as const;
+  }, [userId, userData, usersStore, addOne]);
+  return [state, userData] as const;
 };
 
 export const useUserDataReadOnly = (id: number) => {
