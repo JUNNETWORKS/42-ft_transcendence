@@ -10,8 +10,9 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
+import { Modal } from '@/components/Modal';
 
-type Phase = 'Display' | 'Edit' | 'EditPassword';
+type Phase = 'Display' | 'Edit' | 'Edit2FA' | 'EditPassword';
 
 type Prop = {
   user: TD.User;
@@ -20,6 +21,137 @@ type Prop = {
 
 type InnerProp = Prop & {
   setPhase: (phase: Phase) => void;
+};
+
+const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
+  return (
+    <div>
+      <div>
+        <img src={props.qrcode} />
+      </div>
+      <FTButton onClick={props.onClose}>Close</FTButton>
+    </div>
+  );
+};
+
+type Enable2FACardProp = InnerProp & { onSucceeded: (qrcode: string) => void };
+
+const Enable2FACard = ({
+  user,
+  setPhase,
+  onClose,
+  onSucceeded,
+}: Enable2FACardProp) => {
+  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [state, submit] = useAPI('PATCH', `/me/twoFa/enable`, {
+    onFetched: (json) => {
+      const data = json as { qrcode: string };
+      setPersonalData({ ...personalData!, isEnabled2FA: true });
+      onSucceeded(data.qrcode);
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+        });
+      }
+    },
+  });
+  if (!personalData) {
+    return null;
+  }
+  return (
+    <div>
+      <p>Disabled.</p>
+
+      <FTButton
+        className="mr-2 disabled:opacity-50"
+        disabled={state === 'Fetching'}
+        onClick={() => {
+          if (confirm('really enable 2FA?')) {
+            submit();
+          }
+        }}
+      >
+        Enable 2FA
+      </FTButton>
+    </div>
+  );
+};
+
+const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
+  const [qrcode, setQrcode] = useState<string | null>(null);
+  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [displayName] = useState(user.displayName);
+  const validationErrors = displayNameErrors(displayName);
+  const [, setNetErrors] = useState<{ [key: string]: string }>({});
+  const { updateOne } = useUpdateUser();
+  const [state, submit] = useAPI('PATCH', `/me`, {
+    payload: () => ({ displayName }),
+    onFetched: (json) => {
+      const u = json as TD.User;
+      updateOne(u.id, u);
+      setPersonalData({ ...personalData!, ...u });
+      setNetErrors({});
+      setPhase('Display');
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+          if (typeof json === 'object') {
+            setNetErrors(json);
+          }
+        });
+      }
+    },
+  });
+
+  if (!personalData) {
+    return null;
+  }
+  return (
+    <>
+      <Modal closeModal={() => setQrcode(null)} isOpen={!!qrcode}>
+        {qrcode && (
+          <QrcodeCard qrcode={qrcode} onClose={() => setQrcode(null)} />
+        )}
+      </Modal>
+      <div className="flex gap-8">
+        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <div className="flex flex-col justify-around">
+          <div className="text-2xl">Id: {user.id}</div>
+          <div className="text-2xl">{displayName}</div>
+          <h3 className="text-2xl">2FA</h3>
+          {personalData.isEnabled2FA ? null : (
+            <Enable2FACard
+              user={user}
+              setPhase={setPhase}
+              onClose={onClose}
+              onSucceeded={setQrcode}
+            />
+          )}
+        </div>
+      </div>
+      <div className="flex justify-around gap-8">
+        <FTButton
+          onClick={() => {
+            setPhase('Display');
+          }}
+        >
+          Cancel
+        </FTButton>
+        <FTButton
+          className="mr-2 disabled:opacity-50"
+          disabled={validationErrors.some || state === 'Fetching'}
+          onClick={submit}
+        >
+          <InlineIcon i={<Icons.Save />} />
+          Save
+        </FTButton>
+      </div>
+    </>
+  );
 };
 
 const EditDisplayName = ({ user, setPhase, onClose }: InnerProp) => {
@@ -100,8 +232,9 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
           <p className="text-2xl">Name: {user.displayName}</p>
         </div>
       </div>
-      <div className="flex justify-around gap-8">
+      <div className="flex flex-wrap justify-around gap-8">
         <FTButton
+          className="w-36"
           onClick={() => {
             navigation('/auth');
             onClose();
@@ -109,8 +242,14 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
         >
           認証ページ
         </FTButton>
-        <FTButton onClick={() => setPhase('Edit')}>ユーザ情報変更</FTButton>
+        <FTButton className="w-36" onClick={() => setPhase('Edit')}>
+          ユーザ情報変更
+        </FTButton>
+        <FTButton className="w-36" onClick={() => setPhase('Edit2FA')}>
+          2FA設定
+        </FTButton>
         <FTButton
+          className="w-36"
           onClick={() => {
             navigation('/auth');
             onClose();
@@ -133,13 +272,17 @@ export const UserProfileModal = ({ user, onClose }: Prop) => {
         return (
           <EditDisplayName user={user} setPhase={setPhase} onClose={onClose} />
         );
+      case 'Edit2FA':
+        return <Edit2FA user={user} setPhase={setPhase} onClose={onClose} />;
       case 'EditPassword':
-        return <></>;
+        return null;
     }
   };
   return (
-    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-      {presentator()}
-    </div>
+    <>
+      <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+        {presentator()}
+      </div>
+    </>
   );
 };

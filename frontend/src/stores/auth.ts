@@ -12,6 +12,7 @@ type UserPersonalData = {
   id: number;
   email: string;
   displayName: string;
+  isEnabled2FA: boolean;
 };
 
 export const authAtom = {
