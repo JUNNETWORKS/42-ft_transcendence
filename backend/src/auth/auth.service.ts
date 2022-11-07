@@ -97,7 +97,14 @@ export class AuthService {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(u!, 'id', 'displayName', 'email', 'isEnabled2FA'),
+      user: Utils.pick(
+        u!,
+        'id',
+        'displayName',
+        'email',
+        'isEnabled2FA',
+        'isEnabledAvatar'
+      ),
     };
     return result;
   }
