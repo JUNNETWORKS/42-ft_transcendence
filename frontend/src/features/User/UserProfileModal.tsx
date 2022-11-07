@@ -256,17 +256,27 @@ const convertBlobToDataURL = (blob: File): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
+type AvatarFile = {
+  name: string;
+  dataURL: string;
+};
+
+/**
+ * あまり重要でないユーザ情報(名前, アバター画像)を変更するためのフォーム
+ */
 const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [displayName, setDisplayName] = useState(user.displayName);
-  const [avatarFileDataURL, setAvatarFileDataURL] = useState<string | null>(
-    null
-  );
-  const validationErrors = displayNameErrors(displayName);
+  const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const validationErrors = {
+    ...displayNameErrors(displayName),
+    avatar: avatarError,
+  };
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
   const [state, submit] = useAPI('PATCH', `/me`, {
-    payload: () => ({ displayName, avatar: avatarFileDataURL }),
+    payload: () => ({ displayName, avatar: avatarFile?.dataURL }),
     onFetched: (json) => {
       const u = json as TD.User;
       updateOne(u.id, u);
@@ -287,36 +297,68 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   });
   const onDrop = useCallback((acceptedFiles: File[]) => {
     // Do something with the files
-    if (acceptedFiles.length !== 1) {
+    setAvatarError(null);
+    const file = acceptedFiles[0];
+    if (!file) {
       return;
     }
-    convertBlobToDataURL(acceptedFiles[0]).then((dataURL) => {
+    convertBlobToDataURL(file).then((dataURL) => {
       console.log('dataURL', dataURL);
-      setAvatarFileDataURL(dataURL);
+      console.log('name', file.name);
+      setAvatarFile({ name: file.name, dataURL });
     });
   }, []);
+  const extensions = ['.png', '.gif', '.jpeg', '.jpg'];
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
-      'image/*': ['.png', '.gif', '.jpeg', '.jpg'],
+      'image/*': extensions,
     },
     maxFiles: 1,
     maxSize: 1024 ** 2,
+    multiple: false,
     onDrop,
+    onDropRejected(fileRejections) {
+      setAvatarFile(null);
+      const file = fileRejections[0];
+      for (const err of file.errors) {
+        switch (err.code) {
+          case 'file-too-large':
+            setAvatarError('ファイルサイズが1MBを超えています');
+            break;
+          case 'file-invalid-type':
+            setAvatarError(`可能な拡張子は ${extensions.join(', ')} です`);
+            break;
+        }
+      }
+    },
   });
+  const innerDropZone = (() => {
+    if (avatarFile) {
+      return <img src={avatarFile.dataURL} alt={avatarFile.name}></img>;
+    }
+    return (
+      <p className="text-sm">
+        {isDragActive
+          ? 'ここにファイルをドロップ'
+          : 'ファイルをドラッグ&ドロップ または クリックしてファイルを選択'}
+      </p>
+    );
+  })();
   return (
     <>
       <div className="flex gap-8">
-        <div
-          {...getRootProps()}
-          className="h-[120px] w-[120px] border-[1px] border-dotted border-white"
-        >
-          <input {...getInputProps()} />
-          {isDragActive ? (
-            <p>Drop the files here ...</p>
-          ) : (
-            <p>Drag and drop some files here, or click to select files</p>
-          )}
-          ({avatarFileDataURL ? avatarFileDataURL : ''})
+        <div>
+          <div
+            {...getRootProps()}
+            className="h-[120px] w-[120px] cursor-pointer border-[1px] border-dotted border-white"
+          >
+            <input {...getInputProps()} />
+            {innerDropZone}
+          </div>
+          {avatarFile && <div className="text-sm">{avatarFile.name}</div>}
+          <div className="text-sm text-red-400">
+            {validationErrors.avatar || netErrors.avatar || '　'}
+          </div>
         </div>
 
         {/* <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" /> */}
