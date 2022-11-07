@@ -42,4 +42,7 @@ export const Icons = {
 
   User,
   Chat,
+
+  Android: Fa.FaAndroid,
+  IOS: Fa.FaApple,
 };

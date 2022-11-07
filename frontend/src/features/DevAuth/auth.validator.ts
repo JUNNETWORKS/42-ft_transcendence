@@ -1,4 +1,21 @@
-import * as TD from '@/typedef';
+const validateTotp = (s: string) => {
+  if (!s) {
+    return 'empty?';
+  }
+  return null;
+};
+
+export const totpErrors = (totpStr: string) => {
+  const errors = {
+    totp: validateTotp(totpStr),
+  };
+  return {
+    ...errors,
+    some: (Object.keys(errors) as (keyof typeof errors)[]).some(
+      (key) => errors[key]
+    ),
+  };
+};
 
 const validateUserIdStr = (s: string) => {
   if (!s) {

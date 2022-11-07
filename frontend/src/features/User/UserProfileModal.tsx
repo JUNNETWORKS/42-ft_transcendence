@@ -48,14 +48,15 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
         </li>
       </ul>
       <div className="flex flex-row justify-center">
-        <p className="block p-2">インストール:</p>
+        <p className="block p-2">アプリのインストール:</p>
         <a
           className="block p-2 underline"
           target="_blank"
           rel="noopener noreferrer"
           href={urlGA.play}
         >
-          Google Play
+          <InlineIcon i={<Icons.Android />} />
+          Android
         </a>
         <a
           className="block p-2 underline"
@@ -63,7 +64,8 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
           rel="noopener noreferrer"
           href={urlGA.play}
         >
-          App Store
+          <InlineIcon i={<Icons.IOS />} />
+          iOS
         </a>
       </div>
       <div className="text-center">
