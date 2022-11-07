@@ -270,7 +270,7 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
     onFetched: (json) => {
       const u = json as TD.User;
       updateOne(u.id, u);
-      setPersonalData({ ...personalData!, ...u });
+      setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});
       setPhase('Display');
     },
