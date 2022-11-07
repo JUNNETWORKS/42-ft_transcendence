@@ -43,6 +43,7 @@ export class UsersController {
   // @UseGuards(JwtAuthGuard)
   @Get(':id/avatar')
   async getAvatar(
+    @Req() req: express.Request,
     @Res() res: express.Response,
     @Param('id', ParseIntPipe) id: number
   ) {
@@ -50,11 +51,23 @@ export class UsersController {
       id
     );
     res.set({
+      'Cache-Control': 'no-cache',
       'Content-Type': mime,
-      'Last-Modified': dayjs(lastModified).format(
-        'ddd, DD MMM YYYY HH:mm:ss [GMT]'
-      ),
+      'Last-Modified': lastModified.toUTCString(),
     });
+    const ifModifiedSince = req.header('If-Modified-Since');
+    if (ifModifiedSince) {
+      // Date はミリ秒単位だが, Last-Modified と If-Modified-Since は秒単位で, そのまま比べるとおかしくなるので
+      // 秒単位に切り捨てる.
+      const normalizedLastModified = new Date(
+        Math.floor(lastModified.getTime() / 1000) * 1000
+      );
+      const dims = new Date(ifModifiedSince);
+      if (dims >= normalizedLastModified) {
+        res.status(304).send();
+        return;
+      }
+    }
     avatar.getStream().pipe(res);
   }
 
