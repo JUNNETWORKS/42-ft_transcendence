@@ -1,5 +1,3 @@
-import * as TD from '@/typedef';
-
 const validateTotp = (s: string) => {
   if (!s) {
     return 'empty?';
