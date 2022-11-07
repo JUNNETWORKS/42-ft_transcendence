@@ -101,6 +101,6 @@ export const sendResultRoom = async (
   payload: any
 ) => {
   const socks = await server.to(roomName).allSockets();
-  console.log('sending downlink to:', roomName, op, payload, socks);
+  // console.log('sending downlink to:', roomName, op, payload, socks);
   server.to(roomName).emit(op, payload);
 };
