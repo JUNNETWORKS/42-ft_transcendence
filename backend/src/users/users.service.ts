@@ -156,9 +156,8 @@ export class UsersService {
     if (!m) {
       throw new BadRequestException('unexpected dataurl format');
     }
-    const [, mime, encoding, data] = m;
+    const [, mime, , data] = m;
     const buffer = Buffer.from(data, 'base64');
-    console.log(buffer);
 
     const result = await this.prisma.userAvatar.upsert({
       where: {
@@ -232,7 +231,6 @@ export class UsersService {
         userId: id,
       },
     });
-    console.log(avatar);
     if (!avatar) {
       throw new NotFoundException('avatar is not found');
     }

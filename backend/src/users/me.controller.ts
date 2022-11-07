@@ -33,7 +33,6 @@ export class MeController {
   @UseFilters(PrismaExceptionFilter)
   async patch(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
     const id = req.user.id;
-    console.log({ updateUserDto });
     // displayName の唯一性チェック
     // -> unique 制約に任せる
     const user = await this.usersService.findOne(id);
@@ -49,7 +48,6 @@ export class MeController {
       ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
       : Promise.resolve('skipped');
     const result = await Utils.PromiseMap({ ordinary, avatar });
-    console.log({ result });
     return Utils.pick(
       result.ordinary,
       'id',
@@ -57,14 +55,6 @@ export class MeController {
       'isEnabled2FA',
       'isEnabledAvatar'
     );
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Put('avatar')
-  @UseFilters(PrismaExceptionFilter)
-  async uploadAvatar(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
-    // TODO: Dtoつくる
-    return { status: 'ok ' };
   }
 
   @UseGuards(JwtAuthGuard)
