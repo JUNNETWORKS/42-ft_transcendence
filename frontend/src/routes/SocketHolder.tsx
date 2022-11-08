@@ -204,18 +204,6 @@ export const SocketHolder = () => {
       }
     });
 
-    mySocket?.on('ft_user', (data: TD.UserResult) => {
-      console.log('catch user', data);
-      switch (data.action) {
-        case 'update':
-          userUpdator.updateOne(data.id, data.data);
-          break;
-        case 'delete':
-          userUpdator.delOne(data.id);
-          break;
-      }
-    });
-
     return () => {
       mySocket?.removeAllListeners();
     };

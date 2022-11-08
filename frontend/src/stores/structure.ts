@@ -1,6 +1,5 @@
-import { atom, useAtom } from 'jotai';
+import { atom } from 'jotai';
 import * as TD from '../typedef';
-import * as Utils from '@/utils';
 import { storeAtoms } from './store';
 
 // オブジェクトストラクチャー
@@ -35,7 +34,7 @@ function filterBy<T extends { id: number }>(
   return list.map((f) => map[f.id] || f);
 }
 
-const derivedAtom = {
+export const dataAtom = {
   visibleRoomsAtom: atom((get) =>
     filterBy(get(structureAtom.visibleRoomsAtom), get(storeAtoms.rooms))
   ),
@@ -47,18 +46,4 @@ const derivedAtom = {
   ),
   messagesInRoomAtom: atom((get) => get(structureAtom.messagesInRoomAtom)),
   membersInRoomAtom: atom((get) => get(structureAtom.membersInRoomAtom)),
-};
-
-export const dataAtom = {
-  ...derivedAtom,
-  useMembersInRoom(id: number) {
-    const [dict] = useAtom(derivedAtom.membersInRoomAtom);
-    const [users] = useAtom(storeAtoms.users);
-    const members = Utils.pickBy(
-      dict[id] || {},
-      (val, userId) => !!users[userId]
-    );
-    console.log(dict, '->', members);
-    return [members] as const;
-  },
 };

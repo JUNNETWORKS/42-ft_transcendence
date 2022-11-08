@@ -111,12 +111,6 @@ export type UnfollowResult = {
   user: User;
 };
 
-export type UserResult = {
-  action: 'create' | 'update' | 'delete';
-  id: number;
-  data: Partial<User>;
-};
-
 export const Mapper = {
   user: (data: any): User => {
     return Utils.pick(data, 'id', 'displayName');
