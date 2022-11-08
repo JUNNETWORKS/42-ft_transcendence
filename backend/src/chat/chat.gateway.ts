@@ -140,7 +140,7 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await this.wsServer.usersJoin(user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, { roomId });
 
     // [新しいチャットルームが作成されたことを通知する]
     this.wsServer.sendResults(
@@ -260,7 +260,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.wsServer.usersJoin(user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, { roomId });
     // 入室したことを通知
     this.wsServer.sendResults(
       'ft_join',
@@ -325,7 +325,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.wsServer.usersLeave(user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersLeave(user.id, { roomId });
     this.wsServer.sendResults(
       'ft_leave',
       {
@@ -443,10 +443,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await this.wsServer.usersLeave(
-      targetUser.id,
-      generateFullRoomName({ roomId })
-    );
+    await this.wsServer.usersLeave(targetUser.id, { roomId });
     this.wsServer.sendResults(
       'ft_kick',
       {

@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { RoomName } from 'src/types/RoomType';
+import { RoomArg, RoomName } from 'src/types/RoomType';
 import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 
 // TODO: namespace共通化
@@ -22,11 +22,12 @@ export class WsServerGateway {
    * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
    * @param userId
    * 対象のユーザー
-   * @param roomName
-   * 対象の部屋名
+   * @param roomArg
+   * 対象の部屋の識別子
    */
-  async usersJoin(userId: number, roomName: RoomName) {
+  async usersJoin(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
+    const roomName = generateFullRoomName(roomArg);
     const socks = await this.server.in(fullUserRoomName).allSockets();
     console.log(`joining clients in ${fullUserRoomName} -> ${roomName}`, socks);
     this.server.in(fullUserRoomName).socketsJoin(roomName);
@@ -34,15 +35,14 @@ export class WsServerGateway {
 
   // TODO: (英語としておかしいので名前を変える)
   /**
-   * @param server
-   * サーバー
    * @param userId
    * 対象のユーザー
-   * @param roomName
-   * 対象の部屋名
+   * @param roomArg
+   * 対象の部屋の識別子
    */
-  async usersLeave(userId: number, roomName: RoomName) {
+  async usersLeave(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
+    const roomName = generateFullRoomName(roomArg);
     const socks = await this.server.in(fullUserRoomName).allSockets();
     console.log(
       `leaving clients in ${fullUserRoomName} from ${roomName}`,
