@@ -1,18 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTH3 } from '@/components/FTBasicComponents';
 import { DmRoomView } from './DmRoomView';
 import { useAction } from '@/hooks';
-import { OpenCard } from '@/components/CommandCard';
 import { useAtom } from 'jotai';
 import { authAtom } from '@/stores/auth';
 import { DmRoomListView } from './DmRoomList';
 import { dataAtom, structureAtom } from '@/stores/structure';
-import { Listbox } from '@headlessui/react';
-import { InlineIcon } from '@/hocs/InlineIcon';
-import { Icons } from '@/icons';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {
