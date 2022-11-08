@@ -1,13 +1,12 @@
-import { WsServerService } from './../ws-server/ws-server.service';
+import { WsServerGateway } from './../ws-server/ws-server.gateway';
 import {
   MessageBody,
   ConnectedSocket,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   OnGatewayConnection,
 } from '@nestjs/websockets';
-import { Socket, Server } from 'socket.io';
+import { Socket } from 'socket.io';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members';
 import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message';
@@ -22,12 +21,7 @@ import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 import * as Utils from 'src/utils';
-import {
-  generateFullRoomName,
-  joinChannel,
-  usersLeave,
-  usersJoin,
-} from 'src/utils/socket/SocketRoom';
+import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 import { AuthService } from 'src/auth/auth.service';
@@ -45,15 +39,12 @@ const constants = {
   namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
-  @WebSocketServer()
-  server: Server;
-
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
     private readonly usersService: UsersService,
     private readonly authService: AuthService,
-    private readonly wsServer: WsServerService
+    private readonly wsServer: WsServerGateway
   ) {}
 
   /**
@@ -81,7 +72,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     if (joiningRoomNames.length > 0) {
-      this.socketsInUserChannel(userId).socketsJoin(joiningRoomNames);
+      this.wsServer.socketsInUserChannel(userId).socketsJoin(joiningRoomNames);
     }
     // (connectionでは入室それ自体の通知は不要)
 
@@ -149,7 +140,7 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, generateFullRoomName({ roomId }));
 
     // [新しいチャットルームが作成されたことを通知する]
     this.wsServer.sendResults(
@@ -269,7 +260,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, generateFullRoomName({ roomId }));
     // 入室したことを通知
     this.wsServer.sendResults(
       'ft_join',
@@ -334,7 +325,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersLeave(this.server, user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersLeave(user.id, generateFullRoomName({ roomId }));
     this.wsServer.sendResults(
       'ft_leave',
       {
@@ -452,8 +443,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersLeave(
-      this.server,
+    await this.wsServer.usersLeave(
       targetUser.id,
       generateFullRoomName({ roomId })
     );
@@ -735,10 +725,5 @@ export class ChatGateway implements OnGatewayConnection {
         userId: targetId,
       }
     );
-  }
-
-  private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = generateFullRoomName({ userId });
-    return this.server.in(fullUserRoomName);
   }
 }
