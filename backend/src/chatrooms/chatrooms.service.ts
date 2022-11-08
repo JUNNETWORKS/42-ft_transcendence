@@ -3,8 +3,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { PostMessageDto } from './dto/post-message.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
-import { UpdateRoomNameDto } from './dto/update-room-name.dto';
-import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
 import { ChatroomEntity } from './entities/chatroom.entity';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
@@ -194,26 +192,6 @@ export class ChatroomsService {
         roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
         roomName,
       },
-    });
-    return new ChatroomEntity(res);
-  }
-
-  async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
-    const { roomType, roomPassword } = updateRoomTypeDto;
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
-      data: {
-        roomType: roomType,
-        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
-      },
-    });
-    return new ChatroomEntity(res);
-  }
-
-  async updateRoomName(id: number, updateRoomNameDto: UpdateRoomNameDto) {
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
-      data: updateRoomNameDto,
     });
     return new ChatroomEntity(res);
   }
