@@ -57,6 +57,7 @@ export type ConnectionResult = {
   displayName: string;
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
+  dmRooms: ChatRoom[];
   friends: User[];
 };
 

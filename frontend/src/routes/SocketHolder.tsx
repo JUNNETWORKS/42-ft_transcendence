@@ -15,6 +15,7 @@ export const SocketHolder = () => {
   const [personalData] = useAtom(authAtom.personalData);
   const setVisibleRooms = useSetAtom(structureAtom.visibleRoomsAtom);
   const setJoiningRooms = useSetAtom(structureAtom.joiningRoomsAtom);
+  const setDmRooms = useSetAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
   const setFocusedRoomId = useSetAtom(structureAtom.focusedRoomIdAtom);
   const setMessagesInRoom = useSetAtom(structureAtom.messagesInRoomAtom);
@@ -30,10 +31,12 @@ export const SocketHolder = () => {
       console.log('catch connection', data);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
+      setDmRooms(data.dmRooms);
       setFriends(data.friends);
       userUpdator.addMany(data.friends);
       roomUpdator.addMany(data.visibleRooms);
       roomUpdator.addMany(data.joiningRooms);
+      roomUpdator.addMany(data.dmRooms);
     });
 
     mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {

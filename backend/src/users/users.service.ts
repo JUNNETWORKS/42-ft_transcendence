@@ -127,6 +127,9 @@ export class UsersService {
       joiningRooms: this.chatRoomService
         .getRoomsJoining(id)
         .then((rs) => rs.map((r) => r.chatRoom)),
+      dmRooms: this.chatRoomService
+        .getRoomsJoining(id, 'DM_ONLY')
+        .then((rs) => rs.map((r) => r.chatRoom)),
       friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
     });
     return {
@@ -135,6 +138,7 @@ export class UsersService {
         (r) => r.id
       ),
       joiningRooms: r.joiningRooms,
+      dmRooms: r.dmRooms,
       friends: r.friends,
     };
   }

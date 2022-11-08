@@ -7,6 +7,7 @@ import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
 import { MyPageView } from '@/features/User/MyPage';
+import { DmPage } from '@/features/DM/DmPage';
 
 export const AppRoutes = () => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -17,6 +18,7 @@ export const AppRoutes = () => {
     { path: '/pong', element: <Pong /> },
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
+    { path: '/dm', element: guardElement || <DmPage mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
     { path: '/me/*', element: <MyPageView /> },
   ];
