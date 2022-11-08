@@ -260,9 +260,7 @@ export const SocketHolder = () => {
      * @param newMembers
      */
     mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
-        console.log(`mergeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -274,17 +272,12 @@ export const SocketHolder = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
-        console.log('[newMembers]', newMembers);
-        console.log('[prev]', prev);
-        console.log('[next]', next);
         return next;
       });
     },
 
     removeMembersInRoom: (roomId: number, userId: number) => {
-      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
       setMembersInRoom((prev) => {
-        console.log(`removeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -293,10 +286,7 @@ export const SocketHolder = () => {
         if (!members) {
           return next;
         }
-        console.log('removing member', userId, 'from', members);
         delete members[userId];
-        console.log('members', members);
-        console.log(prev, next);
         return next;
       });
     },
