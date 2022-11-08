@@ -215,9 +215,7 @@ export const ChatRoomView = (props: {
           <FTH3>
             <InlineIcon i={<TypeIcon />} />
             {props.room.roomName}
-            {!isOwner ? (
-              <></>
-            ) : (
+            {isOwner && (
               <FTButton onClick={openModal}>
                 <Icons.Setting className="inline" />
               </FTButton>
