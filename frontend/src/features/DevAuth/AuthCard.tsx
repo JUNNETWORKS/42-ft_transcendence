@@ -175,7 +175,7 @@ const PasswordAuthForm = (props: {
       </div>
       <div>
         <FTButton
-          disabled={errors.some && state === 'Fetching'}
+          disabled={errors.some || state === 'Fetching'}
           onClick={submit}
         >
           Login
