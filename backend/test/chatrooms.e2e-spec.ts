@@ -5,7 +5,6 @@ import { AppModule } from './../src/app.module';
 import { createRooms, postMessages, resetTable } from './testUtils';
 import { CreateChatroomDto } from '../src/chatrooms/dto/create-chatroom.dto';
 import { ChatroomEntity } from 'src/chatrooms/entities/chatroom.entity';
-import { UpdateRoomTypeDto } from 'src/chatrooms/dto/update-room-type.dto';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { CreateRoomMemberDto } from 'src/chatrooms/dto/create-room-member.dto';
 import { RoomMemberDto } from 'src/chatrooms/dto/room-member.dto';
@@ -415,21 +414,6 @@ describe('/Chatrooms (e2e)', () => {
         .send(body);
 
       expect(res.status).toEqual(400);
-    });
-
-    it('PUBLIC -> LOCKED', async () => {
-      const body: UpdateRoomTypeDto = {
-        roomType: 'LOCKED',
-        roomPassword: 'testpass',
-      };
-
-      const res = await request(app.getHttpServer())
-        .put('/chatrooms/1/roomType')
-        .set('Accept', 'application/json')
-        .send(body);
-
-      expect(res.status).toEqual(200);
-      expect(res.body.roomPassword).toEqual('testpass');
     });
 
     it('LOCKED -> PUBLIC', async () => {
