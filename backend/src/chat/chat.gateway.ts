@@ -105,7 +105,15 @@ export class ChatGateway implements OnGatewayConnection {
           Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
         ),
         dmRooms: dmRooms.map((r) =>
-          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+          Utils.pick(
+            r,
+            'id',
+            'roomName',
+            'roomType',
+            'ownerId',
+            'updatedAt',
+            'roomMember'
+          )
         ),
         friends: friends.map((r) => {
           const h = this.heartbeatDict[r.id];

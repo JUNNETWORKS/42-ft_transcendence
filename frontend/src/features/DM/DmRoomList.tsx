@@ -1,14 +1,21 @@
+import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { InlineIcon } from '@/hocs/InlineIcon';
+import { useAtom } from 'jotai';
 
 const DmRoomListItem = (props: {
-  room: TD.ChatRoom;
+  room: TD.DmRoom;
   isJoined: boolean;
   isFocused: boolean;
   nMessages: number | undefined;
   onFocus: (roomId: number) => void;
 }) => {
+  const [personalData] = useAtom(authAtom.personalData);
+  if (!personalData) return null;
+
+  const roomName = props.room.roomMember.find(
+    (member) => member.userId !== personalData.id
+  )!.user.displayName;
   return (
     <>
       <div
@@ -21,7 +28,7 @@ const DmRoomListItem = (props: {
         }}
         onClick={() => props.onFocus(props.room.id)}
       >
-        {props.room.roomName}{' '}
+        {roomName}
         {(() => {
           const n = props.nMessages;
           return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
@@ -32,7 +39,7 @@ const DmRoomListItem = (props: {
 };
 
 export const DmRoomListView = (props: {
-  rooms: TD.ChatRoom[];
+  rooms: TD.DmRoom[];
   isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
   countMessages: (roomId: number) => number | undefined;
@@ -40,7 +47,7 @@ export const DmRoomListView = (props: {
 }) => {
   return (
     <>
-      {props.rooms.map((room: TD.ChatRoom) => {
+      {props.rooms.map((room: TD.DmRoom) => {
         return (
           /* クリックしたルームにフォーカスを当てる */
           <div

@@ -2,6 +2,8 @@ import * as TD from '@/typedef';
 import { FTH3 } from '@/components/FTBasicComponents';
 import * as dayjs from 'dayjs';
 import { SayCard } from '@/components/CommandCard';
+import { authAtom } from '@/stores/auth';
+import { useAtom } from 'jotai';
 
 /**
  * メッセージを表示するコンポーネント
@@ -37,17 +39,23 @@ const DmRoomMessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
 };
 
 export const DmRoomView = (props: {
-  room: TD.ChatRoom;
+  room: TD.DmRoom;
   you: TD.ChatUserRelation | null;
   say: (content: string) => void;
   room_messages: (roomId: number) => TD.ChatRoomMessage[];
   room_members: (roomId: number) => TD.UserRelationMap | null;
 }) => {
+  const [personalData] = useAtom(authAtom.personalData);
+  if (!personalData) return null;
+
+  const roomName = props.room.roomMember.find(
+    (member) => member.userId !== personalData.id
+  )!.user.displayName;
   return (
     <div className="flex h-full flex-row border-2 border-solid border-white p-2">
       <div className="flex h-full shrink grow flex-col overflow-hidden">
         {/* タイトルバー */}
-        <FTH3>{props.room.roomName /* 相手の名前*/}</FTH3>
+        <FTH3>{roomName}</FTH3>
         {/* 今フォーカスしているルームのメッセージ */}
         <div className="shrink grow overflow-scroll border-2 border-solid border-white">
           <DmRoomMessagesList messages={props.room_messages(props.room.id)} />

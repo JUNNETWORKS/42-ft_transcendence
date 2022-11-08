@@ -11,7 +11,7 @@ export const structureAtom = {
   // join しているチャットルームの一覧
   joiningRoomsAtom: atom<TD.ChatRoom[]>([]),
   // dmルームの一覧
-  dmRoomsAtom: atom<TD.ChatRoom[]>([]),
+  dmRoomsAtom: atom<TD.DmRoom[]>([]),
   // フレンドの一覧
   friends: atom<TD.User[]>([]),
   // 今フォーカスしているチャットルームのID

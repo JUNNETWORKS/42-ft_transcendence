@@ -143,7 +143,18 @@ export class ChatroomsService {
         },
       },
       include: {
-        chatRoom: true,
+        chatRoom: {
+          include: {
+            roomMember:
+              category === 'DM_ONLY'
+                ? {
+                    include: {
+                      user: true,
+                    },
+                  }
+                : false,
+          },
+        },
       },
     });
   }
