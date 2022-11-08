@@ -2,7 +2,10 @@ import { Server } from 'socket.io';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: true,
+  namespace: 'chat',
+})
 export class WsServerGateway {
   @WebSocketServer()
   server: Server;
