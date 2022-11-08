@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { PostMessageDto } from './dto/post-message.dto';
@@ -8,6 +8,7 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+import { RoomType } from '@prisma/client';
 
 @Injectable()
 export class ChatroomsService {
@@ -26,32 +27,44 @@ export class ChatroomsService {
   }
 
   async findMany(getChatroomsDto: GetChatroomsDto) {
-    const { take, cursor } = getChatroomsDto;
-    if (take > 0) {
-      const res = await this.prisma.chatRoom.findMany({
+    const { take, cursor, category } = getChatroomsDto;
+    const res = await (async () => {
+      const id = cursor
+        ? take > 0
+          ? { gt: cursor }
+          : { lt: cursor }
+        : undefined;
+      if (category === 'PRIVATE') {
+        if (typeof getChatroomsDto.userId !== 'number') {
+          throw new BadRequestException();
+        }
+        const rels = await this.getRoomsJoining(
+          getChatroomsDto.userId,
+          'PRIVATE_ONLY'
+        );
+        return rels.map((rel) => rel.chatRoom);
+      }
+      return this.prisma.chatRoom.findMany({
         take: take,
         where: {
-          roomType: {
-            notIn: 'PRIVATE',
-          },
-          id: cursor ? { gt: cursor } : undefined,
+          roomType: (() => {
+            switch (category) {
+              case 'DM':
+                return {
+                  in: ['DM'],
+                };
+              default:
+                return {
+                  in: ['PUBLIC', 'LOCKED'],
+                };
+            }
+          })(),
+          id,
         },
         orderBy: { id: 'asc' },
       });
-      return res.map((o) => new ChatroomEntity(o));
-    } else {
-      const res = await this.prisma.chatRoom.findMany({
-        take: take,
-        where: {
-          roomType: {
-            notIn: 'PRIVATE',
-          },
-          id: cursor ? { lt: cursor } : undefined,
-        },
-        orderBy: { id: 'asc' },
-      });
-      return res.map((o) => new ChatroomEntity(o));
-    }
+    })();
+    return res.map((o) => new ChatroomEntity(o));
   }
 
   async findOne(id: number) {
@@ -106,10 +119,28 @@ export class ChatroomsService {
    * @param userId
    * @returns
    */
-  getRoomsJoining(userId: number) {
+  getRoomsJoining(userId: number, category?: 'PRIVATE_ONLY' | 'DM_ONLY') {
     return this.prisma.chatUserRelation.findMany({
       where: {
         userId,
+        chatRoom: {
+          roomType: (() => {
+            switch (category) {
+              case 'DM_ONLY':
+                return {
+                  in: ['DM'],
+                };
+              case 'PRIVATE_ONLY':
+                return {
+                  in: ['PRIVATE'],
+                };
+              default:
+                return {
+                  in: ['PUBLIC', 'LOCKED', 'PRIVATE'],
+                };
+            }
+          })(),
+        },
       },
       include: {
         chatRoom: true,
