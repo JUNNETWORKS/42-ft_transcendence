@@ -116,7 +116,7 @@ export class UsersService {
    * ログイン時の初期表示用の情報をかき集める
    * @param id
    */
-  async collectStartingInfomations(id: number) {
+  async collectStartingInformations(id: number) {
     return Utils.PromiseMap({
       visibleRooms: this.chatRoomService.findMany({ take: 40 }),
       joiningRooms: this.chatRoomService

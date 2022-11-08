@@ -64,7 +64,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const { visibleRooms, joiningRooms, friends } =
-      await this.usersService.collectStartingInfomations(userId);
+      await this.usersService.collectStartingInformations(userId);
     const joiningRoomNames = joiningRooms.map((r) =>
       generateFullRoomName({ roomId: r.id })
     );
