@@ -1,6 +1,6 @@
 import { Match } from './match';
 import { Server, Socket } from 'socket.io';
-import { PlayerInput } from './types/game-state';
+import { MatchResult, PlayerInput } from './types/game-state';
 import {
   generateFullRoomName,
   joinChannel,
@@ -34,6 +34,21 @@ export class OnlineMatch {
           this.roomName,
           this.match.getState()
         );
+
+        if (this.match.winner !== 'none') {
+          const loserSide = this.match.winner === 'right' ? 'left' : 'right';
+          const result: MatchResult = {
+            winner: this.match.players[Match.sideIndex[this.match.winner]],
+            loser: this.match.players[Match.sideIndex[loserSide]],
+          };
+          sendResultRoom(
+            this.wsServer,
+            'pong.match.finish',
+            this.roomName,
+            result
+          );
+          this.close();
+        }
       }
     }, 16.66); // 60fps
   }

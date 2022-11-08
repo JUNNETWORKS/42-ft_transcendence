@@ -13,7 +13,7 @@ import { InlineIcon } from '@/hocs/InlineIcon';
 /**
  * メッセージを表示するコンポーネント
  */
-const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
+const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
@@ -33,7 +33,7 @@ const ChatRoomMessageCard = (props: { message: TD.ChatRoomMessage }) => {
   );
 };
 
-const ChatRoomMemberCard = (
+const AdminOperationBar = (
   props: {
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
@@ -51,29 +51,8 @@ const ChatRoomMemberCard = (
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
 
-  const userTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return '';
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
   return (
-    <div className="flex flex-row">
-      <div
-        className="shrink grow cursor-pointer hover:bg-teal-700"
-        key={props.member.userId}
-        style={{
-          ...(isYou ? { fontWeight: 'bold' } : {}),
-        }}
-      >
-        <Link className="block" to={link_path}>
-          {userTypeCap()} {props.member.user.displayName}
-        </Link>
-      </div>
-
+    <>
       {isNomminatable && (
         <FTButton
           onClick={() =>
@@ -110,21 +89,58 @@ const ChatRoomMemberCard = (
           <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
+    </>
+  );
+};
+
+const MemberCard = (
+  props: {
+    you: TD.ChatUserRelation | null;
+    room: TD.ChatRoom;
+    member: TD.ChatUserRelation;
+  } & TD.MemberOperations
+) => {
+  const isYou = props.you?.userId === props.member.user.id;
+  const isAdmin = props.member.memberType === 'ADMIN';
+  const isOwner = props.room.ownerId === props.member.user.id;
+
+  const UserTypeCap = () => {
+    if (isOwner) {
+      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
+    } else if (isAdmin) {
+      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
+    }
+    return null;
+  };
+  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
+  return (
+    <div className="flex flex-row">
+      <div
+        className={`shrink grow cursor-pointer hover:bg-teal-700 ${
+          isYou ? 'font-bold' : ''
+        }`}
+        key={props.member.userId}
+      >
+        <Link className="block" to={link_path}>
+          {<UserTypeCap />} {props.member.user.displayName}
+        </Link>
+      </div>
+      <AdminOperationBar {...props} />
     </div>
   );
 };
 
-const ChatRoomMessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
   return (
     <>
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatRoomMessageCard key={data.id} message={data} />
+        <MessageCard key={data.id} message={data} />
       ))}
     </>
   );
 };
 
-const ChatRoomMembersList = (
+const MembersList = (
   props: {
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;
@@ -153,16 +169,11 @@ const ChatRoomMembersList = (
     <div className="flex h-full flex-col">
       <FTH3 className="shrink-0 grow-0">Members</FTH3>
       <div className="shrink grow">
-        {computed.members.map((member) => {
-          return (
-            <div key={member.userId}>
-              <ChatRoomMemberCard
-                member={member}
-                {...Utils.omit(props, 'members')}
-              />
-            </div>
-          );
-        })}
+        {computed.members.map((member) => (
+          <div key={member.userId}>
+            <MemberCard member={member} {...Utils.omit(props, 'members')} />
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -173,8 +184,8 @@ export const ChatRoomView = (props: {
   memberOperations: TD.MemberOperations;
   you: TD.ChatUserRelation | null;
   say: (content: string) => void;
-  room_messages: (roomId: number) => TD.ChatRoomMessage[];
-  room_members: (roomId: number) => TD.UserRelationMap | null;
+  roomMessages: (roomId: number) => TD.ChatRoomMessage[];
+  roomMembers: (roomId: number) => TD.UserRelationMap | null;
 }) => {
   const isOwner = props.room.ownerId === props.you?.userId;
   const [isOpen, setIsOpen] = useState(false);
@@ -214,9 +225,7 @@ export const ChatRoomView = (props: {
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-            <ChatRoomMessagesList
-              messages={props.room_messages(props.room.id)}
-            />
+            <MessagesList messages={props.roomMessages(props.room.id)} />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
@@ -226,10 +235,10 @@ export const ChatRoomView = (props: {
           </div>
         </div>
         <div className="shrink-0 grow-0 basis-[20em]">
-          <ChatRoomMembersList
+          <MembersList
             you={props.you}
             room={props.room}
-            members={props.room_members(props.room.id) || {}}
+            members={props.roomMembers(props.room.id) || {}}
             {...props.memberOperations}
           />
         </div>

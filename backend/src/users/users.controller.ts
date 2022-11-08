@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { UserEntity } from './entities/user.entity';
+import { pick } from 'src/utils';
 
 @Controller('users')
 @ApiTags('users')
@@ -34,8 +35,12 @@ export class UsersController {
 
   @Get(':id')
   @ApiOkResponse({ type: UserEntity })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.findOne(id);
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const u = await this.usersService.findOne(id);
+    if (!u) {
+      return null;
+    }
+    return pick(u, 'id', 'displayName');
   }
 
   // TODO: intraId は変更できないようにする
