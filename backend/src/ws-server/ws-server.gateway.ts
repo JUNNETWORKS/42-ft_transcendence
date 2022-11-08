@@ -1,6 +1,6 @@
 import { Server, Socket } from 'socket.io';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { RoomArg, RoomName } from 'src/types/RoomType';
+import { RoomArg } from 'src/types/RoomType';
 import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 
 // TODO: namespace共通化
@@ -23,7 +23,7 @@ export class WsServerGateway {
    * @param userId
    * 対象のユーザー
    * @param roomArg
-   * 対象の部屋の識別子
+   * 対象のルームの識別子
    */
   async usersJoin(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
@@ -38,7 +38,7 @@ export class WsServerGateway {
    * @param userId
    * 対象のユーザー
    * @param roomArg
-   * 対象の部屋の識別子
+   * 対象のルームの識別子
    */
   async usersLeave(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
@@ -55,12 +55,13 @@ export class WsServerGateway {
    * サーバからクライアントに向かってデータを流す
    * @param op
    * イベント名
-   * @param roomName
-   * 対象の部屋名
    * @param payload
    * データ本体
+   * @param roomArg
+   * 対象のルームの識別子
    */
-  sendResultRoom = async (op: string, roomName: RoomName, payload: any) => {
+  sendResultRoom = async (op: string, payload: any, roomArg: RoomArg) => {
+    const roomName = generateFullRoomName(roomArg);
     const socks = await this.server.to(roomName).allSockets();
     console.log('sending downlink to:', roomName, op, payload, socks);
     this.server.to(roomName).emit(op, payload);
@@ -77,25 +78,13 @@ export class WsServerGateway {
     }
   ) {
     if (typeof target.userId === 'number') {
-      await this.sendResultRoom(
-        op,
-        generateFullRoomName({ userId: target.userId }),
-        payload
-      );
+      await this.sendResultRoom(op, payload, { userId: target.userId });
     }
     if (typeof target.roomId === 'number') {
-      await this.sendResultRoom(
-        op,
-        generateFullRoomName({ roomId: target.roomId }),
-        payload
-      );
+      await this.sendResultRoom(op, payload, { roomId: target.roomId });
     }
     if (target.global) {
-      await this.sendResultRoom(
-        op,
-        generateFullRoomName({ global: target.global }),
-        payload
-      );
+      await this.sendResultRoom(op, payload, { global: target.global });
     }
     if (target.client) {
       console.log('sending downlink to client:', target.client.id, op, payload);
