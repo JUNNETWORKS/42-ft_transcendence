@@ -35,7 +35,9 @@ export const TotpAuthForm = (props: {
       if (e instanceof APIError) {
         switch (e.response.status) {
           case 401:
-            setNetErrors({ totp: 'パスワードが違います' });
+            setNetErrors({
+              totp: '認証に失敗しました。もう一度お試しください。',
+            });
             return;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
