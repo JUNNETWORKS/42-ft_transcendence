@@ -14,6 +14,7 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
+import OtpInput from '@/components/OtpInput';
 
 /**
  * TOTP入力フォーム
@@ -58,6 +59,7 @@ export const TotpAuthForm = (props: {
         </li>
       </ul>
       <div>
+        <OtpInput value={otp} valueLength={6} onChange={setOtp}></OtpInput>
         <FTTextField
           className="w-full"
           value={otp}
