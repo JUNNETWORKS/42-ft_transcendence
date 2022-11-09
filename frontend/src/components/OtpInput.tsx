@@ -5,6 +5,7 @@ const RE_DIGIT = new RegExp(/^\d+$/);
 
 export type Props = {
   setOtp: (value: string) => void;
+  submit: () => Promise<void>;
 };
 
 const focusPrevInput = (target: HTMLElement) => {
@@ -19,7 +20,7 @@ const focusNextInput = (target: HTMLElement) => {
   nextElementSibling?.focus();
 };
 
-export default function OtpInput({ setOtp }: Props) {
+export default function OtpInput({ setOtp, submit }: Props) {
   const valueLength = 6;
   const [items, setItems] = useState<string[]>(Array(6).fill(''));
 
@@ -30,6 +31,7 @@ export default function OtpInput({ setOtp }: Props) {
     }
     setOtp('');
   }, [items, setOtp]);
+
   const inputOnChange = (
     { target }: React.ChangeEvent<HTMLInputElement>,
     idx: number
@@ -43,7 +45,7 @@ export default function OtpInput({ setOtp }: Props) {
       focusNextInput(target);
     } else if (targetValue.length === valueLength) {
       setItems(targetValue.split(''));
-      target.blur();
+      // target.blur();
     }
   };
 
@@ -51,7 +53,6 @@ export default function OtpInput({ setOtp }: Props) {
     e: React.KeyboardEvent<HTMLInputElement>,
     idx: number
   ) => {
-    console.log('got onkeydown key', e.key);
     const target = e.target as HTMLInputElement;
     if (e.key === 'Backspace' && target.value === '') {
       setItems(items.map((v, i) => (i === idx - 1 ? '' : v)));
@@ -62,10 +63,12 @@ export default function OtpInput({ setOtp }: Props) {
       setItems(items.map((v, i) => (i === idx ? '' : v)));
       return;
     }
+    if (e.key === 'Enter' && items.every((v) => RE_DIGIT.test(v))) {
+      submit();
+    }
   };
 
-  const inputOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    const { target } = e;
+  const inputOnFocus = ({ target }: React.FocusEvent<HTMLInputElement>) => {
     const prevInputEl =
       target.previousElementSibling as HTMLInputElement | null;
 

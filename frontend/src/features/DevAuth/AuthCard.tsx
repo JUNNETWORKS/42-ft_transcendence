@@ -59,7 +59,7 @@ export const TotpAuthForm = (props: {
         </li>
       </ul>
       <div>
-        <OtpInput setOtp={setOtp}></OtpInput>
+        <OtpInput setOtp={setOtp} submit={submit}></OtpInput>
         <div className="text-red-400">
           {validationErrors.totp || netErrors.totp || '　'}
         </div>
