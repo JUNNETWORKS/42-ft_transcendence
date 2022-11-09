@@ -12,6 +12,8 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
+import { DmModal } from '../DM/DmModal';
+import { Modal } from '@/components/Modal';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -87,8 +89,15 @@ const PresentatorView = (props: { personalData: TD.User }) => {
   const [friends] = useAtom(dataAtom.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === props.personalData.id);
+
+  // DmModal
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
+      <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
+        <DmModal user={props.personalData} onClose={() => setIsOpen(false)} />
+      </Modal>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         <div className="inline-block align-text-bottom">
           <OnlineStatusDot
@@ -113,6 +122,7 @@ const PresentatorView = (props: { personalData: TD.User }) => {
 
         <div>
           <FollowButton userId={props.personalData.id} isFriend={isFriend} />
+          <FTButton onClick={() => setIsOpen(true)}>{'DM'}</FTButton>
         </div>
       </div>
     </>
