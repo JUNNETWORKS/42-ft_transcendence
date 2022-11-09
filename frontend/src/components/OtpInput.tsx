@@ -5,27 +5,22 @@ const RE_DIGIT = new RegExp(/^\d+$/);
 
 export type Props = {
   value: string;
-  valueLength: number;
   onChange: (value: string) => void;
 };
 
-export default function OtpInput({ value, valueLength, onChange }: Props) {
+export default function OtpInput({ value, onChange }: Props) {
   console.log('render otpInput value:', value);
+
+  const valueLength = 6;
+
   const valueItems = useMemo(() => {
     const valueArray = value.split('');
-    const items: Array<string> = [];
-
-    for (let i = 0; i < valueLength; i++) {
-      const char = valueArray[i];
-      if (RE_DIGIT.test(char)) {
-        items.push(char);
-      } else {
-        items.push('');
-      }
-    }
-
+    const items = [...Array(valueLength)].map((_, i) => {
+      const c = valueArray[i];
+      return RE_DIGIT.test(c) ? c : '';
+    });
     return items;
-  }, [value, valueLength]);
+  }, [value]);
 
   const focusPrevInput = (target: HTMLElement) => {
     const previousElementSibling =

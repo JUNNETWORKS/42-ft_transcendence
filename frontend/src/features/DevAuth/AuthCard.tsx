@@ -59,7 +59,7 @@ export const TotpAuthForm = (props: {
         </li>
       </ul>
       <div>
-        <OtpInput value={otp} valueLength={6} onChange={setOtp}></OtpInput>
+        <OtpInput value={otp} onChange={setOtp}></OtpInput>
         <FTTextField
           className="w-full"
           value={otp}
