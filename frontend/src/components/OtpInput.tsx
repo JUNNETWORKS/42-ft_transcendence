@@ -4,8 +4,7 @@ import { FTTextField } from './FTBasicComponents';
 const RE_DIGIT = new RegExp(/^\d+$/);
 
 export type Props = {
-  value: string;
-  onChange: (value: string) => void;
+  setOtp: (value: string) => void;
 };
 
 const focusPrevInput = (target: HTMLElement) => {
@@ -20,15 +19,17 @@ const focusNextInput = (target: HTMLElement) => {
   nextElementSibling?.focus();
 };
 
-export default function OtpInput({ value, onChange }: Props) {
+export default function OtpInput({ setOtp }: Props) {
   const valueLength = 6;
   const [items, setItems] = useState<string[]>(Array(6).fill(''));
 
   useEffect(() => {
     if (items.every((v) => RE_DIGIT.test(v))) {
-      onChange(items.join(''));
+      setOtp(items.join(''));
+      return;
     }
-  }, [items, onChange]);
+    setOtp('');
+  }, [items, setOtp]);
   const inputOnChange = (
     { target }: React.ChangeEvent<HTMLInputElement>,
     idx: number

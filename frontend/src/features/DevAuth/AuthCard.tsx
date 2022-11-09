@@ -59,13 +59,7 @@ export const TotpAuthForm = (props: {
         </li>
       </ul>
       <div>
-        <OtpInput value={otp} onChange={setOtp}></OtpInput>
-        <FTTextField
-          className="w-full"
-          value={otp}
-          placeholder="ワンタイムパスワード"
-          onChange={(e) => setOtp(e.target.value)}
-        />
+        <OtpInput setOtp={setOtp}></OtpInput>
         <div className="text-red-400">
           {validationErrors.totp || netErrors.totp || '　'}
         </div>
