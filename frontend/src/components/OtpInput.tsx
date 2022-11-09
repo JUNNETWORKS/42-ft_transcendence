@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FTTextField } from './FTBasicComponents';
 
 const RE_DIGIT = new RegExp(/^\d+$/);
@@ -21,58 +21,46 @@ const focusNextInput = (target: HTMLElement) => {
 };
 
 export default function OtpInput({ value, onChange }: Props) {
-  console.log('render otpInput value:', value);
-
   const valueLength = 6;
+  const [items, setItems] = useState<string[]>(Array(6).fill(''));
 
-  const valueItems = useMemo(() => {
-    const valueArray = value.split('');
-    const items = [...Array(valueLength)].map((_, i) => {
-      const c = valueArray[i];
-      return RE_DIGIT.test(c) ? c : '';
-    });
-    return items;
-  }, [value]);
-
+  useEffect(() => {
+    if (items.every((v) => RE_DIGIT.test(v))) {
+      onChange(items.join(''));
+    }
+  }, [items, onChange]);
   const inputOnChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
+    { target }: React.ChangeEvent<HTMLInputElement>,
     idx: number
   ) => {
-    console.log('got onchange');
-    const target = e.target;
-    let targetValue = target.value.trim();
-    const isTargetValueDigit = RE_DIGIT.test(targetValue);
+    const targetValue = target.value.trim();
 
-    const nextInputEl = target.nextElementSibling as HTMLInputElement | null;
-    if (!isTargetValueDigit && nextInputEl && nextInputEl.value !== '') {
-      return;
-    }
-
-    targetValue = isTargetValueDigit ? targetValue : ' ';
+    if (!RE_DIGIT.test(targetValue)) return;
 
     if (targetValue.length === 1) {
-      const newValue =
-        value.substring(0, idx) + targetValue + value.substring(idx + 1);
-      onChange(newValue.substring(0, 6));
-
-      if (!isTargetValueDigit) {
-        return;
-      }
+      setItems(items.map((v, i) => (i === idx ? targetValue : v)));
       focusNextInput(target);
     } else if (targetValue.length === valueLength) {
-      onChange(targetValue);
-
+      setItems(targetValue.split(''));
       target.blur();
     }
   };
 
-  const inputOnKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    console.log('got onkeydown');
+  const inputOnKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    idx: number
+  ) => {
+    console.log('got onkeydown key', e.key);
     const target = e.target as HTMLInputElement;
-    if (e.key !== 'Backspace' || target.value !== '') {
+    if (e.key === 'Backspace' && target.value === '') {
+      setItems(items.map((v, i) => (i === idx - 1 ? '' : v)));
+      focusPrevInput(target);
       return;
     }
-    focusPrevInput(target);
+    if (e.key === 'Backspace') {
+      setItems(items.map((v, i) => (i === idx ? '' : v)));
+      return;
+    }
   };
 
   const inputOnFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -88,7 +76,7 @@ export default function OtpInput({ value, onChange }: Props) {
 
   return (
     <div className="flex w-full justify-center gap-x-4">
-      {valueItems.map((digit, idx) => (
+      {items.map((digit, idx) => (
         <FTTextField
           key={idx}
           type="text"
@@ -99,7 +87,7 @@ export default function OtpInput({ value, onChange }: Props) {
           className="h-14 w-12 rounded-sm border text-center text-3xl caret-transparent"
           value={digit}
           onChange={(e) => inputOnChange(e, idx)}
-          onKeyDown={inputOnKeyDown}
+          onKeyDown={(e) => inputOnKeyDown(e, idx)}
           onFocus={inputOnFocus}
         />
       ))}
