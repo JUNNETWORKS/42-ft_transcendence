@@ -8,6 +8,18 @@ export type Props = {
   onChange: (value: string) => void;
 };
 
+const focusPrevInput = (target: HTMLElement) => {
+  const previousElementSibling =
+    target.previousElementSibling as HTMLInputElement | null;
+  previousElementSibling?.focus();
+};
+
+const focusNextInput = (target: HTMLElement) => {
+  const nextElementSibling =
+    target.nextElementSibling as HTMLInputElement | null;
+  nextElementSibling?.focus();
+};
+
 export default function OtpInput({ value, onChange }: Props) {
   console.log('render otpInput value:', value);
 
@@ -21,18 +33,6 @@ export default function OtpInput({ value, onChange }: Props) {
     });
     return items;
   }, [value]);
-
-  const focusPrevInput = (target: HTMLElement) => {
-    const previousElementSibling =
-      target.previousElementSibling as HTMLInputElement | null;
-    previousElementSibling?.focus();
-  };
-
-  const focusNextInput = (target: HTMLElement) => {
-    const nextElementSibling =
-      target.nextElementSibling as HTMLInputElement | null;
-    nextElementSibling?.focus();
-  };
 
   const inputOnChange = (
     e: React.ChangeEvent<HTMLInputElement>,
