@@ -39,6 +39,13 @@ const constants = {
   namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
+  private heartbeatDict: {
+    [userId: number]: {
+      n: number;
+      time: number;
+    };
+  } = {};
+
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
@@ -77,18 +84,7 @@ export class ChatGateway implements OnGatewayConnection {
     // (connectionでは入室それ自体の通知は不要)
 
     // [オンライン状態の変化を全体に通知]
-    // TODO: 通知対象をフレンドのみに限定
-    this.wsServer.sendResults(
-      'ft_connection_friend',
-      {
-        userId,
-        displayName: user.displayName,
-        connectedAt: new Date(),
-      },
-      {
-        global: 'global',
-      }
-    );
+    this.incrementHeartbeat(userId);
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
     this.wsServer.sendResults(
       'ft_connection',
@@ -101,12 +97,28 @@ export class ChatGateway implements OnGatewayConnection {
         joiningRooms: joiningRooms.map((r) =>
           Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
         ),
-        friends: friends.map((r) => Utils.pick(r, 'id', 'displayName')),
+        friends: friends.map((r) => {
+          const h = this.heartbeatDict[r.id];
+          return {
+            ...Utils.pick(r, 'id', 'displayName'),
+            time: h ? h.time : null,
+          };
+        }),
       },
       {
         client,
       }
     );
+  }
+
+  async handleDisconnect(@ConnectedSocket() client: Socket) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const userId = user.id;
+    // [オンライン状態の変化を全体に通知]
+    this.decrementHeartbeat(userId);
   }
 
   /**
@@ -203,6 +215,7 @@ export class ChatGateway implements OnGatewayConnection {
         roomId,
       }
     );
+    this.updateHeartbeat(user.id);
   }
 
   /**
@@ -295,6 +308,7 @@ export class ChatGateway implements OnGatewayConnection {
         client,
       }
     );
+    this.updateHeartbeat(user.id);
   }
 
   /**
@@ -344,6 +358,7 @@ export class ChatGateway implements OnGatewayConnection {
         userId: user.id,
       }
     );
+    this.updateHeartbeat(user.id);
   }
 
   @SubscribeMessage('ft_nomminate')
@@ -634,6 +649,10 @@ export class ChatGateway implements OnGatewayConnection {
     const targetId = data.userId;
     console.log('ft_follow', data);
 
+    if (user.id === data.userId) {
+      console.log('is you!!');
+      return;
+    }
     const rel = await Utils.PromiseMap({
       target: this.usersService.findOne(targetId),
       existing: this.usersService.findFriend(user.id, targetId),
@@ -722,5 +741,56 @@ export class ChatGateway implements OnGatewayConnection {
         userId: targetId,
       }
     );
+  }
+
+  private incrementHeartbeat(userId: number) {
+    const r = this.heartbeatDict[userId] || {
+      n: 0,
+      time: null,
+    };
+    r.n += 1;
+    r.time = Date.now();
+    this.heartbeatDict[userId] = r;
+    this.sendHeartbeat(userId);
+  }
+
+  private updateHeartbeat(userId: number) {
+    const r = this.heartbeatDict[userId];
+    if (!r) {
+      return;
+    }
+    r.time = Date.now();
+    this.heartbeatDict[userId] = r;
+    this.sendHeartbeat(userId);
+  }
+
+  private decrementHeartbeat(userId: number) {
+    const r = this.heartbeatDict[userId];
+    if (!r) {
+      return;
+    }
+    r.n -= 1;
+    if (r.n) {
+      this.heartbeatDict[userId] = r;
+    } else {
+      delete this.heartbeatDict[userId];
+      this.sendOffine(userId);
+    }
+  }
+
+  private sendHeartbeat(userId: number) {
+    const r = this.heartbeatDict[userId];
+    if (!r) {
+      return;
+    }
+    this.wsServer.sendResults(
+      'ft_heartbeat',
+      { userId, time: r.time },
+      { global: 'global' }
+    );
+  }
+
+  private sendOffine(userId: number) {
+    this.wsServer.sendResults('ft_offline', { userId }, { global: 'global' });
   }
 }

@@ -34,6 +34,43 @@ export function omit<T extends object, U extends keyof T>(
   return d;
 }
 
+export function datifyObject<T extends object, U extends keyof T>(
+  obj: T,
+  ...props: Array<Many<U>>
+): T {
+  props.forEach((key) => {
+    (obj as any)[key] = datify((obj as any)[key]);
+  });
+  return obj;
+}
+
+export function datify(data: any) {
+  if (isNull(data)) {
+    return undefined;
+  }
+  if (data instanceof Date) {
+    return data;
+  }
+  if (typeof data === 'number') {
+    return new Date(data);
+  }
+  if (typeof data === 'object') {
+    if (Object.keys(data).length === 1 && typeof data.value === 'string') {
+      return new Date(data.value);
+    }
+    if (typeof data.seconds === 'string' && typeof data.nanos === 'number') {
+      return new Date(parseFloat(data.seconds) * 1000 + data.nanos / 1000);
+    }
+    if (
+      typeof data._seconds === 'number' &&
+      typeof data._nanoseconds === 'number'
+    ) {
+      return new Date(data._seconds * 1000 + data._nanoseconds / 1000);
+    }
+  }
+  return undefined;
+}
+
 /**
  * 配列`array`を, 「`array`の各要素に関数`value`を適用した値」を使って昇順にソートしたものを返す.\
  * 元の`array`は変更しない.
@@ -104,6 +141,10 @@ export function keyBy<T>(
 
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
+}
+
+export function isNull<T>(value: T) {
+  return value === null;
 }
 
 /**
