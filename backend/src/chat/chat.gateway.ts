@@ -285,7 +285,7 @@ export class ChatGateway implements OnGatewayConnection {
         ...dmRoom,
       },
       {
-        global: 'global',
+        roomId,
       }
     );
 
