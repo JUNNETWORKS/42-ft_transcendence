@@ -73,7 +73,7 @@ export const SocketHolder = () => {
     });
 
     mySocket?.on('ft_open_dm', (data: TD.DmOpenResult) => {
-      console.log('catch open');
+      console.log('catch dm_open');
       console.log(data);
       const room: TD.DmRoom = {
         ...data,
