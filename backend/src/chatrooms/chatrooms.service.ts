@@ -8,7 +8,6 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
-import { RoomType } from '@prisma/client';
 
 @Injectable()
 export class ChatroomsService {

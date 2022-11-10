@@ -3,7 +3,7 @@ import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
-import { useState } from 'react';
+import { useReducer, useState } from 'react';
 
 type DmModalProps = {
   user: TD.User;
@@ -30,21 +30,23 @@ export const DmModal = ({ user, onClose }: DmModalProps) => {
     });
   };
 
-  // 新規DM --> ルーム作成、メッセージ送信
-  // DMがすでに存在 -> メッセージ送信
   const submit = () => {
-    // DMのルームの存在確認
     const dmRoom = dmRoomWithUser();
-    if (!dmRoom) {
-      // ない場合、ルームを作成
+    if (dmRoom) {
+      const data = {
+        roomId: dmRoom?.id,
+        content,
+      };
+      console.log(data);
+      mySocket?.emit('ft_say', data);
+    } else {
+      const data = {
+        userId: user.id,
+        content: content,
+      };
+      console.log(data);
+      mySocket?.emit('ft_tell', data);
     }
-    // DMの送信
-    const data = {
-      roomId: dmRoom?.id,
-      content,
-    };
-    console.log(data);
-    mySocket?.emit('ft_say', data);
     // TODO: DMのルームに移動、フォーカス
     onClose();
   };

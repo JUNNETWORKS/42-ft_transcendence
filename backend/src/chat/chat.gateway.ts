@@ -14,6 +14,7 @@ import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
+import { OperationTellDto } from 'src/chatrooms/dto/operation-tell.dto';
 import { UsersService } from 'src/users/users.service';
 import { ChatService } from './chat.service';
 import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
@@ -217,8 +218,83 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
 
+    // [TODO: DM:実行者が対象ユーザーからブロックされていないことの確認]
+    // 未実装
+
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
+    // 発言内容を通知
+    this.sendResults(
+      'ft_say',
+      {
+        ...chatMessage,
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
+      },
+      {
+        roomId,
+      }
+    );
+    this.updateHeartbeat(user.id);
+  }
+
+  /**
+   * DMの新規送信、DMロームの作成とメッセージ送信
+   * @param data
+   * @param client
+   */
+  @SubscribeMessage('ft_tell')
+  async handleTell(
+    @MessageBody() data: OperationTellDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    data.callerId = user.id;
+    // チャットルームの作成
+    const dmRoomName = `dmRoom-uId${data.callerId}-uId${data.userId}`;
+    const dmRoom = await this.chatRoomService.create({
+      roomName: dmRoomName,
+      roomType: 'DM',
+      ownerId: user.id,
+      roomMember: [
+        {
+          userId: user.id,
+          memberType: 'ADMIN',
+        },
+        {
+          userId: data.userId,
+          memberType: 'ADMIN',
+        },
+      ],
+    });
+    // TODO: 実行者が対象ユーザーからブロックされていないことの確認
+    const roomId = dmRoom.id;
+
+    // [作成されたチャットルームにjoin]
+    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+
+    // [新しいチャットルームが作成されたことを通知する]
+    this.sendResults(
+      'ft_open',
+      {
+        ...dmRoom,
+      },
+      {
+        global: 'global',
+      }
+    );
+
+    // 発言を作成
+    const chatMessage = await this.chatService.postMessageBySay({
+      roomId,
+      content: data.content,
+      callerId: data.callerId,
+    });
     // 発言内容を通知
     this.sendResults(
       'ft_say',
