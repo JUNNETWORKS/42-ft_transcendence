@@ -241,7 +241,7 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   /**
-   * DMの新規送信、DMロームの作成とメッセージ送信
+   * DMの新規送信、DMルームの作成とメッセージ送信
    * @param data
    * @param client
    */
@@ -256,9 +256,8 @@ export class ChatGateway implements OnGatewayConnection {
     }
     data.callerId = user.id;
     // チャットルームの作成
-    const dmRoomName = `dmRoom-uId${data.callerId}-uId${data.userId}`;
     const dmRoom = await this.chatRoomService.create({
-      roomName: dmRoomName,
+      roomName: `dm-uId${data.callerId}-uId${data.userId}`,
       roomType: 'DM',
       ownerId: user.id,
       roomMember: [
