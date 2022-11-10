@@ -20,7 +20,7 @@ const focusNextInput = (target: HTMLElement) => {
   nextElementSibling?.focus();
 };
 
-export default function OtpInput({ setOtp, submit }: Props) {
+export const OtpInput = ({ setOtp, submit }: Props) => {
   const valueLength = 6;
   const [items, setItems] = useState<string[]>(Array(6).fill(''));
 
@@ -97,4 +97,4 @@ export default function OtpInput({ setOtp, submit }: Props) {
       ))}
     </div>
   );
-}
+};

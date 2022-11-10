@@ -14,7 +14,7 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
-import OtpInput from '@/components/OtpInput';
+import { OtpInput } from '@/components/OtpInput';
 
 /**
  * TOTP入力フォーム
