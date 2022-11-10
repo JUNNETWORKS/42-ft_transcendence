@@ -255,39 +255,25 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    // チャットルームの作成
+    // DMルームの作成
     const dmRoom = await this.chatRoomService.create({
       roomName: `dm-uId${data.callerId}-uId${data.userId}`,
       roomType: 'DM',
-      ownerId: user.id,
+      ownerId: data.callerId,
       roomMember: [
-        {
-          userId: user.id,
-          memberType: 'ADMIN',
-        },
-        {
-          userId: data.userId,
-          memberType: 'ADMIN',
-        },
+        { userId: data.callerId, memberType: 'ADMIN' },
+        { userId: data.userId, memberType: 'ADMIN' },
       ],
     });
     // TODO: 実行者が対象ユーザーからブロックされていないことの確認
     const roomId = dmRoom.id;
 
-    // [作成されたチャットルームにjoin]
+    // [作成されたDMルームにjoin]
     await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
     await usersJoin(this.server, data.userId, generateFullRoomName({ roomId }));
 
-    // [新しいチャットルームが作成されたことを通知する]
-    this.sendResults(
-      'ft_open',
-      {
-        ...dmRoom,
-      },
-      {
-        roomId,
-      }
-    );
+    // [新しいDMルームが作成されたことを通知する]
+    this.sendResults('ft_open_dm', dmRoom, { roomId });
 
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay({

@@ -14,15 +14,24 @@ export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createChatroomDto: CreateChatroomDto) {
-    const res = await this.prisma.chatRoom.create({
+    return this.prisma.chatRoom.create({
       data: {
         ...createChatroomDto,
         roomMember: {
           create: createChatroomDto.roomMember,
         },
       },
+      include:
+        createChatroomDto.roomType === 'DM'
+          ? {
+              roomMember: {
+                include: {
+                  user: true,
+                },
+              },
+            }
+          : null,
     });
-    return new ChatroomEntity(res);
   }
 
   async findMany(getChatroomsDto: GetChatroomsDto) {

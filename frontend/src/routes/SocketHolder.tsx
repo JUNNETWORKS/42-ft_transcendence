@@ -72,7 +72,7 @@ export const SocketHolder = () => {
       roomUpdator.addOne(room);
     });
 
-    mySocket?.on('ft_dm_open', (data: TD.DmOpenResult) => {
+    mySocket?.on('ft_open_dm', (data: TD.DmOpenResult) => {
       console.log('catch open');
       console.log(data);
       const room: TD.DmRoom = {
