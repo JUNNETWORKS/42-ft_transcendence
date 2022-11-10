@@ -86,7 +86,6 @@ export const OtpInput = ({ setOtp, submit }: Props) => {
           type="text"
           inputMode="numeric"
           autoComplete="one-time-code"
-          pattern="\d{1}"
           maxLength={valueLength}
           className="h-14 w-12 rounded-sm border text-center text-3xl caret-transparent"
           value={digit}
