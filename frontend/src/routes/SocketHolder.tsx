@@ -72,6 +72,22 @@ export const SocketHolder = () => {
       roomUpdator.addOne(room);
     });
 
+    mySocket?.on('ft_dm_open', (data: TD.DmOpenResult) => {
+      console.log('catch open');
+      console.log(data);
+      const room: TD.DmRoom = {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setDmRooms((prev) => {
+        const next = [...prev];
+        next.push(room);
+        return next;
+      });
+      roomUpdator.addOne(room);
+    });
+
     mySocket?.on('ft_say', (data: TD.SayResult) => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');

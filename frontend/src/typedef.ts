@@ -76,6 +76,8 @@ export type OfflineResult = {
 
 export type OpenResult = ChatRoom;
 
+export type DmOpenResult = DmRoom;
+
 export type SayResult = ChatRoomMessage & {
   user: User;
 };

@@ -3,7 +3,7 @@ import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
-import { useReducer, useState } from 'react';
+import { useState } from 'react';
 
 type DmModalProps = {
   user: TD.User;
@@ -13,7 +13,7 @@ type DmModalProps = {
 export const DmModal = ({ user, onClose }: DmModalProps) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
-  const [content, setContent] = useState<string>();
+  const [content, setContent] = useState('');
   if (!mySocket) {
     onClose();
     return null;
@@ -58,7 +58,9 @@ export const DmModal = ({ user, onClose }: DmModalProps) => {
         value={content}
         onChange={(e) => setContent(e.target.value)}
       />
-      <FTButton onClick={submit}>Send</FTButton>
+      <FTButton onClick={submit} disabled={content === ''}>
+        Send
+      </FTButton>
     </div>
   );
 };
