@@ -39,6 +39,12 @@ export const DmModal = ({ user, onClose }: DmModalProps) => {
       // ない場合、ルームを作成
     }
     // DMの送信
+    const data = {
+      roomId: dmRoom?.id,
+      content,
+    };
+    console.log(data);
+    mySocket?.emit('ft_say', data);
     // TODO: DMのルームに移動、フォーカス
     onClose();
   };
