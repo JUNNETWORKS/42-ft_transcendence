@@ -276,6 +276,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [作成されたチャットルームにjoin]
     await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+    await usersJoin(this.server, data.userId, generateFullRoomName({ roomId }));
 
     // [新しいチャットルームが作成されたことを通知する]
     this.sendResults(
