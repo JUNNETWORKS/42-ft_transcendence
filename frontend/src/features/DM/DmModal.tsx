@@ -3,6 +3,7 @@ import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
+import { useState } from 'react';
 
 type DmModalProps = {
   user: TD.User;
@@ -12,6 +13,7 @@ type DmModalProps = {
 export const DmModal = ({ user, onClose }: DmModalProps) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
+  const [content, setContent] = useState<string>();
   if (!mySocket) {
     onClose();
     return null;
@@ -44,7 +46,10 @@ export const DmModal = ({ user, onClose }: DmModalProps) => {
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
       <p className="text-2xl">{user.displayName}へDMを送信</p>
-      <FTTextField />
+      <FTTextField
+        value={content}
+        onChange={(e) => setContent(e.target.value)}
+      />
       <FTButton onClick={submit}>Send</FTButton>
     </div>
   );
