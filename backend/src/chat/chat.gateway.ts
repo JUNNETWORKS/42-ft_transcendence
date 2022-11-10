@@ -273,7 +273,7 @@ export class ChatGateway implements OnGatewayConnection {
     await usersJoin(this.server, data.userId, generateFullRoomName({ roomId }));
 
     // [新しいDMルームが作成されたことを通知する]
-    this.sendResults('ft_open_dm', dmRoom, { roomId });
+    this.sendResults('ft_tell', dmRoom, { roomId });
 
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay({
