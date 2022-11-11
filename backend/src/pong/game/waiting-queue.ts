@@ -1,4 +1,11 @@
 import { OngoingMatches } from './ongoing-matches';
+import { Server } from 'socket.io';
+import {
+  generateFullRoomName,
+  sendResultRoom,
+  usersJoin,
+  usersLeave,
+} from 'src/utils/socket/SocketRoom';
 
 export type WaitingQueueConfig = {
   maxWaiters?: number;
@@ -16,25 +23,35 @@ export class WaitingQueue {
   private onQueueShutdown?: () => void;
   // 待機キュー本体
   private users: Set<number>;
+  // WSサーバー
+  private wsServer: Server;
   // マッチを作成したらここに追加する
   private ongoingMatches: OngoingMatches;
+  // マッチメイキングの進捗を共有するタイマー
+  private matchMakingStatusTimer: NodeJS.Timer;
+  private readonly matchMakingStatusIntervalMs = 500;
   // マッチメイキングを作成するタイマー
   private matchMakingTimer: NodeJS.Timer;
-  private readonly matchMakingIntervalMs = 1000;
+  private readonly matchMakingIntervalMs = 2 * 1000;
   private isCreatingMatch: boolean;
 
   constructor(
     id: string,
     ongoingMatches: OngoingMatches,
+    wsServer: Server,
     config?: WaitingQueueConfig
   ) {
     this.id = id;
     this.users = new Set<number>();
     this.maxWaiterCount = config?.maxWaiters || Number.MAX_SAFE_INTEGER;
     this.onQueueShutdown = config?.onQueueShutdown;
+    this.wsServer = wsServer;
     this.ongoingMatches = ongoingMatches;
-    // append()等実行時にマッチメイキングを実行しようとすると
-    // 排他制御を考える必要があるので定期実行という方式にしている
+
+    this.matchMakingStatusTimer = setInterval(
+      this.shareMatchMakingStatus,
+      this.matchMakingStatusIntervalMs
+    );
     this.matchMakingTimer = setInterval(
       this.createMatches,
       this.matchMakingIntervalMs
@@ -46,6 +63,11 @@ export class WaitingQueue {
   append(userID: number) {
     if (this.users.size == this.maxWaiterCount) {
       this.users.add(userID);
+      usersJoin(
+        this.wsServer,
+        userID,
+        generateFullRoomName({ matchMakingId: this.id })
+      );
     }
   }
 
@@ -53,6 +75,11 @@ export class WaitingQueue {
   remove(userID: number) {
     if (this.users.has(userID)) {
       this.users.delete(userID);
+      usersLeave(
+        this.wsServer,
+        userID,
+        generateFullRoomName({ matchMakingId: this.id })
+      );
     }
   }
 
@@ -66,6 +93,18 @@ export class WaitingQueue {
     if (this.onQueueShutdown) {
       this.onQueueShutdown();
     }
+  }
+
+  // MatchMakingの進捗をユーザーに共有する
+  private async shareMatchMakingStatus() {
+    sendResultRoom(
+      this.wsServer,
+      'pong.match_making.progress',
+      generateFullRoomName({ matchMakingId: this.id }),
+      {
+        waitingPlayerCount: this.users.size,
+      }
+    );
   }
 
   // Match作成を試みる
