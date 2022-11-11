@@ -31,4 +31,8 @@ describe('/Chatrooms (e2e)', () => {
     await createRooms();
     await postMessages();
   });
+
+  it('dummy test', () => {
+    expect(true).toBeTruthy();
+  });
 });
