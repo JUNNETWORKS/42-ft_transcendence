@@ -27,10 +27,11 @@ export const OtpInput = ({ setOtp, submit }: Props) => {
   useEffect(() => {
     if (items.every((v) => RE_DIGIT.test(v))) {
       setOtp(items.join(''));
+      submit();
       return;
     }
     setOtp('');
-  }, [items, setOtp]);
+  }, [items, setOtp, submit]);
 
   const inputOnChange = (
     { target }: React.ChangeEvent<HTMLInputElement>,
@@ -62,9 +63,6 @@ export const OtpInput = ({ setOtp, submit }: Props) => {
     if (e.key === 'Backspace') {
       setItems(items.map((v, i) => (i === idx ? '' : v)));
       return;
-    }
-    if (e.key === 'Enter' && items.every((v) => RE_DIGIT.test(v))) {
-      submit();
     }
   };
 
