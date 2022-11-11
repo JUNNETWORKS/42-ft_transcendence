@@ -7,14 +7,14 @@ import {
   FTButton,
   FTSubmit,
   FTTextField,
-  FTH2,
 } from '@/components/FTBasicComponents';
 import { useAPI } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
+import { passwordErrors, selfErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
+import { useOtp } from './hooks/useOtp';
 
 /**
  * TOTP入力フォーム
@@ -24,10 +24,11 @@ export const TotpAuthForm = (props: {
   onSucceeded: (token: string, user: any, required2fa: boolean) => void;
   onClose: () => void;
 }) => {
-  const [otp, setOtp] = useState('');
+  const otpLength = 6;
+  const [otpString, otpArray, setOtp, clearOtp] = useOtp(otpLength);
   const [state, submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
-    payload: () => ({ otp }),
+    payload: () => ({ otp: otpString }),
     onFetched(json) {
       const { access_token: token, user, required2fa } = json as any;
       props.onSucceeded(token, user, required2fa);
@@ -39,16 +40,22 @@ export const TotpAuthForm = (props: {
             setNetErrors({
               totp: '認証に失敗しました。もう一度お試しください。',
             });
+            clearOtp();
             return;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
+            clearOtp();
             return;
         }
       }
     },
   });
-  const validationErrors = totpErrors(otp);
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
+
+  if (otpString.length === otpLength) {
+    submit();
+  }
+
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
       <h3>ワンタイムパスワード入力</h3>
@@ -59,14 +66,16 @@ export const TotpAuthForm = (props: {
         </li>
       </ul>
       <div>
-        <OtpInput setOtp={setOtp} submit={submit}></OtpInput>
-        <div className="text-red-400">
-          {validationErrors.totp || netErrors.totp || '　'}
-        </div>
+        <OtpInput
+          otpLength={otpLength}
+          otpArray={otpArray}
+          setOtp={setOtp}
+        ></OtpInput>
+        <div className="text-red-400">{netErrors.totp || '　'}</div>
       </div>
       <div>
         <FTButton
-          disabled={validationErrors.some || state === 'Fetching'}
+          disabled={otpString.length !== otpLength || state === 'Fetching'}
           onClick={submit}
         >
           Login
