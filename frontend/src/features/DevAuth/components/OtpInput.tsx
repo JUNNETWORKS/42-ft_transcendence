@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { FTTextField } from './FTBasicComponents';
+import { FTTextField } from '../../../components/FTBasicComponents';
 
 const RE_DIGIT = new RegExp(/^\d+$/);
 
