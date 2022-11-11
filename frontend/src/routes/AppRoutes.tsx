@@ -1,6 +1,6 @@
 import { useRoutes } from 'react-router-dom';
 import { Chat } from '@/features/Chat/Chat';
-import { Pong as PongMatchPage } from '@/features/Pong/components/Pong';
+import { MatchPage as PongMatchPage } from '@/features/Pong/MatchPage';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { chatSocketAtom } from '@/stores/atoms';

@@ -5,14 +5,12 @@ import { Pong } from './components/Pong';
 export const MatchPage: React.FC = () => {
   const { matchID } = useParams();
 
-  useEffect(() => {
-
-  }, []);
+  useEffect(() => {}, []);
 
   return (
     <div>
       <h1>Pong Match Page</h1>
-      <Pong/>
+      <Pong />
     </div>
-  )
+  );
 };
