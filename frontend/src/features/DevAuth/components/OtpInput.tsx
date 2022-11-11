@@ -24,15 +24,6 @@ export const OtpInput = ({ setOtp, submit }: Props) => {
   const valueLength = 6;
   const [items, setItems] = useState<string[]>(Array(6).fill(''));
 
-  useEffect(() => {
-    if (items.every((v) => RE_DIGIT.test(v))) {
-      setOtp(items.join(''));
-      submit();
-      return;
-    }
-    setOtp('');
-  }, [items, setOtp, submit]);
-
   const inputOnChange = (
     { target }: React.ChangeEvent<HTMLInputElement>,
     idx: number
@@ -41,12 +32,20 @@ export const OtpInput = ({ setOtp, submit }: Props) => {
 
     if (!RE_DIGIT.test(targetValue)) return;
 
+    let newValue;
     if (targetValue.length === 1) {
-      setItems(items.map((v, i) => (i === idx ? targetValue : v)));
+      newValue = items.map((v, i) => (i === idx ? targetValue : v));
+      setItems(newValue);
       focusNextInput(target);
     } else if (targetValue.length === valueLength) {
-      setItems(targetValue.split(''));
-      // target.blur();
+      newValue = targetValue.split('');
+      setItems(newValue);
+      target.blur();
+    }
+
+    if (newValue && newValue.every((v) => RE_DIGIT.test(v))) {
+      setOtp(newValue.join(''));
+      submit();
     }
   };
 
