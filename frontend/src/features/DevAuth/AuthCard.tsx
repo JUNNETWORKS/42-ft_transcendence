@@ -15,6 +15,7 @@ import { passwordErrors, selfErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
 import { useOtp } from './hooks/useOtp';
+import { Oval } from 'react-loader-spinner';
 
 /**
  * TOTP入力フォーム
@@ -68,14 +69,23 @@ export const TotpAuthForm = (props: {
           表示されるワンタイムパスワードを入力してください。
         </li>
       </ul>
-      <div>
+      <div className="relative grid">
+        <div className="absolute z-10 place-self-center">
+          <Oval
+            height={40}
+            width={40}
+            color="#ffffff"
+            visible={state === 'Fetching'}
+            secondaryColor="#eeeeee"
+          />
+        </div>
         <OtpInput
           otpLength={otpLength}
           otpArray={otpArray}
           setOtp={setOtp}
         ></OtpInput>
-        <div className="text-red-400">{netErrors.totp || '　'}</div>
       </div>
+      <div className="text-red-400">{netErrors.totp || '　'}</div>
       <div>
         <FTButton
           disabled={otpString.length !== otpLength || state === 'Fetching'}
