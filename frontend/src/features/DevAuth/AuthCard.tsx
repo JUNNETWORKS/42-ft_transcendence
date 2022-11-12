@@ -40,11 +40,9 @@ export const TotpAuthForm = (props: {
             setNetErrors({
               totp: '認証に失敗しました。もう一度お試しください。',
             });
-            clearOtp();
             return;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
-            clearOtp();
             return;
         }
       }
@@ -54,6 +52,7 @@ export const TotpAuthForm = (props: {
 
   if (otpString.length === otpLength) {
     submit();
+    clearOtp();
   }
 
   return (
