@@ -32,6 +32,7 @@ export const TotpAuthForm = (props: {
     onFetched(json) {
       const { access_token: token, user, required2fa } = json as any;
       props.onSucceeded(token, user, required2fa);
+      clearOtp();
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -40,19 +41,22 @@ export const TotpAuthForm = (props: {
             setNetErrors({
               totp: '認証に失敗しました。もう一度お試しください。',
             });
-            return;
+            break;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
-            return;
+            break;
         }
+        clearOtp();
       }
     },
   });
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
-
-  if (otpString.length === otpLength) {
+  if (
+    state !== 'Fetching' &&
+    state !== 'Fetched' &&
+    otpString.length === otpLength
+  ) {
     submit();
-    clearOtp();
   }
 
   return (
