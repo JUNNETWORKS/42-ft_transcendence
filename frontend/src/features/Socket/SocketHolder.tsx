@@ -8,6 +8,7 @@ import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
+import { useUpdateUser } from '@/store';
 
 export const SocketHolder = () => {
   // 「ソケット」
@@ -32,6 +33,8 @@ export const SocketHolder = () => {
     // personalData を監視すると名前などの変更に反応するので, userId を監視する
   }, [userId]);
 
+  const userUpdator = useUpdateUser();
+
   useEffect(() => {
     console.log('mySocket?', !!mySocket);
     mySocket?.on('ft_connection', (data: TD.ConnectionResult) => {
@@ -39,6 +42,17 @@ export const SocketHolder = () => {
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
       setFriends(data.friends);
+      userUpdator.addMany(data.friends);
+    });
+
+    mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {
+      console.log('catch heartbeat', data);
+      userUpdator.updateOne(data.userId, { time: data.time });
+    });
+
+    mySocket?.on('ft_offline', (data: TD.HeartbeatResult) => {
+      console.log('catch offline', data);
+      userUpdator.offlinate(data.userId);
     });
 
     mySocket?.on('ft_open', (data: TD.OpenResult) => {
@@ -181,6 +195,7 @@ export const SocketHolder = () => {
     mySocket?.on('ft_follow', (data: TD.FollowResult) => {
       console.log('catch follow');
       if (!friends.find((f) => f.id === data.user.id)) {
+        userUpdator.addOne(data.user);
         setFriends((prev) => {
           const next = [...prev, data.user];
           return next;

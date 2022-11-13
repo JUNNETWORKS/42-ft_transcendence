@@ -1,10 +1,12 @@
 import { chatSocketAtom, userAtoms } from '@/stores/atoms';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { usePersonalData } from '@/hooks';
 import { useAtom } from 'jotai';
 import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
-import { UserPersonalData } from '@/types';
+import * as dayjs from 'dayjs';
+import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import * as TD from '@/typedef';
+import { useUserData } from '@/store';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -34,34 +36,40 @@ const FollowButton = (props: { userId: number; isFriend: boolean }) => {
         (props.isFriend ? command.unfollow : command.follow)(props.userId)
       }
     >
-      {props.isFriend ? 'Follow' : 'Unfollow'}
+      {props.isFriend ? 'Unollow' : 'Follow'}
     </FTButton>
   );
 };
 
 type UserCardProp = {
-  personalData: UserPersonalData;
+  user: TD.User;
 };
-const UserCard = ({ personalData }: UserCardProp) => {
-  const userId = personalData.id;
+const UserCard = ({ user }: UserCardProp) => {
+  const userId = user.id;
   const [friends] = useAtom(userAtoms.friends);
   // フレンドかどうか
-  console.log(userId, friends);
   const isFriend = !!friends.find((f) => f.id === userId);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-        {personalData.displayName}
+        <div className="inline-block align-text-bottom">
+          <OnlineStatusDot key={user.id} user={user} />
+        </div>
+        {user.displayName}
         {isFriend && <FaUserFriends className="inline" />}
       </FTH1>
       <div className="flex flex-col gap-2">
         <FTH4>id</FTH4>
-        <div>{personalData.id}</div>
+        <div>{user.id}</div>
         <FTH4>name</FTH4>
-        <div>{personalData.displayName}</div>
+        <div>{user.displayName}</div>
+        <FTH4>heartbeat time</FTH4>
+        <div>
+          {user.time ? dayjs(user.time).format('MM/DD HH:mm:ss') : 'offline'}
+        </div>
 
         <div>
-          <FollowButton userId={personalData.id} isFriend={isFriend} />
+          <FollowButton userId={user.id} isFriend={isFriend} />
         </div>
       </div>
     </>
@@ -71,23 +79,24 @@ const UserCard = ({ personalData }: UserCardProp) => {
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
-  const [fetchState, personalData] = usePersonalData(userId);
+  const [fetchState, user] = useUserData(userId);
 
-  const presentator = () => {
+  const presentator = (() => {
+    console.log('personalData', fetchState, user);
     switch (fetchState) {
       case 'Fetched': {
-        if (personalData) {
-          return <UserCard personalData={personalData} />;
+        if (user) {
+          return <UserCard user={user} />;
         }
       }
     }
     return <p>{fetchState}</p>;
-  };
+  })();
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
       <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {presentator()}
+        {presentator}
       </div>
     </div>
   );
