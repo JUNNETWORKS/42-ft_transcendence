@@ -12,6 +12,11 @@ export class WsServerGateway {
   @WebSocketServer()
   server: Server;
 
+  /**
+   * 指定したユーザーIDのルームにjoinしているclientのsocketを取得する
+   * @param userId ユーザーID
+   * @returns
+   */
   socketsInUserChannel(userId: number) {
     const fullUserRoomName = generateFullRoomName({ userId });
     return this.server.in(fullUserRoomName);
@@ -20,10 +25,8 @@ export class WsServerGateway {
   /**
    * 指定したユーザIDに対応するクライアントを指定したルームにjoinさせる\
    * **あらかじめユーザルーム(${userId})にjoinしているクライアントにしか効果がないことに注意！！**
-   * @param userId
-   * 対象のユーザー
-   * @param roomArg
-   * 対象のルームの識別子
+   * @param userId 対象のユーザー
+   * @param roomArg 対象のルームの識別子
    */
   async usersJoin(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
@@ -35,10 +38,9 @@ export class WsServerGateway {
 
   // TODO: (英語としておかしいので名前を変える)
   /**
-   * @param userId
-   * 対象のユーザー
-   * @param roomArg
-   * 対象のルームの識別子
+   * 対象のルームからユーザーIDに対応するクライアントをleaveさせる
+   * @param userId ユーザーID
+   * @param roomArg 対象のルームの識別子
    */
   async usersLeave(userId: number, roomArg: RoomArg) {
     const fullUserRoomName = generateFullRoomName({ userId });
@@ -53,20 +55,23 @@ export class WsServerGateway {
 
   /**
    * サーバからクライアントに向かってデータを流す
-   * @param op
-   * イベント名
-   * @param payload
-   * データ本体
-   * @param roomArg
-   * 対象のルームの識別子
+   * @param op イベント名
+   * @param payload データ本体
+   * @param roomArg 対象のルームの識別子
    */
-  sendResultRoom = async (op: string, payload: any, roomArg: RoomArg) => {
+  private async sendResultRoom(op: string, payload: any, roomArg: RoomArg) {
     const roomName = generateFullRoomName(roomArg);
     const socks = await this.server.to(roomName).allSockets();
     console.log('sending downlink to:', roomName, op, payload, socks);
     this.server.to(roomName).emit(op, payload);
-  };
+  }
 
+  /**
+   * targetのルームにopイベントのpayloadを送信する
+   * @param op イベント名
+   * @param payload データ本体
+   * @param target 対象のルーム識別子
+   */
   async sendResults(
     op: string,
     payload: any,
