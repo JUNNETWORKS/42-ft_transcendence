@@ -112,7 +112,7 @@ const redrawGame = (
 // ========================================
 // React
 
-export const Pong: React.FC = () => {
+export const MatchCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
   const [matchResult, setMatchResult] = useState<GameResult | null>(null);

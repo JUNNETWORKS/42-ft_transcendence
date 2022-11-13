@@ -1,13 +1,50 @@
 import { Modal } from '@/components/Modal';
-import { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
+import { io, Socket } from 'socket.io-client';
+import { useNavigate } from 'react-router-dom';
 
-export const GamePage = () => {
+export const PongTopPage: React.FC = () => {
   const [isWaiting, setIsWaiting] = useState(false);
+  const socketRef = useRef<Socket>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // WebSocket initialization
+    if (!socketRef.current) {
+      socketRef.current = io('http://localhost:3000/pong');
+    }
+
+    // マッチメイキング進捗通知
+    socketRef.current.on('pong.match_making.progress', (data) => {
+      const matchID = data.matchID;
+      // 対戦ページに遷移する
+      navigate(`/pong/matches/${matchID}`);
+    });
+
+    // マッチメイキング完了通知
+    socketRef.current.on('pong.match_making.done', (data) => {
+      const matchID = data.matchID;
+      // 対戦ページに遷移する
+      navigate(`/pong/matches/${matchID}`);
+    });
+
+    return () => {
+      socketRef.current?.off('pong.match_makind.progress');
+      socketRef.current?.off('pong.match_makind.done');
+    };
+  }, []);
 
   const cancelWaiting = () => {
     setIsWaiting(false);
+  };
+
+  const StartMatchMaking = (waitingQueueID: string) => {
+    if (isWaiting) {
+      return;
+    }
+    socketRef.current?.emit('pong.match_making.entry', { waitingQueueID });
   };
 
   return (
@@ -29,20 +66,20 @@ export const GamePage = () => {
             text="カジュアルマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching casual');
+              StartMatchMaking('CASUAL');
             }}
           />
           <CommandCard
             text="ランクマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching rank');
+              StartMatchMaking('RANK');
             }}
           />
           <CommandCard
             text="もどる"
             onClick={() => {
-              console.log('backPage');
+              navigate('/');
             }}
           />
         </div>

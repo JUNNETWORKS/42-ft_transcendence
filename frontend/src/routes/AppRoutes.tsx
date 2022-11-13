@@ -1,13 +1,12 @@
 import { useRoutes } from 'react-router-dom';
 import { Chat } from '@/features/Chat/Chat';
-import { MatchPage as PongMatchPage } from '@/features/Pong/MatchPage';
+import { PongMatchPage } from '@/features/Pong/components/MatchPage';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { chatSocketAtom } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
-import { TopPage as PongTopPage } from '@/features/Pong/TopPage';
-import { GamePage } from '@/features/GamePage/components/GamePage';
+import { PongTopPage } from '@/features/Pong/components/TopPage';
 import { MyPageView } from '@/features/User/MyPage';
 
 export const AppRoutes = () => {
@@ -21,7 +20,6 @@ export const AppRoutes = () => {
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
-    { path: '/game/markup', element: <GamePage /> },
     { path: '/me/*', element: <MyPageView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
