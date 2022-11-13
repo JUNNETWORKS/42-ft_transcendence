@@ -5,6 +5,7 @@ import * as Utils from '@/utils';
 export type User = {
   id: number;
   displayName: string;
+  time?: Date;
 };
 
 export type ChatRoom = {
@@ -53,6 +54,15 @@ export type ConnectionResult = {
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
   friends: User[];
+};
+
+export type HeartbeatResult = {
+  userId: number;
+  time: Date;
+};
+
+export type OfflineResult = {
+  userId: number;
 };
 
 export type OpenResult = ChatRoom;
