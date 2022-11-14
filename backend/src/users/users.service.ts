@@ -112,6 +112,37 @@ export class UsersService {
     });
   }
 
+  async findBlocked(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.findUnique({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async block(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.create({
+      data: {
+        userId,
+        targetUserId,
+      },
+    });
+  }
+
+  async unblock(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.delete({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
   /**
    * ログイン時の初期表示用の情報をかき集める
    * @param id

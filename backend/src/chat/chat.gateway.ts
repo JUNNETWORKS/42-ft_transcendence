@@ -32,6 +32,8 @@ import {
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 import { AuthService } from 'src/auth/auth.service';
+import { OperationBlockDto } from 'src/chatrooms/dto/operation-block.dto';
+import { OperationUnblockDto } from 'src/chatrooms/dto/operation-unblock.dto';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -823,6 +825,92 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         userId: targetId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_block')
+  async handleBlock(
+    @MessageBody() data: OperationBlockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_block', data);
+
+    if (user.id === data.userId) {
+      console.log('is you!!');
+      return;
+    }
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [すでにリレーションが存在していないことを確認]
+    if (rel.existing) {
+      console.log('** already being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.block(user.id, targetId);
+
+    // ブロックしたことを通知
+    this.sendResults(
+      'ft_block',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_unblock')
+  async handleUnblock(
+    @MessageBody() data: OperationUnblockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_unblock', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [リレーションが存在していることを確認]
+    if (!rel.existing) {
+      console.log('** not being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.unblock(user.id, targetId);
+
+    // アンブロックことを通知
+    this.sendResults(
+      'ft_unblock',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
       }
     );
   }
