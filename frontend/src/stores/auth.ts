@@ -90,6 +90,9 @@ export const chatSocketAtom = atom((get) =>
   chatSocketFromCredential(get(storedCredentialAtom))
 );
 
+/**
+ * 呼び出すとアプリの「ログイン状態」を解除する関数、を返す。
+ */
 export const useLogout = () => {
   const setAuthState = useAtom(authAtom.authFlowState)[1];
   const setStoredCredential = useAtom(storedCredentialAtom)[1];
@@ -101,12 +104,16 @@ export const useLogout = () => {
   };
 };
 
+/**
+ * アクセストークンとユーザ情報を与えるとアプリを「ログイン状態」にする関数、
+ * を返す。
+ */
 export const useLoginLocal = () => {
   const setAuthState = useAtom(authAtom.authFlowState)[1];
   const setStoredCredential = useAtom(storedCredentialAtom)[1];
   const setPersonalData = useAtom(authAtom.personalData)[1];
-  return (token: string, user: any) => {
-    setStoredCredential({ token });
+  return (access_token: string, user: any) => {
+    setStoredCredential({ token: access_token });
     setPersonalData(user);
     setAuthState('Authenticated');
   };
