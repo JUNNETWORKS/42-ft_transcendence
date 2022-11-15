@@ -1,10 +1,10 @@
-import { userAtoms } from '@/stores/atoms';
 import { useAtom } from 'jotai';
 import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';
 import { UserView } from './User';
-import { useUserDataReadOnly } from '@/store';
+import { useUserDataReadOnly } from '@/stores/store';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import { dataAtom } from '@/stores/structure';
 
 const FriendListItem = (props: { user: TD.User }) => {
   const user = useUserDataReadOnly(props.user.id);
@@ -34,7 +34,7 @@ const FriendList = (props: { friends: TD.User[] }) => {
 };
 
 export const FriendsView = () => {
-  const [friends] = useAtom(userAtoms.friends);
+  const [friends] = useAtom(dataAtom.friends);
 
   const friendsRoutes = [
     { path: '/', element: null },

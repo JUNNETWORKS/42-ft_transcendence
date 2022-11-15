@@ -19,57 +19,102 @@ export const useQuery = () => {
 };
 
 /**
- * 一度だけ発動する`useEffect`
- * @param action
+ * Fetchフック
+ * @param fetcher fetch(実は`Promise<Response>`ならなんでも良い)を返す関数
+ * @param onFetched 成功時に`Response`を受け取る関数
+ * @param onFailed 失敗時にエラー(`unknown`)を受け取る関数
+ * @returns
  */
-export const useEffectOnce = (action: React.EffectCallback) => {
-  useEffect(action, []);
-};
+export const useFetch = (
+  fetcher: () => Promise<Response>,
+  onFetched: (res: Response) => void,
+  onFailed?: (error: unknown) => void
+) => {
+  type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
+  const [state, setState] = useState<FetchState>('Neutral');
+  useEffect(() => {
+    if (state !== 'Fetching') {
+      return;
+    }
+    const doFetch = async () => {
+      try {
+        const result = await fetcher();
+        if (result.ok) {
+          setState('Fetched');
+          onFetched(result);
+        }
+      } catch (e) {
+        console.error(e);
+        setState('Failed');
+        if (onFailed) {
+          onFailed(e);
+        }
+      }
+    };
+    try {
+      doFetch();
+    } catch (e) {
+      console.error(e);
+      setState('Failed');
+      if (onFailed) {
+        onFailed(e);
+      }
+    }
+  }, [state]);
+  const submit = () => setState('Fetching');
 
-export type AppCredential = {
-  token: string;
+  return [
+    /**
+     * 内部状態
+     */
+    state,
+    /**
+     * 実行すると, 次の副作用タイミングで fetch 処理をキックする
+     */
+    submit,
+  ] as const;
 };
 
 /**
- * `localStorage`**など**に保存されているクレデンシャル情報を取得・更新するフック。
- * @returns
+ * API呼び出しフック(useFetchをラップしたもの)
  */
-export const useStoredCredential = () => {
-  // TODO: 定数なのでどっかで一元管理
-  const credentialKey = 'ft_transcendence_credential';
-  const [storedStr, setStoredStr] = useState(
-    localStorage.getItem(credentialKey) || ''
-  );
+export const useAPI = (
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  endpoint: string,
+  option: {
+    payload?: () => any;
+    onFetched: (json: unknown) => void;
+    onFailed?: (error: unknown) => void;
+  }
+) => {
+  const { payload, onFetched, onFailed } = option;
 
-  const getter = useMemo((): AppCredential | null => {
-    try {
-      const credential = JSON.parse(storedStr);
-      if (credential && typeof credential === 'object') {
-        const token = credential.token;
-        if (typeof token === 'string') {
-          return { token };
+  return useFetch(
+    () =>
+      fetch(`http://localhost:3000${endpoint}`, {
+        method,
+        mode: 'cors',
+        ...(payload
+          ? {
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(payload()),
+            }
+          : {}),
+      }),
+    (res) =>
+      (async () => {
+        try {
+          const json = await res.json();
+          onFetched(json);
+        } catch (e) {
+          console.error(e);
+          if (onFailed) {
+            onFailed(e);
+          }
         }
-      }
-    } catch (e) {
-      //
-    }
-    return null;
-  }, [storedStr]);
-
-  const setter = (val: AppCredential | null) => {
-    setStoredStr((prev) => {
-      if (!val) {
-        // 削除
-        localStorage.removeItem(credentialKey);
-        return '';
-      }
-      const str = JSON.stringify(val);
-      if (str === prev) {
-        return prev;
-      }
-      localStorage.setItem(credentialKey, str);
-      return str;
-    });
-  };
-  return [getter, setter] as const;
+      })(),
+    onFailed
+  );
 };

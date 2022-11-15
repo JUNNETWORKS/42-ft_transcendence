@@ -9,6 +9,7 @@ import { ChatroomEntity } from './entities/chatroom.entity';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
 
 @Injectable()
 export class ChatroomsService {
@@ -182,6 +183,19 @@ export class ChatroomsService {
       },
       update: upArg,
     });
+  }
+
+  async updateRoom(id: number, updateRoomDto: UpdateRoomDto) {
+    const { roomType, roomPassword, roomName } = updateRoomDto;
+    const res = await this.prisma.chatRoom.update({
+      where: { id },
+      data: {
+        roomType: roomType,
+        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
+        roomName,
+      },
+    });
+    return new ChatroomEntity(res);
   }
 
   async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {

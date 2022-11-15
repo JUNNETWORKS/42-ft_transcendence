@@ -1,12 +1,13 @@
-import { chatSocketAtom, userAtoms } from '@/stores/atoms';
+import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
+import { useUserData } from '@/stores/store';
 import { useAtom } from 'jotai';
-import { FaUserFriends } from 'react-icons/fa';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import { Icons } from '@/icons';
 import * as TD from '@/typedef';
-import { useUserData } from '@/store';
+import { structureAtom } from '@/stores/structure';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -46,7 +47,7 @@ type UserCardProp = {
 };
 const UserCard = ({ user }: UserCardProp) => {
   const userId = user.id;
-  const [friends] = useAtom(userAtoms.friends);
+  const [friends] = useAtom(structureAtom.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
   return (
@@ -56,7 +57,7 @@ const UserCard = ({ user }: UserCardProp) => {
           <OnlineStatusDot key={user.id} user={user} />
         </div>
         {user.displayName}
-        {isFriend && <FaUserFriends className="inline" />}
+        {isFriend && <Icons.User.Friend className="inline" />}
       </FTH1>
       <div className="flex flex-col gap-2">
         <FTH4>id</FTH4>

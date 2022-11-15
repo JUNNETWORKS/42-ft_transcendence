@@ -1,11 +1,11 @@
 import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import * as TD from './typedef';
-import * as Utils from './utils';
+import * as TD from '../typedef';
+import * as Utils from '../utils';
 
 // オブジェクトストア
 
-export const objectStoreAtoms = {
+export const storeAtoms = {
   users: atom<{ [id: number]: TD.User }>({}),
   rooms: atom<{ [id: number]: TD.ChatRoom }>({}),
 };
@@ -14,7 +14,7 @@ export const objectStoreAtoms = {
  * usersストアを更新するための関数を提供するフック
  */
 export const useUpdateUser = () => {
-  const [usersStore, setUsersStore] = useAtom(objectStoreAtoms.users);
+  const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
   const updater = {
     addOne: useCallback(
       (data: TD.User) => {
@@ -138,6 +138,32 @@ export const useUserData = (userId: number) => {
 };
 
 export const useUserDataReadOnly = (id: number) => {
-  const [usersStore] = useAtom(objectStoreAtoms.users);
+  const [usersStore] = useAtom(storeAtoms.users);
   return usersStore[id];
+};
+
+export const useUpdateRoom = () => {
+  const [roomStore, setRoomsStore] = useAtom(storeAtoms.rooms);
+  const addOne = (data: TD.ChatRoom) => {
+    setRoomsStore((prev) => ({ ...prev, [data.id]: data }));
+  };
+  const addMany = (data: TD.ChatRoom[]) => {
+    setRoomsStore((prev) => {
+      const next = { ...prev };
+      data.forEach((d) => (next[d.id] = d));
+      return next;
+    });
+  };
+  const updateOne = (roomId: number, part: Partial<TD.ChatRoom>) => {
+    const d = roomStore[roomId];
+    if (!d) {
+      return;
+    }
+    setRoomsStore((prev) => ({ ...prev, [roomId]: { ...d, ...part } }));
+  };
+  return {
+    addOne,
+    addMany,
+    updateOne,
+  };
 };
