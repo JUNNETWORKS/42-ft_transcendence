@@ -3,7 +3,7 @@ import { useAtom, useSetAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { useUpdateRoom, useUpdateUser } from '@/stores/store';
+import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
 
 export const SocketHolder = () => {
@@ -24,6 +24,7 @@ export const SocketHolder = () => {
 
   const userUpdator = useUpdateUser();
   const roomUpdator = useUpdateRoom();
+  const dmRoomUpdator = useUpdateDmRoom();
 
   useEffect(() => {
     console.log('mySocket?', !!mySocket);
@@ -36,7 +37,7 @@ export const SocketHolder = () => {
       userUpdator.addMany(data.friends);
       roomUpdator.addMany(data.visibleRooms);
       roomUpdator.addMany(data.joiningRooms);
-      roomUpdator.addMany(data.dmRooms);
+      dmRoomUpdator.addMany(data.dmRooms);
     });
 
     mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {
@@ -85,7 +86,7 @@ export const SocketHolder = () => {
         next.push(room);
         return next;
       });
-      roomUpdator.addOne(room);
+      dmRoomUpdator.addOne(room);
     });
 
     mySocket?.on('ft_say', (data: TD.SayResult) => {
