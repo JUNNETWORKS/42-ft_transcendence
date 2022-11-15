@@ -80,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection {
     joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const { visibleRooms, joiningRooms, dmRooms, friends } =
+    const { visibleRooms, joiningRooms, dmRooms, friends, blockingUsers } =
       await this.usersService.collectStartingInfomations(userId);
     const joiningRoomNames = [...joiningRooms, ...dmRooms].map((r) =>
       generateFullRoomName({ roomId: r.id })
@@ -125,6 +125,8 @@ export class ChatGateway implements OnGatewayConnection {
             time: h ? h.time : null,
           };
         }),
+        // TODO: timeいるか確認
+        blockingUsers: blockingUsers.map((r) => Utils.pick(r, 'id')),
       },
       {
         client,

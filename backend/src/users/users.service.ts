@@ -132,6 +132,17 @@ export class UsersService {
     });
   }
 
+  async findBlockingUsers(userId: number) {
+    return this.prisma.blockRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        targetUser: true,
+      },
+    });
+  }
+
   async unblock(userId: number, targetUserId: number) {
     return this.prisma.blockRelation.delete({
       where: {
@@ -162,6 +173,9 @@ export class UsersService {
         .getRoomsJoining(id, 'DM_ONLY')
         .then((rs) => rs.map((r) => r.chatRoom)),
       friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
+      blockingUsers: this.findBlockingUsers(id).then((us) =>
+        us.map((d) => d.targetUser)
+      ),
     });
     return {
       visibleRooms: Utils.sortBy(
@@ -171,6 +185,7 @@ export class UsersService {
       joiningRooms: r.joiningRooms,
       dmRooms: r.dmRooms,
       friends: r.friends,
+      blockingUsers: r.blockingUsers,
     };
   }
 
