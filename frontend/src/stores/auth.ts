@@ -94,9 +94,9 @@ export const chatSocketAtom = atom((get) =>
  * 呼び出すとアプリの「ログイン状態」を解除する関数、を返す。
  */
 export const useLogout = () => {
-  const setAuthState = useAtom(authAtom.authFlowState)[1];
-  const setStoredCredential = useAtom(storedCredentialAtom)[1];
-  const setPersonalData = useAtom(authAtom.personalData)[1];
+  const [, setAuthState] = useAtom(authAtom.authFlowState);
+  const [, setStoredCredential] = useAtom(storedCredentialAtom);
+  const [, setPersonalData] = useAtom(authAtom.personalData);
   return () => {
     setStoredCredential(null);
     setPersonalData(null);
@@ -109,9 +109,9 @@ export const useLogout = () => {
  * を返す。
  */
 export const useLoginLocal = () => {
-  const setAuthState = useAtom(authAtom.authFlowState)[1];
-  const setStoredCredential = useAtom(storedCredentialAtom)[1];
-  const setPersonalData = useAtom(authAtom.personalData)[1];
+  const [, setAuthState] = useAtom(authAtom.authFlowState);
+  const [, setStoredCredential] = useAtom(storedCredentialAtom);
+  const [, setPersonalData] = useAtom(authAtom.personalData);
   return (access_token: string, user: any) => {
     setStoredCredential({ token: access_token });
     setPersonalData(user);
