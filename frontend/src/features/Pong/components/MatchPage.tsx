@@ -3,18 +3,13 @@ import { useParams } from 'react-router-dom';
 import { MatchCanvas } from './MatchCanvas';
 import { io, Socket } from 'socket.io-client';
 
-export const PongMatchPage: React.FC = () => {
-  const socketRef = useRef<Socket>();
+export const PongMatchPage = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
   const { matchID } = useParams();
 
   useEffect(() => {
-    // WebSocket initialization
-    if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3000/pong');
-    }
-
     // マッチの状態同期
-    socketRef.current.on('pong.match.state', (data) => {
+    mySocket.on('pong.match.state', (data) => {
       // TODO: canvasに同期
     });
   }, []);

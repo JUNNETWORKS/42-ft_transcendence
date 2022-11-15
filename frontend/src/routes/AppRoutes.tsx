@@ -15,8 +15,14 @@ export const AppRoutes = () => {
   const guardElement = !mySocket ? authElement : null;
   const commonRoutes = [
     { path: '/', element: <Index /> },
-    { path: '/pong', element: <PongTopPage /> },
-    { path: '/pong/matches/:matchID', element: <PongMatchPage /> },
+    {
+      path: '/pong',
+      element: guardElement || <PongTopPage mySocket={mySocket!} />,
+    },
+    {
+      path: '/pong/matches/:matchID',
+      element: guardElement || <PongMatchPage mySocket={mySocket!} />,
+    },
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },

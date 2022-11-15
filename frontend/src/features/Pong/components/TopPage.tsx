@@ -5,38 +5,34 @@ import { RankingCard } from './RankingCard';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 
-export const PongTopPage: React.FC = () => {
+export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
-  const socketRef = useRef<Socket>();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // WebSocket initialization
-    if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3000/pong');
-    }
-
     // マッチメイキング進捗通知
-    socketRef.current.on('pong.match_making.progress', (data) => {
+    mySocket.on('pong.match_making.progress', (data) => {
       const matchID = data.matchID;
       // 対戦ページに遷移する
       navigate(`/pong/matches/${matchID}`);
     });
 
     // マッチメイキング完了通知
-    socketRef.current.on('pong.match_making.done', (data) => {
+    mySocket.on('pong.match_making.done', (data) => {
       const matchID = data.matchID;
       // 対戦ページに遷移する
       navigate(`/pong/matches/${matchID}`);
     });
 
     return () => {
-      socketRef.current?.off('pong.match_makind.progress');
-      socketRef.current?.off('pong.match_makind.done');
+      mySocket?.off('pong.match_makind.progress');
+      mySocket?.off('pong.match_makind.done');
     };
   }, []);
 
   const cancelWaiting = () => {
+    mySocket?.emit('pong.match_making.leave');
     setIsWaiting(false);
   };
 
@@ -44,7 +40,7 @@ export const PongTopPage: React.FC = () => {
     if (isWaiting) {
       return;
     }
-    socketRef.current?.emit('pong.match_making.entry', { waitingQueueID });
+    mySocket?.emit('pong.match_making.entry', { waitingQueueID });
   };
 
   return (
