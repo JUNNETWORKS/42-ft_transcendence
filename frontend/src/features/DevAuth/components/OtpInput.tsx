@@ -6,6 +6,7 @@ const RE_DIGIT = new RegExp(/^\d+$/);
 export type Props = {
   otpLength: number;
   otpArray: string[];
+  submit: (otpString: string) => void;
   setOtp: (newValue: string[]) => void;
 };
 
@@ -21,21 +22,26 @@ const focusNextInput = (target: HTMLElement) => {
   nextElementSibling?.focus();
 };
 
-export const OtpInput = ({ otpLength, otpArray, setOtp }: Props) => {
-  const inputOnChange = (
-    { target }: React.ChangeEvent<HTMLInputElement>,
+export const OtpInput = ({ otpLength, otpArray, submit, setOtp }: Props) => {
+  const inputOnInput = (
+    { target }: React.FormEvent<HTMLInputElement>,
     idx: number
   ) => {
-    const targetValue = target.value.trim();
+    const elem = target as HTMLInputElement;
+    const targetValue = elem.value.trim();
 
     if (!RE_DIGIT.test(targetValue)) return;
-
-    if (targetValue.length === 1) {
-      setOtp(otpArray.map((v, i) => (i === idx ? targetValue : v)));
-      focusNextInput(target);
-    } else if (targetValue.length === otpLength) {
-      setOtp(targetValue.split(''));
-      target.blur();
+    if (targetValue.length !== 1) {
+      return;
+    }
+    const nextOtp = otpArray.map((v, i) => (i === idx ? targetValue : v));
+    setOtp(nextOtp);
+    const otpString = nextOtp.join('');
+    if (idx + 1 < otpLength) {
+      focusNextInput(elem);
+    } else if (idx + 1 === otpLength) {
+      submit(otpString);
+      elem.setSelectionRange(0, elem.value.length);
     }
   };
 
@@ -76,7 +82,7 @@ export const OtpInput = ({ otpLength, otpArray, setOtp }: Props) => {
           maxLength={otpLength}
           className="h-14 w-12 rounded-sm border text-center text-3xl caret-transparent"
           value={digit}
-          onChange={(e) => inputOnChange(e, idx)}
+          onInput={(e) => inputOnInput(e, idx)}
           onKeyDown={(e) => inputOnKeyDown(e, idx)}
           onFocus={inputOnFocus}
         />

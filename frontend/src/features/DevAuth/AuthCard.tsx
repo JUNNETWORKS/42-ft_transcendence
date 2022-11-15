@@ -27,7 +27,7 @@ export const TotpAuthForm = (props: {
 }) => {
   const otpLength = 6;
   const [otpString, otpArray, setOtp, clearOtp] = useOtp(otpLength);
-  const [state, submit] = useAPI('POST', `/auth/otp`, {
+  const [state, submitNothing, , submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
     payload: () => ({ otp: otpString }),
     onFetched(json) {
@@ -47,18 +47,10 @@ export const TotpAuthForm = (props: {
             setNetErrors({ totp: '認証に失敗しました' });
             break;
         }
-        clearOtp();
       }
     },
   });
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
-  if (
-    state !== 'Fetching' &&
-    state !== 'Fetched' &&
-    otpString.length === otpLength
-  ) {
-    submit();
-  }
 
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
@@ -82,6 +74,9 @@ export const TotpAuthForm = (props: {
         <OtpInput
           otpLength={otpLength}
           otpArray={otpArray}
+          submit={(otpString: string) =>
+            submit({ payload: { otp: otpString } })
+          }
           setOtp={setOtp}
         ></OtpInput>
       </div>
@@ -89,7 +84,7 @@ export const TotpAuthForm = (props: {
       <div>
         <FTButton
           disabled={otpString.length !== otpLength || state === 'Fetching'}
-          onClick={submit}
+          onClick={submitNothing}
         >
           Login
         </FTButton>
