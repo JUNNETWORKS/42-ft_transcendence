@@ -125,8 +125,13 @@ export class ChatGateway implements OnGatewayConnection {
             time: h ? h.time : null,
           };
         }),
-        // TODO: timeいるか確認
-        blockingUsers: blockingUsers.map((r) => Utils.pick(r, 'id')),
+        blockingUsers: blockingUsers.map((r) => {
+          const h = this.heartbeatDict[r.id];
+          return {
+            ...Utils.pick(r, 'id', 'displayName'),
+            time: h ? h.time : null,
+          };
+        }),
       },
       {
         client,
