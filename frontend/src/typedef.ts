@@ -63,6 +63,7 @@ export type ConnectionResult = {
   joiningRooms: ChatRoom[];
   dmRooms: DmRoom[];
   friends: User[];
+  blockingUsers: User[];
 };
 
 export type HeartbeatResult = {
@@ -115,6 +116,14 @@ export type FollowResult = {
 };
 
 export type UnfollowResult = {
+  user: User;
+};
+
+export type BlockResult = {
+  user: User;
+};
+
+export type UnblockResult = {
   user: User;
 };
 
