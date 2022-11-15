@@ -9,6 +9,7 @@ async function main() {
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       { displayName: 'Angelique', email: 'angelique@prisma.io', intraId: 2 },
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
+      { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
     ].map((d) => {
       return {
         ...d,
@@ -45,6 +46,11 @@ async function main() {
         roomName: 'test-dm2',
         roomType: 'DM',
         ownerId: 2,
+      },
+      {
+        roomName: 'test-dm3',
+        roomType: 'DM',
+        ownerId: 1,
       },
     ],
     skipDuplicates: true,
@@ -143,6 +149,38 @@ async function main() {
       userId: 3,
       chatRoomId: 5,
       content: `test dm message from user3`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 5,
+      chatRoomId: 1,
+      content: 'something fxxkin message',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 1,
+      chatRoomId: 6,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 5,
+      chatRoomId: 6,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 5,
+      chatRoomId: 6,
+      content: 'something fxxkin message',
     },
   });
 
