@@ -31,6 +31,12 @@ export const OtpInput = ({ otpLength, otpArray, submit, setOtp }: Props) => {
     const targetValue = elem.value.trim();
 
     if (!RE_DIGIT.test(targetValue)) return;
+    if (targetValue.length === otpLength) {
+      setOtp(targetValue.split(''));
+      elem.blur();
+      submit(targetValue);
+      return;
+    }
     if (targetValue.length !== 1) {
       return;
     }
