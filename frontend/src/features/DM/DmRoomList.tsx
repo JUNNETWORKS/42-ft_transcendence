@@ -18,16 +18,16 @@ const DmRoomListItem = (props: {
   const opponent = props.room.roomMember.find(
     (member) => member.userId !== personalData.id
   )!.user;
-  if (blockingUsers.find((u) => u.id === opponent.id)) return null;
+  const isBlocking = blockingUsers.find((u) => u.id === opponent.id);
   const roomName = opponent.displayName;
   return (
     <div className="border-2 border-solid border-white p-[2px]">
       <div
-        className="p-[4px]"
+        className="basis-[1px] p-[4px]"
         style={{
-          flexBasis: '1px',
           cursor: props.isJoined ? 'pointer' : 'unset',
           fontWeight: props.isJoined ? 'bold' : 'normal',
+          textDecorationLine: isBlocking ? 'line-through' : 'none',
           ...(props.isFocused ? { borderLeft: '12px solid teal' } : {}),
         }}
         onClick={() => props.onFocus(props.room.id)}
