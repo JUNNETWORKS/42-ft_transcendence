@@ -22,8 +22,7 @@ export const DmModal = ({ user, onClose }: DmModalProps) => {
   const dmRoomWithUser = () => {
     if (!dmRooms) return undefined;
     return dmRooms.find((room) => {
-      // TODO: dmRoomの方をDmRoomに変更
-      const dmRoom = room as TD.DmRoom;
+      const dmRoom = room;
       if (dmRoom.roomMember.find((member) => member.userId === user.id)) {
         return room;
       }
