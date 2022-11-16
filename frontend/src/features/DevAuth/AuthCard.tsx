@@ -26,14 +26,13 @@ export const TotpAuthForm = (props: {
   onClose: () => void;
 }) => {
   const otpLength = 6;
-  const [otpString, otpArray, setOtp, clearOtp] = useOtp(otpLength);
+  const [otpString, otpArray, setOtp] = useOtp(otpLength);
   const [state, submitNothing, , submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
     payload: () => ({ otp: otpString }),
     onFetched(json) {
       const { access_token: token, user, required2fa } = json as any;
       props.onSucceeded(token, user, required2fa);
-      clearOtp();
     },
     onFailed(e) {
       if (e instanceof APIError) {

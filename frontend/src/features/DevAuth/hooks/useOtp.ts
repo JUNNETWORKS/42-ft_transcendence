@@ -9,10 +9,5 @@ export const useOtp = (length: number) => {
     setStr(newValue.join(''));
   };
 
-  const clearValue = () => {
-    setStr('');
-    setArr(Array(length).fill(''));
-  };
-
-  return [str, arr, setValue, clearValue] as const;
+  return [str, arr, setValue] as const;
 };
