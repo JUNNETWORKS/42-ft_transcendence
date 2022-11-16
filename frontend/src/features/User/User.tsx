@@ -13,11 +13,16 @@ import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { DmModal } from '../DM/DmModal';
 import { Modal } from '@/components/Modal';
 import { FollowButton } from './components/FollowButton';
+import { BlockButton } from './components/BlockButton';
 
 const PresentatorView = (props: { personalData: TD.User }) => {
   const [friends] = useAtom(dataAtom.friends);
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === props.personalData.id);
+  const isBlocking = !!blockingUsers.find(
+    (f) => f.id === props.personalData.id
+  );
 
   // DmModal
   const [isOpen, setIsOpen] = useState(false);
@@ -51,6 +56,7 @@ const PresentatorView = (props: { personalData: TD.User }) => {
 
         <div>
           <FollowButton userId={props.personalData.id} isFriend={isFriend} />
+          <BlockButton userId={props.personalData.id} isBlocking={isBlocking} />
           <FTButton onClick={() => setIsOpen(true)}>{'DM'}</FTButton>
         </div>
       </div>

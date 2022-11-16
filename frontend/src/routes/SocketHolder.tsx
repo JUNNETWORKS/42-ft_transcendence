@@ -229,7 +229,7 @@ export const SocketHolder = () => {
     });
 
     mySocket?.on('ft_block', (data: TD.BlockResult) => {
-      console.log('catch follow');
+      console.log('catch block');
       if (!blockingUsers.find((f) => f.id === data.user.id)) {
         setBlockingUsers((prev) => {
           const next = [...prev, data.user];
