@@ -10,6 +10,7 @@ import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
+import { useAtom } from 'jotai';
 
 const ChatRoomMemberCard = (
   props: {
@@ -18,6 +19,7 @@ const ChatRoomMemberCard = (
     member: TD.ChatUserRelation;
   } & TD.MemberOperations
 ) => {
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
@@ -28,7 +30,7 @@ const ChatRoomMemberCard = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-
+  const isBlocking = !!blockingUsers.find((u) => props.member.userId === u.id);
   const userTypeCap = () => {
     if (isOwner) {
       return <Icons.Chat.Owner style={{ display: 'inline' }} />;
@@ -48,7 +50,10 @@ const ChatRoomMemberCard = (
         }}
       >
         <Link className="block" to={link_path}>
-          {userTypeCap()} {props.member.user.displayName}
+          {userTypeCap()}{' '}
+          {isBlocking
+            ? `${props.member.user.displayName}(Blocking)`
+            : props.member.user.displayName}
         </Link>
       </div>
 

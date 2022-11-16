@@ -18,7 +18,7 @@ const DmRoomListItem = (props: {
   const opponent = props.room.roomMember.find(
     (member) => member.userId !== personalData.id
   )!.user;
-  const isBlocking = blockingUsers.find((u) => u.id === opponent.id);
+  const isBlocking = !!blockingUsers.find((u) => u.id === opponent.id);
   const roomName = opponent.displayName;
   return (
     <div className="border-2 border-solid border-white p-[2px]">
