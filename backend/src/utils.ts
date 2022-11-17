@@ -106,6 +106,13 @@ export async function PromiseMap<T>(pmap: { [P in keyof T]: Promise<T[P]> }) {
   return r as T;
 }
 
-export function hash(secret: string, target: string) {
-  return createHmac('sha256', secret).update(target).digest('hex').toString();
+export function hash(secret: string, target: string, iteration = 1) {
+  if (iteration < 1) {
+    iteration = 1;
+  }
+  let s = target;
+  for (let i = 0; i < iteration; ++i) {
+    s = createHmac('sha256', secret).update(s).digest('hex').toString();
+  }
+  return s;
 }

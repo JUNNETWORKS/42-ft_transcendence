@@ -197,7 +197,7 @@ export class ChatroomsService {
         roomType: roomType,
         roomPassword:
           roomType === 'LOCKED' && !!roomPassword
-            ? Utils.hash(chatRoomConstants.secret, roomPassword)
+            ? Utils.hash(chatRoomConstants.secret, roomPassword, 1000)
             : null,
         roomName,
       },

@@ -146,5 +146,5 @@ export class UsersService {
  * ハッシュ化に用いるキーは`passwordConstants.secret`.
  */
 export function hash_password(password: string) {
-  return Utils.hash(passwordConstants.secret, password);
+  return Utils.hash(passwordConstants.secret, password, 1000);
 }
