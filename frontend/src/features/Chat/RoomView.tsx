@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -13,11 +13,12 @@ import { InlineIcon } from '@/hocs/InlineIcon';
 /**
  * メッセージを表示するコンポーネント
  */
-const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
+const MessageCard = (props: { message: TD.ChatRoomMessage; id: string }) => {
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
       key={props.message.id}
+      id={props.id}
     >
       <div className="flex flex-row">
         <div className="m-[1px] bg-white px-[2px] py-0 text-black">
@@ -130,13 +131,55 @@ const MemberCard = (
   );
 };
 
-const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+function messageCardId(message: TD.ChatRoomMessage) {
+  return `message-${message.id}`;
+}
+
+const MessagesList = (props: {
+  messages: TD.ChatRoomMessage[];
+  id: string;
+}) => {
+  const messageCount = useRef(props.messages.length);
+  useEffect(() => {
+    const increased = messageCount.current <= props.messages.length;
+    messageCount.current = props.messages.length;
+    if (!increased) {
+      return;
+    }
+    const n = messageCount.current;
+    if (n < 2) {
+      return;
+    }
+    const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
+      const lastMessage = props.messages[i];
+      const lastId = messageCardId(lastMessage);
+      return document.getElementById(lastId);
+    });
+    const listEl = document.getElementById(props.id);
+    if (!prevEl || !nextEl || !listEl) {
+      return;
+    }
+    // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
+    //  - prevEl が見えている
+    //  - prevEl のボトムがリストビューの下辺以下にいる
+    // を満たすなら nextEl が見えるようにスクロール
+    const listRect = listEl.getBoundingClientRect();
+    const prevRect = prevEl.getBoundingClientRect();
+    const prevIsShown = !(
+      prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
+    );
+    const prevIsCrossingBottom =
+      Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
+    if (prevIsShown && prevIsCrossingBottom) {
+      nextEl.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [props.messages, props.id]);
   return (
-    <>
+    <div id={props.id} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <MessageCard key={data.id} message={data} />
+        <MessageCard key={data.id} id={messageCardId(data)} message={data} />
       ))}
-    </>
+    </div>
   );
 };
 
@@ -198,6 +241,7 @@ export const ChatRoomView = (props: {
     setIsOpen(true);
   };
   const TypeIcon = RoomTypeIcon[props.room.roomType];
+  const listId = `chat-message-list-${props.room.id}`;
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
@@ -222,8 +266,12 @@ export const ChatRoomView = (props: {
             )}
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
-          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-            <MessagesList messages={props.roomMessages(props.room.id)} />
+          <div className="shrink grow overflow-hidden border-2 border-solid border-white">
+            <MessagesList
+              messages={props.roomMessages(props.room.id)}
+              key={listId}
+              id={listId}
+            />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
