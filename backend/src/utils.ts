@@ -1,3 +1,5 @@
+import { createHmac } from 'crypto';
+
 type Many<T> = T | ReadonlyArray<T>;
 
 /**
@@ -102,4 +104,8 @@ export async function PromiseMap<T>(pmap: { [P in keyof T]: Promise<T[P]> }) {
     )
   );
   return r as T;
+}
+
+export function hash(secret: string, target: string) {
+  return createHmac('sha256', secret).update(target).digest('hex').toString();
 }

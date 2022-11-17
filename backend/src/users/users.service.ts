@@ -1,11 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { createHmac } from 'crypto';
-import { passwordConstants } from '../auth/auth.constants';
-import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as Utils from '../utils';
+
+import { passwordConstants } from '../auth/auth.constants';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -143,8 +146,5 @@ export class UsersService {
  * ハッシュ化に用いるキーは`passwordConstants.secret`.
  */
 export function hash_password(password: string) {
-  return createHmac('sha256', passwordConstants.secret)
-    .update(password)
-    .digest('hex')
-    .toString();
+  return Utils.hash(passwordConstants.secret, password);
 }
