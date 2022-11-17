@@ -79,42 +79,6 @@ const UserCard = ({ user }: UserCardProp) => {
   );
 };
 
-const PresentatorView = (props: { personalData: TD.User }) => {
-  const [friends] = useAtom(dataAtom.friends);
-  // フレンドかどうか
-  const isFriend = !!friends.find((f) => f.id === props.personalData.id);
-  return (
-    <>
-      <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-        <div className="inline-block align-text-bottom">
-          <OnlineStatusDot
-            key={props.personalData.id}
-            user={props.personalData}
-          />
-        </div>
-        {props.personalData.displayName}
-        {isFriend && <Icons.User.Friend className="inline" />}
-      </FTH1>
-      <div className="flex flex-col gap-2">
-        <FTH4>id</FTH4>
-        <div>{props.personalData.id}</div>
-        <FTH4>name</FTH4>
-        <div>{props.personalData.displayName}</div>
-        <FTH4>heartbeat time</FTH4>
-        <div>
-          {props.personalData.time
-            ? dayjs(props.personalData.time).format('MM/DD HH:mm:ss')
-            : 'offline'}
-        </div>
-
-        <div>
-          <FollowButton userId={props.personalData.id} isFriend={isFriend} />
-        </div>
-      </div>
-    </>
-  );
-};
-
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
@@ -136,7 +100,7 @@ export const UserView = () => {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
       <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {personalData && <PresentatorView personalData={personalData} />}
+        {personalData && <UserCard user={personalData} />}
       </div>
     </div>
   );
