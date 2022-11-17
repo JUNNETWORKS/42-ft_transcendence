@@ -1,4 +1,3 @@
-import { WsServerGateway } from './../ws-server/ws-server.gateway';
 import {
   MessageBody,
   ConnectedSocket,
@@ -12,6 +11,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
+import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
@@ -26,6 +26,7 @@ import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 
+import { WsServerGateway } from './../ws-server/ws-server.gateway';
 import { ChatService } from './chat.service';
 
 const secondInMilliseconds = 1000;
