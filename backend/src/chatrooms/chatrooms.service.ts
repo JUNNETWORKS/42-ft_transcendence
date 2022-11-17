@@ -195,10 +195,20 @@ export class ChatroomsService {
       where: { id },
       data: {
         roomType: roomType,
-        roomPassword:
-          roomType === 'LOCKED' && !!roomPassword
-            ? Utils.hash(chatRoomConstants.secret, roomPassword, 1000)
-            : null,
+        ...(() => {
+          if (roomType === 'LOCKED') {
+            if (roomPassword) {
+              // LOCKED かつ roomPassword が与えられている場合は roomPassword を更新
+              return { roomPassword: hash_password(roomPassword) };
+            } else {
+              // LOCKED かつ roomPassword が与えられていない場合は roomPassword を変更しない
+              return {};
+            }
+          } else {
+            // LOCKED でない場合は roomPassword を削除
+            return { roomPassword: null };
+          }
+        })(),
         roomName,
       },
     });
@@ -319,4 +329,15 @@ export class ChatroomsService {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
   }
+}
+
+/**
+ * 生パスワードをハッシュ化する.\
+ */
+export function hash_password(password: string) {
+  return Utils.hash(
+    chatRoomConstants.secret,
+    password + chatRoomConstants.pepper,
+    1000
+  );
 }
