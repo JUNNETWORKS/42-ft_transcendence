@@ -374,20 +374,37 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // チャットルームの内容を通知
-    const messages = await this.chatRoomService.getMessages({
-      roomId,
-      take: 50,
+    await Utils.PromiseMap({
+      messages: (async () => {
+        const messages = await this.chatRoomService.getMessages({
+          roomId,
+          take: 50,
+        });
+        this.sendResults(
+          'ft_get_room_messages',
+          {
+            id: roomId,
+            messages,
+          },
+          {
+            client,
+          }
+        );
+      })(),
+      members: (async () => {
+        const members = await this.chatRoomService.getMembers(roomId);
+        this.sendResults(
+          'ft_get_room_members',
+          {
+            id: roomId,
+            members,
+          },
+          {
+            client,
+          }
+        );
+      })(),
     });
-    this.sendResults(
-      'ft_get_room_messages',
-      {
-        id: roomId,
-        messages,
-      },
-      {
-        client,
-      }
-    );
     this.updateHeartbeat(user.id);
   }
 
