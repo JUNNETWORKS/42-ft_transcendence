@@ -1,13 +1,14 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import * as dayjs from 'dayjs';
-import * as RIFa from 'react-icons/fa';
-import * as RIIo from 'react-icons/im';
-import * as RIBS from 'react-icons/bs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
+import { Icons } from '@/icons';
+import { Modal } from '@/components/Modal';
+import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
+import { InlineIcon } from '@/hocs/InlineIcon';
 
 /**
  * メッセージを表示するコンポーネント
@@ -49,6 +50,7 @@ const AdminOperationBar = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
+
   return (
     <>
       {isNomminatable && (
@@ -57,7 +59,7 @@ const AdminOperationBar = (
             props.onNomminateClick ? props.onNomminateClick(props.member) : null
           }
         >
-          <RIFa.FaUserCog />
+          <Icons.Chat.Operation.Nomminate />
         </FTButton>
       )}
       {isBannable && (
@@ -66,7 +68,7 @@ const AdminOperationBar = (
             props.onBanClick ? props.onBanClick(props.member) : null
           }
         >
-          <RIFa.FaBan />
+          <Icons.Chat.Operation.Ban />
         </FTButton>
       )}
       {isKickable && (
@@ -75,7 +77,7 @@ const AdminOperationBar = (
             props.onKickClick ? props.onKickClick(props.member) : null
           }
         >
-          <RIIo.ImExit />
+          <Icons.Chat.Operation.Kick />
         </FTButton>
       )}
       {isMutable && (
@@ -84,7 +86,7 @@ const AdminOperationBar = (
             props.onMuteClick ? props.onMuteClick(props.member) : null
           }
         >
-          <RIBS.BsMicMute />
+          <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
     </>
@@ -102,15 +104,15 @@ const MemberCard = (
   const isAdmin = props.member.memberType === 'ADMIN';
   const isOwner = props.room.ownerId === props.member.user.id;
 
-  const UserTypeCap = (() => {
+  const UserTypeCap = () => {
     if (isOwner) {
-      return RIFa.FaCrown;
+      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
     } else if (isAdmin) {
-      return RIFa.FaCog;
+      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
     }
     return null;
-  })();
-  const link_path = isYou ? '/auth' : `/user/${props.member.userId}`;
+  };
+  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
   return (
     <div className="flex flex-row">
       <div
@@ -120,8 +122,7 @@ const MemberCard = (
         key={props.member.userId}
       >
         <Link className="block" to={link_path}>
-          {UserTypeCap && <UserTypeCap className="inline" />}{' '}
-          {props.member.user.displayName}
+          {<UserTypeCap />} {props.member.user.displayName}
         </Link>
       </div>
       <AdminOperationBar {...props} />
@@ -186,28 +187,60 @@ export const ChatRoomView = (props: {
   roomMessages: (roomId: number) => TD.ChatRoomMessage[];
   roomMembers: (roomId: number) => TD.UserRelationMap | null;
 }) => {
+  const isOwner = props.room.ownerId === props.you?.userId;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+  const TypeIcon = RoomTypeIcon[props.room.roomType];
   return (
-    <div className="flex h-full flex-row border-2 border-solid border-white p-2">
-      <div className="flex h-full shrink grow flex-col overflow-hidden">
-        {/* 今フォーカスしているルームのメッセージ */}
-        <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-          <MessagesList messages={props.roomMessages(props.room.id)} />
-        </div>
-        <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
-          {/* 今フォーカスしているルームへの発言 */}
-          <div className="flex flex-row border-2 border-solid border-white p-2">
-            <SayCard sender={props.say} />
+    <>
+      <Modal closeModal={closeModal} isOpen={isOpen}>
+        <ChatRoomSettingCard
+          key={props.room.id}
+          room={props.room}
+          onSucceeded={closeModal}
+          onCancel={closeModal}
+        />
+      </Modal>
+
+      <div className="flex h-full flex-row border-2 border-solid border-white p-2">
+        <div className="flex h-full shrink grow flex-col overflow-hidden">
+          {/* タイトルバー */}
+          <FTH3>
+            <InlineIcon i={<TypeIcon />} />
+            {props.room.roomName}
+            {isOwner && (
+              <FTButton onClick={openModal}>
+                <Icons.Setting className="inline" />
+              </FTButton>
+            )}
+          </FTH3>
+          {/* 今フォーカスしているルームのメッセージ */}
+          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
+            <MessagesList messages={props.roomMessages(props.room.id)} />
+          </div>
+          <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
+            {/* 今フォーカスしているルームへの発言 */}
+            <div className="flex flex-row border-2 border-solid border-white p-2">
+              <SayCard sender={props.say} />
+            </div>
           </div>
         </div>
+        <div className="shrink-0 grow-0 basis-[20em]">
+          <MembersList
+            you={props.you}
+            room={props.room}
+            members={props.roomMembers(props.room.id) || {}}
+            {...props.memberOperations}
+          />
+        </div>
       </div>
-      <div className="shrink-0 grow-0 basis-[20em]">
-        <MembersList
-          you={props.you}
-          room={props.room}
-          members={props.roomMembers(props.room.id) || {}}
-          {...props.memberOperations}
-        />
-      </div>
-    </div>
+    </>
   );
 };

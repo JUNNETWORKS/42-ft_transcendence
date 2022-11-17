@@ -1,4 +1,4 @@
-import { userAtoms } from '@/stores/atoms';
+import { authAtom } from '@/stores/auth';
 import { loginByPassword, loginBySelf, urlLoginFt } from './auth';
 import {
   FTH1,
@@ -10,12 +10,6 @@ import {
 } from '@/components/FTBasicComponents';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-
-export type UserPersonalData = {
-  id: number;
-  email: string;
-  displayName: string;
-};
 
 /**
  * 42認証用のフォーム
@@ -205,7 +199,7 @@ export const DevAuthLoginCard = (props: {
  * 認証済み状態で表示されるUI
  */
 export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
-  const [personalData] = useAtom(userAtoms.personalDataAtom);
+  const [personalData] = useAtom(authAtom.personalData);
   return (
     <>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>

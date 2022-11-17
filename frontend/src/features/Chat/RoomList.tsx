@@ -1,6 +1,27 @@
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton } from '@/components/FTBasicComponents';
+import { InlineIcon } from '@/hocs/InlineIcon';
+import { RoomTypeIcon } from './RoomSetting';
+
+const ChatRoomShiftButton = (props: {
+  isJoined: boolean;
+  onJoin: () => void;
+  onLeave: () => void;
+}) => {
+  return props.isJoined ? (
+    <FTButton
+      className="w-[4em] bg-white text-black hover:bg-black hover:text-white"
+      onClick={() => props.onLeave()}
+    >
+      Leave
+    </FTButton>
+  ) : (
+    <FTButton className="w-[4em]" onClick={() => props.onJoin()}>
+      Join
+    </FTButton>
+  );
+};
 
 const ChatRoomListItem = (props: {
   room: TD.ChatRoom;
@@ -11,25 +32,16 @@ const ChatRoomListItem = (props: {
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {
+  const TypeIcon = RoomTypeIcon[props.room.roomType];
+
   return (
     <>
       <div className="shrink-0 grow-0">
-        {props.isJoined ? (
-          <FTButton
-            className="bg-white text-black hover:bg-black hover:text-white"
-            style={{ width: '4em' }}
-            onClick={() => props.onLeave(props.room.id)}
-          >
-            Leave
-          </FTButton>
-        ) : (
-          <FTButton
-            style={{ width: '4em' }}
-            onClick={() => props.onJoin(props.room.id)}
-          >
-            Join
-          </FTButton>
-        )}
+        <ChatRoomShiftButton
+          isJoined={props.isJoined}
+          onJoin={() => props.onJoin(props.room.id)}
+          onLeave={() => props.onLeave(props.room.id)}
+        />
       </div>
       <div
         className="grow p-[4px]"
@@ -41,7 +53,8 @@ const ChatRoomListItem = (props: {
         }}
         onClick={() => props.onFocus(props.room.id)}
       >
-        {props.room.id} / {props.room.roomName}{' '}
+        <InlineIcon i={<TypeIcon />} />
+        {props.room.roomName}{' '}
         {(() => {
           const n = props.nMessages;
           return Utils.isfinite(n) && n > 0 ? `(${n})` : '';

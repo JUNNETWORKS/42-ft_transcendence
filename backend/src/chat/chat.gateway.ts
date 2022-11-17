@@ -7,24 +7,26 @@ import {
   OnGatewayConnection,
 } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
+
+import { AuthService } from 'src/auth/auth.service';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
-import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members';
-import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message';
+import { UsersService } from 'src/users/users.service';
+import * as Utils from 'src/utils';
+
+import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
+import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members.dto';
+import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message.dto';
 import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
+import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
+import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
+import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
-import { UsersService } from 'src/users/users.service';
-import { ChatService } from './chat.service';
-import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
-import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
-import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
-import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
-import * as Utils from 'src/utils';
-import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
-import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
-import { AuthService } from 'src/auth/auth.service';
+
+import { ChatService } from './chat.service';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;

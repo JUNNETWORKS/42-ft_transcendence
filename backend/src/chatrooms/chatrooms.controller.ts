@@ -24,6 +24,8 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
+import { UpdateRoomDto } from './dto/update-room.dto';
+import { UpdateRoomPipe } from './pipe/update-room.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
@@ -79,6 +81,17 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatUserRelationEntity, isArray: true })
   getMembers(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.getMembers(roomId);
+  }
+
+  @Put(':roomId')
+  @ApiOkResponse({ type: ChatroomEntity })
+  updateRoom(
+    @Param('roomId', ParseIntPipe) roomId: number,
+    @Body(new UpdateRoomPipe())
+    updateRoomDto: UpdateRoomDto
+  ) {
+    console.log('updating:', updateRoomDto);
+    return this.chatroomsService.updateRoom(roomId, updateRoomDto);
   }
 
   @Put(':roomId/roomType')

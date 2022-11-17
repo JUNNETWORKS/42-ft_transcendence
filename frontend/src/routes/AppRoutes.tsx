@@ -3,9 +3,10 @@ import { Chat } from '@/features/Chat/Chat';
 import { Pong } from '@/features/Pong/components/Pong';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { chatSocketAtom } from '@/stores/atoms';
+import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
+import { GamePage } from '@/features/GamePage/components/GamePage';
 import { MyPageView } from '@/features/User/MyPage';
 
 export const AppRoutes = () => {
@@ -18,6 +19,7 @@ export const AppRoutes = () => {
     { path: '/auth', element: authElement },
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
+    { path: '/game/markup', element: <GamePage /> },
     { path: '/me/*', element: <MyPageView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
