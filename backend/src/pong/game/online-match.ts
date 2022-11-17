@@ -28,33 +28,7 @@ export class OnlineMatch {
     this.match = new Match(userID1, userID2);
     this.joinAsSpectator(userID1);
     this.joinAsSpectator(userID2);
-    this.gameStateSyncTimer = setInterval(() => {
-      this.match.update();
-
-      if (this.wsServer) {
-        sendResultRoom(
-          this.wsServer,
-          'pong.match.state',
-          this.roomName,
-          this.match.getState()
-        );
-
-        if (this.match.winner !== 'none') {
-          const loserSide = this.match.winner === 'right' ? 'left' : 'right';
-          const result: MatchResult = {
-            winner: this.match.players[Match.sideIndex[this.match.winner]],
-            loser: this.match.players[Match.sideIndex[loserSide]],
-          };
-          sendResultRoom(
-            this.wsServer,
-            'pong.match.finish',
-            this.roomName,
-            result
-          );
-          this.close();
-        }
-      }
-    }, 16.66); // 60fps
+    this.gameStateSyncTimer = setInterval(this.syncGameState, 16.66); // 60fps
   }
 
   // マッチのWSルームに観戦者として参加｡
@@ -79,6 +53,35 @@ export class OnlineMatch {
   // ゲームを終了
   close() {
     clearInterval(this.gameStateSyncTimer);
+  }
+
+  // ゲームの状態更新し､Roomに送信
+  syncGameState() {
+    this.match.update();
+
+    if (this.wsServer) {
+      sendResultRoom(
+        this.wsServer,
+        'pong.match.state',
+        this.roomName,
+        this.match.getState()
+      );
+
+      if (this.match.winner !== 'none') {
+        const loserSide = this.match.winner === 'right' ? 'left' : 'right';
+        const result: MatchResult = {
+          winner: this.match.players[Match.sideIndex[this.match.winner]],
+          loser: this.match.players[Match.sideIndex[loserSide]],
+        };
+        sendResultRoom(
+          this.wsServer,
+          'pong.match.finish',
+          this.roomName,
+          result
+        );
+        this.close();
+      }
+    }
   }
 
   getMatchID() {

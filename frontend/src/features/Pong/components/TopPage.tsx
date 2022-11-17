@@ -8,14 +8,13 @@ import { useNavigate } from 'react-router-dom';
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
+  const [waitingCount, setWaitingCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
     // マッチメイキング進捗通知
     mySocket.on('pong.match_making.progress', (data) => {
-      const matchID = data.matchID;
-      // 対戦ページに遷移する
-      navigate(`/pong/matches/${matchID}`);
+      setWaitingCount(data.waitingPlayerCount);
     });
 
     // マッチメイキング完了通知
@@ -36,11 +35,11 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     setIsWaiting(false);
   };
 
-  const StartMatchMaking = (waitingQueueID: string) => {
+  const StartMatchMaking = (queueID: string) => {
     if (isWaiting) {
       return;
     }
-    mySocket?.emit('pong.match_making.entry', { waitingQueueID });
+    mySocket?.emit('pong.match_making.entry', { queueID: queueID });
   };
 
   return (
@@ -48,6 +47,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
       <Modal isOpen={isWaiting} closeModal={cancelWaiting}>
         <div className="flex flex-col gap-5 rounded-md bg-primary p-10">
           <div className="text-3xl">マッチング待機中</div>
+          <div className="text-3xl">待機ユーザー: {waitingCount}人</div>
           <button
             className="h-[50] w-[100] rounded-sm bg-secondary"
             onClick={cancelWaiting}

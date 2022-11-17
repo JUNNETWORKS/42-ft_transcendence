@@ -10,12 +10,15 @@ import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { OngoingMatches } from './game/ongoing-matches';
 import { WaitingQueues } from './game/waiting-queues';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
+import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
 import { WaitingQueue } from './game/waiting-queue';
 import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create.dto';
 import { generateQueueID } from './game/utils';
 import { AuthService } from 'src/auth/auth.service';
 
-@WebSocketGateway({ cors: true, namespace: '/pong' })
+// TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
+// フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡
+@WebSocketGateway({ cors: true, namespace: '/chat' })
 export class PongGateway {
   private wsServer!: Server;
   private ongoingMatches: OngoingMatches;
@@ -32,8 +35,16 @@ export class PongGateway {
 
   onApplicationBootstrap() {
     // CASUAL の待機キューを作成
-    const rankQueue = new WaitingQueue('RANK', this.ongoingMatches);
-    const casualQueue = new WaitingQueue('CASUAL', this.ongoingMatches);
+    const rankQueue = new WaitingQueue(
+      'RANK',
+      this.ongoingMatches,
+      this.wsServer
+    );
+    const casualQueue = new WaitingQueue(
+      'CASUAL',
+      this.ongoingMatches,
+      this.wsServer
+    );
     this.waitingQueues.appendQueue(rankQueue);
     this.waitingQueues.appendQueue(casualQueue);
     return;
@@ -42,8 +53,10 @@ export class PongGateway {
   async handleDisconnect(client: Socket) {
     const user = await this.authService.trapAuth(client);
     if (!user) {
+      console.log('USER is not logged in!!');
       return;
     }
+
     this.ongoingMatches.leave(user.id);
     const queue = this.waitingQueues.getQueueByPlayerID(user.id);
     if (queue) {
@@ -52,16 +65,28 @@ export class PongGateway {
   }
 
   @SubscribeMessage('pong.match_making.create')
-  receiveMatchMakingCreate(
+  async receiveMatchMakingCreate(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PongMatchMakingCreateDTO
   ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      console.log('USER is not logged in!!');
+      return;
+    }
+
     if (data.queueType === 'private') {
       // プライベートマッチ用の待機キューを作成する｡
       const queueID = generateQueueID();
-      const queue = new WaitingQueue(queueID, this.ongoingMatches, {
-        maxWaiters: 2,
-      }); // TODO: タイムアウトと最大人数を設定する
+      const queue = new WaitingQueue(
+        queueID,
+        this.ongoingMatches,
+        this.wsServer,
+        {
+          createMatchOnce: true,
+          timeoutMs: 180 * 1000,
+        }
+      );
       this.waitingQueues.appendQueue(queue);
       // クライアントに待機キュー作成完了通知を送信
       client.emit('pong.match_making.created', {
@@ -77,6 +102,12 @@ export class PongGateway {
   ) {
     const user = await this.authService.trapAuth(client);
     if (!user) {
+      console.log('USER is not logged in!!');
+      return;
+    }
+
+    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+      // TODO: 既に待機キューに参加している場合はエラーを返す
       return;
     }
     // 待機キューにユーザーを追加する
@@ -84,15 +115,34 @@ export class PongGateway {
     queue?.append(user.id);
   }
 
+  @SubscribeMessage('pong.match_making.leave')
+  async receiveMatchMakingLeave(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PongMatchMakingLeaveDTO
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      console.log('USER is not logged in!!');
+      return;
+    }
+
+    // 待機キューからユーザーを削除する
+    const queue = this.waitingQueues.getQueueByPlayerID(user.id);
+    queue?.remove(user.id);
+  }
+
   @SubscribeMessage('pong.match.action')
   async receivePlayerAction(
     @ConnectedSocket() client: Socket,
     @MessageBody() playerAction: PongMatchActionDTO
   ) {
+    console.log('pong.match.action');
     const user = await this.authService.trapAuth(client);
     if (!user) {
+      console.log('USER is not logged in!!');
       return;
     }
+
     this.ongoingMatches.moveBar(user.id, playerAction);
   }
 }

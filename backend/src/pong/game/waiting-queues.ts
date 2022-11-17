@@ -12,6 +12,7 @@ export class WaitingQueues {
 
   constructor(ongoingMatches: OngoingMatches) {
     this.ongoingMatches = ongoingMatches;
+    this.queues = new Map<string, WaitingQueue>();
   }
 
   // 待機キューを取得する
