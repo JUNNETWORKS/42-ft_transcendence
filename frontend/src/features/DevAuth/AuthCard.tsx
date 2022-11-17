@@ -1,5 +1,5 @@
 import { authAtom } from '@/stores/auth';
-import { loginByPassword, loginBySelf, urlLoginFt } from './auth';
+import { urlLoginFt } from './auth';
 import {
   FTH1,
   FTH3,
@@ -8,8 +8,10 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
+import { useAPI } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
+import { passwordErrors, selfErrors } from './auth.validator';
 
 /**
  * 42認証用のフォーム
@@ -29,34 +31,16 @@ const SelfAuthForm = (props: {
   onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
-  type Phase = 'Neutral' | 'Fetching';
-  const [phase, setPhase] = useState<Phase>('Neutral');
-
-  const validator = (s: string) => {
-    if (!s) {
-      return 'empty?';
-    }
-    const n = parseInt(s);
-    if (`${n}` !== s) {
-      return 'not a valid number?';
-    }
-    if (n < 1) {
-      return 'not a valid userId?';
-    }
-    return null;
-  };
-
-  const click = async () => {
-    try {
-      setPhase('Fetching');
-      await loginBySelf(userIdStr, props.onSucceeded, props.onFailed);
-    } catch (e) {
-      console.error(e);
-    }
-    setPhase('Neutral');
-  };
-
-  const errorMessage = validator(userIdStr);
+  const errors = selfErrors(userIdStr);
+  const [state, submit] = useAPI('GET', `/auth/self/${userIdStr}`, {
+    onFetched(json) {
+      const { access_token: token, user } = json as any;
+      props.onSucceeded(token, user);
+    },
+    onFailed(error) {
+      props.onFailed();
+    },
+  });
 
   return (
     <>
@@ -68,12 +52,12 @@ const SelfAuthForm = (props: {
         onChange={(e) => setUserIdStr(e.target.value)}
       />
       <FTButton
-        disabled={!!errorMessage || phase === 'Fetching'}
-        onClick={() => click()}
+        disabled={!!errors.some || state === 'Fetching'}
+        onClick={submit}
       >
         Force Login
       </FTButton>
-      <div>{errorMessage}</div>
+      <div>{errors.userIdStr}</div>
     </>
   );
 };
@@ -87,42 +71,17 @@ const PasswordAuthForm = (props: {
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  type Phase = 'Neutral' | 'Fetching';
-  const [phase, setPhase] = useState<Phase>('Neutral');
-
-  const validateEmail = (s: string) => {
-    const trimmed = s.trim();
-    if (!trimmed) {
-      return 'empty?';
-    }
-    const emailRegExp = /^[^@]+?@[^@]+$/;
-    const m = trimmed.match(emailRegExp);
-    if (!m) {
-      return 'not a valid email?';
-    }
-    return null;
-  };
-  const validatePassword = (s: string) => {
-    const trimmed = s.trim();
-    if (!trimmed) {
-      return 'empty?';
-    }
-    return null;
-  };
-
-  const click = async () => {
-    try {
-      setPhase('Fetching');
-      await loginByPassword(email, password, props.onSucceeded, props.onFailed);
-    } catch (e) {
-      console.error(e);
-    }
-    setPhase('Neutral');
-  };
-
-  const emailErrorMessage = validateEmail(email);
-  const passwordErrorMessage = validatePassword(password);
-  const isValid = !emailErrorMessage && !passwordErrorMessage;
+  const errors = passwordErrors(email, password);
+  const [state, submit] = useAPI('POST', '/auth/login', {
+    payload: () => ({ email, password }),
+    onFetched(json) {
+      const { access_token: token, user } = json as any;
+      props.onSucceeded(token, user);
+    },
+    onFailed(error) {
+      props.onFailed();
+    },
+  });
 
   return (
     <div className="grid grid-flow-row justify-center">
@@ -134,7 +93,7 @@ const PasswordAuthForm = (props: {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <div>{emailErrorMessage || '　'}</div>
+        <div>{errors.email || '　'}</div>
       </div>
       <div>
         <FTTextField
@@ -145,10 +104,13 @@ const PasswordAuthForm = (props: {
           type="password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <div>{passwordErrorMessage || '　'}</div>
+        <div>{errors.password || '　'}</div>
       </div>
       <div>
-        <FTButton disabled={!isValid || phase === 'Fetching'} onClick={click}>
+        <FTButton
+          disabled={errors.some && state === 'Fetching'}
+          onClick={submit}
+        >
           Login
         </FTButton>
       </div>

@@ -1,13 +1,15 @@
 import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { useUserData } from '@/stores/store';
+import { useAPI } from '@/hooks';
+import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
-import { structureAtom } from '@/stores/structure';
+import { dataAtom, structureAtom } from '@/stores/structure';
+import { useEffect } from 'react';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);
@@ -80,24 +82,25 @@ const UserCard = ({ user }: UserCardProp) => {
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
-  const [fetchState, user] = useUserData(userId);
-
-  const presentator = (() => {
-    console.log('personalData', fetchState, user);
-    switch (fetchState) {
-      case 'Fetched': {
-        if (user) {
-          return <UserCard user={user} />;
-        }
+  const { addOne } = useUpdateUser();
+  const [, submit] = useAPI('GET', `/users/${userId}`, {
+    onFetched(json) {
+      if (json) {
+        addOne(json as TD.User);
       }
+    },
+  });
+  const personalData = useUserDataReadOnly(userId);
+  useEffect(() => {
+    if (!personalData) {
+      submit();
     }
-    return <p>{fetchState}</p>;
-  })();
+  }, []);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
       <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {presentator}
+        {personalData && <UserCard user={personalData} />}
       </div>
     </div>
   );
