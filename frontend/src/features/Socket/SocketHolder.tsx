@@ -13,12 +13,12 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const setVisibleRooms = useSetAtom(structureAtom.visibleRoomsAtom);
-  const setJoiningRooms = useSetAtom(structureAtom.joiningRoomsAtom);
+  const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
-  const setFocusedRoomId = useSetAtom(structureAtom.focusedRoomIdAtom);
-  const setMessagesInRoom = useSetAtom(structureAtom.messagesInRoomAtom);
-  const setMembersInRoom = useSetAtom(structureAtom.membersInRoomAtom);
+  const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
+  const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
+  const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
   const userId = personalData ? personalData.id : -1;
 
   const userUpdator = useUpdateUser();
@@ -187,6 +187,7 @@ export const SocketHolder = () => {
     mySocket?.on('ft_follow', (data: TD.FollowResult) => {
       console.log('catch follow');
       if (!friends.find((f) => f.id === data.user.id)) {
+        userUpdator.addOne(data.user);
         setFriends((prev) => {
           const next = [...prev, data.user];
           return next;
@@ -290,5 +291,5 @@ export const SocketHolder = () => {
     },
   };
 
-  return <></>;
+  return null;
 };
