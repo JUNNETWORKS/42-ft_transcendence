@@ -139,42 +139,65 @@ const MessagesList = (props: {
   messages: TD.ChatRoomMessage[];
   id: string;
 }) => {
-  const messageCount = useRef(props.messages.length);
+  const [prevLatestMessage, setPrevLatestMessage] =
+    useState<TD.ChatRoomMessage | null>(null);
   useEffect(() => {
-    const increased = messageCount.current <= props.messages.length;
-    messageCount.current = props.messages.length;
-    if (!increased) {
+    const n = props.messages.length;
+    const lm = n > 0 && props.messages[n - 1];
+    if (!lm) {
       return;
     }
-    const n = messageCount.current;
-    if (n < 2) {
+    setPrevLatestMessage(lm);
+    if (!prevLatestMessage) {
+      // [初期表示]
+      // → 最新メッセージが表示されるよう瞬間的にスクロール
+      const lastId = messageCardId(lm);
+      const lastEl = document.getElementById(lastId);
+      lastEl?.scrollIntoView({ behavior: 'auto' });
       return;
     }
-    const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
-      const lastMessage = props.messages[i];
-      const lastId = messageCardId(lastMessage);
-      return document.getElementById(lastId);
-    });
-    const listEl = document.getElementById(props.id);
-    if (!prevEl || !nextEl || !listEl) {
-      return;
-    }
-    // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
-    //  - prevEl が見えている
-    //  - prevEl のボトムがリストビューの下辺以下にいる
-    // を満たすなら nextEl が見えるようにスクロール
-    const listRect = listEl.getBoundingClientRect();
-    const prevRect = prevEl.getBoundingClientRect();
-    const prevIsShown = !(
-      prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
-    );
-    const prevIsCrossingBottom =
-      Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
-    if (prevIsShown && prevIsCrossingBottom) {
-      nextEl.scrollIntoView({
-        behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+    if (prevLatestMessage.createdAt < lm.createdAt) {
+      // [メッセージ新着]
+      // → 最新メッセージが表示されるよう自動スクロール
+      if (n < 2) {
+        return;
+      }
+      const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
+        const lastMessage = props.messages[i];
+        const lastId = messageCardId(lastMessage);
+        return document.getElementById(lastId);
       });
+      const listEl = document.getElementById(props.id);
+      console.log(!!prevEl, !!nextEl, !!listEl);
+      if (!prevEl || !nextEl || !listEl) {
+        return;
+      }
+      // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
+      //  - prevEl が見えている
+      //  - prevEl のボトムがリストビューの下辺以下にいる
+      // を満たすなら nextEl が見えるようにスクロール
+      const listRect = listEl.getBoundingClientRect();
+      const prevRect = prevEl.getBoundingClientRect();
+      const prevIsShown = !(
+        prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
+      );
+      const prevIsCrossingBottom =
+        Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
+      console.log(
+        'prevIsShown',
+        prevIsShown,
+        'prevIsCrossingBottom',
+        prevIsCrossingBottom
+      );
+      if (prevIsShown && prevIsCrossingBottom) {
+        nextEl.scrollIntoView({
+          behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+        });
+      }
+      return;
     }
+    // [メッセージ変化]
+    // → 今見えている要素の「見かけの縦位置」を維持する
   }, [props.messages, props.id]);
   return (
     <div id={props.id} className="h-full w-full overflow-scroll">
