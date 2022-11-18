@@ -171,7 +171,9 @@ const MessagesList = (props: {
     const prevIsCrossingBottom =
       Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
     if (prevIsShown && prevIsCrossingBottom) {
-      nextEl.scrollIntoView({ behavior: 'smooth' });
+      nextEl.scrollIntoView({
+        behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+      });
     }
   }, [props.messages, props.id]);
   return (
