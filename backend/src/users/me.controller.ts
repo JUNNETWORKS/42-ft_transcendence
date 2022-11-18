@@ -7,12 +7,16 @@ import {
   Request,
   UseFilters,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
 import { ApiTags } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { UpdateUserNameDto } from './dto/update-user-name.dto';
+import { PrismaExceptionFilter } from 'src/filters/prisma-exception-filter';
 import * as Utils from 'src/utils';
-import { PrismaExceptionFilter } from 'src/filters/prisma';
+
+import { UpdateUserNameDto } from './dto/update-user-name.dto';
+
+
+import { UsersService } from './users.service';
 
 @Controller('me')
 @ApiTags('me')
