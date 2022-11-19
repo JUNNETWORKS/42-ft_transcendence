@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -9,6 +9,7 @@ import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 
 /**
  * メッセージを表示するコンポーネント
@@ -136,11 +137,14 @@ function messageCardId(message: TD.ChatRoomMessage) {
 }
 
 const MessagesList = (props: {
+  room: TD.ChatRoom;
   messages: TD.ChatRoomMessage[];
-  id: string;
 }) => {
+  const listId = useId();
+  const scrollData = useVerticalScrollAttr(listId);
   const [prevLatestMessage, setPrevLatestMessage] =
     useState<TD.ChatRoomMessage | null>(null);
+
   useEffect(() => {
     const n = props.messages.length;
     const lm = n > 0 && props.messages[n - 1];
@@ -148,6 +152,10 @@ const MessagesList = (props: {
       return;
     }
     setPrevLatestMessage(lm);
+    const listEl = document.getElementById(listId);
+    if (!listEl) {
+      return;
+    }
     if (!prevLatestMessage) {
       // [初期表示]
       // → 最新メッセージが表示されるよう瞬間的にスクロール
@@ -167,9 +175,7 @@ const MessagesList = (props: {
         const lastId = messageCardId(lastMessage);
         return document.getElementById(lastId);
       });
-      const listEl = document.getElementById(props.id);
-      console.log(!!prevEl, !!nextEl, !!listEl);
-      if (!prevEl || !nextEl || !listEl) {
+      if (!prevEl || !nextEl) {
         return;
       }
       // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
@@ -183,12 +189,6 @@ const MessagesList = (props: {
       );
       const prevIsCrossingBottom =
         Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
-      console.log(
-        'prevIsShown',
-        prevIsShown,
-        'prevIsCrossingBottom',
-        prevIsCrossingBottom
-      );
       if (prevIsShown && prevIsCrossingBottom) {
         nextEl.scrollIntoView({
           behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
@@ -198,9 +198,10 @@ const MessagesList = (props: {
     }
     // [メッセージ変化]
     // → 今見えている要素の「見かけの縦位置」を維持する
-  }, [props.messages, props.id]);
+    listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
+  }, [props.messages, listId]);
   return (
-    <div id={props.id} className="h-full w-full overflow-scroll">
+    <div id={listId} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => (
         <MessageCard key={data.id} id={messageCardId(data)} message={data} />
       ))}
@@ -266,7 +267,6 @@ export const ChatRoomView = (props: {
     setIsOpen(true);
   };
   const TypeIcon = RoomTypeIcon[props.room.roomType];
-  const listId = `chat-message-list-${props.room.id}`;
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
@@ -293,9 +293,9 @@ export const ChatRoomView = (props: {
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">
             <MessagesList
+              room={props.room}
               messages={props.roomMessages(props.room.id)}
-              key={listId}
-              id={listId}
+              key={props.room.id}
             />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
