@@ -10,6 +10,9 @@ import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
+import { useAtom } from 'jotai';
+import { chatSocketAtom } from '@/stores/auth';
+import { makeCommand } from './command';
 
 /**
  * メッセージを表示するコンポーネント
@@ -200,6 +203,26 @@ const MessagesList = (props: {
     // → 今見えている要素の「見かけの縦位置」を維持する
     listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
   }, [props.messages, listId]);
+
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [requestKey, setRequestKey] = useState('');
+  useEffect(() => {
+    if (Math.floor(scrollData.top) > 0) {
+      return;
+    }
+    if (!mySocket) {
+      return;
+    }
+    const oldestMessage = Utils.first(props.messages);
+    const { get_room_messages } = makeCommand(mySocket, props.room.id);
+    const rk = `${oldestMessage?.id}`;
+    if (rk === requestKey) {
+      return;
+    }
+    setRequestKey(rk);
+    get_room_messages(props.room.id, 50, oldestMessage?.id);
+  }, [mySocket, scrollData, props.room.id]);
+
   return (
     <div id={listId} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => (

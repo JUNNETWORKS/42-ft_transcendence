@@ -42,10 +42,11 @@ export function makeCommand(
       mySocket.emit('ft_say', data);
     },
 
-    get_room_messages: (roomId: number) => {
+    get_room_messages: (roomId: number, take: number, cursor?: number) => {
       const data = {
         roomId,
-        take: 50,
+        take,
+        cursor,
       };
       console.log(['get_room_messages'], data);
       mySocket.emit('ft_get_room_messages', data);
