@@ -609,6 +609,7 @@ export class ChatGateway implements OnGatewayConnection {
     const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
       take: data.take,
+      cursor: data.cursor,
     });
     this.sendResults(
       'ft_get_room_messages',

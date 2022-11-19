@@ -1,11 +1,12 @@
+import { Logger } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
+
 import { PongMatchActionDTO } from './dto/pong-match-action';
 import { OnlineMatch } from './game/online-match';
 
@@ -22,6 +23,7 @@ export class PongGateway {
     this.wsServer = server;
     // 本来はOnlineMatchのコンストラクタで渡す
     match.wsServer = server;
+    match.close();
   }
 
   onApplicationBootstrap() {

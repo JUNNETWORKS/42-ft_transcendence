@@ -1,4 +1,5 @@
 import { PrismaClient, RoomType } from '@prisma/client';
+
 import { hash_password } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
@@ -61,7 +62,7 @@ async function main() {
   // }
 
   for (let i = 1; i <= 3; i++) {
-    for (let j = 1; j <= 20; j++) {
+    for (let j = 1; j <= 200; j++) {
       await prisma.chatMessage.create({
         data: {
           userId: 1,
