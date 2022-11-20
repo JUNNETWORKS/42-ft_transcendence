@@ -8,37 +8,67 @@ import {
   ParseIntPipe,
   Query,
   Put,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ChatroomsService } from './chatrooms.service';
-import { CreateChatroomDto } from './dto/create-chatroom.dto';
-import { PostMessageDto } from './dto/post-message.dto';
+
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { ChatGateway } from 'src/chat/chat.gateway';
+import { pick } from 'src/utils';
+
+import { CreateChatroomApiDto } from './dto/create-chatroom-api.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
+import { GetMessagesDto } from './dto/get-messages.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomNameDto } from './dto/update-room-name.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
-import { ChatMessageEntity } from './entities/chat-message.entity';
-import { ChatroomEntity } from './entities/chatroom.entity';
-import { ChatUserRelationEntity } from './entities/chat-user-relation.entity';
-import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
-import { RoomMemberDto } from './dto/room-member.dto';
-import { GetMessagesDto } from './dto/get-messages.dto';
-import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
-import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+
+import { ChatroomsService } from './chatrooms.service';
+import { ChatMessageEntity } from './entities/chat-message.entity';
+import { ChatUserRelationEntity } from './entities/chat-user-relation.entity';
+import { ChatroomEntity } from './entities/chatroom.entity';
+import { CreateChatroomPipe } from './pipe/create-chatroom.pipe';
+import { UpdateRoomTypePipe } from './pipe/update-room-type.pipe';
 import { UpdateRoomPipe } from './pipe/update-room.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
 export class ChatroomsController {
-  constructor(private readonly chatroomsService: ChatroomsService) {}
+  constructor(
+    private readonly chatroomsService: ChatroomsService,
+    private readonly charGateway: ChatGateway
+  ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Post()
   @ApiCreatedResponse({ type: ChatroomEntity })
-  create(
-    @Body(new UpdateRoomTypePipe(), new CreateChatroomPipe())
-    createChatroomDto: CreateChatroomDto
+  async create(
+    @Request() req: any,
+    @Body(new CreateChatroomPipe(), new CreateChatroomPipe())
+    createChatroomDto: CreateChatroomApiDto
   ) {
-    return this.chatroomsService.create(createChatroomDto);
+    const ownerId = req.user.id;
+    const owner: RoomMemberDto = {
+      userId: ownerId,
+      memberType: 'ADMIN',
+    };
+    const result = await this.chatroomsService.create({
+      ...createChatroomDto,
+      ownerId,
+      roomMember: [owner],
+    });
+    this.charGateway.sendResults(
+      'ft_open',
+      {
+        ...pick(result, 'id', 'roomName', 'roomType', 'ownerId'),
+      },
+      result.roomType === 'PRIVATE' ? { userId: ownerId } : { global: 'global' }
+    );
+    return result;
   }
 
   @Get()
@@ -83,15 +113,30 @@ export class ChatroomsController {
     return this.chatroomsService.getMembers(roomId);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
-  updateRoom(
+  async updateRoom(
     @Param('roomId', ParseIntPipe) roomId: number,
     @Body(new UpdateRoomPipe())
     updateRoomDto: UpdateRoomDto
   ) {
     console.log('updating:', updateRoomDto);
-    return this.chatroomsService.updateRoom(roomId, updateRoomDto);
+    const result = await this.chatroomsService.updateRoom(
+      roomId,
+      updateRoomDto
+    );
+    this.charGateway.sendResults(
+      'ft_chatroom',
+      {
+        action: 'update',
+        id: result.id,
+        data: { ...pick(result, 'roomName', 'roomType', 'ownerId') },
+      },
+      result.roomType === 'PRIVATE'
+        ? { roomId: result.id }
+        : { global: 'global' }
+    );
   }
 
   @Put(':roomId/roomType')
