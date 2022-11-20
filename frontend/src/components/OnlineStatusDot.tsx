@@ -8,7 +8,7 @@ const activeTimeMs = 60 * 1000;
 export const OnlineStatusDot = (props: { user: TD.User }) => {
   const user = useUserDataReadOnly(props.user.id);
   const onlineStatusColor = (user: TD.User) => {
-    if (user.time) {
+    if (user && user.time) {
       if (Date.now() - user.time.getTime() < activeTimeMs) {
         return 'text-green-500';
       } else {
@@ -19,12 +19,11 @@ export const OnlineStatusDot = (props: { user: TD.User }) => {
     }
   };
   const [color, setColor] = useState(onlineStatusColor(user));
-  const [now] = useState(Date.now());
   useEffect(() => {
     const timer = setInterval(() => {
       setColor(onlineStatusColor(user));
     }, 1000);
     return () => clearInterval(timer);
-  }, [now, user]);
+  }, [user]);
   return <Icons.User.StatusDot className={color} />;
 };

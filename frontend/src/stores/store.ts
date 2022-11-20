@@ -1,4 +1,5 @@
 import { atom, useAtom } from 'jotai';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import * as TD from '../typedef';
 import * as Utils from '../utils';
 
@@ -14,57 +15,73 @@ export const storeAtoms = {
  */
 export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
-
-  const addOne = (data: TD.User) => {
-    const d = Utils.datifyObject(data);
-    setUsersStore((prev) => ({ ...prev, [data.id]: d }));
-  };
-  const addMany = (data: TD.User[]) => {
-    setUsersStore((prev) => {
-      const next = { ...prev };
-      const ds = data.map((d) => Utils.datifyObject(d, 'time'));
-      ds.forEach((d) => (next[d.id] = d));
-      return next;
-    });
-  };
-  const updateOne = (userId: number, part: Partial<TD.User>) => {
-    const d = usersStore[userId];
-    if (!d) {
-      return;
-    }
-    const p = Utils.datifyObject(part, 'time');
-    setUsersStore((prev) => ({ ...prev, [userId]: { ...d, ...p } }));
-  };
-  const offlinate = (userId: number) => {
-    const d = usersStore[userId];
-    if (!d) {
-      return;
-    }
-    setUsersStore((prev) => ({
-      ...prev,
-      [userId]: { ...Utils.omit(d, 'time') },
-    }));
-  };
-  const delOne = (userId: number) => {
-    setUsersStore((prev) => {
-      const next: typeof prev = {};
-      for (const id in prev) {
-        if ((id as any) !== userId) {
-          next[id] = prev[id];
-        }
-      }
-      return next;
-    });
+  const updater = {
+    addOne: useCallback(
+      (data: TD.User) => {
+        const d = Utils.datifyObject(data);
+        setUsersStore((prev) => ({ [data.id]: d, ...prev }));
+      },
+      [setUsersStore]
+    ),
+    addMany: useCallback(
+      (data: TD.User[]) => {
+        const ds = data.map((d) => Utils.datifyObject(d, 'time'));
+        setUsersStore((prev) => {
+          const next = { ...prev };
+          ds.forEach((d) => (next[d.id] = d));
+          return next;
+        });
+      },
+      [setUsersStore]
+    ),
+    updateOne: useCallback(
+      (userId: number, part: Partial<TD.User>) => {
+        setUsersStore((prev) => {
+          const d = prev[userId];
+          if (!d) {
+            return prev;
+          }
+          const p = Utils.datifyObject(part, 'time');
+          return { ...prev, [userId]: { ...d, ...p } };
+        });
+      },
+      [setUsersStore]
+    ),
+    offlinate: useCallback(
+      (userId: number) => {
+        setUsersStore((prev) => {
+          const d = prev[userId];
+          if (!d) {
+            return prev;
+          }
+          return {
+            ...prev,
+            [userId]: { ...Utils.omit(d, 'time') },
+          };
+        });
+      },
+      [setUsersStore]
+    ),
+    delOne: useCallback(
+      (userId: number) => {
+        setUsersStore((prev) => {
+          const next: typeof prev = {};
+          for (const id in prev) {
+            if ((id as any) !== userId) {
+              next[id] = prev[id];
+            }
+          }
+          return next;
+        });
+      },
+      [setUsersStore]
+    ),
   };
   // delMany はいらんだろ
 
   return {
     usersStore,
-    addOne,
-    addMany,
-    updateOne,
-    delOne,
-    offlinate,
+    ...updater,
   };
 };
 
