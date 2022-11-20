@@ -1,6 +1,8 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useAtom } from 'jotai';
+import { storedCredentialAtom } from '@/stores/auth';
+import { APIError } from './errors/APIError';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import * as TD from '@/typedef';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -32,36 +34,25 @@ export const useFetch = (
 ) => {
   type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
   const [state, setState] = useState<FetchState>('Neutral');
-  useEffect(() => {
-    if (state !== 'Fetching') {
+  const submit = async () => {
+    if (state === 'Fetching') {
       return;
     }
-    const doFetch = async () => {
-      try {
-        const result = await fetcher();
-        if (result.ok) {
-          setState('Fetched');
-          onFetched(result);
-        }
-      } catch (e) {
-        console.error(e);
-        setState('Failed');
-        if (onFailed) {
-          onFailed(e);
-        }
-      }
-    };
+    setState('Fetching');
     try {
-      doFetch();
+      const result = await fetcher();
+      if (!result.ok) {
+        throw new APIError(result.statusText, result);
+      }
+      setState('Fetched');
+      onFetched(result);
     } catch (e) {
-      console.error(e);
       setState('Failed');
       if (onFailed) {
         onFailed(e);
       }
     }
-  }, [state]);
-  const submit = () => setState('Fetching');
+  };
   const neutralize = () => {
     if (state !== 'Fetching') {
       setState('Neutral');
@@ -85,7 +76,7 @@ export const useFetch = (
  * API呼び出しフック(useFetchをラップしたもの)
  */
 export const useAPI = (
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   endpoint: string,
   option: {
     payload?: () => any;
@@ -94,21 +85,25 @@ export const useAPI = (
   }
 ) => {
   const { payload, onFetched, onFailed } = option;
+  const [credential] = useAtom(storedCredentialAtom);
 
   return useFetch(
-    () =>
-      fetch(`http://localhost:3000${endpoint}`, {
+    () => {
+      const headers: HeadersInit = {};
+      if (payload) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
+      if (credential) {
+        headers['Authorization'] = `Bearer ${credential.token}`;
+      }
+      return fetch(`http://localhost:3000${endpoint}`, {
         method,
+        headers,
         mode: 'cors',
-        ...(payload
-          ? {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(payload()),
-            }
-          : {}),
-      }),
+        ...payloadPart,
+      });
+    },
     (res) =>
       (async () => {
         try {

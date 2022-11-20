@@ -9,7 +9,6 @@ import {
 import { Match } from './match';
 import { MatchResult, PlayerInput } from './types/game-state';
 
-
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
 // - マッチのWSルームを作成
