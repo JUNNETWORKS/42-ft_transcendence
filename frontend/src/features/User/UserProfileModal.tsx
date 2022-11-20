@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
 
 type Phase = 'Display' | 'Edit' | 'Edit2FA' | 'EditPassword';
 
@@ -97,6 +98,7 @@ const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
       }
     },
   });
+  const confirmModal = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -107,8 +109,8 @@ const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
       <FTButton
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
-        onClick={() => {
-          if (confirm('really disable 2FA?')) {
+        onClick={async () => {
+          if (await confirmModal('really disable 2FA?')) {
             submit();
           }
         }}
@@ -142,6 +144,7 @@ const Enable2FACard = ({
       }
     },
   });
+  const confirmModal = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -152,8 +155,8 @@ const Enable2FACard = ({
       <FTButton
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
-        onClick={() => {
-          if (confirm('really enable 2FA?')) {
+        onClick={async () => {
+          if (await confirmModal('really enable 2FA?')) {
             submit();
           }
         }}
@@ -192,11 +195,12 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
     },
   });
 
+  const confirmModal = useConfirmModal();
   if (!personalData) {
     return null;
   }
-  const closeModal = () => {
-    if (confirm('QRコードのスキャンは完了しましたか？')) {
+  const closeModal = async () => {
+    if (await confirmModal('QRコードのスキャンは完了しましたか？')) {
       setQrcode(null);
     }
   };
