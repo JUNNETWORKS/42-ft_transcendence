@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
-import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
+import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
 import { useUserDataReadOnly } from '@/stores/store';
@@ -205,7 +205,7 @@ export const ChatRoomView = (props: {
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
-        <ChatRoomSettingCard
+        <ChatRoomUpdateCard
           key={props.room.id}
           room={props.room}
           onSucceeded={closeModal}

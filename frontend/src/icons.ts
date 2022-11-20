@@ -39,6 +39,7 @@ export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
   Cancel: Fa.FaCross,
+  Add: Md.MdAdd,
 
   User,
   Chat,

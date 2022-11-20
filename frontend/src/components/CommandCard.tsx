@@ -45,38 +45,3 @@ export const SayCard = (props: {
     </>
   );
 };
-
-/**
- * 新しく作成するチャットルームの情報を編集し, 外部に送出するコンポーネント
- * @param props
- * @returns
- */
-export const OpenCard = (props: {
-  sender: (argument: TD.OpenArgument) => void;
-}) => {
-  const [roomName, setRoomName, resetRoomName] = useStateWithResetter('');
-  const sender = () => {
-    // クライアント側バリデーション
-    if (!roomName.trim()) {
-      return;
-    }
-    props.sender({
-      roomName,
-      roomType: 'PUBLIC',
-    });
-    resetRoomName();
-  };
-
-  return (
-    <div>
-      <FTH4>Open</FTH4>
-      <FTTextField
-        autoComplete="off"
-        placeholder="チャットルーム名"
-        value={roomName}
-        onChange={(e) => setRoomName(e.target.value)}
-      />
-      <FTButton onClick={() => sender()}>Open</FTButton>
-    </div>
-  );
-};

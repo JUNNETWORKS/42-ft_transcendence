@@ -5,7 +5,7 @@ import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { Listbox } from '@headlessui/react';
-import { useState } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import { roomErrors } from './room.validator';
 
 export const RoomTypeIcon = {
@@ -56,32 +56,41 @@ const RoomTypeListBox = ({ selected, setSelected }: RoomTypeListProps) => {
   );
 };
 
-type Props = {
-  room: TD.ChatRoom;
-  onCancel: () => void;
-  onSucceeded?: () => void;
+type UseStateFuncs<S> = {
+  (initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
+  (): [S | undefined, Dispatch<SetStateAction<S | undefined>>];
 };
 
-export const ChatRoomSettingCard = ({ room, onCancel, onSucceeded }: Props) => {
-  const [roomName, setRoomName] = useState(room.roomName);
-  const [roomType, setRoomType] = useState<TD.RoomType>(room.roomType);
-  const [roomPassword, setRoomPassword] = useState('');
-  const errors = roomErrors(roomName, roomType, roomPassword);
-  const { updateOne } = useUpdateRoom();
-  const [state, submit] = useAPI('PUT', `/chatrooms/${room.id}`, {
-    payload: () => ({ roomName, roomType, roomPassword }),
-    onFetched: (json) => {
-      updateOne(room.id, json as TD.ChatRoom);
-      if (onSucceeded) {
-        onSucceeded();
-      }
-    },
-  });
+type UseStateFunc<S> = UseStateFuncs<S> extends {
+  (...args: infer Params): infer Ret;
+  (...args: any[]): any;
+}
+  ? { params: Params; ret: Ret }
+  : never;
 
+type ElementProps = {
+  title: string;
+  name: UseStateFunc<string>['ret'];
+  type: UseStateFunc<TD.RoomType>['ret'];
+  password: UseStateFunc<string>['ret'];
+  errors: ReturnType<typeof roomErrors>;
+  api: ReturnType<typeof useAPI>;
+  onCancel: () => void;
+};
+
+const CardElement = ({
+  title,
+  name: [roomName, setRoomName],
+  type: [roomType, setRoomType],
+  password: [roomPassword, setRoomPassword],
+  errors,
+  api: [state, submit],
+  onCancel,
+}: ElementProps) => {
   return (
     <>
       <div className="flex w-96 flex-col border-2 border-solid border-white bg-black">
-        <FTH3>Room Setting</FTH3>
+        <FTH3>{title}</FTH3>
         <div className="flex flex-row p-2">
           <div className="basis-[6em] p-2">ROOM NAME</div>
           <div className="shrink grow">
@@ -137,5 +146,74 @@ export const ChatRoomSettingCard = ({ room, onCancel, onSucceeded }: Props) => {
         </div>
       </div>
     </>
+  );
+};
+
+type CreateProps = {
+  onCancel: () => void;
+  onSucceeded?: () => void;
+};
+
+export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
+  const [roomName, setRoomName] = useState('');
+  const [roomType, setRoomType] = useState<TD.RoomType>('PUBLIC');
+  const [roomPassword, setRoomPassword] = useState('');
+  const errors = roomErrors(roomName, roomType, roomPassword);
+  const { addOne } = useUpdateRoom();
+  const api = useAPI('POST', `/chatrooms`, {
+    payload: () => ({ roomName, roomType, roomPassword }),
+    onFetched: (json) => {
+      addOne(json as TD.ChatRoom);
+      if (onSucceeded) {
+        onSucceeded();
+      }
+    },
+  });
+
+  return (
+    <CardElement
+      title={'CREATE ROOM'}
+      name={[roomName, setRoomName]}
+      type={[roomType, setRoomType]}
+      password={[roomPassword, setRoomPassword]}
+      errors={errors}
+      api={api}
+      onCancel={onCancel}
+    />
+  );
+};
+
+type Props = {
+  room: TD.ChatRoom;
+  onCancel: () => void;
+  onSucceeded?: () => void;
+};
+
+export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
+  const [roomName, setRoomName] = useState(room.roomName);
+  const [roomType, setRoomType] = useState<TD.RoomType>(room.roomType);
+  const [roomPassword, setRoomPassword] = useState('');
+  const errors = roomErrors(roomName, roomType, roomPassword);
+  const { updateOne } = useUpdateRoom();
+  const api = useAPI('PUT', `/chatrooms/${room.id}`, {
+    payload: () => ({ roomName, roomType, roomPassword }),
+    onFetched: (json) => {
+      updateOne(room.id, json as TD.ChatRoom);
+      if (onSucceeded) {
+        onSucceeded();
+      }
+    },
+  });
+
+  return (
+    <CardElement
+      title={'UPDATE ROOM'}
+      name={[roomName, setRoomName]}
+      type={[roomType, setRoomType]}
+      password={[roomPassword, setRoomPassword]}
+      errors={errors}
+      api={api}
+      onCancel={onCancel}
+    />
   );
 };

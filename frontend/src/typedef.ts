@@ -117,6 +117,12 @@ export type UserResult = {
   data: Partial<User>;
 };
 
+export type ChatRoomResult = {
+  id: number;
+  action: 'update';
+  data: Partial<ChatRoom>;
+};
+
 export const Mapper = {
   user: (data: any): User => {
     return Utils.pick(data, 'id', 'displayName');
