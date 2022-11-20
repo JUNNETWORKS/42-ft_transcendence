@@ -99,6 +99,7 @@ export const SocketHolder = () => {
       } else {
         // 他人に関する通知
         console.log('for other');
+        userUpdator.addOne(data.relation.user);
         stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
@@ -168,6 +169,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
+      userUpdator.addMany(messages.map((m) => m.user));
       stateMutater.addMessagesToRoom(
         id,
         messages.map(TD.Mapper.chatRoomMessage)

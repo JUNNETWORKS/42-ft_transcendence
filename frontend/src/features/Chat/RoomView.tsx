@@ -10,11 +10,13 @@ import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
+import { useUserDataReadOnly } from '@/stores/store';
 
 /**
  * メッセージを表示するコンポーネント
  */
 const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
+  const user = useUserDataReadOnly(props.message.user.id);
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
@@ -22,7 +24,7 @@ const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
     >
       <div className="flex flex-row">
         <div className="m-[1px] bg-white px-[2px] py-0 text-black">
-          {props.message.user.displayName}
+          {user.displayName}
         </div>
         <div className="pr-[4px]">
           {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
