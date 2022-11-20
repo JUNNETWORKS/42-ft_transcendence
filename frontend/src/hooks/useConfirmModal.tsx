@@ -14,9 +14,7 @@ type Continuation = {
   resolve: Resolve;
   reject: Reject;
 };
-let confirmContinuation: Continuation | null = null;
 
-const ticker = atom(0); // 変更検知用, 値はどうでも良い
 const confirmModalAtom = {
   text: atom<ConfirmText>({
     body: 'body',
@@ -24,19 +22,7 @@ const confirmModalAtom = {
     denialLabel: 'denialLabel',
   }),
   isOpen: atom(false),
-  continuation: atom(
-    // 関数をatom化することは, 今のJotaiでは不可能または非常に困難なようなので,
-    // 関数自体はatomではないただの変数に入れておく.
-    // それだけだとJotaiが変更を検知しない(いつまでたっても初期値を返し続ける)ので, 変更検知のためだけのatom(ticker)を定義しておく.
-    (get) => {
-      get(ticker); // 変更検知用, 値はどうでも良い
-      return confirmContinuation;
-    },
-    (get, set, newValue: Continuation | null) => {
-      confirmContinuation = newValue;
-      set(ticker, get(ticker) ^ 1);
-    }
-  ),
+  continuation: atom<Continuation | null>(null),
 };
 
 /**
