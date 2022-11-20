@@ -10,11 +10,10 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { PrismaExceptionFilter } from 'src/filters/prisma-exception-filter';
+import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 
 import { UpdateUserNameDto } from './dto/update-user-name.dto';
-
 
 import { UsersService } from './users.service';
 
