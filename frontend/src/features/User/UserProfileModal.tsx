@@ -98,7 +98,7 @@ const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
       }
     },
   });
-  const confirmModal = useConfirmModal();
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -110,7 +110,11 @@ const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
         onClick={async () => {
-          if (await confirmModal('really disable 2FA?')) {
+          if (
+            await confirmModal('二要素認証を無効化しますか？', {
+              affirm: '無効化する',
+            })
+          ) {
             submit();
           }
         }}
@@ -144,7 +148,7 @@ const Enable2FACard = ({
       }
     },
   });
-  const confirmModal = useConfirmModal();
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -156,7 +160,11 @@ const Enable2FACard = ({
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
         onClick={async () => {
-          if (await confirmModal('really enable 2FA?')) {
+          if (
+            await confirmModal('二要素認証を有効化しますか？', {
+              affirm: '有効化する',
+            })
+          ) {
             submit();
           }
         }}
@@ -195,12 +203,17 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
     },
   });
 
-  const confirmModal = useConfirmModal();
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
   const closeModal = async () => {
-    if (await confirmModal('QRコードのスキャンは完了しましたか？')) {
+    if (
+      await confirmModal('QRコードのスキャンは完了しましたか？', {
+        affirm: '完了したので閉じる',
+        denial: 'まだ',
+      })
+    ) {
       setQrcode(null);
     }
   };
