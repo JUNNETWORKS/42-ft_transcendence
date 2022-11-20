@@ -178,6 +178,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
+      userUpdator.addMany(members.map((m) => m.user));
       stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
