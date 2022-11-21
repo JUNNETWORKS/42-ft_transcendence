@@ -1,13 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { createHmac } from 'crypto';
-import { passwordConstants } from '../auth/auth.constants';
-import { PrismaService } from '../prisma/prisma.service';
+import { authenticator } from 'otplib';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as Utils from '../utils';
-import { ChatroomsService } from '../chatrooms/chatrooms.service';
-import { authenticator } from 'otplib';
+
+import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
+import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -120,7 +123,7 @@ export class UsersService {
    * ログイン時の初期表示用の情報をかき集める
    * @param id
    */
-  async collectStartingInfomations(id: number) {
+  async collectStartingInformations(id: number) {
     return Utils.PromiseMap({
       visibleRooms: this.chatRoomService.findMany({ take: 40 }),
       joiningRooms: this.chatRoomService

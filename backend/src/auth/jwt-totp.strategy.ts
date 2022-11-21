@@ -1,6 +1,7 @@
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+
 import { jwtConstants } from './auth.constants';
 
 // Strategy をどこからインポートするかが重要
