@@ -12,6 +12,9 @@ export class UserEntity implements User {
   displayName!: string;
 
   @ApiProperty()
+  isEnabled2FA!: boolean;
+
+  @ApiProperty()
   intraId!: number;
 
   @ApiProperty()
