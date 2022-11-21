@@ -2,4 +2,4 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 echo "lint and format staged file."
-(cd ./frontend && npx lint-staged) && (cd ./backend && npx lint-staged --no-stash)
+(cd ./frontend && npx lint-staged) && (cd ./backend && npx lint-staged)
