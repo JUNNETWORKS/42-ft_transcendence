@@ -36,7 +36,9 @@ export const TotpAuthForm = (props: {
       if (e instanceof APIError) {
         switch (e.response.status) {
           case 401:
-            setNetErrors({ totp: 'パスワードが違います' });
+            setNetErrors({
+              totp: '認証に失敗しました。もう一度お試しください。',
+            });
             return;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
@@ -172,7 +174,7 @@ const PasswordAuthForm = (props: {
       </div>
       <div>
         <FTButton
-          disabled={errors.some && state === 'Fetching'}
+          disabled={errors.some || state === 'Fetching'}
           onClick={submit}
         >
           Login

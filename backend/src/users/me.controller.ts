@@ -9,17 +9,24 @@ import {
   Put,
   BadRequestException,
 } from '@nestjs/common';
-import { UsersService } from './users.service';
 import { ApiTags } from '@nestjs/swagger';
+
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { UpdateMeDto } from './dto/update-me.dto';
+import { ChatGateway } from 'src/chat/chat.gateway';
+import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
-import { PrismaExceptionFilter } from 'src/filters/prisma';
+
+import { UpdateMeDto } from './dto/update-me.dto';
+
+import { UsersService } from './users.service';
 
 @Controller('me')
 @ApiTags('me')
 export class MeController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly chatGateway: ChatGateway
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Get('')
@@ -48,6 +55,15 @@ export class MeController {
       ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
       : Promise.resolve('skipped');
     const result = await Utils.PromiseMap({ ordinary, avatar });
+    this.chatGateway.sendResults(
+      'ft_user',
+      {
+        action: 'update',
+        id,
+        data: { ...updateUserDto },
+      },
+      { global: 'global' }
+    );
     return Utils.pick(
       result.ordinary,
       'id',
