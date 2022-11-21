@@ -122,7 +122,7 @@ const PresentatorView = (props: { personalData: TD.User }) => {
 
         <div>
           <FollowButton userId={props.personalData.id} isFriend={isFriend} />
-          <FTButton onClick={() => setIsOpen(true)}>{'DM'}</FTButton>
+          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>
