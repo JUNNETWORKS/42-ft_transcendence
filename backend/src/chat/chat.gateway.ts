@@ -271,6 +271,15 @@ export class ChatGateway implements OnGatewayConnection {
       return { response: 'banned' };
     }
     // TODO: lockedの場合、パスワードのチェック
+    if (room.roomType === 'LOCKED') {
+      if (!data.roomPassword) {
+        return { response: 'no password' };
+      }
+      // TODO: hash化されたパスワードをチェックする
+      if (room.roomPassword !== data.roomPassword) {
+        return { response: 'invalid password' };
+      }
+    }
 
     // [TODO: ハードリレーション更新]
     const member = await this.chatRoomService.addMember(roomId, {

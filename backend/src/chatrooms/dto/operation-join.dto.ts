@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsInt } from 'class-validator';
+import { IsNotEmpty, IsInt, IsString } from 'class-validator';
 
 export class OperationJoinDto {
   @IsNotEmpty()
@@ -8,6 +8,11 @@ export class OperationJoinDto {
   @IsInt()
   @ApiProperty()
   roomId!: number;
+
+  @IsNotEmpty()
+  @IsString()
+  @ApiProperty()
+  roomPassword?: string;
 
   @IsNotEmpty()
   @Type(() => Number)
