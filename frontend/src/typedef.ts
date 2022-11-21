@@ -8,6 +8,7 @@ export type User = {
   time?: Date;
   isEnabledAvatar: boolean;
 
+  avatar?: boolean;
   avatarTime?: number;
 };
 

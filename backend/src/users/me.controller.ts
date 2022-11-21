@@ -55,15 +55,21 @@ export class MeController {
       ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
       : Promise.resolve('skipped');
     const result = await Utils.PromiseMap({ ordinary, avatar });
-    this.chatGateway.sendResults(
-      'ft_user',
-      {
-        action: 'update',
-        id,
-        data: { ...updateUserDto },
-      },
-      { global: 'global' }
-    );
+    {
+      const data = {
+        ...Utils.omit(updateUserDto, 'avatar'),
+        ...(updateUserDto.avatar ? { avatar: true } : {}),
+      };
+      this.chatGateway.sendResults(
+        'ft_user',
+        {
+          action: 'update',
+          id,
+          data,
+        },
+        { global: 'global' }
+      );
+    }
     return Utils.pick(
       result.ordinary,
       'id',

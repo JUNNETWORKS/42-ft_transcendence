@@ -36,13 +36,17 @@ export const useUpdateUser = () => {
     ),
     updateOne: useCallback(
       (userId: number, part: Partial<TD.User>) => {
+        const patched = Utils.datifyObject(part, 'time');
+        if (part.avatar) {
+          patched.avatarTime = Date.now();
+        }
         setUsersStore((prev) => {
           const d = prev[userId];
           if (!d) {
             return prev;
           }
-          const p = Utils.datifyObject(part, 'time');
-          return { ...prev, [userId]: { ...d, ...p } };
+          const u = { ...d, ...patched };
+          return { ...prev, [userId]: u };
         });
       },
       [setUsersStore]
