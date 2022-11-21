@@ -5,6 +5,8 @@ import {
   PipeTransform,
 } from '@nestjs/common';
 
+import { keyBy } from 'src/utils';
+
 import { CreateChatroomDto } from '../dto/create-chatroom.dto';
 
 @Injectable()
@@ -23,6 +25,17 @@ export class CreateChatroomPipe implements PipeTransform {
         'roomPassword is needed with "LOCKED" roomType',
         400
       );
+    }
+    if (value.roomPassword) {
+      const characters = Object.keys(
+        keyBy(value.roomPassword.split(''), (c) => c)
+      ).length;
+      if (characters < 4) {
+        throw new HttpException(
+          'roomPassword must be consisted by more than 4 types of characters',
+          400
+        );
+      }
     }
     return value;
   }
