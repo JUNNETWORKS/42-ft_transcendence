@@ -260,17 +260,17 @@ describe('/Chatrooms (e2e)', () => {
   //   });
   // });
 
-  // describe('DELETE /chatrooms/{id}', () => {
-  //   it('success', async () => {
-  //     let res = await request(app.getHttpServer())
-  //       .delete('/chatrooms/1')
-  //       .set('Accept', 'application/json');
-  //     expect(res.status).toEqual(200);
+  describe('DELETE /chatrooms/{id}', () => {
+    it('success', async () => {
+      const res = await request(app.getHttpServer())
+        .delete('/chatrooms/1')
+        .set('Accept', 'application/json');
+      expect(res.status).toEqual(200);
 
-  //     res = await request(app.getHttpServer())
-  //       .get('/chatrooms/1')
-  //       .set('Accept', 'application/json');
-  //     expect(res.status).toEqual(400);
-  //   });
-  // });
+      // res = await request(app.getHttpServer())
+      //   .get('/chatrooms/1')
+      //   .set('Accept', 'application/json');
+      // expect(res.status).toEqual(400);
+    });
+  });
 });
