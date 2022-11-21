@@ -1,12 +1,15 @@
 import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { useUserData } from '@/stores/store';
+import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
+import { Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
+import { APIError } from '@/errors/APIError';
+import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { structureAtom } from '@/stores/structure';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
@@ -77,27 +80,52 @@ const UserCard = ({ user }: UserCardProp) => {
   );
 };
 
+const UserInnerView = (props: {
+  userId: number;
+  onError: (e: unknown) => void;
+}) => {
+  const userId = props.userId;
+  const { addOne } = useUpdateUser();
+  const personalData = useUserDataReadOnly(userId);
+  if (!personalData) {
+    throw (async () => {
+      try {
+        const result = await fetch(`http://localhost:3000/users/${userId}`, {
+          method: 'GET',
+          mode: 'cors',
+        });
+        if (!result.ok) {
+          throw new APIError(result.statusText, result);
+        }
+        const json = await result.json();
+        addOne(json as TD.User);
+      } catch (e) {
+        props.onError(e);
+      }
+    })();
+  }
+  return <UserCard user={personalData} />;
+};
+
 export const UserView = () => {
   const { id } = useParams();
   const userId = parseInt(id || '');
-  const [fetchState, user] = useUserData(userId);
-
-  const presentator = (() => {
-    console.log('personalData', fetchState, user);
-    switch (fetchState) {
-      case 'Fetched': {
-        if (user) {
-          return <UserCard user={user} />;
-        }
-      }
-    }
-    return <p>{fetchState}</p>;
-  })();
-
+  const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-      <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {presentator}
+      <div className="w-[28rem] basis-1 border-4 border-white">
+        <ErrorBoundary
+          FallbackComponent={(error) => (
+            <p>
+              failed.
+              <FTButton onClick={() => setError(null)}>Retry</FTButton>
+            </p>
+          )}
+        >
+          <Suspense fallback={<p>Loading...</p>}>
+            <UserInnerView userId={userId} onError={setError} />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     </div>
   );

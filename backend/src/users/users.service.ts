@@ -1,15 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { createHmac } from 'crypto';
-import { passwordConstants } from '../auth/auth.constants';
-import { PrismaService } from '../prisma/prisma.service';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { authenticator } from 'otplib';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as Utils from '../utils';
+
+import { passwordConstants } from '../auth/auth.constants';
+import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @Inject(forwardRef(() => AuthService))
+    private authService: AuthService,
     private prisma: PrismaService,
     private chatRoomService: ChatroomsService
   ) {}
@@ -135,6 +142,54 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async enableTwoFa(id: number) {
+    const secret = authenticator.generateSecret();
+    console.log('secret:', secret);
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.upsert({
+        where: {
+          userId: id,
+        },
+        create: {
+          userId: id,
+          secret,
+        },
+        update: {
+          userId: id,
+          secret,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: true,
+        },
+      }),
+    ]);
+    return await this.authService.generateQrCode(id, secret);
+  }
+
+  async disableTwoFa(id: number) {
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.delete({
+        where: {
+          userId: id,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: false,
+        },
+      }),
+    ]);
+    return;
   }
 }
 

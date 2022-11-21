@@ -1,21 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { hash_password, UsersService } from '../users/users.service';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserMinimum } from '../users/entities/user.entity';
-import { jwtConstants } from 'src/auth/auth.constants';
+import { authenticator } from 'otplib';
+import { toDataURL } from 'qrcode';
 import { Socket } from 'socket.io';
-import * as Utils from 'src/utils';
+
+import { verifyOtpDto } from './dto/verify-opt.dto';
+
+import { PrismaService } from '../prisma/prisma.service';
+import { UserMinimum } from '../users/entities/user.entity';
+import { hash_password, UsersService } from '../users/users.service';
+import * as Utils from '../utils';
+import { jwtConstants } from './auth.constants';
 
 export type LoginResult = {
   access_token: string;
-  user: any;
+  user?: any;
 };
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
+    private prisma: PrismaService
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -40,7 +48,7 @@ export class AuthService {
    */
   async retrieveUser(
     intraId: number,
-    data: Omit<UserMinimum, 'intraId' | 'password'>
+    data: Omit<UserMinimum, 'intraId' | 'password' | 'isEnabled2FA'>
   ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
@@ -60,7 +68,7 @@ export class AuthService {
     return createdUser;
   }
 
-  async login(user: any): Promise<LoginResult> {
+  async login(user: any, completedTwoFa = false): Promise<LoginResult> {
     const iat = Date.now() / 1000;
     const payload = {
       email: user.email,
@@ -68,14 +76,31 @@ export class AuthService {
       iat,
     };
     const u = await this.usersService.findOne(user.id);
+    if (u?.isEnabled2FA && !completedTwoFa) {
+      const secretId = await this.prisma.totpSecret.findUnique({
+        where: {
+          userId: user.id,
+        },
+      });
+      const result = {
+        required2fa: true,
+        access_token: this.jwtService.sign(
+          { secretId: secretId?.id, next: 'totp', iat },
+          {
+            issuer: process.env.JWT_ISSUER,
+            audience: process.env.JWT_AUDIENCE,
+          }
+        ),
+      };
+      return result;
+    }
     const result = {
       access_token: this.jwtService.sign(payload, {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(u!, 'id', 'displayName', 'email'),
+      user: Utils.pick(u!, 'id', 'displayName', 'email', 'isEnabled2FA'),
     };
-    console.log(`[login]`, result);
     return result;
   }
 
@@ -111,5 +136,21 @@ export class AuthService {
       }
     }
     return null;
+  }
+
+  async generateQrCode(userId: number, secret: string) {
+    const otpPath = authenticator.keyuri(userId.toString(), 'tra', secret);
+    return await toDataURL(otpPath);
+  }
+
+  async verifyOtp(secretId: number, verifyOtpDto: verifyOtpDto) {
+    const secret = await this.prisma.totpSecret.findFirst({
+      where: {
+        id: secretId,
+      },
+    });
+    if (!secret) return;
+    const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
+    return isValid;
   }
 }

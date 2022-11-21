@@ -86,6 +86,17 @@ export function keyBy<T>(
   return r;
 }
 
+export function mapValues<T extends object, U>(
+  obj: T,
+  mapper: (val: T[keyof T], key: keyof T) => U
+): { [key in keyof T]: U } {
+  const r: any = {};
+  Object.keys(obj).forEach((k: any) => {
+    r[k] = mapper((obj as any)[k], k);
+  });
+  return r;
+}
+
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }
