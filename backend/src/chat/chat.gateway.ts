@@ -270,7 +270,7 @@ export class ChatGateway implements OnGatewayConnection {
       console.log('** you are banned **');
       return { response: 'banned' };
     }
-    // TODO: lockedの場合、パスワードのチェック
+    // lockedの場合、パスワードのチェック
     if (room.roomType === 'LOCKED') {
       if (!data.roomPassword) {
         return { response: 'no password' };
