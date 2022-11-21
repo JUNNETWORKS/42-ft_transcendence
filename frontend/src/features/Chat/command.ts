@@ -14,9 +14,10 @@ export function makeCommand(
       mySocket.emit('ft_open', data);
     },
 
-    join: (roomId: number, callback: any) => {
+    join: (roomId: number, roomPassword: string, callback: any) => {
       const data = {
         roomId,
+        roomPassword,
       };
       console.log(data);
       mySocket.emit('ft_join', data, (response: any) => {
