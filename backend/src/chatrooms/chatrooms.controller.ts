@@ -90,6 +90,7 @@ export class ChatroomsController {
         ? { roomId: result.id }
         : { global: 'global' }
     );
+    return result;
   }
 
   @Delete(':roomId')
