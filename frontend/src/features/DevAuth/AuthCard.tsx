@@ -7,11 +7,78 @@ import {
   FTButton,
   FTSubmit,
   FTTextField,
+  FTH2,
 } from '@/components/FTBasicComponents';
 import { useAPI } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { passwordErrors, selfErrors } from './auth.validator';
+import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
+import { APIError } from '@/errors/APIError';
+
+/**
+ * TOTP入力フォーム
+ */
+export const TotpAuthForm = (props: {
+  token2FA: string;
+  onSucceeded: (token: string, user: any, required2fa: boolean) => void;
+  onClose: () => void;
+}) => {
+  const [otp, setOtp] = useState('');
+  const [state, submit] = useAPI('POST', `/auth/otp`, {
+    credential: { token: props.token2FA },
+    payload: () => ({ otp }),
+    onFetched(json) {
+      const { access_token: token, user, required2fa } = json as any;
+      props.onSucceeded(token, user, required2fa);
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        switch (e.response.status) {
+          case 401:
+            setNetErrors({
+              totp: '認証に失敗しました。もう一度お試しください。',
+            });
+            return;
+          default:
+            setNetErrors({ totp: '認証に失敗しました' });
+            return;
+        }
+      }
+    },
+  });
+  const validationErrors = totpErrors(otp);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
+  return (
+    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+      <h3>ワンタイムパスワード入力</h3>
+      <ul className="list-disc">
+        <li>
+          お使いのスマートフォンにて Google Authenticator アプリを起動し,
+          表示されるワンタイムパスワードを入力してください。
+        </li>
+      </ul>
+      <div>
+        <FTTextField
+          className="w-full"
+          value={otp}
+          placeholder="ワンタイムパスワード"
+          onChange={(e) => setOtp(e.target.value)}
+        />
+        <div className="text-red-400">
+          {validationErrors.totp || netErrors.totp || '　'}
+        </div>
+      </div>
+      <div>
+        <FTButton
+          disabled={validationErrors.some || state === 'Fetching'}
+          onClick={submit}
+        >
+          Login
+        </FTButton>
+      </div>
+    </div>
+  );
+};
 
 /**
  * 42認証用のフォーム
@@ -27,15 +94,15 @@ const FtAuthForm = () => (
  * 自己申告認証用のフォーム
  */
 const SelfAuthForm = (props: {
-  onSucceeded: (token: string, user: any) => void;
+  onSucceeded: (token: string, user: any, required2fa: boolean) => void;
   onFailed: () => void;
 }) => {
   const [userIdStr, setUserIdStr] = useState('');
   const errors = selfErrors(userIdStr);
   const [state, submit] = useAPI('GET', `/auth/self/${userIdStr}`, {
     onFetched(json) {
-      const { access_token: token, user } = json as any;
-      props.onSucceeded(token, user);
+      const { access_token: token, user, required2fa } = json as any;
+      props.onSucceeded(token, user, required2fa);
     },
     onFailed(error) {
       props.onFailed();
@@ -66,7 +133,7 @@ const SelfAuthForm = (props: {
  * メアド+パスワード認証
  */
 const PasswordAuthForm = (props: {
-  onSucceeded: (token: string, user: any) => void;
+  onSucceeded: (token: string, user: any, required2fa: boolean) => void;
   onFailed: () => void;
 }) => {
   const [email, setEmail] = useState('');
@@ -75,8 +142,8 @@ const PasswordAuthForm = (props: {
   const [state, submit] = useAPI('POST', '/auth/login', {
     payload: () => ({ email, password }),
     onFetched(json) {
-      const { access_token: token, user } = json as any;
-      props.onSucceeded(token, user);
+      const { access_token: token, user, required2fa } = json as any;
+      props.onSucceeded(token, user, required2fa);
     },
     onFailed(error) {
       props.onFailed();
@@ -108,7 +175,7 @@ const PasswordAuthForm = (props: {
       </div>
       <div>
         <FTButton
-          disabled={errors.some && state === 'Fetching'}
+          disabled={errors.some || state === 'Fetching'}
           onClick={submit}
         >
           Login
@@ -122,7 +189,7 @@ const PasswordAuthForm = (props: {
  * 各種認証フォームをまとめたUI
  */
 export const DevAuthLoginCard = (props: {
-  onSucceeded: (token: string, user: any) => void;
+  onSucceeded: (token: string, user: any, required2fa: boolean) => void;
   onFailed: () => void;
 }) => {
   return (

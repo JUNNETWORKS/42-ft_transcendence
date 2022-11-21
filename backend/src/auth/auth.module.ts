@@ -8,10 +8,18 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './auth.constants';
 import { JwtStrategy } from './jwt.strategy';
 import { FtStrategy } from './ft.strategy';
+import { PrismaModule } from '../prisma/prisma.module';
+import { JwtTotpStrategy } from './jwt-totp.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, LocalStrategy, JwtStrategy, FtStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    FtStrategy,
+    JwtTotpStrategy,
+  ],
   imports: [
     forwardRef(() => UsersModule),
     PassportModule,
@@ -19,6 +27,7 @@ import { FtStrategy } from './ft.strategy';
       secret: jwtConstants.secret,
       signOptions: { expiresIn: '30d' },
     }),
+    PrismaModule,
   ],
   exports: [AuthService],
 })

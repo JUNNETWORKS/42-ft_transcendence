@@ -79,14 +79,13 @@ export const useAPI = (
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   endpoint: string,
   option: {
+    credential?: { token: string };
     payload?: () => any;
-    onFetched: (json: unknown) => void;
     onFailed?: (error: unknown) => void;
-  }
+  } & ({ onFetched: (json: unknown) => void } | { onFinished: () => void })
 ) => {
-  const { payload, onFetched, onFailed } = option;
+  const { payload, onFailed } = option;
   const [credential] = useAtom(storedCredentialAtom);
-
   return useFetch(
     () => {
       const headers: HeadersInit = {};
@@ -94,8 +93,9 @@ export const useAPI = (
         headers['Content-Type'] = 'application/json';
       }
       const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
-      if (credential) {
-        headers['Authorization'] = `Bearer ${credential.token}`;
+      const usedCredential = option.credential || credential;
+      if (usedCredential) {
+        headers['Authorization'] = `Bearer ${usedCredential.token}`;
       }
       return fetch(`http://localhost:3000${endpoint}`, {
         method,
@@ -107,8 +107,12 @@ export const useAPI = (
     (res) =>
       (async () => {
         try {
-          const json = await res.json();
-          onFetched(json);
+          if ('onFetched' in option) {
+            const json = await res.json();
+            option.onFetched(json);
+            return;
+          }
+          option.onFinished();
         } catch (e) {
           console.error(e);
           if (onFailed) {
