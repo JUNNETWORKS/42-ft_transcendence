@@ -14,12 +14,14 @@ export function makeCommand(
       mySocket.emit('ft_open', data);
     },
 
-    join: (roomId: number) => {
+    join: (roomId: number, callback: any) => {
       const data = {
         roomId,
       };
       console.log(data);
-      mySocket.emit('ft_join', data);
+      mySocket.emit('ft_join', data, (response: any) => {
+        callback(response);
+      });
     },
 
     leave: (roomId: number) => {

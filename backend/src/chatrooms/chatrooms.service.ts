@@ -1,15 +1,18 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
-import { PostMessageDto } from './dto/post-message.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
+import { GetMessagesDto } from './dto/get-messages.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomNameDto } from './dto/update-room-name.dto';
 import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
-import { ChatroomEntity } from './entities/chatroom.entity';
-import { RoomMemberDto } from './dto/room-member.dto';
-import { GetMessagesDto } from './dto/get-messages.dto';
-import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+
+import { PrismaService } from '../prisma/prisma.service';
+import { ChatroomEntity } from './entities/chatroom.entity';
+
 
 @Injectable()
 export class ChatroomsService {
@@ -57,16 +60,9 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    try {
-      const res = await this.prisma.chatRoom.findUniqueOrThrow({
-        where: { id },
-      });
-      return new ChatroomEntity(res);
-    } catch (err) {
-      console.error(err);
-      // TODO: errの種類拾う
-      throw new HttpException(`${err}`, 400);
-    }
+    return await this.prisma.chatRoom.findUnique({
+      where: { id },
+    });
   }
 
   join(roomId: number, userId: number) {
@@ -234,7 +230,8 @@ export class ChatroomsService {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType } = roomMemberDto;
     const roomInfo = await this.findOne(chatRoomId);
-    if (roomInfo.ownerId === userId) {
+    // TODO: 指定されたroomが存在しなかった時の対応
+    if (roomInfo!.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
     }
 

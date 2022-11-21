@@ -28,18 +28,21 @@ const ChatRoomListItem = (props: {
   isJoined: boolean;
   isFocused: boolean;
   nMessages: number | undefined;
-  onJoin: (roomId: number) => void;
+  onJoin: (roomId: number, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {
   const TypeIcon = RoomTypeIcon[props.room.roomType];
+  const joinCallback = (response: any) => {
+    console.log('response: ', response);
+  };
 
   return (
     <>
       <div className="shrink-0 grow-0">
         <ChatRoomShiftButton
           isJoined={props.isJoined}
-          onJoin={() => props.onJoin(props.room.id)}
+          onJoin={() => props.onJoin(props.room.id, joinCallback)}
           onLeave={() => props.onLeave(props.room.id)}
         />
       </div>
@@ -69,7 +72,7 @@ export const ChatRoomListView = (props: {
   isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
   countMessages: (roomId: number) => number | undefined;
-  onJoin: (roomId: number) => void;
+  onJoin: (roomId: number, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {

@@ -245,7 +245,6 @@ export class ChatGateway implements OnGatewayConnection {
     data.callerId = user.id;
     const userId = user.id;
     const roomId = data.roomId;
-    // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
 
     const rel = await Utils.PromiseMap({
@@ -254,19 +253,24 @@ export class ChatGateway implements OnGatewayConnection {
       attr: this.chatRoomService.getAttribute(roomId, user.id),
     });
 
+    // [ 入室対象のチャットルームが存在していることを確認 ]
+    if (!rel.room) {
+      return { response: 'not found' };
+    }
     const room = rel.room;
-    // [TODO: 実行者が対象チャットルームに入室できることを確認]
+    // [ 既に入室していないか確認 ]
     {
       const relation = rel.relation;
       if (relation) {
-        return;
+        return { response: 'joined already' };
       }
     }
-    // [TODO: 実行者がbanされていないことを確認]
+    // [ 実行者がbanされていないことを確認 ]
     if (rel.attr && rel.attr.bannedEndAt > new Date()) {
       console.log('** you are banned **');
-      return;
+      return { response: 'banned' };
     }
+    // TODO: lockedの場合、パスワードのチェック
 
     // [TODO: ハードリレーション更新]
     const member = await this.chatRoomService.addMember(roomId, {
@@ -319,6 +323,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     this.updateHeartbeat(user.id);
+    return { response: 'success' };
   }
 
   /**
