@@ -9,11 +9,14 @@ import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { dataAtom } from '@/stores/structure';
+import { useUserDataReadOnly } from '@/stores/store';
 
 /**
  * メッセージを表示するコンポーネント
  */
 const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
+  const user = useUserDataReadOnly(props.message.user.id);
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
@@ -21,7 +24,7 @@ const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
     >
       <div className="flex flex-row">
         <div className="m-[1px] bg-white px-[2px] py-0 text-black">
-          {props.message.user.displayName}
+          {user.displayName}
         </div>
         <div className="pr-[4px]">
           {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
@@ -189,6 +192,7 @@ export const ChatRoomView = (props: {
 }) => {
   const isOwner = props.room.ownerId === props.you?.userId;
   const [isOpen, setIsOpen] = useState(false);
+  const [members] = dataAtom.useMembersInRoom(props.room.id);
 
   const closeModal = () => {
     setIsOpen(false);
@@ -236,7 +240,7 @@ export const ChatRoomView = (props: {
           <MembersList
             you={props.you}
             room={props.room}
-            members={props.roomMembers(props.room.id) || {}}
+            members={members}
             {...props.memberOperations}
           />
         </div>
