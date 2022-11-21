@@ -27,20 +27,20 @@ export const useQuery = () => {
  * @param onFailed 失敗時にエラー(`unknown`)を受け取る関数
  * @returns
  */
-export const useFetch = (
-  fetcher: () => Promise<Response>,
+export function useFetch<T>(
+  fetcher: (arg?: T) => Promise<Response>,
   onFetched: (res: Response) => void,
   onFailed?: (error: unknown) => void
-) => {
+) {
   type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
   const [state, setState] = useState<FetchState>('Neutral');
-  const submit = async () => {
+  const submit = async (arg?: T) => {
     if (state === 'Fetching') {
       return;
     }
     setState('Fetching');
     try {
-      const result = await fetcher();
+      const result = await fetcher(arg);
       if (!result.ok) {
         throw new APIError(result.statusText, result);
       }
@@ -58,6 +58,7 @@ export const useFetch = (
       setState('Neutral');
     }
   };
+  const submitNothing = () => submit();
 
   return [
     /**
@@ -67,10 +68,11 @@ export const useFetch = (
     /**
      * 実行すると, 次の副作用タイミングで fetch 処理をキックする
      */
-    submit,
+    submitNothing,
     neutralize,
+    submit,
   ] as const;
-};
+}
 
 /**
  * API呼び出しフック(useFetchをラップしたもの)
@@ -87,12 +89,19 @@ export const useAPI = (
   const { payload, onFailed } = option;
   const [credential] = useAtom(storedCredentialAtom);
   return useFetch(
-    () => {
+    (
+      args: {
+        payload?: any;
+      } = {}
+    ) => {
       const headers: HeadersInit = {};
       if (payload) {
         headers['Content-Type'] = 'application/json';
       }
-      const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
+      const payloadObject = args.payload || (payload ? payload() : null);
+      const payloadPart = payloadObject
+        ? { body: JSON.stringify(payloadObject) }
+        : {};
       const usedCredential = option.credential || credential;
       if (usedCredential) {
         headers['Authorization'] = `Bearer ${usedCredential.token}`;

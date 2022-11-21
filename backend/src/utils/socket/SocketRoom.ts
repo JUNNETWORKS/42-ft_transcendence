@@ -1,5 +1,6 @@
-import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 import { Socket, Server } from 'socket.io';
+
+import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 
 /**
  * システムが使うルーム名
