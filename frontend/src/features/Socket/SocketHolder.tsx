@@ -13,12 +13,12 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const setVisibleRooms = useSetAtom(structureAtom.visibleRoomsAtom);
-  const setJoiningRooms = useSetAtom(structureAtom.joiningRoomsAtom);
+  const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
-  const setFocusedRoomId = useSetAtom(structureAtom.focusedRoomIdAtom);
-  const setMessagesInRoom = useSetAtom(structureAtom.messagesInRoomAtom);
-  const setMembersInRoom = useSetAtom(structureAtom.membersInRoomAtom);
+  const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
+  const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
+  const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
   const userId = personalData ? personalData.id : -1;
 
   const userUpdator = useUpdateUser();
@@ -99,6 +99,7 @@ export const SocketHolder = () => {
       } else {
         // 他人に関する通知
         console.log('for other');
+        userUpdator.addOne(data.relation.user);
         stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
@@ -168,6 +169,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
+      userUpdator.addMany(messages.map((m) => m.user));
       stateMutater.addMessagesToRoom(
         id,
         messages.map(TD.Mapper.chatRoomMessage)
@@ -178,6 +180,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
+      userUpdator.addMany(members.map((m) => m.user));
       stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
@@ -187,6 +190,7 @@ export const SocketHolder = () => {
     mySocket?.on('ft_follow', (data: TD.FollowResult) => {
       console.log('catch follow');
       if (!friends.find((f) => f.id === data.user.id)) {
+        userUpdator.addOne(data.user);
         setFriends((prev) => {
           const next = [...prev, data.user];
           return next;
@@ -201,6 +205,18 @@ export const SocketHolder = () => {
           const next = prev.filter((f) => f.id !== data.user.id);
           return next;
         });
+      }
+    });
+
+    mySocket?.on('ft_user', (data: TD.UserResult) => {
+      console.log('catch user', data);
+      switch (data.action) {
+        case 'update':
+          userUpdator.updateOne(data.id, data.data);
+          break;
+        case 'delete':
+          userUpdator.delOne(data.id);
+          break;
       }
     });
 
@@ -248,9 +264,7 @@ export const SocketHolder = () => {
      * @param newMembers
      */
     mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
-        console.log(`mergeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -262,17 +276,12 @@ export const SocketHolder = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
-        console.log('[newMembers]', newMembers);
-        console.log('[prev]', prev);
-        console.log('[next]', next);
         return next;
       });
     },
 
     removeMembersInRoom: (roomId: number, userId: number) => {
-      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
       setMembersInRoom((prev) => {
-        console.log(`removeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -281,14 +290,11 @@ export const SocketHolder = () => {
         if (!members) {
           return next;
         }
-        console.log('removing member', userId, 'from', members);
         delete members[userId];
-        console.log('members', members);
-        console.log(prev, next);
         return next;
       });
     },
   };
 
-  return <></>;
+  return null;
 };

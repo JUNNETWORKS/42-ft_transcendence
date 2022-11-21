@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Player, GameState, GameSettings } from '../types';
+import { Player, GameState, GameSettings, GameResult } from '../types';
 import { io, Socket } from 'socket.io-client';
+import { Modal } from '@/components/Modal';
 
 // ========================================
 // Canvas
@@ -114,6 +115,7 @@ const redrawGame = (
 export const Pong: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
+  const [matchResult, setMatchResult] = useState<GameResult | null>(null);
 
   const gameSettings: GameSettings = {
     field: { width: 1920, height: 1080 },
@@ -131,33 +133,61 @@ export const Pong: React.FC = () => {
         redrawGame(canvasRef.current, gameSettings, gameState);
       }
     });
+    socketRef.current.on('pong.match.finish', (gameResult: GameResult) => {
+      setMatchResult(gameResult);
+    });
 
-    // add event listeners
-    window.addEventListener('keydown', (e) => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       socketRef.current?.emit('pong.match.action', {
         up: e.key === 'w' || e.key === 'ArrowUp',
         down: e.key === 's' || e.key === 'ArrowDown',
       });
-    });
-    window.addEventListener('keyup', (e) => {
+    };
+
+    const handleKeyUp = () => {
       socketRef.current?.emit('pong.match.action', {
         up: false,
         down: false,
       });
-    });
-    window.addEventListener('resize', (e) => {
+    };
+
+    const handleResize = () => {
       if (canvasRef.current) {
         resizeCanvas(canvasRef.current, gameSettings);
       }
-    });
+    };
+
+    // add event listeners
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (
-    <canvas
-      id="pong"
-      ref={canvasRef}
-      width={gameSettings.field.width}
-      height={gameSettings.field.height}
-    />
+    <>
+      <Modal
+        isOpen={matchResult !== null}
+        //TODO タイトルへ戻る処理？
+        closeModal={() => {
+          console.log('test');
+        }}
+      >
+        <div className="flex items-center justify-center">
+          <p className="text-lg">{matchResult?.winner.id} win</p>
+        </div>
+      </Modal>
+      <canvas
+        id="pong"
+        ref={canvasRef}
+        width={gameSettings.field.width}
+        height={gameSettings.field.height}
+      />
+    </>
   );
 };

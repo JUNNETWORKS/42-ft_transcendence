@@ -68,6 +68,8 @@
     "dotenv-cli": "^6.0.0",
     "eslint": "^8.0.1",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-import-resolver-typescript": "^3.5.2",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-jest": "^26.8.7",
     "husky": "^8.0.1",
     "jest": "28.1.2",
