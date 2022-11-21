@@ -1,5 +1,6 @@
-import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 import { Socket, Server } from 'socket.io';
+
+import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 
 /**
  * システムが使うルーム名
@@ -101,6 +102,6 @@ export const sendResultRoom = async (
   payload: any
 ) => {
   const socks = await server.to(roomName).allSockets();
-  // console.log('sending downlink to:', roomName, op, payload, socks);
+  console.log('sending downlink to:', roomName, op, payload, socks);
   server.to(roomName).emit(op, payload);
 };
