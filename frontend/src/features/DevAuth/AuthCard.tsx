@@ -11,8 +11,11 @@ import {
 import { useAPI } from '@/hooks';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { passwordErrors, selfErrors, totpErrors } from './auth.validator';
+import { passwordErrors, selfErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
+import { OtpInput } from '@/features/DevAuth/components/OtpInput';
+import { useOtp } from './hooks/useOtp';
+import { Oval } from 'react-loader-spinner';
 
 /**
  * TOTP入力フォーム
@@ -22,12 +25,12 @@ export const TotpAuthForm = (props: {
   onSucceeded: (token: string, user: any, required2fa: boolean) => void;
   onClose: () => void;
 }) => {
-  const [otp, setOtp] = useState('');
-  const validationErrors = totpErrors(otp);
+  const otpLength = 6;
+  const [otpString, otpArray, setOtp] = useOtp(otpLength);
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
-  const [state, submit] = useAPI('POST', `/auth/otp`, {
+  const [state, submitNothing, , submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
-    payload: () => ({ otp }),
+    payload: () => ({ otp: otpString }),
     onFetched(json) {
       const { access_token: token, user, required2fa } = json as any;
       props.onSucceeded(token, user, required2fa);
@@ -39,14 +42,15 @@ export const TotpAuthForm = (props: {
             setNetErrors({
               totp: '認証に失敗しました。もう一度お試しください。',
             });
-            return;
+            break;
           default:
             setNetErrors({ totp: '認証に失敗しました' });
-            return;
+            break;
         }
       }
     },
   });
+
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
       <h3>ワンタイムパスワード入力</h3>
@@ -56,21 +60,30 @@ export const TotpAuthForm = (props: {
           表示されるワンタイムパスワードを入力してください。
         </li>
       </ul>
-      <div>
-        <FTTextField
-          className="w-full"
-          value={otp}
-          placeholder="ワンタイムパスワード"
-          onChange={(e) => setOtp(e.target.value)}
-        />
-        <div className="text-red-400">
-          {validationErrors.totp || netErrors.totp || '　'}
+      <div className="relative grid">
+        <div className="absolute z-10 place-self-center">
+          <Oval
+            height={40}
+            width={40}
+            color="#ffffff"
+            visible={state === 'Fetching'}
+            secondaryColor="#eeeeee"
+          />
         </div>
+        <OtpInput
+          otpLength={otpLength}
+          otpArray={otpArray}
+          submit={(otpString: string) =>
+            submit({ payload: { otp: otpString } })
+          }
+          setOtp={setOtp}
+        ></OtpInput>
       </div>
+      <div className="text-red-400">{netErrors.totp || '　'}</div>
       <div>
         <FTButton
-          disabled={validationErrors.some || state === 'Fetching'}
-          onClick={submit}
+          disabled={otpString.length !== otpLength || state === 'Fetching'}
+          onClick={submitNothing}
         >
           Login
         </FTButton>
