@@ -131,13 +131,22 @@ const CardElement = ({
           </div>
         )}
 
+        {state === 'Failed' && (
+          <div className="flex flex-row p-2">
+            <div className="shrink grow p-2 text-center text-red-400">
+              サーバエラー
+            </div>
+          </div>
+        )}
         <div className="p-2">
           <FTButton className="mr-2" onClick={onCancel}>
             Cancel
           </FTButton>
           <FTButton
             className="mr-2 disabled:opacity-50"
-            disabled={errors.some || state !== 'Neutral'}
+            disabled={
+              errors.some || !(state === 'Neutral' || state === 'Failed')
+            }
             onClick={submit}
           >
             <InlineIcon i={<Icons.Save />} />
@@ -161,7 +170,12 @@ export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
   const errors = roomErrors(roomName, roomType, roomPassword);
   const { addOne } = useUpdateRoom();
   const api = useAPI('POST', `/chatrooms`, {
-    payload: () => ({ roomName, roomType, roomPassword }),
+    payload: () => {
+      if (roomType === 'LOCKED') {
+        return { roomName, roomType, roomPassword };
+      }
+      return { roomName, roomType };
+    },
     onFetched: (json) => {
       addOne(json as TD.ChatRoom);
       if (onSucceeded) {
@@ -196,7 +210,12 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
   const errors = roomErrors(roomName, roomType, roomPassword);
   const { updateOne } = useUpdateRoom();
   const api = useAPI('PUT', `/chatrooms/${room.id}`, {
-    payload: () => ({ roomName, roomType, roomPassword }),
+    payload: () => {
+      if (roomType === 'LOCKED') {
+        return { roomName, roomType, roomPassword };
+      }
+      return { roomName, roomType };
+    },
     onFetched: (json) => {
       updateOne(room.id, json as TD.ChatRoom);
       if (onSucceeded) {
