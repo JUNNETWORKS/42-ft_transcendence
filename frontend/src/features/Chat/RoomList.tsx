@@ -6,6 +6,7 @@ import { RoomTypeIcon } from './RoomSetting';
 import { useState } from 'react';
 import { Modal } from '@/components/Modal';
 import { RoomPasswordInput } from './components/RoomPasswordInput';
+import { validateRoomPasswordError } from './components/RoomPassword.validator';
 
 const ChatRoomShiftButton = (props: {
   isJoined: boolean;
@@ -43,9 +44,11 @@ const ChatRoomListItem = (props: {
   const onJoin = () => {
     props.onJoin(props.room.id, roomPassword, (response: any) => {
       if (response.response !== 'success') {
-        setJoinError('something wrong');
+        setJoinError(validateRoomPasswordError(response.response));
       } else {
         setIsOpen(false);
+        setRoomPassword('');
+        setJoinError('');
       }
     });
   };

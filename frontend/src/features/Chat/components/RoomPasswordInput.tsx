@@ -23,7 +23,7 @@ export const RoomPasswordInput = ({
         placeholder="room password"
         onChange={(e) => setRoomPassword(e.target.value)}
       />
-      <div>{joinError !== '' ? joinError : ' '}</div>
+      <div className="text-red-400">{joinError !== '' ? joinError : '　'}</div>
       <FTButton className="mr-2" onClick={onJoin}>
         Join
       </FTButton>
