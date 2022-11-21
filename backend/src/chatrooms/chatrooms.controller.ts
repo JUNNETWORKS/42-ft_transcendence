@@ -1,21 +1,20 @@
 import {
   Controller,
-  Get,
   Post,
   Body,
   Param,
   Delete,
   ParseIntPipe,
-  Query,
   Put,
   UseGuards,
   Request,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { WebSocketGateway } from '@nestjs/websockets';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ChatGateway } from 'src/chat/chat.gateway';
 import { pick } from 'src/utils';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { CreateChatroomApiDto } from './dto/create-chatroom-api.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
@@ -28,10 +27,14 @@ import { UpdateRoomPipe } from './pipe/update-room.pipe';
 
 @Controller('chatrooms')
 @ApiTags('chatrooms')
+@WebSocketGateway({
+  cors: true,
+  namespace: 'chat',
+})
 export class ChatroomsController {
   constructor(
     private readonly chatroomsService: ChatroomsService,
-    private readonly charGateway: ChatGateway
+    private readonly wsServer: WsServerGateway
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -52,7 +55,8 @@ export class ChatroomsController {
       ownerId,
       roomMember: [owner],
     });
-    this.charGateway.sendResults(
+    this.wsServer.usersJoin(ownerId, { roomId: result.id });
+    this.wsServer.sendResults(
       'ft_open',
       {
         ...pick(result, 'id', 'roomName', 'roomType', 'ownerId'),
@@ -75,7 +79,7 @@ export class ChatroomsController {
       roomId,
       updateRoomDto
     );
-    this.charGateway.sendResults(
+    this.wsServer.sendResults(
       'ft_chatroom',
       {
         action: 'update',

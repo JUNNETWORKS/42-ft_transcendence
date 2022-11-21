@@ -11,7 +11,6 @@ import { ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ChatGateway } from 'src/chat/chat.gateway';
 import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
@@ -29,7 +28,6 @@ import { UsersService } from './users.service';
 export class MeController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly chatGateway: ChatGateway,
     private readonly wsServer: WsServerGateway
   ) {}
 
