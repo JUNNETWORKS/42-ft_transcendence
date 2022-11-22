@@ -326,29 +326,29 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [ 入室対象のチャットルームが存在していることを確認 ]
     if (!rel.room) {
-      return { response: 'not found' };
+      return { status: 'not found' };
     }
     const room = rel.room;
     // [ 既に入室していないか確認 ]
     {
       const relation = rel.relation;
       if (relation) {
-        return { response: 'joined already' };
+        return { status: 'joined already' };
       }
     }
     // [ 実行者がbanされていないことを確認 ]
     if (rel.attr && rel.attr.bannedEndAt > new Date()) {
       console.log('** you are banned **');
-      return { response: 'banned' };
+      return { status: 'banned' };
     }
     // lockedの場合、パスワードのチェック
     if (room.roomType === 'LOCKED') {
       if (!data.roomPassword) {
-        return { response: 'no password' };
+        return { status: 'no password' };
       }
       // TODO: hash化されたパスワードをチェックする
       if (room.roomPassword !== data.roomPassword) {
-        return { response: 'invalid password' };
+        return { status: 'invalid password' };
       }
     }
 
@@ -420,7 +420,7 @@ export class ChatGateway implements OnGatewayConnection {
       })(),
     });
     this.updateHeartbeat(user.id);
-    return { response: 'success' };
+    return { status: 'success' };
   }
 
   /**
