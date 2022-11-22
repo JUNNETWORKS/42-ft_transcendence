@@ -47,7 +47,7 @@ const derivedAtom = {
     transformBy(get(structureAtom.joiningRoomsAtom), get(storeAtoms.rooms))
   ),
   dmRoomsAtom: atom((get) =>
-    transformBy(get(structureAtom.dmRoomsAtom), get(storeAtoms.rooms))
+    transformBy(get(structureAtom.dmRoomsAtom), get(storeAtoms.dmRooms))
   ),
   friends: atom((get) =>
     transformBy(get(structureAtom.friends), get(storeAtoms.users))

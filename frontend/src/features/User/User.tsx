@@ -57,7 +57,7 @@ const PresentatorView = (props: { personalData: TD.User }) => {
         <div>
           <FollowButton userId={props.personalData.id} isFriend={isFriend} />
           <BlockButton userId={props.personalData.id} isBlocking={isBlocking} />
-          <FTButton onClick={() => setIsOpen(true)}>{'DM'}</FTButton>
+          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>

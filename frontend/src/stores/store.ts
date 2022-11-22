@@ -7,6 +7,7 @@ import * as Utils from '../utils';
 export const storeAtoms = {
   users: atom<{ [id: number]: TD.User }>({}),
   rooms: atom<{ [id: number]: TD.ChatRoom }>({}),
+  dmRooms: atom<{ [id: number]: TD.DmRoom }>({}),
 };
 
 /**
@@ -94,6 +95,33 @@ export const useUpdateRoom = () => {
   };
   return {
     roomsStore,
+    addOne,
+    addMany,
+    updateOne,
+  };
+};
+
+export const useUpdateDmRoom = () => {
+  const [dmRoomsStore, setDmRoomsStore] = useAtom(storeAtoms.dmRooms);
+  const addOne = (data: TD.DmRoom) => {
+    setDmRoomsStore((prev) => ({ ...prev, [data.id]: data }));
+  };
+  const addMany = (data: TD.DmRoom[]) => {
+    setDmRoomsStore((prev) => {
+      const next = { ...prev };
+      data.forEach((d) => (next[d.id] = d));
+      return next;
+    });
+  };
+  const updateOne = (roomId: number, part: Partial<TD.DmRoom>) => {
+    const d = dmRoomsStore[roomId];
+    if (!d) {
+      return;
+    }
+    setDmRoomsStore((prev) => ({ ...prev, [roomId]: { ...d, ...part } }));
+  };
+  return {
+    dmRoomsStore,
     addOne,
     addMany,
     updateOne,
