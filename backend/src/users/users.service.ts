@@ -1,15 +1,29 @@
-import { Injectable } from '@nestjs/common';
-import { createHmac } from 'crypto';
-import { passwordConstants } from '../auth/auth.constants';
-import { PrismaService } from '../prisma/prisma.service';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
+import { authenticator } from 'otplib';
+
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import * as Utils from '../utils';
+
+import { passwordConstants } from '../auth/auth.constants';
+import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class UsersService {
   constructor(
+    @Inject(forwardRef(() => AuthService))
+    private authService: AuthService,
     private prisma: PrismaService,
     private chatRoomService: ChatroomsService
   ) {}
@@ -158,7 +172,7 @@ export class UsersService {
    * ログイン時の初期表示用の情報をかき集める
    * @param id
    */
-  async collectStartingInfomations(id: number) {
+  async collectStartingInformations(id: number) {
     const r = await Utils.PromiseMap({
       visiblePrivate: this.chatRoomService.findMany({
         take: 40,
@@ -198,6 +212,96 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async upsertAvatar(userId: number, avatarDataURL: string) {
+    const m = avatarDataURL.match(/^data:([^;]+);([^,]+),(.*)$/);
+    if (!m) {
+      throw new BadRequestException('unexpected dataurl format');
+    }
+    const [, mime, , data] = m;
+    const buffer = Buffer.from(data, 'base64');
+
+    const result = await this.prisma.userAvatar.upsert({
+      where: {
+        userId,
+      },
+      create: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+      update: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+    });
+    return Utils.pick(result, 'id', 'userId', 'mime');
+  }
+
+  async enableTwoFa(id: number) {
+    const secret = authenticator.generateSecret();
+    console.log('secret:', secret);
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.upsert({
+        where: {
+          userId: id,
+        },
+        create: {
+          userId: id,
+          secret,
+        },
+        update: {
+          userId: id,
+          secret,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: true,
+        },
+      }),
+    ]);
+    return await this.authService.generateQrCode(id, secret);
+  }
+
+  async disableTwoFa(id: number) {
+    await this.prisma.$transaction([
+      this.prisma.totpSecret.delete({
+        where: {
+          userId: id,
+        },
+      }),
+      this.prisma.user.update({
+        where: {
+          id: id,
+        },
+        data: {
+          isEnabled2FA: false,
+        },
+      }),
+    ]);
+    return;
+  }
+
+  async getAvatar(id: number) {
+    const avatar = await this.prisma.userAvatar.findUnique({
+      where: {
+        userId: id,
+      },
+    });
+    if (!avatar) {
+      throw new NotFoundException('avatar is not found');
+    }
+    return {
+      mime: avatar.mime,
+      avatar: new StreamableFile(avatar.avatar),
+      lastModified: avatar.lastModified,
+    };
   }
 }
 

@@ -1,7 +1,8 @@
 import { Catch, ExceptionFilter, ArgumentsHost } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import * as Utils from 'src/utils';
 import * as express from 'express';
+
+import * as Utils from 'src/utils';
 
 const code2message: { [key: string]: string } = {
   P2002: 'not_unique',
@@ -15,7 +16,7 @@ export class PrismaExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<express.Response>();
     const messages = (() => {
-      if (exception.meta) {
+      if (exception.meta && exception.meta.target) {
         // { [フィールド名]: "エラー名" } というmapを作って返す
         const errorMap = Utils.mapValues(
           Utils.keyBy(exception.meta.target as string[], (t) => t),

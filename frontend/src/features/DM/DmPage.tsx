@@ -3,7 +3,6 @@ import { io } from 'socket.io-client';
 import * as Utils from '@/utils';
 import { FTH3 } from '@/components/FTBasicComponents';
 import { DmRoomView } from './DmRoomView';
-import { useAction } from '@/hooks';
 import { useAtom } from 'jotai';
 import { authAtom } from '@/stores/auth';
 import { DmRoomListView } from './DmRoomList';
@@ -137,22 +136,22 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: useAction(0, (roomId) => {
+    get_room_message: (roomId: number) => {
       if (roomId > 0) {
         if (!Utils.isfinite(store.count_message(roomId))) {
           command.get_room_messages(roomId);
         }
       }
-    })[0],
+    },
 
-    get_room_members: useAction(0, (roomId) => {
+    get_room_members: (roomId: number) => {
       if (roomId > 0) {
         const mems = store.room_members(roomId);
         if (!mems) {
           command.get_room_members(roomId);
         }
       }
-    })[0],
+    },
   };
 
   return (

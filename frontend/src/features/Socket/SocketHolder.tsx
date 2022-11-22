@@ -1,5 +1,5 @@
 import { authAtom, chatSocketAtom } from '@/stores/auth';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
@@ -13,16 +13,16 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const setVisibleRooms = useSetAtom(structureAtom.visibleRoomsAtom);
-  const setJoiningRooms = useSetAtom(structureAtom.joiningRoomsAtom);
-  const setDmRooms = useSetAtom(structureAtom.dmRoomsAtom);
+  const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
   const [blockingUsers, setBlockingUsers] = useAtom(
     structureAtom.blockingUsers
   );
-  const setFocusedRoomId = useSetAtom(structureAtom.focusedRoomIdAtom);
-  const setMessagesInRoom = useSetAtom(structureAtom.messagesInRoomAtom);
-  const setMembersInRoom = useSetAtom(structureAtom.membersInRoomAtom);
+  const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
+  const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
+  const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
   const userId = personalData ? personalData.id : -1;
 
   const userUpdator = useUpdateUser();
@@ -124,6 +124,7 @@ export const SocketHolder = () => {
       } else {
         // 他人に関する通知
         console.log('for other');
+        userUpdator.addOne(data.relation.user);
         stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
@@ -193,6 +194,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
+      userUpdator.addMany(messages.map((m) => m.user));
       stateMutater.addMessagesToRoom(
         id,
         messages.map(TD.Mapper.chatRoomMessage)
@@ -203,6 +205,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
+      userUpdator.addMany(members.map((m) => m.user));
       stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
@@ -212,6 +215,7 @@ export const SocketHolder = () => {
     mySocket?.on('ft_follow', (data: TD.FollowResult) => {
       console.log('catch follow');
       if (!friends.find((f) => f.id === data.user.id)) {
+        userUpdator.addOne(data.user);
         setFriends((prev) => {
           const next = [...prev, data.user];
           return next;
@@ -337,5 +341,5 @@ export const SocketHolder = () => {
     },
   };
 
-  return <></>;
+  return null;
 };

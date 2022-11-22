@@ -5,58 +5,54 @@ import { Suspense, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { dataAtom } from '@/stores/structure';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { DmModal } from '../DM/DmModal';
+import { DmCard } from '../DM/DmCard';
 import { Modal } from '@/components/Modal';
+import { dataAtom, structureAtom } from '@/stores/structure';
 import { FollowButton } from './components/FollowButton';
 import { BlockButton } from './components/BlockButton';
 
-const PresentatorView = (props: { personalData: TD.User }) => {
-  const [friends] = useAtom(dataAtom.friends);
+type UserCardProp = {
+  user: TD.User;
+};
+const UserCard = ({ user }: UserCardProp) => {
+  const userId = user.id;
+  const [friends] = useAtom(structureAtom.friends);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   // フレンドかどうか
-  const isFriend = !!friends.find((f) => f.id === props.personalData.id);
-  const isBlocking = !!blockingUsers.find(
-    (f) => f.id === props.personalData.id
-  );
-
+  const isFriend = !!friends.find((f) => f.id === userId);
+  const isBlocking = !!blockingUsers.find((f) => f.id === user.id);
   // DmModal
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
       <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        <DmModal user={props.personalData} onClose={() => setIsOpen(false)} />
+        <DmCard user={user} onClose={() => setIsOpen(false)} />
       </Modal>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         <div className="inline-block align-text-bottom">
-          <OnlineStatusDot
-            key={props.personalData.id}
-            user={props.personalData}
-          />
+          <OnlineStatusDot key={user.id} user={user} />
         </div>
-        {props.personalData.displayName}
+        {user.displayName}
         {isFriend && <Icons.User.Friend className="inline" />}
       </FTH1>
       <div className="flex flex-col gap-2">
         <FTH4>id</FTH4>
-        <div>{props.personalData.id}</div>
+        <div>{user.id}</div>
         <FTH4>name</FTH4>
-        <div>{props.personalData.displayName}</div>
+        <div>{user.displayName}</div>
         <FTH4>heartbeat time</FTH4>
         <div>
-          {props.personalData.time
-            ? dayjs(props.personalData.time).format('MM/DD HH:mm:ss')
-            : 'offline'}
+          {user.time ? dayjs(user.time).format('MM/DD HH:mm:ss') : 'offline'}
         </div>
 
         <div>
-          <FollowButton userId={props.personalData.id} isFriend={isFriend} />
-          <BlockButton userId={props.personalData.id} isBlocking={isBlocking} />
+          <FollowButton userId={user.id} isFriend={isFriend} />
+          <BlockButton userId={user.id} isBlocking={isBlocking} />
           <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
@@ -88,7 +84,7 @@ const UserInnerView = (props: {
       }
     })();
   }
-  return <PresentatorView personalData={personalData} />;
+  return <UserCard user={personalData} />;
 };
 
 export const UserView = () => {
