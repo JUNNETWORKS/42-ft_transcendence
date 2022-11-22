@@ -23,7 +23,6 @@ export class PongGateway {
     this.wsServer = server;
     // 本来はOnlineMatchのコンストラクタで渡す
     match.wsServer = server;
-    match.close();
   }
 
   onApplicationBootstrap() {
