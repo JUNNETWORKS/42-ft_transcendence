@@ -126,6 +126,48 @@ export class UsersService {
     });
   }
 
+  async findBlocked(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.findUnique({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async block(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.create({
+      data: {
+        userId,
+        targetUserId,
+      },
+    });
+  }
+
+  async findBlockingUsers(userId: number) {
+    return this.prisma.blockRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        targetUser: true,
+      },
+    });
+  }
+
+  async unblock(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.delete({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
   /**
    * ログイン時の初期表示用の情報をかき集める
    * @param id
@@ -145,6 +187,9 @@ export class UsersService {
         .getRoomsJoining(id, 'DM_ONLY')
         .then((rs) => rs.map((r) => r.chatRoom)),
       friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
+      blockingUsers: this.findBlockingUsers(id).then((us) =>
+        us.map((d) => d.targetUser)
+      ),
     });
     return {
       visibleRooms: Utils.sortBy(
@@ -154,6 +199,7 @@ export class UsersService {
       joiningRooms: r.joiningRooms,
       dmRooms: r.dmRooms,
       friends: r.friends,
+      blockingUsers: r.blockingUsers,
     };
   }
 
