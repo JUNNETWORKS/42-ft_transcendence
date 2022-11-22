@@ -4,6 +4,7 @@ export const jwtConstants = {
 
 export const passwordConstants = {
   secret: process.env.AUTH_HMAC_SECRET!,
+  pepper: process.env.AUTH_HMAC_PEPPER!,
 };
 
 export const ftConstants = {

@@ -306,12 +306,12 @@ export class UsersService {
 }
 
 /**
- * 与えられた生パスワード`password`をハッシュ化する.\
- * ハッシュ化に用いるキーは`passwordConstants.secret`.
+ * 生パスワードをハッシュ化する.\
  */
 export function hash_password(password: string) {
-  return createHmac('sha256', passwordConstants.secret)
-    .update(password)
-    .digest('hex')
-    .toString();
+  return Utils.hash(
+    passwordConstants.secret,
+    password + passwordConstants.pepper,
+    1000
+  );
 }

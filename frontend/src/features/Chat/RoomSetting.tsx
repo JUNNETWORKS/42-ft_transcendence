@@ -66,7 +66,7 @@ export const ChatRoomSettingCard = ({ room, onCancel, onSucceeded }: Props) => {
   const [roomName, setRoomName] = useState(room.roomName);
   const [roomType, setRoomType] = useState<TD.RoomType>(room.roomType);
   const [roomPassword, setRoomPassword] = useState('');
-  const errors = roomErrors(roomName, roomType, roomPassword);
+  const errors = roomErrors(roomName, roomType, roomPassword, room);
   const { updateOne } = useUpdateRoom();
   const [state, submit] = useAPI('PUT', `/chatrooms/${room.id}`, {
     payload: () => ({ roomName, roomType, roomPassword }),
