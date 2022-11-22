@@ -1,8 +1,8 @@
 import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { verifyCredential } from '@/features/DevAuth/auth';
 import { useUpdateUser } from '@/stores/store';
+import { verifyCredential } from './auth';
 
 /**
  * 認証状態の状態遷移
@@ -10,8 +10,9 @@ import { useUpdateUser } from '@/stores/store';
 export const AuthChecker = () => {
   const [storedCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
-  const setPersonalData = useAtom(authAtom.personalData)[1];
+  const [, setPersonalData] = useAtom(authAtom.personalData);
   const { addOne } = useUpdateUser();
+
   useEffect(() => {
     switch (authState) {
       case 'Neutral': {
@@ -40,5 +41,5 @@ export const AuthChecker = () => {
     }
   }, [authState]);
 
-  return <></>;
+  return null;
 };

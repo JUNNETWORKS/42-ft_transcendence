@@ -1,14 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { hash_password, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { UserMinimum } from '../users/entities/user.entity';
-import { jwtConstants } from './auth.constants';
-import { Socket } from 'socket.io';
-import * as Utils from '../utils';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
+import { Socket } from 'socket.io';
+
 import { verifyOtpDto } from './dto/verify-opt.dto';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { UserMinimum } from '../users/entities/user.entity';
+import { hash_password, UsersService } from '../users/users.service';
+import * as Utils from '../utils';
+import { jwtConstants } from './auth.constants';
 
 export type LoginResult = {
   access_token: string;
@@ -46,7 +48,7 @@ export class AuthService {
    */
   async retrieveUser(
     intraId: number,
-    data: Omit<UserMinimum, 'intraId' | 'password' | 'isEnabled2FA'>
+    data: Pick<UserMinimum, 'displayName' | 'email'>
   ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
@@ -97,7 +99,14 @@ export class AuthService {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(u!, 'id', 'displayName', 'email', 'isEnabled2FA'),
+      user: Utils.pick(
+        u!,
+        'id',
+        'displayName',
+        'email',
+        'isEnabled2FA',
+        'isEnabledAvatar'
+      ),
     };
     return result;
   }

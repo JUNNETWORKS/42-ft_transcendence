@@ -11,17 +11,20 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
 import { ApiFoundResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { LocalAuthGuard } from './local-auth.guard';
-import { JwtAuthGuard } from './jwt-auth.guard';
-import { FtAuthGuard } from './ft-auth.guard';
-import { LoginResultEntity } from './entities/auth.entity';
+
+import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
+
 import { verifyOtpDto } from './dto/verify-opt.dto';
+
+import { AuthService } from './auth.service';
+import { LoginResultEntity } from './entities/auth.entity';
+import { FtAuthGuard } from './ft-auth.guard';
+import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtTotpAuthGuard } from './jwt-totp-auth.guard';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { LocalAuthGuard } from './local-auth.guard';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -47,7 +50,14 @@ export class AuthController {
     if (!user) {
       throw new HttpException('No User', 401);
     }
-    return Utils.pick(user, 'id', 'displayName', 'email', 'isEnabled2FA');
+    return Utils.pick(
+      user,
+      'id',
+      'displayName',
+      'email',
+      'isEnabled2FA',
+      'isEnabledAvatar'
+    );
   }
 
   @UseGuards(FtAuthGuard)

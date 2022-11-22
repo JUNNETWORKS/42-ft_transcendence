@@ -1,8 +1,8 @@
 import { useAtom } from 'jotai';
-import { useEffect, useState, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import { storedCredentialAtom } from '@/stores/auth';
 import { APIError } from './errors/APIError';
+import { useState, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -13,17 +13,6 @@ export function useStateWithResetter<T>(initial: T) {
   const [val, setter] = useState<T>(initial);
   const resetter = () => setter(initial);
   return [val, setter, resetter] as const;
-}
-
-/**
- * `id`の変化をトリガーとして何らかのアクションを行うフック
- * @param initialId `id`の初期値
- * @param action  `id`を受け取り, アクションを実行する関数
- */
-export function useAction<T>(initialId: T, action: (id: T) => void) {
-  const [actionId, setActionId] = useState<T>(initialId);
-  useEffect(() => action(actionId), [actionId]);
-  return [setActionId, actionId] as const;
 }
 
 export const useQuery = () => {
@@ -38,20 +27,20 @@ export const useQuery = () => {
  * @param onFailed 失敗時にエラー(`unknown`)を受け取る関数
  * @returns
  */
-export const useFetch = (
-  fetcher: () => Promise<Response>,
+export function useFetch<T>(
+  fetcher: (arg?: T) => Promise<Response>,
   onFetched: (res: Response) => void,
   onFailed?: (error: unknown) => void
-) => {
+) {
   type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
   const [state, setState] = useState<FetchState>('Neutral');
-  const submit = async () => {
+  const submit = async (arg?: T) => {
     if (state === 'Fetching') {
       return;
     }
     setState('Fetching');
     try {
-      const result = await fetcher();
+      const result = await fetcher(arg);
       if (!result.ok) {
         throw new APIError(result.statusText, result);
       }
@@ -69,6 +58,7 @@ export const useFetch = (
       setState('Neutral');
     }
   };
+  const submitNothing = () => submit();
 
   return [
     /**
@@ -78,10 +68,11 @@ export const useFetch = (
     /**
      * 実行すると, 次の副作用タイミングで fetch 処理をキックする
      */
-    submit,
+    submitNothing,
     neutralize,
+    submit,
   ] as const;
-};
+}
 
 /**
  * API呼び出しフック(useFetchをラップしたもの)
@@ -98,12 +89,19 @@ export const useAPI = (
   const { payload, onFailed } = option;
   const [credential] = useAtom(storedCredentialAtom);
   return useFetch(
-    () => {
+    (
+      args: {
+        payload?: any;
+      } = {}
+    ) => {
       const headers: HeadersInit = {};
       if (payload) {
         headers['Content-Type'] = 'application/json';
       }
-      const payloadPart = payload ? { body: JSON.stringify(payload()) } : {};
+      const payloadObject = args.payload || (payload ? payload() : null);
+      const payloadPart = payloadObject
+        ? { body: JSON.stringify(payloadObject) }
+        : {};
       const usedCredential = option.credential || credential;
       if (usedCredential) {
         headers['Authorization'] = `Bearer ${usedCredential.token}`;

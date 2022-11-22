@@ -1,7 +1,7 @@
 import { AppRoutes } from '@/routes/AppRoutes';
 import { AppProvider } from '@/providers/AppProvider';
-import { AuthChecker } from './routes/AuthChecker';
-import { SocketHolder } from './routes/SocketHolder';
+import { AuthChecker } from '@/features/DevAuth/AuthChecker';
+import { SocketHolder } from '@/features/Socket/SocketHolder';
 import '../index.css';
 import { useConfirmModalComponent } from './hooks/useConfirmModal';
 

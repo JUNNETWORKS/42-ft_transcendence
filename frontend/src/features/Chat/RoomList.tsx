@@ -2,7 +2,6 @@ import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
-import { Icons } from '@/icons';
 import { RoomTypeIcon } from './RoomSetting';
 
 const ChatRoomShiftButton = (props: {
@@ -12,14 +11,13 @@ const ChatRoomShiftButton = (props: {
 }) => {
   return props.isJoined ? (
     <FTButton
-      className="bg-white text-black hover:bg-black hover:text-white"
-      style={{ width: '4em' }}
+      className="w-[4em] bg-white text-black hover:bg-black hover:text-white"
       onClick={() => props.onLeave()}
     >
       Leave
     </FTButton>
   ) : (
-    <FTButton style={{ width: '4em' }} onClick={() => props.onJoin()}>
+    <FTButton className="w-[4em]" onClick={() => props.onJoin()}>
       Join
     </FTButton>
   );
