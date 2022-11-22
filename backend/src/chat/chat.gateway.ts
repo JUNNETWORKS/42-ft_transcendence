@@ -214,9 +214,6 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
 
-    // [TODO: DM:実行者が対象ユーザーからブロックされていないことの確認]
-    // 未実装
-
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
     // 発言内容を通知
