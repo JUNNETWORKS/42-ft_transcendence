@@ -6,17 +6,18 @@ import {
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
+import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-import { passwordConstants, passwordConstants } from '../auth/auth.constants';
+import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
-import { PrismaService, PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
 
-import { createHmac, createHmac } from 'crypto';
+import { createHmac } from 'crypto';
 
 @Injectable()
 export class UsersService {
