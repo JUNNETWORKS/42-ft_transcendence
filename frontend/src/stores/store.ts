@@ -22,6 +22,7 @@ export const useUpdateUser = () => {
     addOne: useCallback(
       (data: TD.User) => {
         const d = Utils.datifyObject(data);
+        d.avatarTime = Date.now();
         setUsersStore((prev) => ({ [data.id]: d, ...prev }));
       },
       [setUsersStore]
@@ -53,13 +54,9 @@ export const useUpdateUser = () => {
         });
         if (personalData?.id === userId) {
           // 自分のデータの更新を受け取った場合は`personalData`の更新も同時に行う
-          setPersonalData((prev) => {
-            if (!prev) {
-              return prev;
-            }
-            const u = { ...prev, ...patched };
-            return u;
-          });
+          if (personalData) {
+            setPersonalData({ ...personalData, ...patched });
+          }
         }
       },
       [setUsersStore, setPersonalData, personalData?.id]
