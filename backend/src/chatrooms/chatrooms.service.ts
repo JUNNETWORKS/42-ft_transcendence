@@ -9,7 +9,6 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
-
 import * as Utils from '../utils';
 import { chatRoomConstants } from './chatrooms.constant';
 import { ChatroomEntity } from './entities/chatroom.entity';
@@ -265,7 +264,7 @@ export class ChatroomsService {
         ...(() => {
           if (roomType === 'LOCKED') {
             if (roomPassword) {
-              return { roomPassword: hash_password(roomPassword) }; // (C)
+              return { roomPassword: this.hash_password(roomPassword) }; // (C)
             } else {
               return {}; // (B)
             }
@@ -374,15 +373,15 @@ export class ChatroomsService {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
   }
-}
 
-/**
- * 生パスワードをハッシュ化する.\
- */
-export function hash_password(password: string) {
-  return Utils.hash(
-    chatRoomConstants.secret,
-    password + chatRoomConstants.pepper,
-    1000
-  );
+  /**
+   * 生パスワードをハッシュ化する.\
+   */
+  hash_password(password: string) {
+    return Utils.hash(
+      chatRoomConstants.secret,
+      password + chatRoomConstants.pepper,
+      1000
+    );
+  }
 }

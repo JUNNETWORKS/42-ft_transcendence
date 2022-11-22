@@ -346,8 +346,9 @@ export class ChatGateway implements OnGatewayConnection {
       if (!data.roomPassword) {
         return { status: 'no password' };
       }
-      // TODO: hash化されたパスワードをチェックする
-      if (room.roomPassword !== data.roomPassword) {
+      // hash化されたパスワードをチェックする
+      const hashed = this.chatRoomService.hash_password(data.roomPassword);
+      if (room.roomPassword !== hashed) {
         return { status: 'invalid password' };
       }
     }
