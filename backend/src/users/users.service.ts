@@ -131,13 +131,30 @@ export class UsersService {
    * @param id
    */
   async collectStartingInformations(id: number) {
-    return Utils.PromiseMap({
-      visibleRooms: this.chatRoomService.findMany({ take: 40 }),
+    const r = await Utils.PromiseMap({
+      visiblePrivate: this.chatRoomService.findMany({
+        take: 40,
+        category: 'PRIVATE',
+        userId: id,
+      }),
+      visiblePublic: this.chatRoomService.findMany({ take: 40 }),
       joiningRooms: this.chatRoomService
         .getRoomsJoining(id)
         .then((rs) => rs.map((r) => r.chatRoom)),
+      dmRooms: this.chatRoomService
+        .getRoomsJoining(id, 'DM_ONLY')
+        .then((rs) => rs.map((r) => r.chatRoom)),
       friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
     });
+    return {
+      visibleRooms: Utils.sortBy(
+        [...r.visiblePublic, ...r.visiblePrivate],
+        (r) => r.id
+      ),
+      joiningRooms: r.joiningRooms,
+      dmRooms: r.dmRooms,
+      friends: r.friends,
+    };
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
