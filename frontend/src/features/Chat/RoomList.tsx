@@ -43,7 +43,7 @@ const ChatRoomListItem = (props: {
 
   const onJoin = () => {
     props.onJoin(props.room.id, roomPassword, (response: any) => {
-      if (response.response !== 'success') {
+      if (response.status !== 'success') {
         setJoinError(validateRoomPasswordError(response.status));
       } else {
         setIsOpen(false);
