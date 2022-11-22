@@ -19,7 +19,6 @@ const AdminOperationBar = (
     member: TD.ChatUserRelation;
   } & TD.MemberOperations
 ) => {
-  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
@@ -30,33 +29,9 @@ const AdminOperationBar = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isBlocking = !!blockingUsers.find((u) => props.member.userId === u.id);
-  const userTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return '';
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
+
   return (
     <div className="flex flex-row">
-      <div
-        className="shrink grow cursor-pointer hover:bg-teal-700"
-        key={props.member.userId}
-        style={{
-          ...(isYou ? { fontWeight: 'bold' } : {}),
-        }}
-      >
-        <Link className="block" to={link_path}>
-          {userTypeCap()}{' '}
-          {isBlocking
-            ? `${props.member.user.displayName}(Blocking)`
-            : props.member.user.displayName}
-        </Link>
-      </div>
-
       {isNomminatable && (
         <FTButton
           onClick={() =>
