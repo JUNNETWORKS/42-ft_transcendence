@@ -74,7 +74,7 @@ export const verifyCredential = async (
  */
 export const verifyOAuth2AuthorizationCode = async (
   authCode: string,
-  onSucceeded: (token: string, user: any) => void,
+  onSucceeded: (token: string, user: any, required2fa: boolean) => void,
   onFailed: () => void
 ) => {
   const url = `${backendHost}/auth/callback_ft?code=${authCode}`;
@@ -84,9 +84,9 @@ export const verifyOAuth2AuthorizationCode = async (
     headers: {},
   });
   if (result.ok) {
-    const { access_token, user } = (await result.json()) || {};
+    const { access_token, user, required2fa } = (await result.json()) || {};
     if (access_token && typeof access_token === 'string') {
-      onSucceeded(access_token, user);
+      onSucceeded(access_token, user, required2fa);
       return;
     }
   }

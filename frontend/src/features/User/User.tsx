@@ -1,8 +1,7 @@
-import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
@@ -10,40 +9,11 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { structureAtom } from '@/stores/structure';
-
-const FollowButton = (props: { userId: number; isFriend: boolean }) => {
-  const [mySocket] = useAtom(chatSocketAtom);
-  if (!mySocket) {
-    return null;
-  }
-  const command = {
-    follow: (targetId: number) => {
-      const data = {
-        userId: targetId,
-      };
-      console.log('ft_follow', data);
-      mySocket.emit('ft_follow', data);
-    },
-    unfollow: (targetId: number) => {
-      const data = {
-        userId: targetId,
-      };
-      console.log('ft_unfollow', data);
-      mySocket.emit('ft_unfollow', data);
-    },
-  };
-  return (
-    <FTButton
-      className="w-20"
-      onClick={() =>
-        (props.isFriend ? command.unfollow : command.follow)(props.userId)
-      }
-    >
-      {props.isFriend ? 'Unollow' : 'Follow'}
-    </FTButton>
-  );
-};
+import { DmCard } from '../DM/DmCard';
+import { Modal } from '@/components/Modal';
+import { dataAtom, structureAtom } from '@/stores/structure';
+import { FollowButton } from './components/FollowButton';
+import { BlockButton } from './components/BlockButton';
 
 type UserCardProp = {
   user: TD.User;
@@ -51,10 +21,18 @@ type UserCardProp = {
 const UserCard = ({ user }: UserCardProp) => {
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
+  const isBlocking = !!blockingUsers.find((f) => f.id === user.id);
+  // DmModal
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
+      <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
+        <DmCard user={user} onClose={() => setIsOpen(false)} />
+      </Modal>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         <div className="inline-block align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
@@ -74,6 +52,8 @@ const UserCard = ({ user }: UserCardProp) => {
 
         <div>
           <FollowButton userId={user.id} isFriend={isFriend} />
+          <BlockButton userId={user.id} isBlocking={isBlocking} />
+          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>

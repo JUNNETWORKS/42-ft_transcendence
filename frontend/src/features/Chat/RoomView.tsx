@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
@@ -10,31 +9,8 @@ import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
-import { useUserDataReadOnly } from '@/stores/store';
-
-/**
- * メッセージを表示するコンポーネント
- */
-const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
-  const user = useUserDataReadOnly(props.message.user.id);
-  return (
-    <div
-      className="flex flex-col border-[1px] border-solid border-white p-2"
-      key={props.message.id}
-    >
-      <div className="flex flex-row">
-        <div className="m-[1px] bg-white px-[2px] py-0 text-black">
-          {user.displayName}
-        </div>
-        <div className="pr-[4px]">
-          {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-        </div>
-        <div className="pr-[4px]">chatRoomId: {props.message.chatRoomId}</div>
-      </div>
-      <div>{props.message.content}</div>
-    </div>
-  );
-};
+import { ChatMessageCard } from '@/components/ChatMessageCard';
+import { useAtom } from 'jotai';
 
 const AdminOperationBar = (
   props: {
@@ -43,6 +19,7 @@ const AdminOperationBar = (
     member: TD.ChatUserRelation;
   } & TD.MemberOperations
 ) => {
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
@@ -53,9 +30,33 @@ const AdminOperationBar = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-
+  const isBlocking = !!blockingUsers.find((u) => props.member.userId === u.id);
+  const userTypeCap = () => {
+    if (isOwner) {
+      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
+    } else if (isAdmin) {
+      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
+    }
+    return '';
+  };
+  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
   return (
-    <>
+    <div className="flex flex-row">
+      <div
+        className="shrink grow cursor-pointer hover:bg-teal-700"
+        key={props.member.userId}
+        style={{
+          ...(isYou ? { fontWeight: 'bold' } : {}),
+        }}
+      >
+        <Link className="block" to={link_path}>
+          {userTypeCap()}{' '}
+          {isBlocking
+            ? `${props.member.user.displayName}(Blocking)`
+            : props.member.user.displayName}
+        </Link>
+      </div>
+
       {isNomminatable && (
         <FTButton
           onClick={() =>
@@ -92,7 +93,7 @@ const AdminOperationBar = (
           <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
-    </>
+    </div>
   );
 };
 
@@ -137,7 +138,7 @@ const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
   return (
     <>
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <MessageCard key={data.id} message={data} />
+        <ChatMessageCard key={data.id} message={data} />
       ))}
     </>
   );
