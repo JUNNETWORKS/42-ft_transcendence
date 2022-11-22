@@ -9,6 +9,8 @@ import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+import { chatRoomConstants } from './chatrooms.constant';
 import { ChatroomEntity } from './entities/chatroom.entity';
 
 @Injectable()
@@ -215,11 +217,46 @@ export class ChatroomsService {
 
   async updateRoom(id: number, updateRoomDto: UpdateRoomDto) {
     const { roomType, roomPassword, roomName } = updateRoomDto;
+    const before = await this.prisma.chatRoom.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!before) {
+      throw new HttpException('object not found', 400);
+    }
+    // [roomType と roomPassword]
+    // - roomType が LOCKED である
+    //   - 変更前の roomType が LOCKED でない かつ roomPassword が空欄
+    //     - Bad Request ... (A)
+    //   - 変更前の roomType が LOCKED である かつ roomPassword が空欄
+    //     - パスワードを変更しない ... (B)
+    //   - roomPassword が空欄でない
+    //     - パスワードを変更する ... (C)
+    // - roomType が LOCKED でない
+    //   - パスワードを削除する ... (D)
+    if (
+      roomType === 'LOCKED' &&
+      before.roomType !== roomType &&
+      !roomPassword
+    ) {
+      throw new HttpException('password is needed', 400); // (A)
+    }
     const res = await this.prisma.chatRoom.update({
       where: { id },
       data: {
         roomType: roomType,
-        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
+        ...(() => {
+          if (roomType === 'LOCKED') {
+            if (roomPassword) {
+              return { roomPassword: hash_password(roomPassword) }; // (C)
+            } else {
+              return {}; // (B)
+            }
+          } else {
+            return { roomPassword: null }; // (D)
+          }
+        })(),
         roomName,
       },
     });
@@ -320,4 +357,15 @@ export class ChatroomsService {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
   }
+}
+
+/**
+ * 生パスワードをハッシュ化する.\
+ */
+export function hash_password(password: string) {
+  return Utils.hash(
+    chatRoomConstants.secret,
+    password + chatRoomConstants.pepper,
+    1000
+  );
 }

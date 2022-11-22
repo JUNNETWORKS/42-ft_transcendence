@@ -10,6 +10,7 @@ import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
+import { useAtom } from 'jotai';
 
 const AdminOperationBar = (
   props: {
@@ -30,7 +31,7 @@ const AdminOperationBar = (
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
 
   return (
-    <>
+    <div className="flex flex-row">
       {isNomminatable && (
         <FTButton
           onClick={() =>
@@ -67,7 +68,7 @@ const AdminOperationBar = (
           <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
-    </>
+    </div>
   );
 };
 

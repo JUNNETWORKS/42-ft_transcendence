@@ -14,6 +14,8 @@ export const structureAtom = {
   dmRoomsAtom: atom<TD.DmRoom[]>([]),
   // フレンドの一覧
   friends: atom<TD.User[]>([]),
+  // ブロックしているユーザーの一覧
+  blockingUsers: atom<TD.User[]>([]),
   // 今フォーカスしているチャットルームのID
   focusedRoomIdAtom: atom<number>(-1),
   /**
@@ -49,6 +51,9 @@ const derivedAtom = {
   ),
   friends: atom((get) =>
     transformBy(get(structureAtom.friends), get(storeAtoms.users))
+  ),
+  blockingUsers: atom((get) =>
+    transformBy(get(structureAtom.blockingUsers), get(storeAtoms.users))
   ),
   messagesInRoomAtom: atom((get) => get(structureAtom.messagesInRoomAtom)),
   membersInRoomAtom: atom((get) => get(structureAtom.membersInRoomAtom)),

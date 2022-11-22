@@ -17,6 +17,9 @@ export const SocketHolder = () => {
   const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
+  const [blockingUsers, setBlockingUsers] = useAtom(
+    structureAtom.blockingUsers
+  );
   const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
   const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
   const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
@@ -34,7 +37,9 @@ export const SocketHolder = () => {
       setVisibleRooms(data.visibleRooms);
       setDmRooms(data.dmRooms);
       setFriends(data.friends);
+      setBlockingUsers(data.blockingUsers);
       userUpdator.addMany(data.friends);
+      userUpdator.addMany(data.blockingUsers);
       roomUpdator.addMany(data.visibleRooms);
       roomUpdator.addMany(data.joiningRooms);
       dmRoomUpdator.addMany(data.dmRooms);
@@ -222,6 +227,26 @@ export const SocketHolder = () => {
       console.log('catch unfollow');
       if (friends.find((f) => f.id === data.user.id)) {
         setFriends((prev) => {
+          const next = prev.filter((f) => f.id !== data.user.id);
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_block', (data: TD.BlockResult) => {
+      console.log('catch block');
+      if (!blockingUsers.find((f) => f.id === data.user.id)) {
+        setBlockingUsers((prev) => {
+          const next = [...prev, data.user];
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_unblock', (data: TD.UnblockResult) => {
+      console.log('catch unblock');
+      if (blockingUsers.find((f) => f.id === data.user.id)) {
+        setBlockingUsers((prev) => {
           const next = prev.filter((f) => f.id !== data.user.id);
           return next;
         });
