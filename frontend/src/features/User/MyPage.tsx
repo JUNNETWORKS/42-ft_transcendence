@@ -7,9 +7,7 @@ import { FriendsView } from './FriendsView';
 export const MyPageView = () => {
   const [personalData] = useAtom(authAtom.personalData);
 
-  const presentator = !personalData ? (
-    <></>
-  ) : (
+  const presentator = personalData && (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
       <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
         <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>

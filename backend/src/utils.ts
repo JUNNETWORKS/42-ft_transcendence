@@ -18,6 +18,20 @@ export function pick<T extends object, U extends keyof T>(
   return d;
 }
 
+export function omit<T extends object, U extends keyof T>(
+  obj: T,
+  ...props: Array<Many<U>>
+): Omit<T, U> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    d[key] = (obj as any)[key];
+  });
+  props.forEach((key) => {
+    delete d[key];
+  });
+  return d;
+}
+
 /**
  * 配列`array`を, 「`array`の各要素に関数`value`を適用した値」を使って昇順にソートしたものを返す.\
  * 元の`array`は変更しない.

@@ -3,35 +3,32 @@ import {
   ConnectedSocket,
   SubscribeMessage,
   WebSocketGateway,
-  WebSocketServer,
   OnGatewayConnection,
 } from '@nestjs/websockets';
-import { Socket, Server } from 'socket.io';
+import { Socket } from 'socket.io';
+
+import { AuthService } from 'src/auth/auth.service';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
-import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members';
-import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message';
+import { UsersService } from 'src/users/users.service';
+import * as Utils from 'src/utils';
+import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
+
+import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
+import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members.dto';
+import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message.dto';
 import { OperationJoinDto } from 'src/chatrooms/dto/operation-join.dto';
+import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
+import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
+import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { OperationTellDto } from 'src/chatrooms/dto/operation-tell.dto';
-import { UsersService } from 'src/users/users.service';
-import { ChatService } from './chat.service';
-import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
-import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
-import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
-import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
-import * as Utils from 'src/utils';
-import {
-  generateFullRoomName,
-  joinChannel,
-  usersLeave,
-  usersJoin,
-  sendResultRoom,
-} from 'src/utils/socket/SocketRoom';
-import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
-import { AuthService } from 'src/auth/auth.service';
+
+import { WsServerGateway } from './../ws-server/ws-server.gateway';
+import { ChatService } from './chat.service';
 
 const secondInMilliseconds = 1000;
 const minuteInSeconds = 60;
@@ -46,8 +43,6 @@ const constants = {
   namespace: 'chat',
 })
 export class ChatGateway implements OnGatewayConnection {
-  @WebSocketServer()
-  server: Server;
   private heartbeatDict: {
     [userId: number]: {
       n: number;
@@ -59,7 +54,8 @@ export class ChatGateway implements OnGatewayConnection {
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
     private readonly usersService: UsersService,
-    private readonly authService: AuthService
+    private readonly authService: AuthService,
+    private readonly wsServer: WsServerGateway
   ) {}
 
   /**
@@ -79,7 +75,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const { visibleRooms, joiningRooms, dmRooms, friends } =
-      await this.usersService.collectStartingInfomations(userId);
+      await this.usersService.collectStartingInformations(userId);
     const joiningRoomNames = [...joiningRooms, ...dmRooms].map((r) =>
       generateFullRoomName({ roomId: r.id })
     );
@@ -87,14 +83,14 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     if (joiningRoomNames.length > 0) {
-      this.socketsInUserChannel(userId).socketsJoin(joiningRoomNames);
+      this.wsServer.socketsInUserChannel(userId).socketsJoin(joiningRoomNames);
     }
     // (connectionでは入室それ自体の通知は不要)
 
     // [オンライン状態の変化を全体に通知]
     this.incrementHeartbeat(userId);
     // [TODO: 初期表示に必要な情報をユーザ本人に通知]
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_connection',
       {
         userId,
@@ -171,10 +167,10 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = createdRoom.id;
 
     // [作成されたチャットルームにjoin]
-    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, { roomId });
 
     // [新しいチャットルームが作成されたことを通知する]
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_open',
       {
         ...createdRoom,
@@ -224,7 +220,7 @@ export class ChatGateway implements OnGatewayConnection {
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay(data);
     // 発言内容を通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_say',
       {
         ...chatMessage,
@@ -269,11 +265,11 @@ export class ChatGateway implements OnGatewayConnection {
     const roomId = dmRoom.id;
 
     // [作成されたDMルームにjoin]
-    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
-    await usersJoin(this.server, data.userId, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, { roomId });
+    await this.wsServer.usersJoin(data.userId, { roomId });
 
     // [新しいDMルームが作成されたことを通知する]
-    this.sendResults('ft_tell', dmRoom, { roomId });
+    this.wsServer.sendResults('ft_tell', dmRoom, { roomId });
 
     // 発言を作成
     const chatMessage = await this.chatService.postMessageBySay({
@@ -282,7 +278,7 @@ export class ChatGateway implements OnGatewayConnection {
       callerId: data.callerId,
     });
     // 発言内容を通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_say',
       {
         ...chatMessage,
@@ -353,9 +349,9 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersJoin(this.server, user.id, generateFullRoomName({ roomId }));
+    await this.wsServer.usersJoin(user.id, { roomId });
     // 入室したことを通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_join',
       {
         relation,
@@ -380,7 +376,7 @@ export class ChatGateway implements OnGatewayConnection {
           roomId,
           take: 50,
         });
-        this.sendResults(
+        this.wsServer.sendResults(
           'ft_get_room_messages',
           {
             id: roomId,
@@ -393,7 +389,7 @@ export class ChatGateway implements OnGatewayConnection {
       })(),
       members: (async () => {
         const members = await this.chatRoomService.getMembers(roomId);
-        this.sendResults(
+        this.wsServer.sendResults(
           'ft_get_room_members',
           {
             id: roomId,
@@ -436,8 +432,8 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersLeave(this.server, user.id, generateFullRoomName({ roomId }));
-    this.sendResults(
+    await this.wsServer.usersLeave(user.id, { roomId });
+    this.wsServer.sendResults(
       'ft_leave',
       {
         relation,
@@ -503,7 +499,7 @@ export class ChatGateway implements OnGatewayConnection {
     );
     console.log('[newRel]', newRel);
 
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_nomminate',
       {
         relation: newRel,
@@ -555,12 +551,8 @@ export class ChatGateway implements OnGatewayConnection {
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
-    await usersLeave(
-      this.server,
-      targetUser.id,
-      generateFullRoomName({ roomId })
-    );
-    this.sendResults(
+    await this.wsServer.usersLeave(targetUser.id, { roomId });
+    this.wsServer.sendResults(
       'ft_kick',
       {
         room: Utils.pick(room, 'id', 'roomName'),
@@ -614,7 +606,7 @@ export class ChatGateway implements OnGatewayConnection {
     console.log(prolongedBannedEndAt);
     console.log('[new attr]', attr);
 
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_ban',
       {
         room: Utils.pick(room, 'id', 'roomName'),
@@ -667,7 +659,7 @@ export class ChatGateway implements OnGatewayConnection {
     console.log(prolongedMutedEndAt);
     console.log('[new attr]', attr);
 
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_mute',
       {
         room: Utils.pick(room, 'id', 'roomName'),
@@ -697,7 +689,7 @@ export class ChatGateway implements OnGatewayConnection {
       roomId: data.roomId,
       take: data.take,
     });
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_get_room_messages',
       {
         id: data.roomId,
@@ -726,7 +718,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     data.callerId = user.id;
     const members = await this.chatRoomService.getMembers(data.roomId);
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_get_room_members',
       {
         id: data.roomId,
@@ -772,7 +764,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.usersService.addFriend(user.id, targetId);
 
     // フォロー**した**ことを通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_follow',
       {
         user: Utils.pick(rel.target, 'id', 'displayName'),
@@ -782,7 +774,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // フォロー**された**ことを通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_followed',
       {
         user: Utils.pick(user, 'id', 'displayName'),
@@ -823,7 +815,7 @@ export class ChatGateway implements OnGatewayConnection {
     await this.usersService.removeFriend(user.id, targetId);
 
     // フォロー**した**ことを通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_unfollow',
       {
         user: Utils.pick(rel.target, 'id', 'displayName'),
@@ -833,7 +825,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // フォロー**された**ことを通知
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_unfollowed',
       {
         user: Utils.pick(user, 'id', 'displayName'),
@@ -842,51 +834,6 @@ export class ChatGateway implements OnGatewayConnection {
         userId: targetId,
       }
     );
-  }
-
-  private socketsInUserChannel(userId: number) {
-    const fullUserRoomName = generateFullRoomName({ userId });
-    return this.server.in(fullUserRoomName);
-  }
-
-  async sendResults(
-    op: string,
-    payload: any,
-    target: {
-      userId?: number;
-      roomId?: number;
-      global?: string;
-      client?: Socket;
-    }
-  ) {
-    if (typeof target.userId === 'number') {
-      await sendResultRoom(
-        this.server,
-        op,
-        generateFullRoomName({ userId: target.userId }),
-        payload
-      );
-    }
-    if (typeof target.roomId === 'number') {
-      await sendResultRoom(
-        this.server,
-        op,
-        generateFullRoomName({ roomId: target.roomId }),
-        payload
-      );
-    }
-    if (target.global) {
-      await sendResultRoom(
-        this.server,
-        op,
-        generateFullRoomName({ global: target.global }),
-        payload
-      );
-    }
-    if (target.client) {
-      console.log('sending downlink to client:', target.client.id, op, payload);
-      target.client.emit(op, payload);
-    }
   }
 
   private incrementHeartbeat(userId: number) {
@@ -929,7 +876,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!r) {
       return;
     }
-    this.sendResults(
+    this.wsServer.sendResults(
       'ft_heartbeat',
       { userId, time: r.time },
       { global: 'global' }
@@ -937,6 +884,6 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   private sendOffine(userId: number) {
-    this.sendResults('ft_offline', { userId }, { global: 'global' });
+    this.wsServer.sendResults('ft_offline', { userId }, { global: 'global' });
   }
 }

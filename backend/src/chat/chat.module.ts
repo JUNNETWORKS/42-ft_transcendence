@@ -1,9 +1,12 @@
 import { forwardRef, Module } from '@nestjs/common';
-import { ChatService } from './chat.service';
-import { ChatGateway } from './chat.gateway';
+
+import { AuthModule } from 'src/auth/auth.module';
+
 import { ChatroomsModule } from '../chatrooms/chatrooms.module';
 import { UsersModule } from '../users/users.module';
-import { AuthModule } from 'src/auth/auth.module';
+import { WsServerModule } from '../ws-server/ws-server.module';
+import { ChatGateway } from './chat.gateway';
+import { ChatService } from './chat.service';
 
 @Module({
   providers: [ChatGateway, ChatService],
@@ -11,6 +14,7 @@ import { AuthModule } from 'src/auth/auth.module';
     ChatroomsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    WsServerModule,
   ],
   exports: [ChatGateway],
 })
