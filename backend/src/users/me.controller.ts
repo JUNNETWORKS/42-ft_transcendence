@@ -10,11 +10,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { WebSocketGateway } from '@nestjs/websockets';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { ChatGateway } from 'src/chat/chat.gateway';
 import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { UpdateMeDto } from './dto/update-me.dto';
 
@@ -22,10 +24,15 @@ import { UsersService } from './users.service';
 
 @Controller('me')
 @ApiTags('me')
+@WebSocketGateway({
+  cors: true,
+  namespace: 'chat',
+})
 export class MeController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly chatGateway: ChatGateway
+    private readonly chatGateway: ChatGateway,
+    private readonly wsServer: WsServerGateway
   ) {}
 
   @UseGuards(JwtAuthGuard)
@@ -60,7 +67,7 @@ export class MeController {
         ...Utils.omit(updateUserDto, 'avatar'),
         ...(updateUserDto.avatar ? { avatar: true } : {}),
       };
-      this.chatGateway.sendResults(
+      this.wsServer.sendResults(
         'ft_user',
         {
           action: 'update',

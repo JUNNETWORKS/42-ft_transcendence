@@ -4,6 +4,7 @@ import { AuthModule } from 'src/auth/auth.module';
 
 import { ChatroomsModule } from '../chatrooms/chatrooms.module';
 import { UsersModule } from '../users/users.module';
+import { WsServerModule } from '../ws-server/ws-server.module';
 import { ChatGateway } from './chat.gateway';
 import { ChatService } from './chat.service';
 
@@ -13,6 +14,7 @@ import { ChatService } from './chat.service';
     ChatroomsModule,
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
+    WsServerModule,
   ],
   exports: [ChatGateway],
 })

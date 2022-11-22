@@ -1,14 +1,16 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
-import { hash_password, UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
-import { UserMinimum } from '../users/entities/user.entity';
-import { jwtConstants } from './auth.constants';
-import { Socket } from 'socket.io';
-import * as Utils from '../utils';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
+import { Socket } from 'socket.io';
+
 import { verifyOtpDto } from './dto/verify-opt.dto';
+
 import { PrismaService } from '../prisma/prisma.service';
+import { UserMinimum } from '../users/entities/user.entity';
+import { hash_password, UsersService } from '../users/users.service';
+import * as Utils from '../utils';
+import { jwtConstants } from './auth.constants';
 
 export type LoginResult = {
   access_token: string;
