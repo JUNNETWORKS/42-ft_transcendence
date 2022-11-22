@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
@@ -10,31 +9,7 @@ import { Modal } from '@/components/Modal';
 import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
-import { useUserDataReadOnly } from '@/stores/store';
-
-/**
- * メッセージを表示するコンポーネント
- */
-const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
-  const user = useUserDataReadOnly(props.message.user.id);
-  return (
-    <div
-      className="flex flex-col border-[1px] border-solid border-white p-2"
-      key={props.message.id}
-    >
-      <div className="flex flex-row">
-        <div className="m-[1px] bg-white px-[2px] py-0 text-black">
-          {user.displayName}
-        </div>
-        <div className="pr-[4px]">
-          {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-        </div>
-        <div className="pr-[4px]">chatRoomId: {props.message.chatRoomId}</div>
-      </div>
-      <div>{props.message.content}</div>
-    </div>
-  );
-};
+import { ChatMessageCard } from '@/components/ChatMessageCard';
 
 const AdminOperationBar = (
   props: {
@@ -137,7 +112,7 @@ const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
   return (
     <>
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <MessageCard key={data.id} message={data} />
+        <ChatMessageCard key={data.id} message={data} />
       ))}
     </>
   );

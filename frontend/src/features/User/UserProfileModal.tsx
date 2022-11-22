@@ -7,12 +7,14 @@ import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
+import { useDropzone } from 'react-dropzone';
+import { UserAvatar } from '@/components/UserAvater';
 
-type Phase = 'Display' | 'Edit' | 'Edit2FA' | 'EditPassword';
+type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
 type Prop = {
   user: TD.User;
@@ -69,7 +71,7 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
         </a>
       </div>
       <div className="text-center">
-        <img className="inline" src={props.qrcode} />
+        <img className="inline object-cover" src={props.qrcode} />
       </div>
       <ul className="list-disc">
         <li>
@@ -83,7 +85,10 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
   );
 };
 
-const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
+/**
+ * 二要素認証を無効化するためのコンポーネント
+ */
+const Disable2FACard = () => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
     onFinished: () => {
@@ -119,14 +124,12 @@ const Disable2FACard = ({ user, setPhase, onClose }: InnerProp) => {
   );
 };
 
-type Enable2FACardProp = InnerProp & { onSucceeded: (qrcode: string) => void };
+type Enable2FACardProp = { onSucceeded: (qrcode: string) => void };
 
-const Enable2FACard = ({
-  user,
-  setPhase,
-  onClose,
-  onSucceeded,
-}: Enable2FACardProp) => {
+/**
+ * 二要素認証を有効化するためのコンポーネント
+ */
+const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [state, submit] = useAPI('PATCH', `/me/twoFa/enable`, {
     onFetched: (json) => {
@@ -206,20 +209,15 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <div className="flex gap-8">
-        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <UserAvatar user={user} className="h-24 w-24" />
         <div className="flex flex-col justify-around">
           <div className="text-2xl">Id: {user.id}</div>
           <div className="text-2xl">{displayName}</div>
           <h3 className="text-2xl">2FA</h3>
           {personalData.isEnabled2FA ? (
-            <Disable2FACard user={user} setPhase={setPhase} onClose={onClose} />
+            <Disable2FACard />
           ) : (
-            <Enable2FACard
-              user={user}
-              setPhase={setPhase}
-              onClose={onClose}
-              onSucceeded={setQrcode}
-            />
+            <Enable2FACard onSucceeded={setQrcode} />
           )}
         </div>
       </div>
@@ -244,18 +242,45 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
   );
 };
 
-const EditDisplayName = ({ user, setPhase, onClose }: InnerProp) => {
+const convertBlobToDataURL = (blob: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+        return;
+      }
+      reject(undefined);
+    };
+    reader.readAsDataURL(blob);
+  });
+
+type AvatarFile = {
+  name: string;
+  dataURL: string;
+};
+
+/**
+ * あまり重要でないユーザ情報(名前, アバター画像)を変更するためのフォーム
+ */
+const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [displayName, setDisplayName] = useState(user.displayName);
-  const validationErrors = displayNameErrors(displayName);
+  const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
+  const validationErrors = {
+    ...displayNameErrors(displayName),
+    avatar: avatarError,
+  };
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
   const [state, submit] = useAPI('PATCH', `/me`, {
-    payload: () => ({ displayName }),
+    payload: () => ({ displayName, avatar: avatarFile?.dataURL }),
     onFetched: (json) => {
       const u = json as TD.User;
       updateOne(u.id, u);
-      setPersonalData({ ...personalData!, ...u });
+      setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});
       setPhase('Display');
     },
@@ -270,10 +295,80 @@ const EditDisplayName = ({ user, setPhase, onClose }: InnerProp) => {
       }
     },
   });
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    // Do something with the files
+    setAvatarError(null);
+    const file = acceptedFiles[0];
+    if (!file) {
+      return;
+    }
+    convertBlobToDataURL(file).then((dataURL) => {
+      console.log('dataURL', dataURL);
+      console.log('name', file.name);
+      setAvatarFile({ name: file.name, dataURL });
+    });
+  }, []);
+  const extensions = ['.png', '.gif', '.jpeg', '.jpg'];
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'image/*': extensions,
+    },
+    maxFiles: 1,
+    maxSize: 1024 ** 2,
+    multiple: false,
+    onDrop,
+    onDropRejected(fileRejections) {
+      setAvatarFile(null);
+      const file = fileRejections[0];
+      for (const err of file.errors) {
+        switch (err.code) {
+          case 'file-too-large':
+            setAvatarError('ファイルサイズが1MBを超えています');
+            break;
+          case 'file-invalid-type':
+            setAvatarError(`可能な拡張子は ${extensions.join(', ')} です`);
+            break;
+        }
+      }
+    },
+  });
+  const innerDropZone = (() => {
+    if (avatarFile) {
+      return (
+        <img
+          className="h-full w-full object-cover"
+          src={avatarFile.dataURL}
+          alt={avatarFile.name}
+        ></img>
+      );
+    }
+    return (
+      <p className="text-sm">
+        {isDragActive
+          ? 'ここにファイルをドロップ'
+          : 'ファイルをドラッグ&ドロップ または クリックしてファイルを選択'}
+      </p>
+    );
+  })();
   return (
     <>
       <div className="flex gap-8">
-        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <div>
+          <div
+            {...getRootProps()}
+            className="h-[120px] w-[120px] cursor-pointer border-[1px] border-dotted border-white"
+          >
+            <input {...getInputProps()} />
+            {innerDropZone}
+          </div>
+          {avatarFile && <div className="text-sm">{avatarFile.name}</div>}
+          <div className="text-sm text-red-400">
+            {validationErrors.avatar || netErrors.avatar || '　'}
+          </div>
+        </div>
+
+        {/* <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" /> */}
+
         <div className="flex flex-col justify-around">
           <div className="text-2xl">Id: {user.id}</div>
           <div className="text-2xl">
@@ -316,7 +411,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
   return (
     <>
       <div className="flex gap-8">
-        <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" />
+        <UserAvatar user={user} className="h-24 w-24" />
         <div className="flex flex-col justify-around">
           <p className="text-2xl">Id: {user.id}</p>
           <p className="text-2xl">Name: {user.displayName}</p>
@@ -360,7 +455,7 @@ export const UserProfileModal = ({ user, onClose }: Prop) => {
         return <Display user={user} setPhase={setPhase} onClose={onClose} />;
       case 'Edit':
         return (
-          <EditDisplayName user={user} setPhase={setPhase} onClose={onClose} />
+          <EditAttribute user={user} setPhase={setPhase} onClose={onClose} />
         );
       case 'Edit2FA':
         return <Edit2FA user={user} setPhase={setPhase} onClose={onClose} />;

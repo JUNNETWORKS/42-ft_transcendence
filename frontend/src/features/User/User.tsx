@@ -2,7 +2,7 @@ import { chatSocketAtom } from '@/stores/auth';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
-import { Suspense } from 'react';
+import { Suspense, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
@@ -10,6 +10,8 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
+import { DmCard } from '../DM/DmCard';
+import { Modal } from '@/components/Modal';
 import { structureAtom } from '@/stores/structure';
 
 const FollowButton = (props: { userId: number; isFriend: boolean }) => {
@@ -53,8 +55,14 @@ const UserCard = ({ user }: UserCardProp) => {
   const [friends] = useAtom(structureAtom.friends);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
+  // DmModal
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
+      <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
+        <DmCard user={user} onClose={() => setIsOpen(false)} />
+      </Modal>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         <div className="inline-block align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
@@ -74,6 +82,7 @@ const UserCard = ({ user }: UserCardProp) => {
 
         <div>
           <FollowButton userId={user.id} isFriend={isFriend} />
+          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>
