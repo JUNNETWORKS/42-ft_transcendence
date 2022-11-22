@@ -1,4 +1,5 @@
 import { PrismaClient, RoomType } from '@prisma/client';
+
 import { hash_password } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
