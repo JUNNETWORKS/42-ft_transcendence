@@ -1,4 +1,3 @@
-import React from 'react';
 import * as TD from '@/typedef';
 
 type Props = {
@@ -17,7 +16,7 @@ export const UserAvatar = (props: Props) => {
           : '/Kizaru.png'
       }
       alt="CurrentUserProfileImage"
-      className={props.className || 'm-3 h-14 w-14'}
+      className={`m-3 ${props.className || 'h-14 w-14'} object-cover`}
     />
   );
 };

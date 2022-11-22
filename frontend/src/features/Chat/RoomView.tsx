@@ -34,7 +34,7 @@ const AdminOperationBar = (
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
 
   return (
-    <>
+    <div className="flex flex-row">
       {isNomminatable && (
         <FTButton
           onClick={() =>
@@ -71,7 +71,7 @@ const AdminOperationBar = (
           <Icons.Chat.Operation.Mute />
         </FTButton>
       )}
-    </>
+    </div>
   );
 };
 

@@ -71,7 +71,7 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
         </a>
       </div>
       <div className="text-center">
-        <img className="inline" src={props.qrcode} />
+        <img className="inline object-cover" src={props.qrcode} />
       </div>
       <ul className="list-disc">
         <li>
@@ -334,7 +334,13 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   });
   const innerDropZone = (() => {
     if (avatarFile) {
-      return <img src={avatarFile.dataURL} alt={avatarFile.name}></img>;
+      return (
+        <img
+          className="h-full w-full object-cover"
+          src={avatarFile.dataURL}
+          alt={avatarFile.name}
+        ></img>
+      );
     }
     return (
       <p className="text-sm">

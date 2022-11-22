@@ -1,5 +1,7 @@
+import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as dayjs from 'dayjs';
+import { useAtom } from 'jotai';
 
 type Props = {
   message: TD.ChatRoomMessage;
@@ -10,6 +12,9 @@ type Props = {
  * メッセージを表示するコンポーネント
  */
 export const ChatMessageCard = ({ message, id }: Props) => {
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
+  if (blockingUsers && blockingUsers.find((u) => u.id === message.userId))
+    return null;
   return (
     <div
       className="flex flex-col border-[1px] border-solid border-white p-2"
