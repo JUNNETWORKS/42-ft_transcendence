@@ -35,7 +35,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     setIsWaiting(false);
   };
 
-  const StartMatchMaking = (queueID: string) => {
+  const startMatchMaking = (queueID: string) => {
     if (isWaiting) {
       return;
     }
@@ -62,14 +62,14 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
             text="カジュアルマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              StartMatchMaking('CASUAL');
+              startMatchMaking('CASUAL');
             }}
           />
           <CommandCard
             text="ランクマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              StartMatchMaking('RANK');
+              startMatchMaking('RANK');
             }}
           />
           <CommandCard
