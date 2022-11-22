@@ -10,7 +10,7 @@ type DmModalProps = {
   onClose: () => void;
 };
 
-export const DmModal = ({ user, onClose }: DmModalProps) => {
+export const DmCard = ({ user, onClose }: DmModalProps) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
   const [content, setContent] = useState('');

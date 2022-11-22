@@ -10,7 +10,7 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { DmModal } from '../DM/DmModal';
+import { DmCard } from '../DM/DmCard';
 import { Modal } from '@/components/Modal';
 import { structureAtom } from '@/stores/structure';
 
@@ -61,7 +61,7 @@ const UserCard = ({ user }: UserCardProp) => {
   return (
     <>
       <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        <DmModal user={user} onClose={() => setIsOpen(false)} />
+        <DmCard user={user} onClose={() => setIsOpen(false)} />
       </Modal>
       <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
         <div className="inline-block align-text-bottom">
