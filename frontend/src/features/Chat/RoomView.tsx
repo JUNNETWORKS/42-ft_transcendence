@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
@@ -10,129 +9,7 @@ import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { useAtom } from 'jotai';
-
-const AdminOperationBar = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
-  const areYouOwner = props.you?.userId === props.room.ownerId;
-  const areYouAdmin = props.you?.memberType === 'ADMIN';
-  const areYouAdminLike = areYouOwner;
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-  const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
-  const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isBlocking = !!blockingUsers.find((u) => props.member.userId === u.id);
-  const userTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return '';
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
-  return (
-    <div className="flex flex-row">
-      <div
-        className="shrink grow cursor-pointer hover:bg-teal-700"
-        key={props.member.userId}
-        style={{
-          ...(isYou ? { fontWeight: 'bold' } : {}),
-        }}
-      >
-        <Link className="block" to={link_path}>
-          {userTypeCap()}{' '}
-          {isBlocking
-            ? `${props.member.user.displayName}(Blocking)`
-            : props.member.user.displayName}
-        </Link>
-      </div>
-
-      {isNomminatable && (
-        <FTButton
-          onClick={() =>
-            props.onNomminateClick ? props.onNomminateClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Nomminate />
-        </FTButton>
-      )}
-      {isBannable && (
-        <FTButton
-          onClick={() =>
-            props.onBanClick ? props.onBanClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Ban />
-        </FTButton>
-      )}
-      {isKickable && (
-        <FTButton
-          onClick={() =>
-            props.onKickClick ? props.onKickClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Kick />
-        </FTButton>
-      )}
-      {isMutable && (
-        <FTButton
-          onClick={() =>
-            props.onMuteClick ? props.onMuteClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Mute />
-        </FTButton>
-      )}
-    </div>
-  );
-};
-
-const MemberCard = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-
-  const UserTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return null;
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
-  return (
-    <div className="flex flex-row">
-      <div
-        className={`shrink grow cursor-pointer hover:bg-teal-700 ${
-          isYou ? 'font-bold' : ''
-        }`}
-        key={props.member.userId}
-      >
-        <Link className="block" to={link_path}>
-          {<UserTypeCap />} {props.member.user.displayName}
-        </Link>
-      </div>
-      <AdminOperationBar {...props} />
-    </div>
-  );
-};
+import { ChatMemberCard } from '@/components/ChatMemberCard';
 
 const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
   return (
@@ -175,7 +52,7 @@ const MembersList = (
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
-            <MemberCard member={member} {...Utils.omit(props, 'members')} />
+            <ChatMemberCard member={member} {...Utils.omit(props, 'members')} />
           </div>
         ))}
       </div>
@@ -237,7 +114,7 @@ export const ChatRoomView = (props: {
             </div>
           </div>
         </div>
-        <div className="shrink-0 grow-0 basis-[20em]">
+        <div className="shrink-0 grow-0 basis-[12em]">
           <MembersList
             you={props.you}
             room={props.room}
