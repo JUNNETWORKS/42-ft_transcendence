@@ -4,11 +4,9 @@ import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
-import { makeCommands } from '@/features/Pong/api/commands';
 
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
-  const commands = makeCommands(mySocket);
   const [isWaiting, setIsWaiting] = useState(false);
   const [waitingCount, setWaitingCount] = useState(0);
   const navigate = useNavigate();
@@ -27,13 +25,13 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     });
 
     return () => {
-      mySocket?.off('pong.match_making.progress');
-      mySocket?.off('pong.match_making.done');
+      mySocket?.off('pong.match_makind.progress');
+      mySocket?.off('pong.match_makind.done');
     };
   }, []);
 
   const cancelWaiting = () => {
-    commands.leaveMatchMaking();
+    mySocket?.emit('pong.match_making.leave');
     setIsWaiting(false);
   };
 
@@ -41,7 +39,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     if (isWaiting) {
       return;
     }
-    commands.entryMatchMaking(queueID);
+    mySocket?.emit('pong.match_making.entry', { queueID: queueID });
   };
 
   return (
