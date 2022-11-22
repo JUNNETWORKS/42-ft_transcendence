@@ -1,8 +1,4 @@
-import {
-  userAtoms,
-  authFlowStateAtom,
-  storedCredentialAtom,
-} from '@/stores/atoms';
+import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
@@ -15,12 +11,12 @@ import {
   DevAuthenticatedCard,
   DevAuthLoginCard,
   DevAuthValidatingCard,
+  TotpAuthForm,
 } from './AuthCard';
+import { Modal } from '@/components/Modal';
 
 export const DevAuth = () => {
-  const [authState, setAuthState] = useAtom(authFlowStateAtom);
-  const [, setStoredCredential] = useAtom(storedCredentialAtom);
-  const [, setPersonalData] = useAtom(userAtoms.personalDataAtom);
+  const [authState] = useAtom(authAtom.authFlowState);
 
   const query = useQuery();
   const navigation = useNavigate();
@@ -38,19 +34,22 @@ export const DevAuth = () => {
     useState<FtAuthenticationFlowState>(initialFlowState);
   // 認可コード
   const [ftAuthCode] = useState(initialAuthCode);
+  const loginLocal = useLoginLocal();
+  const logout = useLogout();
 
   const anonymizeAuthFlow = () => {
-    setStoredCredential(null);
-    setPersonalData(null);
-    setAuthState('NotAuthenticated');
+    logout();
     setFtAuthState('Neutral');
   };
 
-  const finalizeAuthFlow = (token: string, user: any) => {
-    setStoredCredential({ token });
-    setPersonalData(user);
+  const finalizeAuthFlow = (token: string, user: any, required2fa: boolean) => {
+    if (required2fa) {
+      setToken2FA(token);
+      return;
+    }
+    setToken2FA(null);
+    loginLocal(token, user);
     setFtAuthState('Neutral');
-    setAuthState('Authenticated');
   };
 
   // 42認証フローのチェックと状態遷移
@@ -82,6 +81,8 @@ export const DevAuth = () => {
     }
   }, [ftAuthState]);
 
+  const [token2FA, setToken2FA] = useState<string | null>(null);
+
   const presentator = (() => {
     switch (ftAuthState) {
       case 'NeutralAuthorizationCode':
@@ -106,10 +107,24 @@ export const DevAuth = () => {
   })();
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-      <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        {presentator}
+    <>
+      <Modal closeModal={() => setToken2FA(null)} isOpen={!!token2FA}>
+        {token2FA && (
+          <TotpAuthForm
+            token2FA={token2FA}
+            onClose={() => setToken2FA(null)}
+            onSucceeded={finalizeAuthFlow}
+          />
+        )}
+      </Modal>
+      <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
+        <div
+          className="basis-1 border-4 border-white"
+          style={{ width: '28rem' }}
+        >
+          {presentator}
+        </div>
       </div>
-    </div>
+    </>
   );
 };

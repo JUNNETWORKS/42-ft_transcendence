@@ -1,6 +1,5 @@
-import { Match } from './match';
 import { Server, Socket } from 'socket.io';
-import { MatchResult, PlayerInput } from './types/game-state';
+
 import {
   generateFullRoomName,
   sendResultRoom,
@@ -8,6 +7,9 @@ import {
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
 import { v4 as uuidv4 } from 'uuid';
+
+import { Match } from './match';
+import { MatchResult, PlayerInput } from './types/game-state';
 
 // このクラスは以下に対して責任を持つ
 // - マッチの保持

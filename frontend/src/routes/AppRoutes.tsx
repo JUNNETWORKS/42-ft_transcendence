@@ -3,7 +3,7 @@ import { Chat } from '@/features/Chat/Chat';
 import { PongMatchPage } from '@/features/Pong/components/MatchPage';
 import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { chatSocketAtom } from '@/stores/atoms';
+import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { UserView } from '@/features/User/User';
 import { PongTopPage } from '@/features/Pong/components/TopPage';

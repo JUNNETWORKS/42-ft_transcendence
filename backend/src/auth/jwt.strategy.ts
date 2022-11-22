@@ -1,6 +1,7 @@
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+
 import { jwtConstants } from './auth.constants';
 
 // Strategy をどこからインポートするかが重要
@@ -25,6 +26,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // 主張 = ペイロードの中身
     // 検証 = 署名が正しいことの確認
     // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
+    if (payload.next) {
+      console.log('required 2fa');
+      throw new UnauthorizedException('required 2fa');
+    }
     return { email: payload.email, id: payload.sub };
   }
 }

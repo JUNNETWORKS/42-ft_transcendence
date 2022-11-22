@@ -8,10 +8,14 @@ export type User = {
   time?: Date;
 };
 
+export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
+export const RoomTypes = [...RoomTypesSelectable, 'DM'] as const;
+export type RoomType = typeof RoomTypes[number];
+
 export type ChatRoom = {
   id: number;
   roomName: string;
-  roomType: string;
+  roomType: RoomType;
   ownerId: number;
   createdAt: Date;
   updatedAt: Date;
@@ -105,6 +109,12 @@ export type FollowResult = {
 
 export type UnfollowResult = {
   user: User;
+};
+
+export type UserResult = {
+  action: 'create' | 'update' | 'delete';
+  id: number;
+  data: Partial<User>;
 };
 
 export const Mapper = {
