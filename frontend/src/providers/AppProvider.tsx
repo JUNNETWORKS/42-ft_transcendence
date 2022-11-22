@@ -7,8 +7,8 @@ type AppProviderProps = {
 
 export const AppProvider = ({ children }: AppProviderProps) => {
   return (
-    <Layout>
-      <BrowserRouter>{children}</BrowserRouter>
-    </Layout>
+    <BrowserRouter>
+      <Layout>{children}</Layout>
+    </BrowserRouter>
   );
 };

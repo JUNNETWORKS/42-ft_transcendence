@@ -2,36 +2,14 @@ import { useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import * as dayjs from 'dayjs';
 import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
-
-/**
- * メッセージを表示するコンポーネント
- */
-const MessageCard = (props: { message: TD.ChatRoomMessage }) => {
-  return (
-    <div
-      className="flex flex-col border-[1px] border-solid border-white p-2"
-      key={props.message.id}
-    >
-      <div className="flex flex-row">
-        <div className="m-[1px] bg-white px-[2px] py-0 text-black">
-          {props.message.user.displayName}
-        </div>
-        <div className="pr-[4px]">
-          {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-        </div>
-        <div className="pr-[4px]">chatRoomId: {props.message.chatRoomId}</div>
-      </div>
-      <div>{props.message.content}</div>
-    </div>
-  );
-};
+import { dataAtom } from '@/stores/structure';
+import { ChatMessageCard } from '@/components/ChatMessageCard';
 
 const AdminOperationBar = (
   props: {
@@ -134,7 +112,7 @@ const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
   return (
     <>
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <MessageCard key={data.id} message={data} />
+        <ChatMessageCard key={data.id} message={data} />
       ))}
     </>
   );
@@ -189,6 +167,7 @@ export const ChatRoomView = (props: {
 }) => {
   const isOwner = props.room.ownerId === props.you?.userId;
   const [isOpen, setIsOpen] = useState(false);
+  const [members] = dataAtom.useMembersInRoom(props.room.id);
 
   const closeModal = () => {
     setIsOpen(false);
@@ -236,7 +215,7 @@ export const ChatRoomView = (props: {
           <MembersList
             you={props.you}
             room={props.room}
-            members={props.roomMembers(props.room.id) || {}}
+            members={members}
             {...props.memberOperations}
           />
         </div>

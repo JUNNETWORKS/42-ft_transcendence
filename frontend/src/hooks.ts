@@ -1,6 +1,8 @@
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useAtom } from 'jotai';
+import { storedCredentialAtom } from '@/stores/auth';
+import { APIError } from './errors/APIError';
+import { useState, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import * as TD from '@/typedef';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -25,43 +27,38 @@ export const useQuery = () => {
  * @param onFailed 失敗時にエラー(`unknown`)を受け取る関数
  * @returns
  */
-export const useFetch = (
-  fetcher: () => Promise<Response>,
+export function useFetch<T>(
+  fetcher: (arg?: T) => Promise<Response>,
   onFetched: (res: Response) => void,
   onFailed?: (error: unknown) => void
-) => {
+) {
   type FetchState = 'Neutral' | 'Fetching' | 'Fetched' | 'Failed';
   const [state, setState] = useState<FetchState>('Neutral');
-  useEffect(() => {
-    if (state !== 'Fetching') {
+  const submit = async (arg?: T) => {
+    if (state === 'Fetching') {
       return;
     }
-    const doFetch = async () => {
-      try {
-        const result = await fetcher();
-        if (result.ok) {
-          setState('Fetched');
-          onFetched(result);
-        }
-      } catch (e) {
-        console.error(e);
-        setState('Failed');
-        if (onFailed) {
-          onFailed(e);
-        }
-      }
-    };
+    setState('Fetching');
     try {
-      doFetch();
+      const result = await fetcher(arg);
+      if (!result.ok) {
+        throw new APIError(result.statusText, result);
+      }
+      setState('Fetched');
+      onFetched(result);
     } catch (e) {
-      console.error(e);
       setState('Failed');
       if (onFailed) {
         onFailed(e);
       }
     }
-  }, [state]);
-  const submit = () => setState('Fetching');
+  };
+  const neutralize = () => {
+    if (state !== 'Fetching') {
+      setState('Neutral');
+    }
+  };
+  const submitNothing = () => submit();
 
   return [
     /**
@@ -71,43 +68,60 @@ export const useFetch = (
     /**
      * 実行すると, 次の副作用タイミングで fetch 処理をキックする
      */
+    submitNothing,
+    neutralize,
     submit,
   ] as const;
-};
+}
 
 /**
  * API呼び出しフック(useFetchをラップしたもの)
  */
 export const useAPI = (
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   endpoint: string,
   option: {
+    credential?: { token: string };
     payload?: () => any;
-    onFetched: (json: unknown) => void;
     onFailed?: (error: unknown) => void;
-  }
+  } & ({ onFetched: (json: unknown) => void } | { onFinished: () => void })
 ) => {
-  const { payload, onFetched, onFailed } = option;
-
+  const { payload, onFailed } = option;
+  const [credential] = useAtom(storedCredentialAtom);
   return useFetch(
-    () =>
-      fetch(`http://localhost:3000${endpoint}`, {
+    (
+      args: {
+        payload?: any;
+      } = {}
+    ) => {
+      const headers: HeadersInit = {};
+      if (payload) {
+        headers['Content-Type'] = 'application/json';
+      }
+      const payloadObject = args.payload || (payload ? payload() : null);
+      const payloadPart = payloadObject
+        ? { body: JSON.stringify(payloadObject) }
+        : {};
+      const usedCredential = option.credential || credential;
+      if (usedCredential) {
+        headers['Authorization'] = `Bearer ${usedCredential.token}`;
+      }
+      return fetch(`http://localhost:3000${endpoint}`, {
         method,
+        headers,
         mode: 'cors',
-        ...(payload
-          ? {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(payload()),
-            }
-          : {}),
-      }),
+        ...payloadPart,
+      });
+    },
     (res) =>
       (async () => {
         try {
-          const json = await res.json();
-          onFetched(json);
+          if ('onFetched' in option) {
+            const json = await res.json();
+            option.onFetched(json);
+            return;
+          }
+          option.onFinished();
         } catch (e) {
           console.error(e);
           if (onFailed) {

@@ -20,6 +20,20 @@ export function pick<T extends object, U extends keyof T>(
   return d;
 }
 
+export function omit<T extends object, U extends keyof T>(
+  obj: T,
+  ...props: Array<Many<U>>
+): Omit<T, U> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    d[key] = (obj as any)[key];
+  });
+  props.forEach((key) => {
+    delete d[key];
+  });
+  return d;
+}
+
 /**
  * 配列`array`を, 「`array`の各要素に関数`value`を適用した値」を使って昇順にソートしたものを返す.\
  * 元の`array`は変更しない.
@@ -84,6 +98,17 @@ export function keyBy<T>(
   const r: any = {};
   array.forEach((a) => {
     r[value(a)] = a;
+  });
+  return r;
+}
+
+export function mapValues<T extends object, U>(
+  obj: T,
+  mapper: (val: T[keyof T], key: keyof T) => U
+): { [key in keyof T]: U } {
+  const r: any = {};
+  Object.keys(obj).forEach((k: any) => {
+    r[k] = mapper((obj as any)[k], k);
   });
   return r;
 }

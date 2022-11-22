@@ -1,9 +1,9 @@
 import { authAtom, chatSocketAtom } from '@/stores/auth';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { useUpdateRoom, useUpdateUser } from '@/stores/store';
+import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
 
 export const SocketHolder = () => {
@@ -15,6 +15,7 @@ export const SocketHolder = () => {
   const [personalData] = useAtom(authAtom.personalData);
   const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
   const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
   const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
   const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
@@ -23,6 +24,7 @@ export const SocketHolder = () => {
 
   const userUpdator = useUpdateUser();
   const roomUpdator = useUpdateRoom();
+  const dmRoomUpdator = useUpdateDmRoom();
 
   useEffect(() => {
     console.log('mySocket?', !!mySocket);
@@ -30,10 +32,12 @@ export const SocketHolder = () => {
       console.log('catch connection', data);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
+      setDmRooms(data.dmRooms);
       setFriends(data.friends);
       userUpdator.addMany(data.friends);
       roomUpdator.addMany(data.visibleRooms);
       roomUpdator.addMany(data.joiningRooms);
+      dmRoomUpdator.addMany(data.dmRooms);
     });
 
     mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {
@@ -69,6 +73,22 @@ export const SocketHolder = () => {
       roomUpdator.addOne(room);
     });
 
+    mySocket?.on('ft_tell', (data: TD.DmOpenResult) => {
+      console.log('catch dm_open');
+      console.log(data);
+      const room: TD.DmRoom = {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setDmRooms((prev) => {
+        const next = [...prev];
+        next.push(room);
+        return next;
+      });
+      dmRoomUpdator.addOne(room);
+    });
+
     mySocket?.on('ft_say', (data: TD.SayResult) => {
       const message = TD.Mapper.chatRoomMessage(data);
       console.log('catch say');
@@ -99,6 +119,7 @@ export const SocketHolder = () => {
       } else {
         // 他人に関する通知
         console.log('for other');
+        userUpdator.addOne(data.relation.user);
         stateMutater.mergeMembersInRoom(room.id, { [user.id]: data.relation });
       }
     });
@@ -168,6 +189,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_messages');
       const { id, messages } = data;
       console.log(id, !!messages);
+      userUpdator.addMany(messages.map((m) => m.user));
       stateMutater.addMessagesToRoom(
         id,
         messages.map(TD.Mapper.chatRoomMessage)
@@ -178,6 +200,7 @@ export const SocketHolder = () => {
       console.log('catch get_room_members');
       const { id, members } = data;
       console.log(id, members);
+      userUpdator.addMany(members.map((m) => m.user));
       stateMutater.mergeMembersInRoom(
         id,
         Utils.keyBy(members, (a) => `${a.userId}`)
@@ -202,6 +225,18 @@ export const SocketHolder = () => {
           const next = prev.filter((f) => f.id !== data.user.id);
           return next;
         });
+      }
+    });
+
+    mySocket?.on('ft_user', (data: TD.UserResult) => {
+      console.log('catch user', data);
+      switch (data.action) {
+        case 'update':
+          userUpdator.updateOne(data.id, data.data);
+          break;
+        case 'delete':
+          userUpdator.delOne(data.id);
+          break;
       }
     });
 
@@ -249,9 +284,7 @@ export const SocketHolder = () => {
      * @param newMembers
      */
     mergeMembersInRoom: (roomId: number, newMembers: TD.UserRelationMap) => {
-      console.log(`mergeMembersInRoom(${roomId}, ${newMembers})`);
       setMembersInRoom((prev) => {
-        console.log(`mergeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -263,17 +296,12 @@ export const SocketHolder = () => {
         Utils.keys(newMembers).forEach((key) => {
           members[key] = newMembers[key];
         });
-        console.log('[newMembers]', newMembers);
-        console.log('[prev]', prev);
-        console.log('[next]', next);
         return next;
       });
     },
 
     removeMembersInRoom: (roomId: number, userId: number) => {
-      console.log(`removeMembersInRoom(${roomId}, ${userId})`);
       setMembersInRoom((prev) => {
-        console.log(`removeMembersInRoom -> setMembersInRoom`);
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
           next[key] = prev[key] ? { ...prev[key] } : {};
@@ -282,10 +310,7 @@ export const SocketHolder = () => {
         if (!members) {
           return next;
         }
-        console.log('removing member', userId, 'from', members);
         delete members[userId];
-        console.log('members', members);
-        console.log(prev, next);
         return next;
       });
     },
