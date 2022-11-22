@@ -6,6 +6,7 @@ type RoomPasswordInputProps = {
   setRoomPassword: React.Dispatch<React.SetStateAction<string>>;
   joinError: string;
   onJoin: () => void;
+  onClose: () => void;
 };
 
 export const RoomPasswordInput = ({
@@ -13,20 +14,31 @@ export const RoomPasswordInput = ({
   setRoomPassword,
   joinError,
   onJoin,
+  onClose,
 }: RoomPasswordInputProps) => {
   return (
-    <div className="flex w-96 flex-col border-2 border-solid border-white bg-black">
+    <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
       <FTH3>Input Room Password</FTH3>
-      <FTTextField
-        className="w-full border-2"
-        value={roomPassword}
-        placeholder="room password"
-        onChange={(e) => setRoomPassword(e.target.value)}
-      />
-      <div className="text-red-400">{joinError !== '' ? joinError : '　'}</div>
-      <FTButton className="mr-2" onClick={onJoin}>
-        Join
-      </FTButton>
+      <div className="p-2">
+        <FTTextField
+          className="w-full border-2"
+          type="password"
+          value={roomPassword}
+          placeholder="room password"
+          onChange={(e) => setRoomPassword(e.target.value)}
+        />
+        <div className="text-red-400">
+          {joinError !== '' ? joinError : '　'}
+        </div>
+      </div>
+      <div className="flex flex-row justify-center p-2">
+        <FTButton className="mx-4" onClick={onJoin}>
+          Join
+        </FTButton>
+        <FTButton className="mx-4" onClick={onClose}>
+          Cancel
+        </FTButton>
+      </div>
     </div>
   );
 };

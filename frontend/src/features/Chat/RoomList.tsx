@@ -52,20 +52,17 @@ const ChatRoomListItem = (props: {
       }
     });
   };
+  const closeModal = () => setIsOpen(false);
 
   return (
     <>
-      <Modal
-        isOpen={isOpen}
-        closeModal={() => {
-          setIsOpen(false);
-        }}
-      >
+      <Modal isOpen={isOpen} closeModal={closeModal}>
         <RoomPasswordInput
           roomPassword={roomPassword}
           setRoomPassword={setRoomPassword}
           joinError={joinError}
           onJoin={onJoin}
+          onClose={closeModal}
         />
       </Modal>
       <div className="shrink-0 grow-0">
