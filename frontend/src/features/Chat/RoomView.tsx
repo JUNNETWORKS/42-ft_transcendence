@@ -10,7 +10,6 @@ import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { useAtom } from 'jotai';
 
 const AdminOperationBar = (
   props: {

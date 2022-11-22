@@ -76,6 +76,10 @@ type ElementProps = {
   errors: ReturnType<typeof roomErrors>;
   api: ReturnType<typeof useAPI>;
   onCancel: () => void;
+  placeholder: {
+    name?: string;
+    password?: string;
+  };
 };
 
 const CardElement = ({
@@ -86,6 +90,7 @@ const CardElement = ({
   errors,
   api: [state, submit],
   onCancel,
+  placeholder = {},
 }: ElementProps) => {
   return (
     <>
@@ -98,7 +103,7 @@ const CardElement = ({
               className="w-full border-2"
               autoComplete="off"
               value={roomName}
-              placeholder="名前"
+              placeholder={placeholder.name || '2文字以上 50文字以下'}
               onChange={(e) => setRoomName(e.target.value)}
             />
             <div>{errors.roomName || '　'}</div>
@@ -123,7 +128,7 @@ const CardElement = ({
                 type="password"
                 autoComplete="off"
                 value={roomPassword}
-                placeholder="空欄の場合は変更なし"
+                placeholder={placeholder.password || '4文字以上 40文字以下'}
                 onChange={(e) => setRoomPassword(e.target.value)}
               />
               <div>{errors.roomPassword || '　'}</div>
@@ -233,6 +238,9 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
       errors={errors}
       api={api}
       onCancel={onCancel}
+      placeholder={{
+        password: room.roomType === 'LOCKED' ? '空欄なら変更なし' : '',
+      }}
     />
   );
 };
