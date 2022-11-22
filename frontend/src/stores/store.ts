@@ -2,6 +2,7 @@ import { atom, useAtom } from 'jotai';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import * as TD from '../typedef';
 import * as Utils from '../utils';
+import { authAtom } from './auth';
 
 // オブジェクトストア
 
@@ -15,6 +16,8 @@ export const storeAtoms = {
  */
 export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
+  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+
   const updater = {
     addOne: useCallback(
       (data: TD.User) => {
@@ -36,16 +39,30 @@ export const useUpdateUser = () => {
     ),
     updateOne: useCallback(
       (userId: number, part: Partial<TD.User>) => {
+        const patched = Utils.datifyObject(part, 'time');
+        if (part.avatar) {
+          patched.avatarTime = Date.now();
+        }
         setUsersStore((prev) => {
           const d = prev[userId];
           if (!d) {
             return prev;
           }
-          const p = Utils.datifyObject(part, 'time');
-          return { ...prev, [userId]: { ...d, ...p } };
+          const u = { ...d, ...patched };
+          return { ...prev, [userId]: u };
         });
+        if (personalData?.id === userId) {
+          // 自分のデータの更新を受け取った場合は`personalData`の更新も同時に行う
+          setPersonalData((prev) => {
+            if (!prev) {
+              return prev;
+            }
+            const u = { ...prev, ...patched };
+            return u;
+          });
+        }
       },
-      [setUsersStore]
+      [setUsersStore, setPersonalData, personalData?.id]
     ),
     offlinate: useCallback(
       (userId: number) => {

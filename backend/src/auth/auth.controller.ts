@@ -26,7 +26,6 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { JwtTotpAuthGuard } from './jwt-totp-auth.guard';
 import { LocalAuthGuard } from './local-auth.guard';
 
-
 @Controller('auth')
 @ApiTags('auth')
 export class AuthController {
@@ -51,7 +50,14 @@ export class AuthController {
     if (!user) {
       throw new HttpException('No User', 401);
     }
-    return Utils.pick(user, 'id', 'displayName', 'email', 'isEnabled2FA');
+    return Utils.pick(
+      user,
+      'id',
+      'displayName',
+      'email',
+      'isEnabled2FA',
+      'isEnabledAvatar'
+    );
   }
 
   @UseGuards(FtAuthGuard)

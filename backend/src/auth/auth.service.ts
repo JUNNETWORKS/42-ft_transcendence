@@ -48,7 +48,7 @@ export class AuthService {
    */
   async retrieveUser(
     intraId: number,
-    data: Omit<UserMinimum, 'intraId' | 'password' | 'isEnabled2FA'>
+    data: Pick<UserMinimum, 'displayName' | 'email'>
   ) {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
@@ -99,7 +99,14 @@ export class AuthService {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(u!, 'id', 'displayName', 'email', 'isEnabled2FA'),
+      user: Utils.pick(
+        u!,
+        'id',
+        'displayName',
+        'email',
+        'isEnabled2FA',
+        'isEnabledAvatar'
+      ),
     };
     return result;
   }

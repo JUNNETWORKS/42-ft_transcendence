@@ -6,6 +6,7 @@ import {
   UseGuards,
   Request,
   UseFilters,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
@@ -16,7 +17,7 @@ import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
-import { UpdateUserNameDto } from './dto/update-user-name.dto';
+import { UpdateMeDto } from './dto/update-me.dto';
 
 import { UsersService } from './users.service';
 
@@ -43,21 +44,45 @@ export class MeController {
   @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseFilters(PrismaExceptionFilter)
-  async patch(@Request() req: any, @Body() updateUserDto: UpdateUserNameDto) {
+  async patch(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
     const id = req.user.id;
     // displayName の唯一性チェック
     // -> unique 制約に任せる
-    const result = await this.usersService.update(id, updateUserDto);
-    this.wsServer.sendResults(
-      'ft_user',
-      {
-        action: 'update',
-        id,
-        data: { ...updateUserDto },
-      },
-      { global: 'global' }
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new BadRequestException('no user');
+    }
+    const isEnabledAvatar = !!updateUserDto.avatar || user.isEnabledAvatar;
+    const ordinary = this.usersService.update(id, {
+      ...Utils.pick(updateUserDto, 'displayName'),
+      isEnabledAvatar,
+    });
+    const avatar = updateUserDto.avatar
+      ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
+      : Promise.resolve('skipped');
+    const result = await Utils.PromiseMap({ ordinary, avatar });
+    {
+      const data = {
+        ...Utils.omit(updateUserDto, 'avatar'),
+        ...(updateUserDto.avatar ? { avatar: true } : {}),
+      };
+      this.wsServer.sendResults(
+        'ft_user',
+        {
+          action: 'update',
+          id,
+          data,
+        },
+        { global: 'global' }
+      );
+    }
+    return Utils.pick(
+      result.ordinary,
+      'id',
+      'displayName',
+      'isEnabled2FA',
+      'isEnabledAvatar'
     );
-    return result;
   }
 
   @UseGuards(JwtAuthGuard)

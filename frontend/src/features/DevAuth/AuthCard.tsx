@@ -27,6 +27,7 @@ export const TotpAuthForm = (props: {
 }) => {
   const otpLength = 6;
   const [otpString, otpArray, setOtp] = useOtp(otpLength);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const [state, submitNothing, , submit] = useAPI('POST', `/auth/otp`, {
     credential: { token: props.token2FA },
     payload: () => ({ otp: otpString }),
@@ -49,7 +50,6 @@ export const TotpAuthForm = (props: {
       }
     },
   });
-  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
 
   return (
     <div className="flex w-[480px] flex-col justify-around gap-5 p-8">

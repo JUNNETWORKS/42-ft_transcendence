@@ -1,4 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
 import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -144,6 +151,32 @@ export class UsersService {
     return this.prisma.user.delete({ where: { id } });
   }
 
+  async upsertAvatar(userId: number, avatarDataURL: string) {
+    const m = avatarDataURL.match(/^data:([^;]+);([^,]+),(.*)$/);
+    if (!m) {
+      throw new BadRequestException('unexpected dataurl format');
+    }
+    const [, mime, , data] = m;
+    const buffer = Buffer.from(data, 'base64');
+
+    const result = await this.prisma.userAvatar.upsert({
+      where: {
+        userId,
+      },
+      create: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+      update: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+    });
+    return Utils.pick(result, 'id', 'userId', 'mime');
+  }
+
   async enableTwoFa(id: number) {
     const secret = authenticator.generateSecret();
     console.log('secret:', secret);
@@ -190,6 +223,22 @@ export class UsersService {
       }),
     ]);
     return;
+  }
+
+  async getAvatar(id: number) {
+    const avatar = await this.prisma.userAvatar.findUnique({
+      where: {
+        userId: id,
+      },
+    });
+    if (!avatar) {
+      throw new NotFoundException('avatar is not found');
+    }
+    return {
+      mime: avatar.mime,
+      avatar: new StreamableFile(avatar.avatar),
+      lastModified: avatar.lastModified,
+    };
   }
 }
 
