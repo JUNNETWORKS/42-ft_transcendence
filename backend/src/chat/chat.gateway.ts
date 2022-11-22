@@ -258,7 +258,6 @@ export class ChatGateway implements OnGatewayConnection {
         { userId: data.userId, memberType: 'ADMIN' },
       ],
     });
-    // TODO: 実行者が対象ユーザーからブロックされていないことの確認
     const roomId = dmRoom.id;
 
     // [作成されたDMルームにjoin]
