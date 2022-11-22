@@ -34,7 +34,7 @@ export class PongGateway {
   }
 
   onApplicationBootstrap() {
-    // CASUAL の待機キューを作成
+    // 常設のWaitingQueueを作成
     const rankQueue = new WaitingQueue(
       'RANK',
       this.ongoingMatches,
@@ -61,37 +61,6 @@ export class PongGateway {
     const queue = this.waitingQueues.getQueueByPlayerID(user.id);
     if (queue) {
       queue.remove(user.id);
-    }
-  }
-
-  @SubscribeMessage('pong.match_making.create')
-  async receiveMatchMakingCreate(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: PongMatchMakingCreateDTO
-  ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      console.log('USER is not logged in!!');
-      return;
-    }
-
-    if (data.queueType === 'private') {
-      // プライベートマッチ用の待機キューを作成する｡
-      const queueID = generateQueueID();
-      const queue = new WaitingQueue(
-        queueID,
-        this.ongoingMatches,
-        this.wsServer,
-        {
-          createMatchOnce: true,
-          timeoutMs: 180 * 1000,
-        }
-      );
-      this.waitingQueues.appendQueue(queue);
-      // クライアントに待機キュー作成完了通知を送信
-      client.emit('pong.match_making.created', {
-        id: queueID,
-      });
     }
   }
 
