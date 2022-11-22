@@ -25,8 +25,8 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     });
 
     return () => {
-      mySocket?.off('pong.match_makind.progress');
-      mySocket?.off('pong.match_makind.done');
+      mySocket?.off('pong.match_making.progress');
+      mySocket?.off('pong.match_making.done');
     };
   }, []);
 
