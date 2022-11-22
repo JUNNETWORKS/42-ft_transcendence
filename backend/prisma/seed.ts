@@ -37,6 +37,16 @@ async function main() {
         roomType: 'PUBLIC',
         ownerId: 1,
       },
+      {
+        roomName: 'test-dm1',
+        roomType: 'DM',
+        ownerId: 1,
+      },
+      {
+        roomName: 'test-dm2',
+        roomType: 'DM',
+        ownerId: 2,
+      },
     ],
     skipDuplicates: true,
   });
@@ -72,6 +82,70 @@ async function main() {
       });
     }
   }
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 1,
+      chatRoomId: 4,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 2,
+      chatRoomId: 4,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 2,
+      chatRoomId: 5,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 3,
+      chatRoomId: 5,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      chatRoomId: 4,
+      content: `test dm message from user1`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 2,
+      chatRoomId: 4,
+      content: `test dm message from user2`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 2,
+      chatRoomId: 5,
+      content: `test dm message from user2`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 3,
+      chatRoomId: 5,
+      content: `test dm message from user3`,
+    },
+  });
 
   // chatMessageたくさん入れる
   // const data = [];

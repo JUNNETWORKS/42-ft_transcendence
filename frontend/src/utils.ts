@@ -147,6 +147,18 @@ export function keyBy<T>(
   return r;
 }
 
+export function mapValues<T extends object, U>(
+  dict: T,
+  mapper: (val: T[keyof T], key: keyof T) => U
+): { [key in keyof T]: U } {
+  const r = {} as { [key in keyof T]: U };
+  Object.keys(dict).forEach((key) => {
+    const k = key as keyof T;
+    r[k] = mapper(dict[k], k);
+  });
+  return r;
+}
+
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }

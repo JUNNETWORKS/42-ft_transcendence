@@ -16,6 +16,8 @@ model User {
   displayName       String              @unique
   intraId           Int                 @unique
   password          String
+  isEnabledAvatar   Boolean             @default(false)
+  isEnabled2FA      Boolean             @default(false)
   chatMessage       ChatMessage[]
   joinedRoom        ChatUserRelation[]
   ownedRoom         ChatRoom[]
@@ -24,6 +26,20 @@ model User {
   followedUser      FriendRelation[]    @relation("followedUser")
   blockingUser      BlockRelation[]     @relation("blockingUser")
   blockedUser       BlockRelation[]     @relation("blockedUser")
+}
+
+model UserAvatar {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  mime         String
+  avatar       Bytes
+  lastModified DateTime @default(now()) @updatedAt
+}
+
+model TotpSecret {
+  id     Int    @id @default(autoincrement())
+  userId Int    @unique
+  secret String
 }
 
 model FriendRelation {
