@@ -375,7 +375,7 @@ export class ChatroomsService {
   }
 
   /**
-   * 生パスワードをハッシュ化する.\
+   * 生パスワードをハッシュ化する
    */
   hash_password(password: string) {
     return Utils.hash(
