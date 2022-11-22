@@ -7,9 +7,11 @@ import {
   Put,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+
+import { UpdateRoomDto } from './dto/update-room.dto';
+
 import { ChatroomsService } from './chatrooms.service';
 import { ChatroomEntity } from './entities/chatroom.entity';
-import { UpdateRoomDto } from './dto/update-room.dto';
 import { UpdateRoomPipe } from './pipe/update-room.pipe';
 
 @Controller('chatrooms')

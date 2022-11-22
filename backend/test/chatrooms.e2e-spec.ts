@@ -1,8 +1,9 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+
+import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from './../src/app.module';
 import { createRooms, postMessages, resetTable } from './testUtils';
-import { PrismaService } from '../src/prisma/prisma.service';
 
 describe('/Chatrooms (e2e)', () => {
   let app: INestApplication;
