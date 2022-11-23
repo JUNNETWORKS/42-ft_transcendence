@@ -4,9 +4,9 @@ import { Icons } from '@/icons';
 import { UserAvatar } from './UserAvater';
 import { useUserDataReadOnly } from '@/stores/store';
 import { Popover } from '@headlessui/react';
-import { UserView } from '@/features/User/User';
 import { useState } from 'react';
 import { usePopper } from 'react-popper';
+import { UserCard } from '@/features/User/UserCard';
 
 const AdminOperationBar = (
   props: {
@@ -121,7 +121,7 @@ export const ChatMemberCard = (
         style={styles.popper}
         {...attributes.popper}
       >
-        <UserView id={user.id} />
+        <UserCard id={user.id} />
       </Popover.Panel>
     </Popover>
   );

@@ -10,73 +10,57 @@ import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { DmCard } from '../DM/DmCard';
+import { Modal } from '@/components/Modal';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import { FollowButton } from './components/FollowButton';
 import { BlockButton } from './components/BlockButton';
-import { UserAvatar } from '@/components/UserAvater';
 
-type UserCardProp = {
+type ActualViewProps = {
   user: TD.User;
 };
-const UserCard = ({ user }: UserCardProp) => {
+const ActualView = ({ user }: ActualViewProps) => {
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
   const isBlocking = !!blockingUsers.find((f) => f.id === user.id);
+  // DmModal
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
     <>
-      <FTH1 className="flex flex-row items-center p-[4px] text-4xl font-bold">
-        <div className="inline-block shrink-0 grow-0 align-text-bottom">
+      <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
+        <DmCard user={user} onClose={() => setIsOpen(false)} />
+      </Modal>
+      <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
+        <div className="inline-block align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
         </div>
-        <p className="shrink grow overflow-hidden text-ellipsis">
-          {user.displayName}
-        </p>
-        {isFriend && <Icons.User.Friend className="h-6 w-6 shrink-0 grow-0" />}
-        {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
+        {user.displayName}
+        {isFriend && <Icons.User.Friend className="inline" />}
       </FTH1>
-      <div className="flex flex-col">
-        <div className="flex flex-row">
-          <div className="shrink-0 grow-0">
-            <FTH4>Avatar</FTH4>
-            <UserAvatar
-              className="h-24 w-24 border-8 border-solid border-gray-700"
-              user={user}
-            />
-          </div>
-          <div className="shrink grow">
-            <FTH4 className="shrink-0 grow-0">id</FTH4>
-            <p className="p-1">{user.id}</p>
-            <FTH4 className="shrink-0 grow-0">status</FTH4>
-            <p className="p-1">
-              {user.time
-                ? dayjs(user.time).format('MM/DD HH:mm:ss')
-                : 'offline'}
-            </p>
-          </div>
+      <div className="flex flex-col gap-2">
+        <FTH4>id</FTH4>
+        <div>{user.id}</div>
+        <FTH4>name</FTH4>
+        <div>{user.displayName}</div>
+        <FTH4>heartbeat time</FTH4>
+        <div>
+          {user.time ? dayjs(user.time).format('MM/DD HH:mm:ss') : 'offline'}
         </div>
 
-        <FTH4>DM</FTH4>
-        <div className="p-2">
-          <DmCard user={user} />
-        </div>
-
-        <div className="flex flex-row px-1 py-2">
-          <div className="mx-1">
-            <FollowButton userId={user.id} isFriend={isFriend} />
-          </div>
-          <div className="mx-1">
-            <BlockButton userId={user.id} isBlocking={isBlocking} />
-          </div>
+        <div>
+          <FollowButton userId={user.id} isFriend={isFriend} />
+          <BlockButton userId={user.id} isBlocking={isBlocking} />
+          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>
   );
 };
 
-const UserInnerView = (props: {
+const Presentator = (props: {
   userId: number;
   onError: (e: unknown) => void;
 }) => {
@@ -100,16 +84,16 @@ const UserInnerView = (props: {
       }
     })();
   }
-  return <UserCard user={personalData} />;
+  return <ActualView user={personalData} />;
 };
 
-export const UserView = (props: { id?: number }) => {
+export const UserView = () => {
   const { id } = useParams();
-  const userId = parseInt(id || props.id?.toString() || '');
+  const userId = parseInt(id || '');
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-      <div className="w-[20rem] basis-1 border-4 border-white">
+      <div className="w-[28rem] basis-1 border-4 border-white">
         <ErrorBoundary
           FallbackComponent={(error) => (
             <p>
@@ -119,7 +103,7 @@ export const UserView = (props: { id?: number }) => {
           )}
         >
           <Suspense fallback={<p>Loading...</p>}>
-            <UserInnerView userId={userId} onError={setError} />
+            <Presentator userId={userId} onError={setError} />
           </Suspense>
         </ErrorBoundary>
       </div>
