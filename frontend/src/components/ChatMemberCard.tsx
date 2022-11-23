@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { usePopper } from 'react-popper';
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { DmCard } from '@/features/DM/DmCard';
 
 const AdminOperationBar = (
   props: {
@@ -34,7 +35,7 @@ const AdminOperationBar = (
   return (
     <>
       <FTH4>Admin Operation</FTH4>
-      <div className="flex flex-row px-1 py-2">
+      <div className="flex flex-row px-1 py-4">
         <FTButton
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isNomminatable}
@@ -132,6 +133,15 @@ export const ChatMemberCard = (
       >
         <UserCard id={user.id}>
           <AdminOperationBar {...props} />
+
+          {!isYou && (
+            <>
+              <FTH4>DM</FTH4>
+              <div className="px-2 py-4">
+                <DmCard user={user} />
+              </div>
+            </>
+          )}
         </UserCard>
       </Popover.Panel>
     </Popover>

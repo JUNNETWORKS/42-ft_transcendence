@@ -1,7 +1,7 @@
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
-import { ReactNode, Suspense, useState } from 'react';
+import { ReactNode, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
@@ -9,20 +9,25 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { DmCard } from '../DM/DmCard';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import { FollowButton } from './components/FollowButton';
 import { BlockButton } from './components/BlockButton';
 import { UserAvatar } from '@/components/UserAvater';
+import { authAtom } from '@/stores/auth';
 
 type ActualCardProp = {
   user: TD.User;
   children?: ReactNode;
 };
 const ActualCard = ({ user, children }: ActualCardProp) => {
+  const [personalData] = useAtom(authAtom.personalData);
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
+  if (!personalData) {
+    return null;
+  }
+  const isYou = personalData.id === user.id;
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
   const isBlocking = !!blockingUsers.find((f) => f.id === user.id);
@@ -61,18 +66,17 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
 
         {children}
 
-        <FTH4>DM</FTH4>
-        <div className="p-2">
-          <DmCard user={user} />
-        </div>
-
         <div className="flex flex-row px-1 py-2">
-          <div className="mx-1">
-            <FollowButton userId={user.id} isFriend={isFriend} />
-          </div>
-          <div className="mx-1">
-            <BlockButton userId={user.id} isBlocking={isBlocking} />
-          </div>
+          {!isYou && (
+            <div className="mx-1">
+              <FollowButton userId={user.id} isFriend={isFriend} />
+            </div>
+          )}
+          {!isYou && (
+            <div className="mx-1">
+              <BlockButton userId={user.id} isBlocking={isBlocking} />
+            </div>
+          )}
         </div>
       </div>
     </>
