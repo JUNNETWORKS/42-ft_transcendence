@@ -1,5 +1,5 @@
 import * as TD from '@/typedef';
-import { FTButton } from '@/components/FTBasicComponents';
+import { FTButton, FTH4 } from '@/components/FTBasicComponents';
 import { Icons } from '@/icons';
 import { UserAvatar } from './UserAvater';
 import { useUserDataReadOnly } from '@/stores/store';
@@ -7,6 +7,7 @@ import { Popover } from '@headlessui/react';
 import { useState } from 'react';
 import { usePopper } from 'react-popper';
 import { UserCard } from '@/features/User/UserCard';
+import { InlineIcon } from '@/hocs/InlineIcon';
 
 const AdminOperationBar = (
   props: {
@@ -21,6 +22,10 @@ const AdminOperationBar = (
   const isYou = props.you?.userId === props.member.user.id;
   const isAdmin = props.member.memberType === 'ADMIN';
   const isOwner = props.room.ownerId === props.member.user.id;
+  const isAdminableFor = !isYou && (areYouOwner || (areYouAdmin && !isOwner));
+  if (!isAdminableFor) {
+    return null;
+  }
   const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
@@ -28,42 +33,45 @@ const AdminOperationBar = (
 
   return (
     <>
-      {isNomminatable && (
+      <FTH4>Admin Operation</FTH4>
+      <div className="flex flex-row px-1 py-2">
         <FTButton
+          className="mx-1 text-2xl disabled:opacity-50"
+          disabled={!isNomminatable}
           onClick={() =>
             props.onNomminateClick ? props.onNomminateClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Nomminate />
         </FTButton>
-      )}
-      {isBannable && (
         <FTButton
+          className="mx-1 text-2xl disabled:opacity-50"
+          disabled={!isBannable}
           onClick={() =>
             props.onBanClick ? props.onBanClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Ban />
         </FTButton>
-      )}
-      {isKickable && (
         <FTButton
+          className="mx-1 text-2xl disabled:opacity-50"
+          disabled={!isKickable}
           onClick={() =>
             props.onKickClick ? props.onKickClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Kick />
         </FTButton>
-      )}
-      {isMutable && (
         <FTButton
+          className="mx-1 text-2xl disabled:opacity-50"
+          disabled={!isMutable}
           onClick={() =>
             props.onMuteClick ? props.onMuteClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Mute />
         </FTButton>
-      )}
+      </div>
     </>
   );
 };
@@ -82,9 +90,9 @@ export const ChatMemberCard = (
 
   const UserTypeCap = () => {
     if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
+      return <InlineIcon i={<Icons.Chat.Owner />} />;
     } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
+      return <InlineIcon i={<Icons.Chat.Admin />} />;
     }
     return null;
   };
@@ -105,13 +113,14 @@ export const ChatMemberCard = (
         <div className="shrink-0 grow-0">
           <UserAvatar className="m-1 h-8 w-8" user={user} />
         </div>
+        <UserTypeCap />
         <div
           className={`shrink grow cursor-pointer ${
             isYou ? 'font-bold' : ''
           } overflow-hidden text-ellipsis text-left`}
           key={props.member.userId}
         >
-          {<UserTypeCap />} {user.displayName}
+          {user.displayName}
         </div>
       </Popover.Button>
 
@@ -121,7 +130,9 @@ export const ChatMemberCard = (
         style={styles.popper}
         {...attributes.popper}
       >
-        <UserCard id={user.id} />
+        <UserCard id={user.id}>
+          <AdminOperationBar {...props} />
+        </UserCard>
       </Popover.Panel>
     </Popover>
   );
