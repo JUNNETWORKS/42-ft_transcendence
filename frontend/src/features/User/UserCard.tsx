@@ -46,21 +46,33 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
       <div className="flex flex-col">
         <div className="flex flex-row">
           <div className="shrink-0 grow-0">
-            <FTH4>Avatar</FTH4>
+            <FTH4>&nbsp;</FTH4>
             <UserAvatar
               className="h-24 w-24 border-8 border-solid border-gray-700"
               user={user}
             />
           </div>
-          <div className="shrink grow">
-            <FTH4 className="shrink-0 grow-0">id</FTH4>
+          <div className="shrink grow overflow-hidden">
+            <FTH4 className="">id</FTH4>
             <p className="p-1">{user.id}</p>
-            <FTH4 className="shrink-0 grow-0">status</FTH4>
-            <p className="p-1">
-              {user.time
-                ? dayjs(user.time).format('MM/DD HH:mm:ss')
-                : 'offline'}
-            </p>
+
+            {isYou ? (
+              <>
+                <FTH4 className="">email</FTH4>
+                <div className="overflow-hidden truncate p-1">
+                  {personalData.email}
+                </div>
+              </>
+            ) : (
+              <>
+                <FTH4 className="">status</FTH4>
+                <p className="p-1">
+                  {user.time
+                    ? dayjs(user.time).format('MM/DD HH:mm:ss')
+                    : 'offline'}
+                </p>
+              </>
+            )}
           </div>
         </div>
 

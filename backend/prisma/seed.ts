@@ -8,7 +8,12 @@ async function main() {
     data: [
       { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
-      { displayName: 'Angelique', email: 'angelique@prisma.io', intraId: 2 },
+      {
+        displayName: 'AngeliqueAngeliqueAngelique',
+        email:
+          'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
+        intraId: 2,
+      },
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
       { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
     ].map((d) => {

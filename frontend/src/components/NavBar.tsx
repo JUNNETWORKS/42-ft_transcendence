@@ -19,11 +19,13 @@ const UserCard = ({ user }: UserCardProp) => {
         <UserProfileModal user={user} onClose={() => setIsOpen(false)} />
       </Modal>
       <div
-        className="flex w-72 cursor-pointer gap-x-6 bg-secondary"
+        className="flex w-72 cursor-pointer flex-row items-center bg-secondary"
         onClick={() => setIsOpen(true)}
       >
-        <UserAvatar user={user} />
-        <div className="flex flex-1 items-center text-2xl">
+        <div className="shrink-0 grow-0">
+          <UserAvatar user={user} />
+        </div>
+        <div className="shrink grow overflow-hidden text-ellipsis text-2xl">
           {user.displayName}
         </div>
       </div>
