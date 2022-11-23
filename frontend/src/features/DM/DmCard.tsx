@@ -4,18 +4,17 @@ import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
 import { useState } from 'react';
+import { onEnter } from '@/utils/react';
 
 type DmModalProps = {
   user: TD.User;
-  onClose: () => void;
 };
 
-export const DmCard = ({ user, onClose }: DmModalProps) => {
+export const DmCard = ({ user }: DmModalProps) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
   const [content, setContent] = useState('');
   if (!mySocket) {
-    onClose();
     return null;
   }
 
@@ -46,20 +45,27 @@ export const DmCard = ({ user, onClose }: DmModalProps) => {
       console.log(data);
       mySocket?.emit('ft_tell', data);
     }
-    // TODO: DMのルームに移動、フォーカス
-    onClose();
   };
+  const isSendable = content !== '';
 
   return (
-    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-      <p className="text-2xl">{user.displayName}へDMを送信</p>
+    <div className="flex flex-row">
+      <div className="shrink-0 grow-0">
+        <FTButton onClick={submit} disabled={!isSendable}>
+          Send
+        </FTButton>
+      </div>
       <FTTextField
+        className="shrink grow"
         value={content}
+        placeholder="発言内容"
         onChange={(e) => setContent(e.target.value)}
+        onKeyDown={onEnter(() => {
+          if (isSendable) {
+            submit();
+          }
+        })}
       />
-      <FTButton onClick={submit} disabled={content === ''}>
-        Send
-      </FTButton>
     </div>
   );
 };

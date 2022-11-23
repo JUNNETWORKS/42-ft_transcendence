@@ -1,9 +1,12 @@
 import * as TD from '@/typedef';
 import { FTButton } from '@/components/FTBasicComponents';
-import { Link } from 'react-router-dom';
 import { Icons } from '@/icons';
 import { UserAvatar } from './UserAvater';
 import { useUserDataReadOnly } from '@/stores/store';
+import { Popover } from '@headlessui/react';
+import { UserView } from '@/features/User/User';
+import { useState } from 'react';
+import { usePopper } from 'react-popper';
 
 const AdminOperationBar = (
   props: {
@@ -85,21 +88,41 @@ export const ChatMemberCard = (
     }
     return null;
   };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
+  const [referenceElement, setReferenceElement] =
+    useState<HTMLButtonElement | null>(null);
+  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
+    null
+  );
+  const { styles, attributes } = usePopper(referenceElement, popperElement, {
+    placement: 'left-start',
+  });
   return (
-    <div className="flex flex-row items-center hover:bg-teal-700">
-      <Link className="shrink-0 grow-0" to={link_path}>
-        <UserAvatar className="m-1 h-8 w-8" user={user} />
-      </Link>
-      <Link
-        className={`shrink grow cursor-pointer ${
-          isYou ? 'font-bold' : ''
-        } overflow-hidden text-ellipsis`}
-        key={props.member.userId}
-        to={link_path}
+    <Popover className="relative">
+      <Popover.Button
+        className="flex w-full flex-row items-center hover:bg-teal-700"
+        ref={setReferenceElement}
       >
-        {<UserTypeCap />} {user.displayName}
-      </Link>
-    </div>
+        <div className="shrink-0 grow-0">
+          <UserAvatar className="m-1 h-8 w-8" user={user} />
+        </div>
+        <div
+          className={`shrink grow cursor-pointer ${
+            isYou ? 'font-bold' : ''
+          } overflow-hidden text-ellipsis text-left`}
+          key={props.member.userId}
+        >
+          {<UserTypeCap />} {user.displayName}
+        </div>
+      </Popover.Button>
+
+      <Popover.Panel
+        className="absolute z-10 border-8 border-gray-500 bg-black/90"
+        ref={setPopperElement}
+        style={styles.popper}
+        {...attributes.popper}
+      >
+        <UserView id={user.id} />
+      </Popover.Panel>
+    </Popover>
   );
 };
