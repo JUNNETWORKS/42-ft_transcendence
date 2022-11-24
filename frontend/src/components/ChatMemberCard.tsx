@@ -8,7 +8,6 @@ import { useState } from 'react';
 import { usePopper } from 'react-popper';
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
-import { DmCard } from '@/features/DM/DmCard';
 
 const AdminOperationBar = (
   props: {
@@ -133,15 +132,6 @@ export const ChatMemberCard = (
       >
         <UserCard id={user.id}>
           <AdminOperationBar {...props} />
-
-          {!isYou && (
-            <>
-              <FTH4>DM</FTH4>
-              <div className="px-2 py-4">
-                <DmCard user={user} />
-              </div>
-            </>
-          )}
         </UserCard>
       </Popover.Panel>
     </Popover>

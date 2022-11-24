@@ -2,7 +2,7 @@ import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { Icons } from '@/icons';
@@ -14,6 +14,7 @@ import { FollowButton } from './components/FollowButton';
 import { BlockButton } from './components/BlockButton';
 import { UserAvatar } from '@/components/UserAvater';
 import { authAtom } from '@/stores/auth';
+import { DmCard } from '../DM/DmCard';
 
 type ActualCardProp = {
   user: TD.User;
@@ -24,6 +25,7 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
+  const navigation = useNavigate();
   if (!personalData) {
     return null;
   }
@@ -78,7 +80,26 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
 
         {children}
 
+        {!isYou && (
+          <>
+            <FTH4>DM</FTH4>
+            <div className="px-2 py-4">
+              <DmCard user={user} />
+            </div>
+          </>
+        )}
+
         <div className="flex flex-row px-1 py-2">
+          <div className="mx-1">
+            <FTButton
+              onClick={() => {
+                navigation(isYou ? '/me' : `/user/${user.id}`);
+              }}
+            >
+              User Page
+            </FTButton>
+          </div>
+
           {!isYou && (
             <div className="mx-1">
               <FollowButton userId={user.id} isFriend={isFriend} />
