@@ -12,6 +12,7 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
 import { RoomMemberDto } from './room-member.dto';
 
 export class CreateChatroomDto {

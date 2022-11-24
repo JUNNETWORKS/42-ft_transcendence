@@ -1,9 +1,10 @@
-import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
+import { PassportStrategy } from '@nestjs/passport';
+import * as Fetch from 'node-fetch';
 import { Strategy } from 'passport-oauth2';
+
 import { ftConstants } from './auth.constants';
 import { AuthService } from './auth.service';
-import * as Fetch from 'node-fetch';
 
 const ftApiConstants = {
   endpointURL: 'https://api.intra.42.fr/v2',

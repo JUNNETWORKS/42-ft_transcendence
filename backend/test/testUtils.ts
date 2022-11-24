@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+
 import { PostMessageDto } from 'src/chatrooms/dto/post-message.dto';
 
 const prisma = new PrismaClient();
