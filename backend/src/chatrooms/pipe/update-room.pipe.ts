@@ -19,12 +19,6 @@ export class UpdateRoomPipe implements PipeTransform {
         400
       );
     }
-    if (value.roomType === 'LOCKED' && !value.roomPassword) {
-      throw new HttpException(
-        'roomPassword is needed with "LOCKED" roomType',
-        400
-      );
-    }
     return value;
   }
 }
