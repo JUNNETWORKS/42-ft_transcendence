@@ -9,7 +9,7 @@ import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { displayNameErrors } from './user.validator';
+import { displayNameErrors, passwordErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
 import { useDropzone } from 'react-dropzone';
 import { UserAvatar } from '@/components/UserAvater';
@@ -23,11 +23,6 @@ type Prop = {
 
 type InnerProp = Prop & {
   setPhase: (phase: Phase) => void;
-};
-
-const urlGA = {
-  play: 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=ja&gl=US',
-  appstore: 'https://apps.apple.com/jp/app/google-authenticator/id388497605',
 };
 
 const CommonCard = (props: { user: TD.User }) => {
@@ -48,6 +43,84 @@ const CommonCard = (props: { user: TD.User }) => {
       </div>
     </div>
   );
+};
+
+const EditPassword = ({ user, setPhase, onClose }: InnerProp) => {
+  const [personalData] = useAtom(authAtom.personalData);
+  const [password, setPassword] = useState('');
+  const validationErrors = passwordErrors(password);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
+  const [state, submit] = useAPI('PATCH', `/me/password`, {
+    payload: () => ({ password }),
+    onFetched: (json) => {
+      console.log('result', json);
+      setNetErrors({});
+      setPhase('Display');
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+          if (typeof json === 'object') {
+            setNetErrors(json);
+          }
+        });
+      }
+    },
+  });
+
+  if (!personalData) {
+    return null;
+  }
+  const passwordError = validationErrors.password || netErrors.password;
+  return (
+    <>
+      <CommonCard user={user} />
+      <div className="flex flex-row items-center justify-center gap-2">
+        <div>
+          <p className="">新しいパスワード:</p>
+          <div className="text-red-400">&nbsp;</div>
+        </div>
+        <div>
+          <FTTextField
+            className="w-[16em] border-2"
+            autoComplete="off"
+            placeholder="12 - 60文字"
+            value={password}
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {passwordError ? (
+            <div className="text-red-400">{passwordError}</div>
+          ) : (
+            <div>{password.length}/60</div>
+          )}
+        </div>
+      </div>
+      <div className="flex justify-around gap-8">
+        <FTButton
+          onClick={() => {
+            setPhase('Display');
+          }}
+        >
+          Cancel
+        </FTButton>
+        <FTButton
+          className="mr-2 disabled:opacity-50"
+          disabled={validationErrors.some || state === 'Fetching'}
+          onClick={submit}
+        >
+          <InlineIcon i={<Icons.Save />} />
+          Save
+        </FTButton>
+      </div>
+    </>
+  );
+};
+
+const urlGA = {
+  play: 'https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=ja&gl=US',
+  appstore: 'https://apps.apple.com/jp/app/google-authenticator/id388497605',
 };
 
 /**
@@ -435,13 +508,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
         <FTButton className="w-36" onClick={() => setPhase('Edit2FA')}>
           2FA設定
         </FTButton>
-        <FTButton
-          className="w-36"
-          onClick={() => {
-            navigation('/auth');
-            onClose();
-          }}
-        >
+        <FTButton className="w-36" onClick={() => setPhase('EditPassword')}>
           パスワード変更
         </FTButton>
       </div>
@@ -462,7 +529,9 @@ export const UserProfileModal = ({ user, onClose }: Prop) => {
       case 'Edit2FA':
         return <Edit2FA user={user} setPhase={setPhase} onClose={onClose} />;
       case 'EditPassword':
-        return null;
+        return (
+          <EditPassword user={user} setPhase={setPhase} onClose={onClose} />
+        );
     }
   };
   return (

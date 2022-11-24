@@ -17,8 +17,6 @@ import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
 
-import { createHmac } from 'crypto';
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -204,9 +202,16 @@ export class UsersService {
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
+    const d = {
+      ...updateUserDto,
+    };
+    if (d.password) {
+      const p = d.password;
+      d.password = UsersService.hash_password(p);
+    }
     return this.prisma.user.update({
       where: { id },
-      data: updateUserDto,
+      data: d,
     });
   }
 
@@ -303,15 +308,15 @@ export class UsersService {
       lastModified: avatar.lastModified,
     };
   }
-}
 
-/**
- * 生パスワードをハッシュ化する.\
- */
-export function hash_password(password: string) {
-  return Utils.hash(
-    passwordConstants.secret,
-    password + passwordConstants.pepper,
-    1000
-  );
+  /**
+   * 生パスワードをハッシュ化する.\
+   */
+  static hash_password(password: string) {
+    return Utils.hash(
+      passwordConstants.secret,
+      password + passwordConstants.pepper,
+      1000
+    );
+  }
 }
