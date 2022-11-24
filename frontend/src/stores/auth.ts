@@ -51,8 +51,13 @@ export type AppCredential = {
 };
 
 function getSub(credential: AppCredential | null) {
-  const t = credential ? jwtDecode<{ sub: string }>(credential.token) : null;
-  return t?.sub;
+  try {
+    const t = credential ? jwtDecode<{ sub: string }>(credential.token) : null;
+    return t?.sub || null;
+  } catch (e) {
+    console.error(e);
+  }
+  return null;
 }
 
 /**
