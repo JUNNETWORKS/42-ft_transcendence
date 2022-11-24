@@ -32,14 +32,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new UnauthorizedException('no user');
-      const now = Date.now();
-      console.log('now', now);
-      if (isfinite(exp)) {
-        console.log('exp', exp);
-        if (exp * 1000 <= now) {
-          console.log('invalid by exp');
-          throw new UnauthorizedException('already expired');
-        }
+    }
+    const now = Date.now();
+    console.log('now', now);
+    if (isfinite(exp)) {
+      console.log('exp', exp);
+      if (exp < now / 1000) {
+        console.log('invalid by exp');
+        throw new UnauthorizedException('already expired');
+      }
+    }
+    if (user.invalidateTokenIssuedBefore && isfinite(iat)) {
+      console.log(user.invalidateTokenIssuedBefore, iat);
+      if (iat < user.invalidateTokenIssuedBefore.getTime() / 1000) {
+        console.log('invalid by iat');
+        throw new UnauthorizedException('already expired');
       }
     }
     // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
