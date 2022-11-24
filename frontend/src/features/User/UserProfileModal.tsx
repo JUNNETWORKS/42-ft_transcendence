@@ -126,8 +126,8 @@ const Disable2FACard = () => {
     return null;
   }
   return (
-    <div>
-      <p>Enabled.</p>
+    <>
+      <p className="text-xl text-green-400">利用する</p>
 
       <FTButton
         className="mr-2 disabled:opacity-50"
@@ -138,9 +138,9 @@ const Disable2FACard = () => {
           }
         }}
       >
-        Disable 2FA
+        無効にする
       </FTButton>
-    </div>
+    </>
   );
 };
 
@@ -169,8 +169,8 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
     return null;
   }
   return (
-    <div>
-      <p>Disabled.</p>
+    <>
+      <p>利用しない</p>
 
       <FTButton
         className="mr-2 disabled:opacity-50"
@@ -181,9 +181,9 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
           }
         }}
       >
-        Enable 2FA
+        有効にする
       </FTButton>
-    </div>
+    </>
   );
 };
 
@@ -229,8 +229,8 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <CommonCard user={user} />
-      <div className="flex gap-8">
-        <h3 className="text-2xl">2FA</h3>
+      <div className="flex flex-row items-center justify-center gap-2">
+        <p className="text-2xl">2FA:</p>
         {personalData.isEnabled2FA ? (
           <Disable2FACard />
         ) : (
@@ -243,15 +243,7 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
             setPhase('Display');
           }}
         >
-          Cancel
-        </FTButton>
-        <FTButton
-          className="mr-2 disabled:opacity-50"
-          disabled={validationErrors.some || state === 'Fetching'}
-          onClick={submit}
-        >
-          <InlineIcon i={<Icons.Save />} />
-          Save
+          Back
         </FTButton>
       </div>
     </>
