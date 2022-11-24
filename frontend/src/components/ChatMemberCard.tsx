@@ -9,7 +9,7 @@ import { usePopper } from 'react-popper';
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 
-const AdminOperationBar = (
+export const AdminOperationBar = (
   props: {
     you: TD.ChatUserRelation | null;
     room: TD.ChatRoom;

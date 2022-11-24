@@ -11,12 +11,28 @@ import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { ChatMemberCard } from '@/components/ChatMemberCard';
 
-const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+const MessagesList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  messages: TD.ChatRoomMessage[];
+  members: TD.UserRelationMap;
+}) => {
   return (
     <>
-      {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatMessageCard key={data.id} message={data} />
-      ))}
+      {props.messages.map((data: TD.ChatRoomMessage) => {
+        const member = props.members[data.userId];
+        return (
+          member && (
+            <ChatMessageCard
+              key={data.id}
+              message={data}
+              you={props.you}
+              room={props.room}
+              member={member}
+            />
+          )
+        );
+      })}
     </>
   );
 };
@@ -105,7 +121,12 @@ export const ChatRoomView = (props: {
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-            <MessagesList messages={props.roomMessages(props.room.id)} />
+            <MessagesList
+              you={props.you}
+              room={props.room}
+              members={members}
+              messages={props.roomMessages(props.room.id)}
+            />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
