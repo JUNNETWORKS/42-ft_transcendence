@@ -31,26 +31,19 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const { email, sub: id, exp, iat } = payload;
     const user = await this.usersService.findOne(id);
     if (!user) {
+      // JWTのsubに対応するユーザがいないと401
       throw new UnauthorizedException('no user');
     }
     const now = Date.now();
-    console.log('now', now);
     if (isfinite(exp)) {
-      console.log('exp', exp);
+      // JWTに設定されている有効期限が過ぎていると401
       if (exp < now / 1000) {
-        console.log('invalid by exp');
         throw new UnauthorizedException('already expired');
       }
     }
+    // ユーザの`invalidateTokenIssuedBefore`よりiatが古いと401
     if (user.invalidateTokenIssuedBefore && isfinite(iat)) {
-      console.log(
-        user.invalidateTokenIssuedBefore,
-        iat,
-        user.invalidateTokenIssuedBefore.getTime() / 1000,
-        iat < user.invalidateTokenIssuedBefore.getTime() / 1000
-      );
       if (iat < Math.floor(user.invalidateTokenIssuedBefore.getTime() / 1000)) {
-        console.log('invalid by iat');
         throw new UnauthorizedException('already expired');
       }
     }
