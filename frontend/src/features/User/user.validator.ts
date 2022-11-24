@@ -22,18 +22,24 @@ export const displayNameErrors = (displayName: string) => {
 
 const validatePassword = (s: string) => {
   const trimmed = s.trim();
+  const policy = {
+    min: 12,
+    max: 60,
+    types: 4,
+    usableCharacters: /^[A-Za-z0-9/_-]+$/,
+  };
   const n = trimmed.length;
-  if (n < 12) {
-    return `${n}/12 too short`;
+  if (n < policy.min) {
+    return `${n}/${policy.min} too short`;
   }
-  if (60 < n) {
-    return `${n}/60 too long`;
+  if (policy.max < n) {
+    return `${n}/${policy.max} too long`;
   }
   const characters = Object.keys(keyBy(trimmed.split(''), (c) => c));
-  if (characters.length < 4) {
-    return `too less character types (${characters.length}/4)`;
+  if (characters.length < policy.types) {
+    return `too less character types (${characters.length}/${policy.types})`;
   }
-  if (trimmed.match(/[^A-Za-z0-9/_-]/)) {
+  if (!trimmed.match(policy.usableCharacters)) {
     return 'unusable character detected';
   }
   return null;
