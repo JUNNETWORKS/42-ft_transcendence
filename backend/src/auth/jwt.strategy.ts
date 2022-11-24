@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { UsersService } from 'src/users/users.service';
+import { isfinite } from 'src/utils';
 
 import { jwtConstants } from './auth.constants';
 
@@ -31,6 +32,15 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const user = await this.usersService.findOne(id);
     if (!user) {
       throw new UnauthorizedException('no user');
+      const now = Date.now();
+      console.log('now', now);
+      if (isfinite(exp)) {
+        console.log('exp', exp);
+        if (exp * 1000 <= now) {
+          console.log('invalid by exp');
+          throw new UnauthorizedException('already expired');
+        }
+      }
     }
     // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
     if (payload.next) {
