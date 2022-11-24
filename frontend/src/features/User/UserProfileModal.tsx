@@ -30,6 +30,26 @@ const urlGA = {
   appstore: 'https://apps.apple.com/jp/app/google-authenticator/id388497605',
 };
 
+const CommonCard = (props: { user: TD.User }) => {
+  return (
+    <div className="flex gap-8">
+      <UserAvatar user={props.user} className="h-24 w-24 shrink-0 grow-0" />
+      <div className="flex min-w-0 shrink grow flex-col justify-around">
+        <div className="flex flex-row gap-2">
+          <p className="shrink-0 grow-0 text-2xl">Id:</p>
+          <p className="shrink grow text-2xl">{props.user.id}</p>
+        </div>
+        <div className="flex flex-row gap-2">
+          <p className="shrink-0 grow-0 text-2xl">Name:</p>
+          <p className="shrink grow overflow-hidden text-ellipsis text-2xl">
+            {props.user.displayName}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * 2FA用のQRコードをユーザに表示するコンポーネント
  */
@@ -208,18 +228,14 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
       <Modal closeModal={closeModal} isOpen={!!qrcode}>
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
+      <CommonCard user={user} />
       <div className="flex gap-8">
-        <UserAvatar user={user} className="h-24 w-24" />
-        <div className="flex flex-col justify-around">
-          <div className="text-2xl">Id: {user.id}</div>
-          <div className="text-2xl">{displayName}</div>
-          <h3 className="text-2xl">2FA</h3>
-          {personalData.isEnabled2FA ? (
-            <Disable2FACard />
-          ) : (
-            <Enable2FACard onSucceeded={setQrcode} />
-          )}
-        </div>
+        <h3 className="text-2xl">2FA</h3>
+        {personalData.isEnabled2FA ? (
+          <Disable2FACard />
+        ) : (
+          <Enable2FACard onSucceeded={setQrcode} />
+        )}
       </div>
       <div className="flex justify-around gap-8">
         <FTButton
@@ -410,13 +426,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
   const navigation = useNavigate();
   return (
     <>
-      <div className="flex gap-8">
-        <UserAvatar user={user} className="h-24 w-24" />
-        <div className="flex flex-col justify-around">
-          <p className="text-2xl">Id: {user.id}</p>
-          <p className="text-2xl">Name: {user.displayName}</p>
-        </div>
-      </div>
+      <CommonCard user={user} />
       <div className="flex flex-wrap justify-around gap-8">
         <FTButton
           className="w-36"
