@@ -9,13 +9,12 @@ import { usePopper } from 'react-popper';
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 
-export const AdminOperationBar = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
+export const AdminOperationBar = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  member: TD.ChatUserRelation;
+  memberOperations: TD.MemberOperations;
+}) => {
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
@@ -30,6 +29,7 @@ export const AdminOperationBar = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
+  const ops = props.memberOperations;
 
   return (
     <>
@@ -39,7 +39,7 @@ export const AdminOperationBar = (
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isNomminatable}
           onClick={() =>
-            props.onNomminateClick ? props.onNomminateClick(props.member) : null
+            ops.onNomminateClick ? ops.onNomminateClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Nomminate />
@@ -47,9 +47,7 @@ export const AdminOperationBar = (
         <FTButton
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isBannable}
-          onClick={() =>
-            props.onBanClick ? props.onBanClick(props.member) : null
-          }
+          onClick={() => (ops.onBanClick ? ops.onBanClick(props.member) : null)}
         >
           <Icons.Chat.Operation.Ban />
         </FTButton>
@@ -57,7 +55,7 @@ export const AdminOperationBar = (
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isKickable}
           onClick={() =>
-            props.onKickClick ? props.onKickClick(props.member) : null
+            ops.onKickClick ? ops.onKickClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Kick />
@@ -66,7 +64,7 @@ export const AdminOperationBar = (
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isMutable}
           onClick={() =>
-            props.onMuteClick ? props.onMuteClick(props.member) : null
+            ops.onMuteClick ? ops.onMuteClick(props.member) : null
           }
         >
           <Icons.Chat.Operation.Mute />
@@ -76,13 +74,12 @@ export const AdminOperationBar = (
   );
 };
 
-export const ChatMemberCard = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
+export const ChatMemberCard = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  member: TD.ChatUserRelation;
+  memberOperations: TD.MemberOperations;
+}) => {
   const user = useUserDataReadOnly(props.member.userId);
   const isYou = props.you?.userId === props.member.user.id;
   const isAdmin = props.member.memberType === 'ADMIN';

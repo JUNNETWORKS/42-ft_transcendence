@@ -16,6 +16,7 @@ export const ChatMessageCard = (props: {
   room: TD.ChatRoom;
   message: TD.ChatRoomMessage;
   member: TD.ChatUserRelation;
+  memberOperations: TD.MemberOperations;
 }) => {
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const [referenceElement, setReferenceElement] =

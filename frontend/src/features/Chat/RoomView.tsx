@@ -16,6 +16,7 @@ const MessagesList = (props: {
   room: TD.ChatRoom;
   messages: TD.ChatRoomMessage[];
   members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
 }) => {
   return (
     <>
@@ -29,6 +30,7 @@ const MessagesList = (props: {
               you={props.you}
               room={props.room}
               member={member}
+              memberOperations={props.memberOperations}
             />
           )
         );
@@ -37,13 +39,12 @@ const MessagesList = (props: {
   );
 };
 
-const MembersList = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    members: TD.UserRelationMap;
-  } & TD.MemberOperations
-) => {
+const MembersList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
+}) => {
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
@@ -126,6 +127,7 @@ export const ChatRoomView = (props: {
               room={props.room}
               members={members}
               messages={props.roomMessages(props.room.id)}
+              memberOperations={props.memberOperations}
             />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
@@ -140,7 +142,7 @@ export const ChatRoomView = (props: {
             you={props.you}
             room={props.room}
             members={members}
-            {...props.memberOperations}
+            memberOperations={props.memberOperations}
           />
         </div>
       </div>
