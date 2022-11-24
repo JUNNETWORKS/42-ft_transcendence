@@ -43,8 +43,13 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       }
     }
     if (user.invalidateTokenIssuedBefore && isfinite(iat)) {
-      console.log(user.invalidateTokenIssuedBefore, iat);
-      if (iat < user.invalidateTokenIssuedBefore.getTime() / 1000) {
+      console.log(
+        user.invalidateTokenIssuedBefore,
+        iat,
+        user.invalidateTokenIssuedBefore.getTime() / 1000,
+        iat < user.invalidateTokenIssuedBefore.getTime() / 1000
+      );
+      if (iat < Math.floor(user.invalidateTokenIssuedBefore.getTime() / 1000)) {
         console.log('invalid by iat');
         throw new UnauthorizedException('already expired');
       }

@@ -17,8 +17,6 @@ import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
 
-import { createHmac } from 'crypto';
-
 @Injectable()
 export class UsersService {
   constructor(
@@ -263,6 +261,7 @@ export class UsersService {
         },
         data: {
           isEnabled2FA: true,
+          invalidateTokenIssuedBefore: new Date(),
         },
       }),
     ]);
