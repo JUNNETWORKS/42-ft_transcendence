@@ -3,6 +3,7 @@ import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAtom } from 'jotai';
 import { Link, useRoutes } from 'react-router-dom';
 import { FriendsView } from './FriendsView';
+import { BlockingView } from './BlockingView';
 
 export const MyPageView = () => {
   const [personalData] = useAtom(authAtom.personalData);
@@ -19,7 +20,12 @@ export const MyPageView = () => {
           <FTH4>email</FTH4>
           <div>{personalData.email}</div>
           <div>
-            <Link to="/me/friends">Friends</Link>
+            <Link to="/me/friends" className="border-2 p-2">
+              Friends
+            </Link>
+            <Link to="/me/blocking" className="border-2 p-2">
+              BlockingUsers
+            </Link>
             <FTButton>Stats(stub)</FTButton>
             <FTButton>Blocked(stub)</FTButton>
           </div>
@@ -31,6 +37,7 @@ export const MyPageView = () => {
   const myPageRoutes = [
     { path: '/', element: presentator },
     { path: '/friends/*', element: <FriendsView /> },
+    { path: '/blocking/*', element: <BlockingView /> },
   ];
   const routeElements = useRoutes([...myPageRoutes]);
   return <>{routeElements}</>;

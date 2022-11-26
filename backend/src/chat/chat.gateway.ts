@@ -14,6 +14,7 @@ import * as Utils from 'src/utils';
 import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationBlockDto } from 'src/chatrooms/dto/operation-block.dto';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members.dto';
 import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message.dto';
@@ -25,6 +26,7 @@ import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { OperationTellDto } from 'src/chatrooms/dto/operation-tell.dto';
+import { OperationUnblockDto } from 'src/chatrooms/dto/operation-unblock.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 
 import { WsServerGateway } from './../ws-server/ws-server.gateway';
@@ -74,7 +76,7 @@ export class ChatGateway implements OnGatewayConnection {
     joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const { visibleRooms, joiningRooms, dmRooms, friends } =
+    const { visibleRooms, joiningRooms, dmRooms, friends, blockingUsers } =
       await this.usersService.collectStartingInformations(userId);
     const joiningRoomNames = [...joiningRooms, ...dmRooms].map((r) =>
       generateFullRoomName({ roomId: r.id })
@@ -113,6 +115,13 @@ export class ChatGateway implements OnGatewayConnection {
           )
         ),
         friends: friends.map((r) => {
+          const h = this.heartbeatDict[r.id];
+          return {
+            ...Utils.pick(r, 'id', 'displayName'),
+            time: h ? h.time : null,
+          };
+        }),
+        blockingUsers: blockingUsers.map((r) => {
           const h = this.heartbeatDict[r.id];
           return {
             ...Utils.pick(r, 'id', 'displayName'),
@@ -828,6 +837,92 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         userId: targetId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_block')
+  async handleBlock(
+    @MessageBody() data: OperationBlockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_block', data);
+
+    if (user.id === data.userId) {
+      console.log('is you!!');
+      return;
+    }
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [すでにリレーションが存在していないことを確認]
+    if (rel.existing) {
+      console.log('** already being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.block(user.id, targetId);
+
+    // ブロックしたことを通知
+    this.wsServer.sendResults(
+      'ft_block',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_unblock')
+  async handleUnblock(
+    @MessageBody() data: OperationUnblockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_unblock', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [リレーションが存在していることを確認]
+    if (!rel.existing) {
+      console.log('** not being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.unblock(user.id, targetId);
+
+    // アンブロックことを通知
+    this.wsServer.sendResults(
+      'ft_unblock',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
       }
     );
   }
