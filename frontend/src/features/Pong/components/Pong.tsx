@@ -30,13 +30,10 @@ const drawBackground = (
   height: number
 ) => {
   // 背景枠
-  ctx.beginPath();
   ctx.fillStyle = pongWhite;
   ctx.fillRect(0, 0, width, height);
-  ctx.closePath();
   //背景色
   const bezelSize = 5;
-  ctx.beginPath();
   ctx.fillStyle = pongBlack;
   ctx.fillRect(
     bezelSize,
@@ -44,18 +41,15 @@ const drawBackground = (
     width - bezelSize * 2,
     height - bezelSize * 2
   );
-  ctx.closePath();
 
   //中央破線
   const dashedLineHeight = 25;
   const dashedLineWidth = 15;
 
+  ctx.fillStyle = pongWhite;
   for (let startY = 0; startY < height; startY += dashedLineHeight * 2) {
-    ctx.beginPath();
-    ctx.fillStyle = pongWhite;
     const startX = width / 2 - dashedLineWidth / 2;
     ctx.fillRect(startX, startY, dashedLineWidth, dashedLineHeight);
-    ctx.closePath();
   }
 };
 
@@ -66,7 +60,6 @@ const drawScore = (
   game: GameState
 ) => {
   // スコア
-  ctx.beginPath();
   ctx.font = '160px PixelMplus';
   ctx.fillStyle = pongWhite;
   const y = height * 0.25;
@@ -81,14 +74,12 @@ const drawScore = (
     }
     ctx.fillText(player.score.toString(), x, y);
   }
-  ctx.closePath();
 };
 
 const drawBar = (ctx: CanvasRenderingContext2D, { players }: GameState) => {
   for (let i = 0; i < players.length; i++) {
     const { topLeft, bottomRight } = players[i].bar;
 
-    ctx.beginPath();
     ctx.fillStyle = pongWhite;
     ctx.fillRect(
       topLeft.x,
@@ -96,7 +87,6 @@ const drawBar = (ctx: CanvasRenderingContext2D, { players }: GameState) => {
       bottomRight.x - topLeft.x,
       bottomRight.y - topLeft.y
     );
-    ctx.closePath();
   }
 };
 
@@ -110,11 +100,8 @@ const drawBall = (
 ) => {
   const r = staticGameSettings.ball.radius;
 
-  ctx.beginPath();
   ctx.fillStyle = pongWhite;
   ctx.fillRect(x - r, y - r, r * 2, r * 2);
-  ctx.fill();
-  ctx.closePath();
 };
 
 const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
