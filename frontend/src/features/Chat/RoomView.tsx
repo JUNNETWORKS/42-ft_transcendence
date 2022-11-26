@@ -179,6 +179,11 @@ const MessagesList = (props: {
     // [メッセージ変化]
     // → 今見えている要素の「見かけの縦位置」を維持する
     listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
+    // 以下の関係式が成り立つようにする:
+    // listEl.scrollHeight - listEl.scrollTop = scrollData.height - scrollData.top
+    // ※お気持ち
+    // height(領域の高さ) - top(領域の上から測った位置) は「領域の下から測った位置」となるので,
+    // これが維持されるように listEl.scrollTop をいじって辻褄を合わせている.
   }, [props.messages, listId]);
 
   const [mySocket] = useAtom(chatSocketAtom);
