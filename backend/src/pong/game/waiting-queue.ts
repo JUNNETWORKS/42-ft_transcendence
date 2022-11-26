@@ -1,11 +1,13 @@
-import { OngoingMatches } from './ongoing-matches';
 import { Server } from 'socket.io';
+
 import {
   generateFullRoomName,
   sendResultRoom,
   usersJoin,
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
+
+import { OngoingMatches } from './ongoing-matches';
 
 // マッチメイキングの待機キュー
 export class WaitingQueue {
@@ -76,8 +78,34 @@ export class WaitingQueue {
   }
 
   private async createMatch(userID1: number, userID2: number) {
-    this.ongoingMatches.createMatch(userID1, userID2);
+    const matchID = this.ongoingMatches.createMatch(userID1, userID2);
     this.users.delete(userID1);
     this.users.delete(userID2);
+    usersLeave(
+      this.wsServer,
+      userID1,
+      generateFullRoomName({ matchMakingId: this.id })
+    );
+    usersLeave(
+      this.wsServer,
+      userID2,
+      generateFullRoomName({ matchMakingId: this.id })
+    );
+    sendResultRoom(
+      this.wsServer,
+      'pong.match_making.done',
+      generateFullRoomName({ userId: userID1 }),
+      {
+        matchID: matchID,
+      }
+    );
+    sendResultRoom(
+      this.wsServer,
+      'pong.match_making.done',
+      generateFullRoomName({ userId: userID2 }),
+      {
+        matchID: matchID,
+      }
+    );
   }
 }

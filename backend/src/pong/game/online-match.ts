@@ -1,4 +1,5 @@
 import { Server, Socket } from 'socket.io';
+import { v4 as uuidv4 } from 'uuid';
 
 import {
   generateFullRoomName,
@@ -6,7 +7,6 @@ import {
   usersJoin,
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
-import { v4 as uuidv4 } from 'uuid';
 
 import { Match } from './match';
 import { MatchResult, PlayerInput } from './types/game-state';
@@ -59,6 +59,11 @@ export class OnlineMatch {
 
   // ゲームの状態更新し､Roomに送信
   syncGameState() {
+    if (this.match === undefined) {
+      // インスタンスが作られる前に gameStateSyncTimer が呼ばれることがあるのでガードを入れておく｡
+      return;
+    }
+
     this.match.update();
 
     if (this.wsServer) {

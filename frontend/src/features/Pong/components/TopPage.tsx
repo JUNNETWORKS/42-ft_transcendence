@@ -47,7 +47,6 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
       <Modal isOpen={isWaiting} closeModal={cancelWaiting}>
         <div className="flex flex-col gap-5 rounded-md bg-primary p-10">
           <div className="text-3xl">マッチング待機中</div>
-          <div className="text-3xl">待機ユーザー: {waitingCount}人</div>
           <button
             className="h-[50] w-[100] rounded-sm bg-secondary"
             onClick={cancelWaiting}
