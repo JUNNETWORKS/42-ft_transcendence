@@ -19,9 +19,6 @@ import { generateQueueID } from './game/utils';
 import { WaitingQueue } from './game/waiting-queue';
 import { WaitingQueues } from './game/waiting-queues';
 
-
-
-
 // TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
 // フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡
 @WebSocketGateway({ cors: true, namespace: '/chat' })
@@ -36,7 +33,7 @@ export class PongGateway {
   afterInit(server: Server) {
     this.wsServer = server;
     this.ongoingMatches = new OngoingMatches(this.wsServer);
-    this.waitingQueues = new WaitingQueues(this.ongoingMatches);
+    this.waitingQueues = new WaitingQueues();
   }
 
   onApplicationBootstrap() {

@@ -7,11 +7,9 @@ import { WaitingQueue } from './waiting-queue';
 // - Casual全体で1つ
 // - Privateの場合は1試合につき1つ
 export class WaitingQueues {
-  private ongoingMatches: OngoingMatches;
   private queues: Map<string, WaitingQueue>;
 
-  constructor(ongoingMatches: OngoingMatches) {
-    this.ongoingMatches = ongoingMatches;
+  constructor() {
     this.queues = new Map<string, WaitingQueue>();
   }
 

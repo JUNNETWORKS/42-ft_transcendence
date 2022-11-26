@@ -8,15 +8,9 @@ import { useNavigate } from 'react-router-dom';
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
-  const [waitingCount, setWaitingCount] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // マッチメイキング進捗通知
-    mySocket.on('pong.match_making.progress', (data) => {
-      setWaitingCount(data.waitingPlayerCount);
-    });
-
     // マッチメイキング完了通知
     mySocket.on('pong.match_making.done', (data) => {
       const matchID = data.matchID;
@@ -25,7 +19,6 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     });
 
     return () => {
-      mySocket?.off('pong.match_making.progress');
       mySocket?.off('pong.match_making.done');
     };
   }, []);
