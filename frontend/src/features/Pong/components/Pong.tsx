@@ -27,8 +27,7 @@ const clearCanvas = (
 const drawBackground = (
   ctx: CanvasRenderingContext2D,
   width: number,
-  height: number,
-  game: GameState
+  height: number
 ) => {
   // 背景枠
   ctx.beginPath();
@@ -58,7 +57,14 @@ const drawBackground = (
     ctx.fillRect(startX, startY, dashedLineWidth, dashedLineHeight);
     ctx.closePath();
   }
+};
 
+const drawScore = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  game: GameState
+) => {
   // スコア
   ctx.beginPath();
   ctx.font = '160px PixelMplus';
@@ -115,11 +121,19 @@ const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   clearCanvas(ctx, canvas.width, canvas.height);
-  drawBackground(ctx, canvas.width, canvas.height, game);
+  drawBackground(ctx, canvas.width, canvas.height);
+  drawScore(ctx, canvas.width, canvas.height, game);
   drawBar(ctx, game);
   drawBall(ctx, game);
 };
 
+const drawResultCanvas = (canvas: HTMLCanvasElement, game: GameState) => {
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  clearCanvas(ctx, canvas.width, canvas.height);
+  drawBackground(ctx, canvas.width, canvas.height);
+  drawBar(ctx, game);
+};
 // ========================================
 // React
 
@@ -165,9 +179,15 @@ export const Pong: React.FC = () => {
         redrawGame(canvasRef.current, gameState);
       }
     });
-    socketRef.current.on('pong.match.finish', (gameResult: GameResult) => {
-      setMatchResult(gameResult);
-    });
+    socketRef.current.on(
+      'pong.match.finish',
+      ({ game, result }: { game: GameState; result: GameResult }) => {
+        if (canvasRef.current) {
+          drawResultCanvas(canvasRef.current, game);
+        }
+        setMatchResult(result);
+      }
+    );
 
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       socketRef.current?.emit('pong.match.action', {
