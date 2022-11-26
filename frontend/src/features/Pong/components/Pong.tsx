@@ -78,26 +78,19 @@ const drawBackground = (
   ctx.closePath();
 };
 
-const drawBar = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  game: GameState
-) => {
-  for (let i = 0; i < game.players.length; i++) {
-    const player = game.players[i];
+const drawBar = (ctx: CanvasRenderingContext2D, { players }: GameState) => {
+  for (let i = 0; i < players.length; i++) {
+    const { topLeft, bottomRight } = players[i].bar;
 
     ctx.beginPath();
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = pongWhite;
     ctx.fillRect(
-      player.bar.topLeft.x,
-      player.bar.topLeft.y,
-      player.bar.bottomRight.x - player.bar.topLeft.x,
-      player.bar.bottomRight.y - player.bar.topLeft.y
+      topLeft.x,
+      topLeft.y,
+      bottomRight.x - topLeft.x,
+      bottomRight.y - topLeft.y
     );
     ctx.closePath();
-    player.bar.topLeft;
-    player.bar.bottomRight;
   }
 };
 
@@ -123,7 +116,7 @@ const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
   if (!ctx) return;
   clearCanvas(ctx, canvas.width, canvas.height);
   drawBackground(ctx, canvas.width, canvas.height, game);
-  drawBar(ctx, canvas.width, canvas.height, game);
+  drawBar(ctx, game);
   drawBall(ctx, canvas.width, canvas.height, game);
 };
 
