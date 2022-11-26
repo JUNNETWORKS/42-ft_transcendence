@@ -354,7 +354,6 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [ハードリレーション更新]
-    // TODO: これトランザクションにするべきでは？
     const member = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
