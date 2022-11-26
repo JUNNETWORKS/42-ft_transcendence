@@ -1,59 +1,82 @@
-import { HttpException, Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
-import { PostMessageDto } from './dto/post-message.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
-import { UpdateRoomNameDto } from './dto/update-room-name.dto';
-import { UpdateRoomTypeDto } from './dto/update-room-type.dto';
-import { ChatroomEntity } from './entities/chatroom.entity';
-import { RoomMemberDto } from './dto/room-member.dto';
-import { GetMessagesDto } from './dto/get-messages.dto';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
+import { GetMessagesDto } from './dto/get-messages.dto';
+import { PostMessageDto } from './dto/post-message.dto';
+import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
+
+import { PrismaService } from '../prisma/prisma.service';
+import * as Utils from '../utils';
+import { chatRoomConstants } from './chatrooms.constant';
+import { ChatroomEntity } from './entities/chatroom.entity';
 
 @Injectable()
 export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createChatroomDto: CreateChatroomDto) {
-    const res = await this.prisma.chatRoom.create({
+    return this.prisma.chatRoom.create({
       data: {
         ...createChatroomDto,
         roomMember: {
           create: createChatroomDto.roomMember,
         },
       },
+      include:
+        createChatroomDto.roomType === 'DM'
+          ? {
+              roomMember: {
+                include: {
+                  user: true,
+                },
+              },
+            }
+          : null,
     });
-    return new ChatroomEntity(res);
   }
 
   async findMany(getChatroomsDto: GetChatroomsDto) {
-    const { take, cursor } = getChatroomsDto;
-    if (take > 0) {
-      const res = await this.prisma.chatRoom.findMany({
+    const { take, cursor, category } = getChatroomsDto;
+    const res = await (async () => {
+      const id = cursor
+        ? take > 0
+          ? { gt: cursor }
+          : { lt: cursor }
+        : undefined;
+      if (category === 'PRIVATE') {
+        if (typeof getChatroomsDto.userId !== 'number') {
+          throw new BadRequestException();
+        }
+        const rels = await this.getRoomsJoining(
+          getChatroomsDto.userId,
+          'PRIVATE_ONLY'
+        );
+        return rels.map((rel) => rel.chatRoom);
+      }
+      return this.prisma.chatRoom.findMany({
         take: take,
         where: {
-          roomType: {
-            notIn: 'PRIVATE',
-          },
-          id: cursor ? { gt: cursor } : undefined,
+          roomType: (() => {
+            switch (category) {
+              case 'DM':
+                return {
+                  in: ['DM'],
+                };
+              default:
+                return {
+                  in: ['PUBLIC', 'LOCKED'],
+                };
+            }
+          })(),
+          id,
         },
         orderBy: { id: 'asc' },
       });
-      return res.map((o) => new ChatroomEntity(o));
-    } else {
-      const res = await this.prisma.chatRoom.findMany({
-        take: take,
-        where: {
-          roomType: {
-            notIn: 'PRIVATE',
-          },
-          id: cursor ? { lt: cursor } : undefined,
-        },
-        orderBy: { id: 'asc' },
-      });
-      return res.map((o) => new ChatroomEntity(o));
-    }
+    })();
+    return res.map((o) => new ChatroomEntity(o));
   }
 
   async findOne(id: number) {
@@ -108,13 +131,42 @@ export class ChatroomsService {
    * @param userId
    * @returns
    */
-  getRoomsJoining(userId: number) {
+  getRoomsJoining(userId: number, category?: 'PRIVATE_ONLY' | 'DM_ONLY') {
     return this.prisma.chatUserRelation.findMany({
       where: {
         userId,
+        chatRoom: {
+          roomType: (() => {
+            switch (category) {
+              case 'DM_ONLY':
+                return {
+                  in: ['DM'],
+                };
+              case 'PRIVATE_ONLY':
+                return {
+                  in: ['PRIVATE'],
+                };
+              default:
+                return {
+                  in: ['PUBLIC', 'LOCKED', 'PRIVATE'],
+                };
+            }
+          })(),
+        },
       },
       include: {
-        chatRoom: true,
+        chatRoom: {
+          include: {
+            roomMember:
+              category === 'DM_ONLY'
+                ? {
+                    include: {
+                      user: true,
+                    },
+                  }
+                : false,
+          },
+        },
       },
     });
   }
@@ -187,33 +239,48 @@ export class ChatroomsService {
 
   async updateRoom(id: number, updateRoomDto: UpdateRoomDto) {
     const { roomType, roomPassword, roomName } = updateRoomDto;
+    const before = await this.prisma.chatRoom.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!before) {
+      throw new HttpException('object not found', 400);
+    }
+    // [roomType と roomPassword]
+    // - roomType が LOCKED である
+    //   - 変更前の roomType が LOCKED でない かつ roomPassword が空欄
+    //     - Bad Request ... (A)
+    //   - 変更前の roomType が LOCKED である かつ roomPassword が空欄
+    //     - パスワードを変更しない ... (B)
+    //   - roomPassword が空欄でない
+    //     - パスワードを変更する ... (C)
+    // - roomType が LOCKED でない
+    //   - パスワードを削除する ... (D)
+    if (
+      roomType === 'LOCKED' &&
+      before.roomType !== roomType &&
+      !roomPassword
+    ) {
+      throw new HttpException('password is needed', 400); // (A)
+    }
     const res = await this.prisma.chatRoom.update({
       where: { id },
       data: {
         roomType: roomType,
-        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
+        ...(() => {
+          if (roomType === 'LOCKED') {
+            if (roomPassword) {
+              return { roomPassword: hash_password(roomPassword) }; // (C)
+            } else {
+              return {}; // (B)
+            }
+          } else {
+            return { roomPassword: null }; // (D)
+          }
+        })(),
         roomName,
       },
-    });
-    return new ChatroomEntity(res);
-  }
-
-  async updateRoomType(id: number, updateRoomTypeDto: UpdateRoomTypeDto) {
-    const { roomType, roomPassword } = updateRoomTypeDto;
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
-      data: {
-        roomType: roomType,
-        roomPassword: roomType !== 'LOCKED' ? null : roomPassword,
-      },
-    });
-    return new ChatroomEntity(res);
-  }
-
-  async updateRoomName(id: number, updateRoomNameDto: UpdateRoomNameDto) {
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
-      data: updateRoomNameDto,
     });
     return new ChatroomEntity(res);
   }
@@ -312,4 +379,15 @@ export class ChatroomsService {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
   }
+}
+
+/**
+ * 生パスワードをハッシュ化する.\
+ */
+export function hash_password(password: string) {
+  return Utils.hash(
+    chatRoomConstants.secret,
+    password + chatRoomConstants.pepper,
+    1000
+  );
 }

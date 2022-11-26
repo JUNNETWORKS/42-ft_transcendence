@@ -14,6 +14,7 @@ import * as Utils from 'src/utils';
 import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
+import { OperationBlockDto } from 'src/chatrooms/dto/operation-block.dto';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
 import { OperationGetRoomMembersDto } from 'src/chatrooms/dto/operation-get-room-members.dto';
 import { OperationGetRoomMessageDto } from 'src/chatrooms/dto/operation-get-room-message.dto';
@@ -24,6 +25,8 @@ import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
 import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
+import { OperationTellDto } from 'src/chatrooms/dto/operation-tell.dto';
+import { OperationUnblockDto } from 'src/chatrooms/dto/operation-unblock.dto';
 import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 
 import { WsServerGateway } from './../ws-server/ws-server.gateway';
@@ -73,9 +76,9 @@ export class ChatGateway implements OnGatewayConnection {
     joinChannel(client, generateFullRoomName({ global: 'global' }));
 
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
-    const { visibleRooms, joiningRooms, friends } =
+    const { visibleRooms, joiningRooms, dmRooms, friends, blockingUsers } =
       await this.usersService.collectStartingInformations(userId);
-    const joiningRoomNames = joiningRooms.map((r) =>
+    const joiningRoomNames = [...joiningRooms, ...dmRooms].map((r) =>
       generateFullRoomName({ roomId: r.id })
     );
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
@@ -100,7 +103,25 @@ export class ChatGateway implements OnGatewayConnection {
         joiningRooms: joiningRooms.map((r) =>
           Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
         ),
+        dmRooms: dmRooms.map((r) =>
+          Utils.pick(
+            r,
+            'id',
+            'roomName',
+            'roomType',
+            'ownerId',
+            'updatedAt',
+            'roomMember'
+          )
+        ),
         friends: friends.map((r) => {
+          const h = this.heartbeatDict[r.id];
+          return {
+            ...Utils.pick(r, 'id', 'displayName'),
+            time: h ? h.time : null,
+          };
+        }),
+        blockingUsers: blockingUsers.map((r) => {
           const h = this.heartbeatDict[r.id];
           return {
             ...Utils.pick(r, 'id', 'displayName'),
@@ -222,6 +243,63 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   /**
+   * DMの新規送信、DMルームの作成とメッセージ送信
+   * @param data
+   * @param client
+   */
+  @SubscribeMessage('ft_tell')
+  async handleTell(
+    @MessageBody() data: OperationTellDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    data.callerId = user.id;
+    // DMルームの作成
+    const dmRoom = await this.chatRoomService.create({
+      roomName: `dm-uId${data.callerId}-uId${data.userId}`,
+      roomType: 'DM',
+      ownerId: data.callerId,
+      roomMember: [
+        { userId: data.callerId, memberType: 'ADMIN' },
+        { userId: data.userId, memberType: 'ADMIN' },
+      ],
+    });
+    const roomId = dmRoom.id;
+
+    // [作成されたDMルームにjoin]
+    await this.wsServer.usersJoin(user.id, { roomId });
+    await this.wsServer.usersJoin(data.userId, { roomId });
+
+    // [新しいDMルームが作成されたことを通知する]
+    this.wsServer.sendResults('ft_tell', dmRoom, { roomId });
+
+    // 発言を作成
+    const chatMessage = await this.chatService.postMessageBySay({
+      roomId,
+      content: data.content,
+      callerId: data.callerId,
+    });
+    // 発言内容を通知
+    this.wsServer.sendResults(
+      'ft_say',
+      {
+        ...chatMessage,
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
+      },
+      {
+        roomId,
+      }
+    );
+    this.updateHeartbeat(user.id);
+  }
+
+  /**
    * チャットルームへの入室
    * @param data
    * @param client
@@ -297,20 +375,37 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     // チャットルームの内容を通知
-    const messages = await this.chatRoomService.getMessages({
-      roomId,
-      take: 50,
+    await Utils.PromiseMap({
+      messages: (async () => {
+        const messages = await this.chatRoomService.getMessages({
+          roomId,
+          take: 50,
+        });
+        this.wsServer.sendResults(
+          'ft_get_room_messages',
+          {
+            id: roomId,
+            messages,
+          },
+          {
+            client,
+          }
+        );
+      })(),
+      members: (async () => {
+        const members = await this.chatRoomService.getMembers(roomId);
+        this.wsServer.sendResults(
+          'ft_get_room_members',
+          {
+            id: roomId,
+            members,
+          },
+          {
+            client,
+          }
+        );
+      })(),
     });
-    this.wsServer.sendResults(
-      'ft_get_room_messages',
-      {
-        id: roomId,
-        messages,
-      },
-      {
-        client,
-      }
-    );
     this.updateHeartbeat(user.id);
   }
 
@@ -742,6 +837,92 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         userId: targetId,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_block')
+  async handleBlock(
+    @MessageBody() data: OperationBlockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_block', data);
+
+    if (user.id === data.userId) {
+      console.log('is you!!');
+      return;
+    }
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [すでにリレーションが存在していないことを確認]
+    if (rel.existing) {
+      console.log('** already being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.block(user.id, targetId);
+
+    // ブロックしたことを通知
+    this.wsServer.sendResults(
+      'ft_block',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
+      }
+    );
+  }
+
+  @SubscribeMessage('ft_unblock')
+  async handleUnblock(
+    @MessageBody() data: OperationUnblockDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const user = await this.authService.trapAuth(client);
+    if (!user) {
+      return;
+    }
+    const targetId = data.userId;
+    console.log('ft_unblock', data);
+
+    const rel = await Utils.PromiseMap({
+      target: this.usersService.findOne(targetId),
+      existing: this.usersService.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      console.log('** unexisting target user **');
+      return;
+    }
+    // [リレーションが存在していることを確認]
+    if (!rel.existing) {
+      console.log('** not being blocked **');
+      return;
+    }
+
+    // [ハードリレーション更新]
+    await this.usersService.unblock(user.id, targetId);
+
+    // アンブロックことを通知
+    this.wsServer.sendResults(
+      'ft_unblock',
+      {
+        user: Utils.pick(rel.target, 'id', 'displayName'),
+      },
+      {
+        userId: user.id,
       }
     );
   }

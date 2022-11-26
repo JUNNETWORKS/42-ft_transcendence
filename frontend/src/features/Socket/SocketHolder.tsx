@@ -1,9 +1,9 @@
 import { authAtom, chatSocketAtom } from '@/stores/auth';
-import { useAtom, useSetAtom } from 'jotai';
+import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { useUpdateRoom, useUpdateUser } from '@/stores/store';
+import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
 
 export const SocketHolder = () => {
@@ -15,7 +15,11 @@ export const SocketHolder = () => {
   const [personalData] = useAtom(authAtom.personalData);
   const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
   const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
+  const [blockingUsers, setBlockingUsers] = useAtom(
+    structureAtom.blockingUsers
+  );
   const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
   const [, setMessagesInRoom] = useAtom(structureAtom.messagesInRoomAtom);
   const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
@@ -23,6 +27,7 @@ export const SocketHolder = () => {
 
   const userUpdator = useUpdateUser();
   const roomUpdator = useUpdateRoom();
+  const dmRoomUpdator = useUpdateDmRoom();
 
   useEffect(() => {
     console.log('mySocket?', !!mySocket);
@@ -30,10 +35,14 @@ export const SocketHolder = () => {
       console.log('catch connection', data);
       setJoiningRooms(data.joiningRooms);
       setVisibleRooms(data.visibleRooms);
+      setDmRooms(data.dmRooms);
       setFriends(data.friends);
+      setBlockingUsers(data.blockingUsers);
       userUpdator.addMany(data.friends);
+      userUpdator.addMany(data.blockingUsers);
       roomUpdator.addMany(data.visibleRooms);
       roomUpdator.addMany(data.joiningRooms);
+      dmRoomUpdator.addMany(data.dmRooms);
     });
 
     mySocket?.on('ft_heartbeat', (data: TD.HeartbeatResult) => {
@@ -67,6 +76,22 @@ export const SocketHolder = () => {
         });
       }
       roomUpdator.addOne(room);
+    });
+
+    mySocket?.on('ft_tell', (data: TD.DmOpenResult) => {
+      console.log('catch dm_open');
+      console.log(data);
+      const room: TD.DmRoom = {
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      setDmRooms((prev) => {
+        const next = [...prev];
+        next.push(room);
+        return next;
+      });
+      dmRoomUpdator.addOne(room);
     });
 
     mySocket?.on('ft_say', (data: TD.SayResult) => {
@@ -202,6 +227,26 @@ export const SocketHolder = () => {
       console.log('catch unfollow');
       if (friends.find((f) => f.id === data.user.id)) {
         setFriends((prev) => {
+          const next = prev.filter((f) => f.id !== data.user.id);
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_block', (data: TD.BlockResult) => {
+      console.log('catch block');
+      if (!blockingUsers.find((f) => f.id === data.user.id)) {
+        setBlockingUsers((prev) => {
+          const next = [...prev, data.user];
+          return next;
+        });
+      }
+    });
+
+    mySocket?.on('ft_unblock', (data: TD.UnblockResult) => {
+      console.log('catch unblock');
+      if (blockingUsers.find((f) => f.id === data.user.id)) {
+        setBlockingUsers((prev) => {
           const next = prev.filter((f) => f.id !== data.user.id);
           return next;
         });

@@ -1,13 +1,15 @@
 import { atom, useAtom } from 'jotai';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import * as TD from '../typedef';
 import * as Utils from '../utils';
+import { authAtom } from './auth';
 
 // オブジェクトストア
 
 export const storeAtoms = {
   users: atom<{ [id: number]: TD.User }>({}),
   rooms: atom<{ [id: number]: TD.ChatRoom }>({}),
+  dmRooms: atom<{ [id: number]: TD.DmRoom }>({}),
 };
 
 /**
@@ -15,10 +17,13 @@ export const storeAtoms = {
  */
 export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
+  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+
   const updater = {
     addOne: useCallback(
       (data: TD.User) => {
         const d = Utils.datifyObject(data);
+        d.avatarTime = Date.now();
         setUsersStore((prev) => ({ [data.id]: d, ...prev }));
       },
       [setUsersStore]
@@ -36,16 +41,26 @@ export const useUpdateUser = () => {
     ),
     updateOne: useCallback(
       (userId: number, part: Partial<TD.User>) => {
+        const patched = Utils.datifyObject(part, 'time');
+        if (part.avatar) {
+          patched.avatarTime = Date.now();
+        }
         setUsersStore((prev) => {
           const d = prev[userId];
           if (!d) {
             return prev;
           }
-          const p = Utils.datifyObject(part, 'time');
-          return { ...prev, [userId]: { ...d, ...p } };
+          const u = { ...d, ...patched };
+          return { ...prev, [userId]: u };
         });
+        if (personalData?.id === userId) {
+          // 自分のデータの更新を受け取った場合は`personalData`の更新も同時に行う
+          if (personalData) {
+            setPersonalData({ ...personalData, ...patched });
+          }
+        }
       },
-      [setUsersStore]
+      [setUsersStore, setPersonalData, personalData?.id]
     ),
     offlinate: useCallback(
       (userId: number) => {
@@ -111,6 +126,33 @@ export const useUpdateRoom = () => {
   };
   return {
     roomsStore,
+    addOne,
+    addMany,
+    updateOne,
+  };
+};
+
+export const useUpdateDmRoom = () => {
+  const [dmRoomsStore, setDmRoomsStore] = useAtom(storeAtoms.dmRooms);
+  const addOne = (data: TD.DmRoom) => {
+    setDmRoomsStore((prev) => ({ ...prev, [data.id]: data }));
+  };
+  const addMany = (data: TD.DmRoom[]) => {
+    setDmRoomsStore((prev) => {
+      const next = { ...prev };
+      data.forEach((d) => (next[d.id] = d));
+      return next;
+    });
+  };
+  const updateOne = (roomId: number, part: Partial<TD.DmRoom>) => {
+    const d = dmRoomsStore[roomId];
+    if (!d) {
+      return;
+    }
+    setDmRoomsStore((prev) => ({ ...prev, [roomId]: { ...d, ...part } }));
+  };
+  return {
+    dmRoomsStore,
     addOne,
     addMany,
     updateOne,

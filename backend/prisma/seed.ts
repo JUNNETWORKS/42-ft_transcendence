@@ -1,4 +1,5 @@
 import { PrismaClient, RoomType } from '@prisma/client';
+
 import { hash_password } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
@@ -9,6 +10,7 @@ async function main() {
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       { displayName: 'Angelique', email: 'angelique@prisma.io', intraId: 2 },
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
+      { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
     ].map((d) => {
       return {
         ...d,
@@ -34,6 +36,21 @@ async function main() {
       {
         roomName: 'chatroom3',
         roomType: 'PUBLIC',
+        ownerId: 1,
+      },
+      {
+        roomName: 'test-dm1',
+        roomType: 'DM',
+        ownerId: 1,
+      },
+      {
+        roomName: 'test-dm2',
+        roomType: 'DM',
+        ownerId: 2,
+      },
+      {
+        roomName: 'test-dm3',
+        roomType: 'DM',
         ownerId: 1,
       },
     ],
@@ -71,6 +88,102 @@ async function main() {
       });
     }
   }
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 1,
+      chatRoomId: 4,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 2,
+      chatRoomId: 4,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 2,
+      chatRoomId: 5,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 3,
+      chatRoomId: 5,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      chatRoomId: 4,
+      content: `test dm message from user1`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 2,
+      chatRoomId: 4,
+      content: `test dm message from user2`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 2,
+      chatRoomId: 5,
+      content: `test dm message from user2`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 3,
+      chatRoomId: 5,
+      content: `test dm message from user3`,
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 5,
+      chatRoomId: 1,
+      content: 'something fxxkin message',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 1,
+      chatRoomId: 6,
+      memberType: 'ADMIN',
+    },
+  });
+
+  await prisma.chatUserRelation.create({
+    data: {
+      userId: 5,
+      chatRoomId: 6,
+      memberType: 'MEMBER',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 5,
+      chatRoomId: 6,
+      content: 'something fxxkin message',
+    },
+  });
 
   // chatMessageたくさん入れる
   // const data = [];

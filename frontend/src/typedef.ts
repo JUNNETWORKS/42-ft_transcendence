@@ -6,6 +6,10 @@ export type User = {
   id: number;
   displayName: string;
   time?: Date;
+  isEnabledAvatar: boolean;
+
+  avatar?: boolean;
+  avatarTime: number;
 };
 
 export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
@@ -19,6 +23,10 @@ export type ChatRoom = {
   ownerId: number;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type DmRoom = ChatRoom & {
+  roomMember: ChatUserRelation[];
 };
 
 export type ChatUserRelation = {
@@ -57,7 +65,9 @@ export type ConnectionResult = {
   displayName: string;
   visibleRooms: ChatRoom[];
   joiningRooms: ChatRoom[];
+  dmRooms: DmRoom[];
   friends: User[];
+  blockingUsers: User[];
 };
 
 export type HeartbeatResult = {
@@ -70,6 +80,8 @@ export type OfflineResult = {
 };
 
 export type OpenResult = ChatRoom;
+
+export type DmOpenResult = DmRoom;
 
 export type SayResult = ChatRoomMessage & {
   user: User;
@@ -108,6 +120,14 @@ export type FollowResult = {
 };
 
 export type UnfollowResult = {
+  user: User;
+};
+
+export type BlockResult = {
+  user: User;
+};
+
+export type UnblockResult = {
   user: User;
 };
 

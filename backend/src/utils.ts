@@ -1,3 +1,5 @@
+import { createHmac } from 'crypto';
+
 type Many<T> = T | ReadonlyArray<T>;
 
 /**
@@ -14,6 +16,20 @@ export function pick<T extends object, U extends keyof T>(
   const d: any = {};
   props.forEach((key) => {
     d[key] = (obj as any)[key];
+  });
+  return d;
+}
+
+export function omit<T extends object, U extends keyof T>(
+  obj: T,
+  ...props: Array<Many<U>>
+): Omit<T, U> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    d[key] = (obj as any)[key];
+  });
+  props.forEach((key) => {
+    delete d[key];
   });
   return d;
 }
@@ -113,4 +129,15 @@ export async function PromiseMap<T>(pmap: { [P in keyof T]: Promise<T[P]> }) {
     )
   );
   return r as T;
+}
+
+export function hash(secret: string, target: string, iteration = 1) {
+  if (iteration < 1) {
+    iteration = 1;
+  }
+  let s = target;
+  for (let i = 0; i < iteration; ++i) {
+    s = createHmac('sha256', secret).update(s).digest('hex').toString();
+  }
+  return s;
 }

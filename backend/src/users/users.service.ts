@@ -1,4 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  forwardRef,
+  Inject,
+  Injectable,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
 import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -119,18 +126,81 @@ export class UsersService {
     });
   }
 
+  async findBlocked(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.findUnique({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
+  async block(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.create({
+      data: {
+        userId,
+        targetUserId,
+      },
+    });
+  }
+
+  async findBlockingUsers(userId: number) {
+    return this.prisma.blockRelation.findMany({
+      where: {
+        userId,
+      },
+      include: {
+        targetUser: true,
+      },
+    });
+  }
+
+  async unblock(userId: number, targetUserId: number) {
+    return this.prisma.blockRelation.delete({
+      where: {
+        userId_targetUserId: {
+          userId,
+          targetUserId,
+        },
+      },
+    });
+  }
+
   /**
    * ログイン時の初期表示用の情報をかき集める
    * @param id
    */
   async collectStartingInformations(id: number) {
-    return Utils.PromiseMap({
-      visibleRooms: this.chatRoomService.findMany({ take: 40 }),
+    const r = await Utils.PromiseMap({
+      visiblePrivate: this.chatRoomService.findMany({
+        take: 40,
+        category: 'PRIVATE',
+        userId: id,
+      }),
+      visiblePublic: this.chatRoomService.findMany({ take: 40 }),
       joiningRooms: this.chatRoomService
         .getRoomsJoining(id)
         .then((rs) => rs.map((r) => r.chatRoom)),
+      dmRooms: this.chatRoomService
+        .getRoomsJoining(id, 'DM_ONLY')
+        .then((rs) => rs.map((r) => r.chatRoom)),
       friends: this.findFriends(id).then((fs) => fs.map((d) => d.targetUser)),
+      blockingUsers: this.findBlockingUsers(id).then((us) =>
+        us.map((d) => d.targetUser)
+      ),
     });
+    return {
+      visibleRooms: Utils.sortBy(
+        [...r.visiblePublic, ...r.visiblePrivate],
+        (r) => r.id
+      ),
+      joiningRooms: r.joiningRooms,
+      dmRooms: r.dmRooms,
+      friends: r.friends,
+      blockingUsers: r.blockingUsers,
+    };
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
@@ -142,6 +212,32 @@ export class UsersService {
 
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
+  }
+
+  async upsertAvatar(userId: number, avatarDataURL: string) {
+    const m = avatarDataURL.match(/^data:([^;]+);([^,]+),(.*)$/);
+    if (!m) {
+      throw new BadRequestException('unexpected dataurl format');
+    }
+    const [, mime, , data] = m;
+    const buffer = Buffer.from(data, 'base64');
+
+    const result = await this.prisma.userAvatar.upsert({
+      where: {
+        userId,
+      },
+      create: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+      update: {
+        userId,
+        mime,
+        avatar: buffer,
+      },
+    });
+    return Utils.pick(result, 'id', 'userId', 'mime');
   }
 
   async enableTwoFa(id: number) {
@@ -191,15 +287,31 @@ export class UsersService {
     ]);
     return;
   }
+
+  async getAvatar(id: number) {
+    const avatar = await this.prisma.userAvatar.findUnique({
+      where: {
+        userId: id,
+      },
+    });
+    if (!avatar) {
+      throw new NotFoundException('avatar is not found');
+    }
+    return {
+      mime: avatar.mime,
+      avatar: new StreamableFile(avatar.avatar),
+      lastModified: avatar.lastModified,
+    };
+  }
 }
 
 /**
- * 与えられた生パスワード`password`をハッシュ化する.\
- * ハッシュ化に用いるキーは`passwordConstants.secret`.
+ * 生パスワードをハッシュ化する.\
  */
 export function hash_password(password: string) {
-  return createHmac('sha256', passwordConstants.secret)
-    .update(password)
-    .digest('hex')
-    .toString();
+  return Utils.hash(
+    passwordConstants.secret,
+    password + passwordConstants.pepper,
+    1000
+  );
 }

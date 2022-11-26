@@ -1,20 +1,26 @@
+import { Logger } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
+
+import { AuthService } from 'src/auth/auth.service';
+
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
-import { OngoingMatches } from './game/ongoing-matches';
-import { WaitingQueues } from './game/waiting-queues';
+import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
-import { WaitingQueue } from './game/waiting-queue';
-import { PongMatchMakingCreateDTO } from './dto/pong-match-making-create.dto';
+
+import { OngoingMatches } from './game/ongoing-matches';
 import { generateQueueID } from './game/utils';
-import { AuthService } from 'src/auth/auth.service';
+import { WaitingQueue } from './game/waiting-queue';
+import { WaitingQueues } from './game/waiting-queues';
+
+
+
 
 // TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
 // フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡

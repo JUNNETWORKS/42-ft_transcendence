@@ -8,7 +8,7 @@ import {
   IsEnum,
 } from 'class-validator';
 
-const RoomTypes = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
+const RoomTypes = ['PUBLIC', 'PRIVATE', 'LOCKED', 'DM'] as const;
 export type RoomType = typeof RoomTypes[number];
 
 export class OperationOpenDto {
