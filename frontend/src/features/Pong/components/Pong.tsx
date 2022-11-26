@@ -187,16 +187,19 @@ export const Pong: React.FC = () => {
           <p className="text-lg">{matchResult?.winner.id} win</p>
         </div>
       </Modal>
-      <canvas
-        id="pong"
-        ref={canvasRef}
-        width={staticGameSettings.field.width}
-        height={staticGameSettings.field.height}
-        style={{
-          width: canvasDisplaySize.width,
-          height: canvasDisplaySize.height,
-        }}
-      />
+      <div className="flex flex-1 items-center justify-center">
+        <canvas
+          id="pong"
+          ref={canvasRef}
+          width={staticGameSettings.field.width}
+          height={staticGameSettings.field.height}
+          //tailwindは動的にスタイル生成できないので、style属性で対応
+          style={{
+            width: canvasDisplaySize.width,
+            height: canvasDisplaySize.height,
+          }}
+        />
+      </div>
     </>
   );
 };
