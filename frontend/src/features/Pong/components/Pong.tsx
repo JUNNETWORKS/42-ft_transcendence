@@ -9,6 +9,9 @@ const staticGameSettings = {
   ball: { radius: 6, dx: 2, dy: 2 },
 };
 
+const pongBlack = '#000000';
+const pongWhite = '#FFFFFE';
+
 // ========================================
 // Canvas
 
@@ -27,29 +30,52 @@ const drawBackground = (
   height: number,
   game: GameState
 ) => {
-  // 背景
+  // 背景枠
   ctx.beginPath();
-  ctx.fillStyle = '#eee';
+  ctx.fillStyle = pongWhite;
   ctx.fillRect(0, 0, width, height);
   ctx.closePath();
+  //背景色
+  const bezelSize = 5;
+  ctx.beginPath();
+  ctx.fillStyle = pongBlack;
+  ctx.fillRect(
+    bezelSize,
+    bezelSize,
+    width - bezelSize * 2,
+    height - bezelSize * 2
+  );
+  ctx.closePath();
+
+  //中央破線
+  const dashedLineHeight = 25;
+  const dashedLineWidth = 15;
+
+  for (let startY = 0; startY < height; startY += dashedLineHeight * 2) {
+    ctx.beginPath();
+    ctx.fillStyle = pongWhite;
+    const startX = width / 2 - dashedLineWidth / 2;
+    ctx.fillRect(startX, startY, dashedLineWidth, dashedLineHeight);
+    ctx.closePath();
+  }
 
   // スコア
   ctx.beginPath();
-  ctx.font = 'bold 48px serif';
-  ctx.fillStyle = '#eee';
-  const y = height * 0.2;
+  ctx.font = '160px PixelMplus';
+  ctx.fillStyle = pongWhite;
+  const y = height * 0.25;
   for (let i = 0; i < game.players.length; i++) {
     const player = game.players[i];
     let x = 0;
     if (player.side == 'left') {
-      x = width * 0.4;
+      //中央から150px離した位置。左はフォントの大きさ分ずらす。
+      x = width / 2 - 150 - 160;
     } else {
-      x = width * 0.6;
+      x = width / 2 + 150;
     }
     ctx.fillText(player.score.toString(), x, y);
   }
   ctx.closePath();
-  return;
 };
 
 const drawBar = (
