@@ -15,6 +15,18 @@ const pongWhite = '#FFFFFE';
 // ========================================
 // Canvas
 
+const drawCenteringText = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  y: number
+) => {
+  const textSize = ctx.measureText(text).width;
+  const x = centerX - textSize / 2;
+
+  ctx.fillText(text, x, y);
+};
+
 const clearCanvas = (
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -57,22 +69,18 @@ const drawScore = (
   ctx: CanvasRenderingContext2D,
   width: number,
   height: number,
-  game: GameState
+  { players }: GameState
 ) => {
   // スコア
   ctx.font = '160px PixelMplus';
   ctx.fillStyle = pongWhite;
   const y = height * 0.25;
-  for (let i = 0; i < game.players.length; i++) {
-    const player = game.players[i];
-    let x = 0;
-    if (player.side == 'left') {
-      //中央から150px離した位置。左はフォントの大きさ分ずらす。
-      x = width / 2 - 150 - 160;
-    } else {
-      x = width / 2 + 150;
-    }
-    ctx.fillText(player.score.toString(), x, y);
+
+  for (let i = 0; i < players.length; i++) {
+    const player = players[i];
+    const x = player.side === 'left' ? width / 2 - 400 : width / 2 + 400;
+
+    drawCenteringText(ctx, player.score.toString(), x, y);
   }
 };
 
@@ -113,18 +121,6 @@ const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
   drawScore(ctx, canvas.width, canvas.height, game);
   drawBar(ctx, game);
   drawBall(ctx, game);
-};
-
-const drawCenteringText = (
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  centerX: number,
-  y: number
-) => {
-  const textSize = ctx.measureText(text).width;
-  const x = centerX - textSize / 2;
-
-  ctx.fillText(text, x, y);
 };
 
 const drawResultCanvas = (
