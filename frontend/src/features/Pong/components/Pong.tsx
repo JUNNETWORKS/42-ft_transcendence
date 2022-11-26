@@ -120,6 +120,7 @@ const drawBall = (
 const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
+
   clearCanvas(ctx, canvas.width, canvas.height);
   drawBackground(ctx, canvas.width, canvas.height);
   drawScore(ctx, canvas.width, canvas.height, game);
@@ -127,12 +128,49 @@ const redrawGame = (canvas: HTMLCanvasElement, game: GameState) => {
   drawBall(ctx, game);
 };
 
-const drawResultCanvas = (canvas: HTMLCanvasElement, game: GameState) => {
+const drawCenteringText = (
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  centerX: number,
+  y: number
+) => {
+  const textSize = ctx.measureText(text).width;
+  const x = centerX - textSize / 2;
+
+  ctx.fillText(text, x, y);
+};
+
+const drawResultCanvas = (
+  canvas: HTMLCanvasElement,
+  game: GameState,
+  result: GameResult
+) => {
   const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
   if (!ctx) return;
-  clearCanvas(ctx, canvas.width, canvas.height);
-  drawBackground(ctx, canvas.width, canvas.height);
+  clearCanvas(ctx, width, height);
+  drawBackground(ctx, width, height);
   drawBar(ctx, game);
+
+  // Overlay
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+  ctx.fillRect(0, 0, width, height);
+
+  //Score
+  ctx.fillStyle = pongWhite;
+  const y = height * 0.45;
+  for (let i = 0; i < game.players.length; i++) {
+    const player = game.players[i];
+    const x = player.side === 'left' ? width / 2 - 400 : width / 2 + 400;
+    const resultText = player.id === result.winner.id ? 'WIN' : 'LOSE';
+
+    ctx.font = '160px PixelMplus';
+    drawCenteringText(ctx, player.score.toString(), x, y);
+    ctx.font = '80px PixelMplus';
+    drawCenteringText(ctx, player.id, x, y + 120);
+    ctx.font = '70px PixelMplus';
+    drawCenteringText(ctx, resultText, x, y + 220);
+  }
 };
 // ========================================
 // React
@@ -160,7 +198,7 @@ const CalculateCanvasSize = (magnification: number) => {
 export const Pong: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
-  const [matchResult, setMatchResult] = useState<GameResult | null>(null);
+  const [isFinished, setIsFinished] = useState<boolean>(false);
 
   const magnification = useWindowMagnification(staticGameSettings.field.width);
   const canvasDisplaySize = useMemo(
@@ -183,9 +221,9 @@ export const Pong: React.FC = () => {
       'pong.match.finish',
       ({ game, result }: { game: GameState; result: GameResult }) => {
         if (canvasRef.current) {
-          drawResultCanvas(canvasRef.current, game);
+          drawResultCanvas(canvasRef.current, game, result);
         }
-        setMatchResult(result);
+        setIsFinished(true);
       }
     );
 
@@ -215,17 +253,6 @@ export const Pong: React.FC = () => {
 
   return (
     <>
-      <Modal
-        isOpen={matchResult !== null}
-        //TODO タイトルへ戻る処理？
-        closeModal={() => {
-          console.log('test');
-        }}
-      >
-        <div className="flex items-center justify-center">
-          <p className="text-lg">{matchResult?.winner.id} win</p>
-        </div>
-      </Modal>
       <div className="flex flex-1 items-center justify-center">
         <canvas
           id="pong"
@@ -238,6 +265,11 @@ export const Pong: React.FC = () => {
             height: canvasDisplaySize.height,
           }}
         />
+        {isFinished && (
+          <button className="absolute bottom-1/4 bg-secondary p-4">
+            タイトルに戻る
+          </button>
+        )}
       </div>
     </>
   );
