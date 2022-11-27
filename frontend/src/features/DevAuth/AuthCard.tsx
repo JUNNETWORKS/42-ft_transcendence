@@ -16,6 +16,7 @@ import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
 import { useOtp } from './hooks/useOtp';
 import { Oval } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
 
 /**
  * TOTP入力フォーム
@@ -263,6 +264,7 @@ export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
           <FTButton
             onClick={() => {
               if (props.onLogout) props.onLogout();
+              toast('ログアウトしました');
             }}
           >
             Logout

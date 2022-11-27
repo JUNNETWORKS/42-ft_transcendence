@@ -13,6 +13,7 @@ import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
 import { useDropzone } from 'react-dropzone';
 import { UserAvatar } from '@/components/UserAvater';
+import { toast } from 'react-toastify';
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
@@ -93,6 +94,7 @@ const Disable2FACard = () => {
   const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
     onFinished: () => {
       setPersonalData({ ...personalData!, isEnabled2FA: false });
+      toast.info('二要素認証が無効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -136,6 +138,7 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
       const data = json as { qrcode: string };
       setPersonalData({ ...personalData!, isEnabled2FA: true });
       onSucceeded(data.qrcode);
+      toast.info('二要素認証が有効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
       if (e instanceof APIError) {

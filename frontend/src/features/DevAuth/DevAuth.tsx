@@ -14,6 +14,7 @@ import {
   TotpAuthForm,
 } from './AuthCard';
 import { Modal } from '@/components/Modal';
+import { toast } from 'react-toastify';
 
 export const DevAuth = () => {
   const [authState] = useAtom(authAtom.authFlowState);
@@ -51,6 +52,7 @@ export const DevAuth = () => {
     setToken2FA(null);
     loginLocal(token, user);
     setFtAuthState('Neutral');
+    toast(`${user.displayName} としてログインしました`);
   };
 
   // 42認証フローのチェックと状態遷移
