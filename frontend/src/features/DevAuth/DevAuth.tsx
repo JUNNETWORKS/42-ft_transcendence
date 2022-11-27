@@ -39,6 +39,7 @@ export const DevAuth = () => {
 
   const anonymizeAuthFlow = () => {
     logout();
+    setToken2FA(null);
     setFtAuthState('Neutral');
   };
 
@@ -108,11 +109,11 @@ export const DevAuth = () => {
 
   return (
     <>
-      <Modal closeModal={() => setToken2FA(null)} isOpen={!!token2FA}>
+      <Modal closeModal={() => anonymizeAuthFlow()} isOpen={!!token2FA}>
         {token2FA && (
           <TotpAuthForm
             token2FA={token2FA}
-            onClose={() => setToken2FA(null)}
+            onClose={() => anonymizeAuthFlow()}
             onSucceeded={finalizeAuthFlow}
           />
         )}

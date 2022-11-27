@@ -15,15 +15,26 @@ type UserPersonalData = {
   isEnabled2FA: boolean;
   isEnabledAvatar: boolean;
 
-  avatarTime?: number;
+  avatarTime: number;
 };
+
+const actualPersonalDataAtom = atom<UserPersonalData | null>(null);
 
 export const authAtom = {
   authFlowState: atom<AuthenticationFlowState>('Neutral'),
   /**
-   * ユーザデータのAtom
+   * ログインユーザデータのAtom
    */
-  personalData: atom<UserPersonalData | null>(null),
+  personalData: atom(
+    (get) => get(actualPersonalDataAtom),
+    (get, set, newValue: UserPersonalData | null) => {
+      if (newValue) {
+        set(actualPersonalDataAtom, { ...newValue, avatarTime: Date.now() });
+      } else {
+        set(actualPersonalDataAtom, null);
+      }
+    }
+  ),
 };
 
 const credentialKey = 'ft_transcendence_credential';

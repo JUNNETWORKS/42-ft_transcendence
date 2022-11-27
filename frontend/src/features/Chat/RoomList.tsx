@@ -31,7 +31,6 @@ const ChatRoomListItem = (props: {
   room: TD.ChatRoom;
   isJoined: boolean;
   isFocused: boolean;
-  nMessages: number | undefined;
   onJoin: (roomId: number, roomPassword: string, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
@@ -90,10 +89,6 @@ const ChatRoomListItem = (props: {
       >
         <InlineIcon i={<TypeIcon />} />
         {props.room.roomName}{' '}
-        {(() => {
-          const n = props.nMessages;
-          return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-        })()}
       </div>
     </>
   );
@@ -103,7 +98,6 @@ export const ChatRoomListView = (props: {
   rooms: TD.ChatRoom[];
   isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
-  countMessages: (roomId: number) => number | undefined;
   onJoin: (roomId: number, roomPassword: string, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
@@ -121,7 +115,6 @@ export const ChatRoomListView = (props: {
               room={room}
               isJoined={props.isJoiningTo(room.id)}
               isFocused={props.isFocusingTo(room.id)}
-              nMessages={props.countMessages(room.id)}
               onJoin={props.onJoin}
               onLeave={props.onLeave}
               onFocus={props.onFocus}

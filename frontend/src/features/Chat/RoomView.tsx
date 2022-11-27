@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -8,9 +8,12 @@ import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
+import { useAtom } from 'jotai';
+import { chatSocketAtom } from '@/stores/auth';
+import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { useAtom } from 'jotai';
 
 const AdminOperationBar = (
   props: {
@@ -19,7 +22,6 @@ const AdminOperationBar = (
     member: TD.ChatUserRelation;
   } & TD.MemberOperations
 ) => {
-  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
@@ -30,33 +32,9 @@ const AdminOperationBar = (
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isBlocking = !!blockingUsers.find((u) => props.member.userId === u.id);
-  const userTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return '';
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
+
   return (
     <div className="flex flex-row">
-      <div
-        className="shrink grow cursor-pointer hover:bg-teal-700"
-        key={props.member.userId}
-        style={{
-          ...(isYou ? { fontWeight: 'bold' } : {}),
-        }}
-      >
-        <Link className="block" to={link_path}>
-          {userTypeCap()}{' '}
-          {isBlocking
-            ? `${props.member.user.displayName}(Blocking)`
-            : props.member.user.displayName}
-        </Link>
-      </div>
-
       {isNomminatable && (
         <FTButton
           onClick={() =>
@@ -134,13 +112,109 @@ const MemberCard = (
   );
 };
 
-const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+function messageCardId(message: TD.ChatRoomMessage) {
+  return `message-${message.id}`;
+}
+
+const MessagesList = (props: {
+  room: TD.ChatRoom;
+  messages: TD.ChatRoomMessage[];
+}) => {
+  const listId = useId();
+  const scrollData = useVerticalScrollAttr(listId);
+  const [prevLatestMessage, setPrevLatestMessage] =
+    useState<TD.ChatRoomMessage | null>(null);
+
+  useEffect(() => {
+    const n = props.messages.length;
+    const lm = n > 0 && props.messages[n - 1];
+    if (!lm) {
+      return;
+    }
+    setPrevLatestMessage(lm);
+    const listEl = document.getElementById(listId);
+    if (!listEl) {
+      return;
+    }
+    if (!prevLatestMessage) {
+      // [初期表示]
+      // → 最新メッセージが表示されるよう瞬間的にスクロール
+      const lastId = messageCardId(lm);
+      const lastEl = document.getElementById(lastId);
+      lastEl?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+    if (prevLatestMessage.createdAt < lm.createdAt) {
+      // [メッセージ新着]
+      // → 最新メッセージが表示されるよう自動スクロール
+      if (n < 2) {
+        return;
+      }
+      const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
+        const lastMessage = props.messages[i];
+        const lastId = messageCardId(lastMessage);
+        return document.getElementById(lastId);
+      });
+      if (!prevEl || !nextEl) {
+        return;
+      }
+      // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
+      //  - prevEl が見えている
+      //  - prevEl のボトムがリストビューの下辺以下にいる
+      // を満たすなら nextEl が見えるようにスクロール
+      const listRect = listEl.getBoundingClientRect();
+      const prevRect = prevEl.getBoundingClientRect();
+      const prevIsShown = !(
+        prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
+      );
+      const prevIsCrossingBottom =
+        Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
+      if (prevIsShown && prevIsCrossingBottom) {
+        nextEl.scrollIntoView({
+          behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+        });
+      }
+      return;
+    }
+    // [メッセージ変化]
+    // → 今見えている要素の「見かけの縦位置」を維持する
+    listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
+    // 以下の関係式が成り立つようにする:
+    // listEl.scrollHeight - listEl.scrollTop = scrollData.height - scrollData.top
+    // ※お気持ち
+    // height(領域の高さ) - top(領域の上から測った位置) は「領域の下から測った位置」となるので,
+    // これが維持されるように listEl.scrollTop をいじって辻褄を合わせている.
+  }, [props.messages, listId]);
+
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [requestKey, setRequestKey] = useState('');
+  useEffect(() => {
+    if (Math.floor(scrollData.top) > 0) {
+      return;
+    }
+    if (!mySocket) {
+      return;
+    }
+    const oldestMessage = Utils.first(props.messages);
+    const { get_room_messages } = makeCommand(mySocket, props.room.id);
+    const rk = `${oldestMessage?.id}`;
+    if (rk === requestKey) {
+      return;
+    }
+    setRequestKey(rk);
+    get_room_messages(props.room.id, 50, oldestMessage?.id);
+  }, [mySocket, scrollData, props.room.id]);
+
   return (
-    <>
+    <div id={listId} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatMessageCard key={data.id} message={data} />
+        <ChatMessageCard
+          key={data.id}
+          id={messageCardId(data)}
+          message={data}
+        />
       ))}
-    </>
+    </div>
   );
 };
 
@@ -227,8 +301,12 @@ export const ChatRoomView = (props: {
             )}
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
-          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-            <MessagesList messages={props.roomMessages(props.room.id)} />
+          <div className="shrink grow overflow-hidden border-2 border-solid border-white">
+            <MessagesList
+              room={props.room}
+              messages={props.roomMessages(props.room.id)}
+              key={props.room.id}
+            />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
