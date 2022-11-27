@@ -340,18 +340,11 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // [TODO: ハードリレーション更新]
-    const member = await this.chatRoomService.addMember(roomId, {
+    const relation = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
     });
-    console.log('member', member);
-    const relation = await this.chatRoomService.getRelationWithUser(
-      roomId,
-      user.id
-    );
-    if (!relation) {
-      return;
-    }
+    console.log('member relation:', relation);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersJoin(user.id, { roomId });
