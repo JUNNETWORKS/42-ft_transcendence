@@ -40,7 +40,7 @@ export const Pong: React.FC = () => {
     [magnification]
   );
 
-  const onClickCanvasButton = () => {
+  const onClickCanvas = () => {
     if (isFinished === false) return;
     //TODO タイトルへ遷移
     console.log('to title');
@@ -103,7 +103,7 @@ export const Pong: React.FC = () => {
           width: canvasDisplaySize.width,
           height: canvasDisplaySize.height,
         }}
-        onClick={onClickCanvasButton}
+        onClick={onClickCanvas}
       />
     </div>
   );
