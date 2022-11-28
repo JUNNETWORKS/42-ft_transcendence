@@ -1,7 +1,14 @@
+import { useCallback, useRef } from 'react';
+import { useCanvasSize } from './useCanvasSize';
 import { GameResult, GameSettings, GameState } from '../types';
 
 const pongBlack = '#000000';
 const pongWhite = '#FFFFFE';
+
+const staticGameSettings = {
+  field: { width: 1920, height: 1080 },
+  ball: { radius: 6, dx: 2, dy: 2 },
+};
 
 const drawCenteringText = (
   ctx: CanvasRenderingContext2D,
@@ -105,7 +112,7 @@ const drawBall = (
   ctx.fillRect(x - r, y - r, r * 2, r * 2);
 };
 
-export const redrawGame = (
+const redrawGame = (
   canvas: HTMLCanvasElement,
   game: GameState,
   setting: GameSettings
@@ -120,7 +127,7 @@ export const redrawGame = (
   drawBall(ctx, game, setting.ball.radius);
 };
 
-export const drawResultCanvas = (
+const drawResult = (
   canvas: HTMLCanvasElement,
   game: GameState,
   result: GameResult
@@ -147,7 +154,7 @@ export const drawResultCanvas = (
     ctx.font = '160px PixelMplus';
     drawCenteringText(ctx, player.score.toString(), x, y);
     ctx.font = '80px PixelMplus';
-    drawCenteringText(ctx, player.id, x, y + 120, 650);
+    drawCenteringText(ctx, player.id, x, y + 120, 650); //TODO IDを名前に変える
     ctx.font = '70px PixelMplus';
     drawCenteringText(ctx, resultText, x, y + 220);
   }
@@ -155,4 +162,43 @@ export const drawResultCanvas = (
   ctx.fillStyle = pongWhite;
   ctx.font = '60px PixelMplus';
   drawCenteringText(ctx, 'クリックでタイトルへ', width / 2, 800);
+};
+
+export const usePongGame = (isFinished: boolean) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasSize = useCanvasSize();
+
+  const onClickResult = useCallback(() => {
+    if (isFinished === false) return;
+    //TODO タイトルへ遷移
+    console.log('to title');
+  }, [isFinished]);
+
+  const renderGame = () => (
+    <canvas
+      id="pong"
+      ref={canvasRef}
+      width={staticGameSettings.field.width}
+      height={staticGameSettings.field.height}
+      //tailwindは動的にスタイル生成できないので、style属性で対応
+      style={{
+        width: canvasSize.width,
+        height: canvasSize.height,
+      }}
+      onClick={onClickResult}
+    />
+  );
+
+  const drawGameOneFrame = (game: GameState) => {
+    if (canvasRef.current) {
+      redrawGame(canvasRef.current, game, staticGameSettings);
+    }
+  };
+  const drawGameResult = (game: GameState, result: GameResult) => {
+    if (canvasRef.current) {
+      drawResult(canvasRef.current, game, result);
+    }
+  };
+
+  return { renderGame, drawGameOneFrame, drawGameResult };
 };

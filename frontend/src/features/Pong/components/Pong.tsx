@@ -1,26 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { GameState, GameResult } from '../types';
 import { io, Socket } from 'socket.io-client';
-import { useCanvasSize } from '../hooks/useCanvasSize';
-import { redrawGame, drawResultCanvas } from '../utils/CanvasUtils';
-
-const staticGameSettings = {
-  field: { width: 1920, height: 1080 },
-  ball: { radius: 6, dx: 2, dy: 2 },
-};
+import { usePongGame } from '../hooks/usePongGame';
 
 export const Pong: React.FC = () => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
   const [isFinished, setIsFinished] = useState<boolean>(false);
 
-  const canvasSize = useCanvasSize();
-
-  const onClickCanvas = () => {
-    if (isFinished === false) return;
-    //TODO タイトルへ遷移
-    console.log('to title');
-  };
+  const { renderGame, drawGameOneFrame, drawGameResult } =
+    usePongGame(isFinished);
 
   useEffect(() => {
     // WebSocket initialization
@@ -28,17 +16,15 @@ export const Pong: React.FC = () => {
       socketRef.current = io('http://localhost:3000/pong');
     }
     // Register websocket event handlers
-    socketRef.current.on('pong.match.state', (gameState: GameState) => {
-      if (canvasRef.current) {
-        redrawGame(canvasRef.current, gameState, staticGameSettings);
-      }
+
+    socketRef.current.on('pong.match.state', (game: GameState) => {
+      drawGameOneFrame(game);
     });
+
     socketRef.current.on(
       'pong.match.finish',
       ({ game, result }: { game: GameState; result: GameResult }) => {
-        if (canvasRef.current) {
-          drawResultCanvas(canvasRef.current, game, result);
-        }
+        drawGameResult(game, result);
         setIsFinished(true);
       }
     );
@@ -65,22 +51,11 @@ export const Pong: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, []);
+  }, [drawGameOneFrame, drawGameResult]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      <canvas
-        id="pong"
-        ref={canvasRef}
-        width={staticGameSettings.field.width}
-        height={staticGameSettings.field.height}
-        //tailwindは動的にスタイル生成できないので、style属性で対応
-        style={{
-          width: canvasSize.width,
-          height: canvasSize.height,
-        }}
-        onClick={onClickCanvas}
-      />
+      {renderGame()}
     </div>
   );
 };
