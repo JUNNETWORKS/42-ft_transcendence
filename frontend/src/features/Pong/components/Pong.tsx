@@ -154,6 +154,10 @@ const drawResultCanvas = (
     ctx.font = '70px PixelMplus';
     drawCenteringText(ctx, resultText, x, y + 220);
   }
+
+  ctx.fillStyle = pongWhite;
+  ctx.font = '60px PixelMplus';
+  drawCenteringText(ctx, 'クリックでタイトルへ', width / 2, 800);
 };
 // ========================================
 // React
@@ -188,6 +192,12 @@ export const Pong: React.FC = () => {
     () => CalculateCanvasSize(magnification),
     [magnification]
   );
+
+  const onClickCanvasButton = () => {
+    if (isFinished === false) return;
+    //TODO タイトルへ遷移
+    console.log('to title');
+  };
 
   useEffect(() => {
     // WebSocket initialization
@@ -235,25 +245,19 @@ export const Pong: React.FC = () => {
   }, []);
 
   return (
-    <>
-      <div className="flex flex-1 items-center justify-center">
-        <canvas
-          id="pong"
-          ref={canvasRef}
-          width={staticGameSettings.field.width}
-          height={staticGameSettings.field.height}
-          //tailwindは動的にスタイル生成できないので、style属性で対応
-          style={{
-            width: canvasDisplaySize.width,
-            height: canvasDisplaySize.height,
-          }}
-        />
-        {isFinished && (
-          <button className="absolute bottom-1/4 bg-secondary p-4">
-            タイトルに戻る
-          </button>
-        )}
-      </div>
-    </>
+    <div className="flex flex-1 items-center justify-center">
+      <canvas
+        id="pong"
+        ref={canvasRef}
+        width={staticGameSettings.field.width}
+        height={staticGameSettings.field.height}
+        //tailwindは動的にスタイル生成できないので、style属性で対応
+        style={{
+          width: canvasDisplaySize.width,
+          height: canvasDisplaySize.height,
+        }}
+        onClick={onClickCanvasButton}
+      />
+    </div>
   );
 };
