@@ -15,7 +15,7 @@ export const useCanvasSize = () => {
   );
 
   useLayoutEffect(() => {
-    const updateMagnification = () => {
+    const updateCanvasSize = () => {
       setCanvasSize(
         calculateCanvasSize(
           window.innerWidth,
@@ -24,9 +24,9 @@ export const useCanvasSize = () => {
       );
     };
 
-    window.addEventListener('resize', updateMagnification);
+    window.addEventListener('resize', updateCanvasSize);
 
-    return () => window.removeEventListener('resize', updateMagnification);
+    return () => window.removeEventListener('resize', updateCanvasSize);
   }, []);
 
   return canvasSize;
