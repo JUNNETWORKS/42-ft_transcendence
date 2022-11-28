@@ -286,6 +286,7 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
       setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});
       setPhase('Display');
+      toast('ユーザ情報を更新しました');
     },
     onFailed(e) {
       if (e instanceof APIError) {

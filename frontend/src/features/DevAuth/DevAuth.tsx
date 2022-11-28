@@ -52,7 +52,9 @@ export const DevAuth = () => {
     setToken2FA(null);
     loginLocal(token, user);
     setFtAuthState('Neutral');
-    toast(`${user.displayName} としてログインしました`);
+    toast.error(`${user.displayName} としてログインしました`, {
+      autoClose: false,
+    });
   };
 
   // 42認証フローのチェックと状態遷移

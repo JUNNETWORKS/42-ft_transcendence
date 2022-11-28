@@ -7,6 +7,7 @@ import * as TD from '@/typedef';
 import { Listbox } from '@headlessui/react';
 import { useState } from 'react';
 import { roomErrors } from './room.validator';
+import { toast } from 'react-toastify';
 
 export const RoomTypeIcon = {
   PUBLIC: Icons.Chat.Public,
@@ -75,6 +76,7 @@ export const ChatRoomSettingCard = ({ room, onCancel, onSucceeded }: Props) => {
       if (onSucceeded) {
         onSucceeded();
       }
+      toast('ルーム情報を更新しました');
     },
   });
 

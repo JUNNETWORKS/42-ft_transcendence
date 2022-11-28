@@ -26,3 +26,12 @@ html {
   border: 4px solid white;
   border-radius: 0;
 }
+
+.Toastify__toast--error {
+  color: red;
+}
+
+/* .Toastify__toast--error svg {
+  stroke: red;
+  fill: red;
+} */
