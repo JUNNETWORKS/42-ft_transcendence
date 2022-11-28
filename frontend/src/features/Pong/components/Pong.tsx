@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { GameState, GameResult } from '../types';
 import { io, Socket } from 'socket.io-client';
-import { useWindowMagnification } from '../hooks/useWindowMagnification';
+import { useCanvasSize } from '../hooks/useCanvasSize';
 import { redrawGame, drawResultCanvas } from '../utils/CanvasUtils';
 
 const staticGameSettings = {
@@ -9,36 +9,12 @@ const staticGameSettings = {
   ball: { radius: 6, dx: 2, dy: 2 },
 };
 
-const CalculateCanvasSize = (magnification: number) => {
-  //TODO ゲーム中はnavBarを消してもいいかも
-  const magnifiedHeight = staticGameSettings.field.height * magnification;
-
-  const navBarSize = 80;
-  const maxCanvasHeight = window.innerHeight - navBarSize;
-
-  const canContainMagnifiedCanvas = maxCanvasHeight >= magnifiedHeight;
-
-  // navBarを除いた高さに横幅から計算した倍率をかけた高さ or navBarを除いた高さ
-  const height = canContainMagnifiedCanvas ? magnifiedHeight : maxCanvasHeight;
-
-  //maxCanvasHeightを採用した場合、16:9の横幅を計算する
-  const width = canContainMagnifiedCanvas
-    ? staticGameSettings.field.width * magnification
-    : maxCanvasHeight * (16 / 9);
-
-  return { width, height };
-};
-
 export const Pong: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const socketRef = useRef<Socket>();
   const [isFinished, setIsFinished] = useState<boolean>(false);
 
-  const magnification = useWindowMagnification(staticGameSettings.field.width);
-  const canvasDisplaySize = useMemo(
-    () => CalculateCanvasSize(magnification),
-    [magnification]
-  );
+  const canvasSize = useCanvasSize();
 
   const onClickCanvas = () => {
     if (isFinished === false) return;
@@ -100,8 +76,8 @@ export const Pong: React.FC = () => {
         height={staticGameSettings.field.height}
         //tailwindは動的にスタイル生成できないので、style属性で対応
         style={{
-          width: canvasDisplaySize.width,
-          height: canvasDisplaySize.height,
+          width: canvasSize.width,
+          height: canvasSize.height,
         }}
         onClick={onClickCanvas}
       />
