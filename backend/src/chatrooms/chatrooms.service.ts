@@ -278,16 +278,22 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async addMember(id: number, updateRoomMemberDto: CreateRoomMemberDto) {
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
+  async addMember(
+    chatRoomId: number,
+    createRoomMemberDto: CreateRoomMemberDto
+  ) {
+    const { userId, memberType } = createRoomMemberDto;
+    return await this.prisma.chatUserRelation.create({
       data: {
-        roomMember: {
-          create: updateRoomMemberDto,
-        },
+        userId,
+        chatRoomId,
+        memberType,
+      },
+      include: {
+        chatRoom: true,
+        user: true,
       },
     });
-    return new ChatroomEntity(res);
   }
 
   async updateMember(chatRoomId: number, roomMemberDto: RoomMemberDto) {
