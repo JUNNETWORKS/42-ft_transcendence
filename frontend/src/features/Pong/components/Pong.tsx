@@ -19,12 +19,16 @@ const drawCenteringText = (
   ctx: CanvasRenderingContext2D,
   text: string,
   centerX: number,
-  y: number
+  y: number,
+  maxWidth?: number
 ) => {
   const textSize = ctx.measureText(text).width;
-  const x = centerX - textSize / 2;
+  const drawingSize = maxWidth && maxWidth < textSize ? maxWidth : textSize;
+  const x = centerX - drawingSize / 2;
 
-  ctx.fillText(text, x, y);
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y, maxWidth);
+  ctx.textBaseline = 'alphabetic';
 };
 
 const clearCanvas = (
@@ -150,7 +154,7 @@ const drawResultCanvas = (
     ctx.font = '160px PixelMplus';
     drawCenteringText(ctx, player.score.toString(), x, y);
     ctx.font = '80px PixelMplus';
-    drawCenteringText(ctx, player.id, x, y + 120);
+    drawCenteringText(ctx, player.id, x, y + 120, 650);
     ctx.font = '70px PixelMplus';
     drawCenteringText(ctx, resultText, x, y + 220);
   }
