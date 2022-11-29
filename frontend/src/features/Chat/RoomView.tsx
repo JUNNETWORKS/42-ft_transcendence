@@ -2,7 +2,6 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
@@ -14,111 +13,18 @@ import { chatSocketAtom } from '@/stores/auth';
 import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
-
-const AdminOperationBar = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const areYouOwner = props.you?.userId === props.room.ownerId;
-  const areYouAdmin = props.you?.memberType === 'ADMIN';
-  const areYouAdminLike = areYouOwner;
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-  const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
-  const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-
-  return (
-    <div className="flex flex-row">
-      {isNomminatable && (
-        <FTButton
-          onClick={() =>
-            props.onNomminateClick ? props.onNomminateClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Nomminate />
-        </FTButton>
-      )}
-      {isBannable && (
-        <FTButton
-          onClick={() =>
-            props.onBanClick ? props.onBanClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Ban />
-        </FTButton>
-      )}
-      {isKickable && (
-        <FTButton
-          onClick={() =>
-            props.onKickClick ? props.onKickClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Kick />
-        </FTButton>
-      )}
-      {isMutable && (
-        <FTButton
-          onClick={() =>
-            props.onMuteClick ? props.onMuteClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Mute />
-        </FTButton>
-      )}
-    </div>
-  );
-};
-
-const MemberCard = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-
-  const UserTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
-    }
-    return null;
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
-  return (
-    <div className="flex flex-row">
-      <div
-        className={`shrink grow cursor-pointer hover:bg-teal-700 ${
-          isYou ? 'font-bold' : ''
-        }`}
-        key={props.member.userId}
-      >
-        <Link className="block" to={link_path}>
-          {<UserTypeCap />} {props.member.user.displayName}
-        </Link>
-      </div>
-      <AdminOperationBar {...props} />
-    </div>
-  );
-};
+import { ChatMemberCard } from '@/components/ChatMemberCard';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;
 }
 
 const MessagesList = (props: {
+  you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   messages: TD.ChatRoomMessage[];
+  members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
 }) => {
   const listId = useId();
   const scrollData = useVerticalScrollAttr(listId);
@@ -207,24 +113,32 @@ const MessagesList = (props: {
 
   return (
     <div id={listId} className="h-full w-full overflow-scroll">
-      {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatMessageCard
-          key={data.id}
-          id={messageCardId(data)}
-          message={data}
-        />
-      ))}
+      {props.messages.map((data: TD.ChatRoomMessage) => {
+        const member = props.members[data.userId];
+        return (
+          member && (
+            <ChatMessageCard
+              key={data.id}
+              id={messageCardId(data)}
+              message={data}
+              you={props.you}
+              room={props.room}
+              member={member}
+              memberOperations={props.memberOperations}
+            />
+          )
+        );
+      })}
     </div>
   );
 };
 
-const MembersList = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    members: TD.UserRelationMap;
-  } & TD.MemberOperations
-) => {
+const MembersList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
+}) => {
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
@@ -249,7 +163,7 @@ const MembersList = (
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
-            <MemberCard member={member} {...Utils.omit(props, 'members')} />
+            <ChatMemberCard member={member} {...Utils.omit(props, 'members')} />
           </div>
         ))}
       </div>
@@ -303,9 +217,11 @@ export const ChatRoomView = (props: {
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">
             <MessagesList
+              you={props.you}
               room={props.room}
+              members={members}
               messages={props.roomMessages(props.room.id)}
-              key={props.room.id}
+              memberOperations={props.memberOperations}
             />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
@@ -315,12 +231,12 @@ export const ChatRoomView = (props: {
             </div>
           </div>
         </div>
-        <div className="shrink-0 grow-0 basis-[20em]">
+        <div className="shrink-0 grow-0 basis-[12em]">
           <MembersList
             you={props.you}
             room={props.room}
             members={members}
-            {...props.memberOperations}
+            memberOperations={props.memberOperations}
           />
         </div>
       </div>

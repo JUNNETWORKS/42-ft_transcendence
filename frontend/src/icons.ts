@@ -33,6 +33,7 @@ const Chat = {
 const User = {
   StatusDot: Vsc.VscCircleFilled,
   Friend: Fa.FaUserFriends,
+  Block: Md.MdBlock,
 };
 
 export const Icons = {
