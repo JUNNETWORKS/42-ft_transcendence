@@ -198,6 +198,7 @@ export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
       errors={errors}
       api={api}
       onCancel={onCancel}
+      placeholder={{}}
     />
   );
 };
@@ -216,7 +217,7 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
   const { updateOne } = useUpdateRoom();
   const api = useAPI('PUT', `/chatrooms/${room.id}`, {
     payload: () => {
-      if (roomType === 'LOCKED') {
+      if (roomType === 'LOCKED' && roomPassword) {
         return { roomName, roomType, roomPassword };
       }
       return { roomName, roomType };
