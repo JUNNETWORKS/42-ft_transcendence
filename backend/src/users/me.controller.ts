@@ -16,8 +16,10 @@ import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
+import { UpdateMePasswordDto } from './dto/update-me-password.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
+import { UpdatePasswordPipe } from './pipe/update-password.pipe';
 import { UsersService } from './users.service';
 
 @Controller('me')
@@ -42,7 +44,7 @@ export class MeController {
   @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseFilters(PrismaExceptionFilter)
-  async patch(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
+  async patch(@Request() req: any, @Body() updateMeDto: UpdateMeDto) {
     const id = req.user.id;
     // displayName の唯一性チェック
     // -> unique 制約に任せる
@@ -50,19 +52,19 @@ export class MeController {
     if (!user) {
       throw new BadRequestException('no user');
     }
-    const isEnabledAvatar = !!updateUserDto.avatar || user.isEnabledAvatar;
+    const isEnabledAvatar = !!updateMeDto.avatar || user.isEnabledAvatar;
     const ordinary = this.usersService.update(id, {
-      ...Utils.pick(updateUserDto, 'displayName'),
+      ...Utils.pick(updateMeDto, 'displayName'),
       isEnabledAvatar,
     });
-    const avatar = updateUserDto.avatar
-      ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
+    const avatar = updateMeDto.avatar
+      ? this.usersService.upsertAvatar(id, updateMeDto.avatar)
       : Promise.resolve('skipped');
     const result = await Utils.PromiseMap({ ordinary, avatar });
     {
       const data = {
-        ...Utils.omit(updateUserDto, 'avatar'),
-        ...(updateUserDto.avatar ? { avatar: true } : {}),
+        ...Utils.omit(updateMeDto, 'avatar'),
+        ...(updateMeDto.avatar ? { avatar: true } : {}),
       };
       this.wsServer.sendResults(
         'ft_user',
@@ -81,6 +83,24 @@ export class MeController {
       'isEnabled2FA',
       'isEnabledAvatar'
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/password')
+  @UseFilters(PrismaExceptionFilter)
+  async patchPassword(
+    @Request() req: any,
+    @Body(new UpdatePasswordPipe()) updateMePasswordDto: UpdateMePasswordDto
+  ) {
+    const id = req.user.id;
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new BadRequestException('no user');
+    }
+    await this.usersService.update(id, updateMePasswordDto);
+    // TODO: このユーザのすべてのJWTを失効させる
+    // TODO: 新しいアクセストークンを返す
+    return { status: 'ok' };
   }
 
   @UseGuards(JwtAuthGuard)

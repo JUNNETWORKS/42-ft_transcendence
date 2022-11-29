@@ -5,7 +5,7 @@ import { Index } from '@/features/Index/Index';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
-import { UserView } from '@/features/User/User';
+import { UserView } from '@/features/User/UserView';
 import { GamePage } from '@/features/GamePage/components/GamePage';
 import { MyPageView } from '@/features/User/MyPage';
 import { DmPage } from '@/features/DM/DmPage';

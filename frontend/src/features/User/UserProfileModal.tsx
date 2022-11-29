@@ -9,7 +9,7 @@ import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { displayNameErrors } from './user.validator';
+import { displayNameErrors, passwordErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { UserAvatar } from '@/components/UserAvater';
@@ -24,6 +24,99 @@ type Prop = {
 
 type InnerProp = Prop & {
   setPhase: (phase: Phase) => void;
+};
+
+const CommonCard = (props: { user: TD.User }) => {
+  return (
+    <div className="flex gap-8">
+      <UserAvatar user={props.user} className="h-24 w-24 shrink-0 grow-0" />
+      <div className="flex min-w-0 shrink grow flex-col justify-around">
+        <div className="flex flex-row gap-2">
+          <p className="shrink-0 grow-0 text-2xl">Id:</p>
+          <p className="shrink grow text-2xl">{props.user.id}</p>
+        </div>
+        <div className="flex flex-row gap-2">
+          <p className="shrink-0 grow-0 text-2xl">Name:</p>
+          <p className="shrink grow overflow-hidden text-ellipsis text-2xl">
+            {props.user.displayName}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const EditPassword = ({ user, setPhase, onClose }: InnerProp) => {
+  const [personalData] = useAtom(authAtom.personalData);
+  const [password, setPassword] = useState('');
+  const validationErrors = passwordErrors(password);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
+  const [state, submit] = useAPI('PATCH', `/me/password`, {
+    payload: () => ({ password }),
+    onFetched: (json) => {
+      console.log('result', json);
+      setNetErrors({});
+      setPhase('Display');
+    },
+    onFailed(e) {
+      if (e instanceof APIError) {
+        e.response.json().then((json: any) => {
+          console.log({ json });
+          if (typeof json === 'object') {
+            setNetErrors(json);
+          }
+        });
+      }
+    },
+  });
+
+  if (!personalData) {
+    return null;
+  }
+  const passwordError = validationErrors.password || netErrors.password;
+  return (
+    <>
+      <CommonCard user={user} />
+      <div className="flex flex-row items-center justify-center gap-2">
+        <div>
+          <p className="">新しいパスワード:</p>
+          <div className="text-red-400">&nbsp;</div>
+        </div>
+        <div>
+          <FTTextField
+            className="w-[16em] border-2"
+            autoComplete="off"
+            placeholder="12 - 60文字"
+            value={password}
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          {passwordError ? (
+            <div className="text-red-400">{passwordError}</div>
+          ) : (
+            <div>{password.length}/60</div>
+          )}
+        </div>
+      </div>
+      <div className="flex justify-around gap-8">
+        <FTButton
+          onClick={() => {
+            setPhase('Display');
+          }}
+        >
+          Cancel
+        </FTButton>
+        <FTButton
+          className="mr-2 disabled:opacity-50"
+          disabled={validationErrors.some || state === 'Fetching'}
+          onClick={submit}
+        >
+          <InlineIcon i={<Icons.Save />} />
+          Save
+        </FTButton>
+      </div>
+    </>
+  );
 };
 
 const urlGA = {
@@ -108,8 +201,8 @@ const Disable2FACard = () => {
     return null;
   }
   return (
-    <div>
-      <p>Enabled.</p>
+    <>
+      <p className="text-xl text-green-400">利用する</p>
 
       <FTButton
         className="mr-2 disabled:opacity-50"
@@ -124,9 +217,9 @@ const Disable2FACard = () => {
           }
         }}
       >
-        Disable 2FA
+        無効にする
       </FTButton>
-    </div>
+    </>
   );
 };
 
@@ -156,8 +249,8 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
     return null;
   }
   return (
-    <div>
-      <p>Disabled.</p>
+    <>
+      <p>利用しない</p>
 
       <FTButton
         className="mr-2 disabled:opacity-50"
@@ -172,9 +265,9 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
           }
         }}
       >
-        Enable 2FA
+        有効にする
       </FTButton>
-    </div>
+    </>
   );
 };
 
@@ -225,18 +318,14 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
       <Modal closeModal={closeModal} isOpen={!!qrcode}>
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
-      <div className="flex gap-8">
-        <UserAvatar user={user} className="h-24 w-24" />
-        <div className="flex flex-col justify-around">
-          <div className="text-2xl">Id: {user.id}</div>
-          <div className="text-2xl">{displayName}</div>
-          <h3 className="text-2xl">2FA</h3>
-          {personalData.isEnabled2FA ? (
-            <Disable2FACard />
-          ) : (
-            <Enable2FACard onSucceeded={setQrcode} />
-          )}
-        </div>
+      <CommonCard user={user} />
+      <div className="flex flex-row items-center justify-center gap-2">
+        <p className="text-2xl">2FA:</p>
+        {personalData.isEnabled2FA ? (
+          <Disable2FACard />
+        ) : (
+          <Enable2FACard onSucceeded={setQrcode} />
+        )}
       </div>
       <div className="flex justify-around gap-8">
         <FTButton
@@ -244,15 +333,7 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
             setPhase('Display');
           }}
         >
-          Cancel
-        </FTButton>
-        <FTButton
-          className="mr-2 disabled:opacity-50"
-          disabled={validationErrors.some || state === 'Fetching'}
-          onClick={submit}
-        >
-          <InlineIcon i={<Icons.Save />} />
-          Save
+          Back
         </FTButton>
       </div>
     </>
@@ -342,13 +423,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
   const navigation = useNavigate();
   return (
     <>
-      <div className="flex gap-8">
-        <UserAvatar user={user} className="h-24 w-24" />
-        <div className="flex flex-col justify-around">
-          <p className="text-2xl">Id: {user.id}</p>
-          <p className="text-2xl">Name: {user.displayName}</p>
-        </div>
-      </div>
+      <CommonCard user={user} />
       <div className="flex flex-wrap justify-around gap-8">
         <FTButton
           className="w-36"
@@ -365,13 +440,7 @@ const Display = ({ user, setPhase, onClose }: InnerProp) => {
         <FTButton className="w-36" onClick={() => setPhase('Edit2FA')}>
           2FA設定
         </FTButton>
-        <FTButton
-          className="w-36"
-          onClick={() => {
-            navigation('/auth');
-            onClose();
-          }}
-        >
+        <FTButton className="w-36" onClick={() => setPhase('EditPassword')}>
           パスワード変更
         </FTButton>
       </div>
@@ -392,7 +461,9 @@ export const UserProfileModal = ({ user, onClose }: Prop) => {
       case 'Edit2FA':
         return <Edit2FA user={user} setPhase={setPhase} onClose={onClose} />;
       case 'EditPassword':
-        return null;
+        return (
+          <EditPassword user={user} setPhase={setPhase} onClose={onClose} />
+        );
     }
   };
   return (
