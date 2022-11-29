@@ -14,17 +14,18 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     // マッチメイキング完了通知
     mySocket.on('pong.match_making.done', (data) => {
       const matchID = data.matchID;
+      console.log(`マッチメイキング完了! matchID: ${matchID}`);
       // 対戦ページに遷移する
       navigate(`/pong/matches/${matchID}`);
     });
 
     return () => {
-      mySocket?.off('pong.match_making.done');
+      mySocket.off('pong.match_making.done');
     };
   }, []);
 
   const cancelWaiting = () => {
-    mySocket?.emit('pong.match_making.leave');
+    mySocket.emit('pong.match_making.leave');
     setIsWaiting(false);
   };
 
@@ -32,7 +33,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     if (isWaiting) {
       return;
     }
-    mySocket?.emit('pong.match_making.entry', { queueID: queueID });
+    mySocket.emit('pong.match_making.entry', { queueID: queueID });
   };
 
   return (
