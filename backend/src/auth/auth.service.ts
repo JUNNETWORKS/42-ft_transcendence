@@ -53,7 +53,7 @@ export class AuthService {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
       // ユーザがいた -> そのまま返す
-      return user;
+      return { user, created: false };
     }
     // ユーザがいない -> ユーザを登録
     // MEMO: ユニーク制約が破られた時には PrismaClientKnownRequestError が飛んでくる
@@ -65,7 +65,7 @@ export class AuthService {
       ...data,
       password: '',
     });
-    return createdUser;
+    return { user: createdUser, created: true };
   }
 
   async login(user: any, completedTwoFa = false): Promise<LoginResult> {
@@ -99,14 +99,17 @@ export class AuthService {
         issuer: process.env.JWT_ISSUER,
         audience: process.env.JWT_AUDIENCE,
       }),
-      user: Utils.pick(
-        u!,
-        'id',
-        'displayName',
-        'email',
-        'isEnabled2FA',
-        'isEnabledAvatar'
-      ),
+      user: {
+        ...Utils.pick(
+          u!,
+          'id',
+          'displayName',
+          'email',
+          'isEnabled2FA',
+          'isEnabledAvatar'
+        ),
+        created: !!user.created,
+      },
     };
     return result;
   }
