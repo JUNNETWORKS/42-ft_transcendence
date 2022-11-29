@@ -7,14 +7,13 @@ import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useDropzone } from 'react-dropzone';
 import { UserAvatar } from '@/components/UserAvater';
-import { AvatarInput } from '../DevAuth/components/AvatarInput';
+import { AvatarFile, AvatarInput } from './components/AvatarInput';
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
@@ -258,25 +257,6 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
       </div>
     </>
   );
-};
-
-const convertBlobToDataURL = (blob: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = reject;
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        resolve(reader.result);
-        return;
-      }
-      reject(undefined);
-    };
-    reader.readAsDataURL(blob);
-  });
-
-type AvatarFile = {
-  name: string;
-  dataURL: string;
 };
 
 /**

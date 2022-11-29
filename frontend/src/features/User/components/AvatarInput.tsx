@@ -15,7 +15,7 @@ const convertBlobToDataURL = (blob: File): Promise<string> =>
     reader.readAsDataURL(blob);
   });
 
-type AvatarFile = {
+export type AvatarFile = {
   name: string;
   dataURL: string;
 };
