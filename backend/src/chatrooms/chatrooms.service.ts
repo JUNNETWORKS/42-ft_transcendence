@@ -24,6 +24,14 @@ export class ChatroomsService {
         roomMember: {
           create: createChatroomDto.roomMember,
         },
+        ...(() => {
+          const { roomType, roomPassword } = createChatroomDto;
+          if (roomType === 'LOCKED' && roomPassword) {
+            return { roomPassword: this.hash_password(roomPassword) };
+          } else {
+            return {};
+          }
+        })(),
       },
       include:
         createChatroomDto.roomType === 'DM'
@@ -82,28 +90,6 @@ export class ChatroomsService {
   async findOne(id: number) {
     return await this.prisma.chatRoom.findUnique({
       where: { id },
-    });
-  }
-
-  join(roomId: number, userId: number) {
-    // TODO: BANされているユーザーはjoinできない
-    return this.prisma.chatUserRelation.create({
-      data: {
-        userId: userId,
-        chatRoomId: roomId,
-      },
-    });
-  }
-
-  leave(roomId: number, userId: number) {
-    // TODO: OWNERをどう扱うか
-    return this.prisma.chatUserRelation.delete({
-      where: {
-        userId_chatRoomId: {
-          userId: userId,
-          chatRoomId: roomId,
-        },
-      },
     });
   }
 

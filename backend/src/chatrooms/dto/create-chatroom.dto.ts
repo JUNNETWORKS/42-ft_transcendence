@@ -18,7 +18,7 @@ import { RoomMemberDto } from './room-member.dto';
 export class CreateChatroomDto {
   @IsNotEmpty()
   @IsString()
-  @MinLength(5)
+  @MinLength(2)
   @MaxLength(50)
   @ApiProperty()
   roomName!: string;
@@ -30,6 +30,8 @@ export class CreateChatroomDto {
 
   @IsOptional()
   @IsString()
+  @MinLength(4)
+  @MaxLength(40)
   @ApiProperty()
   roomPassword?: string;
 

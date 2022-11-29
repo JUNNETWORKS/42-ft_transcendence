@@ -265,6 +265,15 @@ export const SocketHolder = () => {
       }
     });
 
+    mySocket?.on('ft_chatroom', (data: TD.ChatRoomResult) => {
+      console.log('catch chatroom', data);
+      switch (data.action) {
+        case 'update':
+          roomUpdator.updateOne(data.id, data.data);
+          break;
+      }
+    });
+
     return () => {
       mySocket?.removeAllListeners();
     };

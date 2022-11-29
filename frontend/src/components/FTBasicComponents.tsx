@@ -31,8 +31,11 @@ export const FTButton = (
 ) => {
   return (
     <button
-      className="hover:bg-white hover:text-black disabled:opacity-50"
       {...{ ...props }}
+      className={
+        'hover:bg-white hover:text-black disabled:opacity-50 ' +
+        (props.className || '')
+      }
       style={{
         ...(props.style || {}),
         ...styleButtonCommon,
