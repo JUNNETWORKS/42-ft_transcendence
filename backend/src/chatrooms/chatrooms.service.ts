@@ -24,6 +24,14 @@ export class ChatroomsService {
         roomMember: {
           create: createChatroomDto.roomMember,
         },
+        ...(() => {
+          const { roomType, roomPassword } = createChatroomDto;
+          if (roomType === 'LOCKED' && roomPassword) {
+            return { roomPassword: this.hash_password(roomPassword) };
+          } else {
+            return {};
+          }
+        })(),
       },
       include:
         createChatroomDto.roomType === 'DM'
