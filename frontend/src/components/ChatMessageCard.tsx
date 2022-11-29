@@ -19,6 +19,7 @@ export const ChatMessageCard = (props: {
   message: TD.ChatRoomMessage;
   member: TD.ChatUserRelation;
   memberOperations: TD.MemberOperations;
+  id: string;
 }) => {
   const user = useUserDataReadOnly(props.member.userId);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
@@ -40,6 +41,7 @@ export const ChatMessageCard = (props: {
       <div
         className="flex flex-row items-start px-2 py-1"
         key={props.message.id}
+        id={props.id}
       >
         <div className="shrink-0 grow-0">
           <Popover.Button>

@@ -316,7 +316,6 @@ export class ChatGateway implements OnGatewayConnection {
     data.callerId = user.id;
     const userId = user.id;
     const roomId = data.roomId;
-    // [TODO: 入室対象のチャットルームが存在していることを確認]
     console.log('ft_join', data);
 
     const rel = await Utils.PromiseMap({
@@ -325,33 +324,41 @@ export class ChatGateway implements OnGatewayConnection {
       attr: this.chatRoomService.getAttribute(roomId, user.id),
     });
 
+    // [ 入室対象のチャットルームが存在していることを確認 ]
+    if (!rel.room) {
+      return { status: 'not found' };
+    }
     const room = rel.room;
-    // [TODO: 実行者が対象チャットルームに入室できることを確認]
+    // [ 既に入室していないか確認 ]
     {
       const relation = rel.relation;
       if (relation) {
-        return;
+        return { status: 'joined already' };
       }
     }
-    // [TODO: 実行者がbanされていないことを確認]
+    // [ 実行者がbanされていないことを確認 ]
     if (rel.attr && rel.attr.bannedEndAt > new Date()) {
       console.log('** you are banned **');
-      return;
+      return { status: 'banned' };
+    }
+    // lockedの場合、パスワードのチェック
+    if (room.roomType === 'LOCKED') {
+      if (!data.roomPassword) {
+        return { status: 'no password' };
+      }
+      // hash化されたパスワードをチェックする
+      const hashed = this.chatRoomService.hash_password(data.roomPassword);
+      if (room.roomPassword !== hashed) {
+        return { status: 'invalid password' };
+      }
     }
 
     // [TODO: ハードリレーション更新]
-    const member = await this.chatRoomService.addMember(roomId, {
+    const relation = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
     });
-    console.log('member', member);
-    const relation = await this.chatRoomService.getRelationWithUser(
-      roomId,
-      user.id
-    );
-    if (!relation) {
-      return;
-    }
+    console.log('member relation:', relation);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersJoin(user.id, { roomId });
@@ -407,6 +414,7 @@ export class ChatGateway implements OnGatewayConnection {
       })(),
     });
     this.updateHeartbeat(user.id);
+    return { status: 'success' };
   }
 
   /**
@@ -693,6 +701,7 @@ export class ChatGateway implements OnGatewayConnection {
     const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
       take: data.take,
+      cursor: data.cursor,
     });
     this.wsServer.sendResults(
       'ft_get_room_messages',

@@ -10,9 +10,7 @@ export const UserAvatar = ({ user, className }: Props) => {
     <img
       src={
         user.isEnabledAvatar
-          ? `http://localhost:3000/users/${user.id}/avatar?${
-              user.avatarTime || 0
-            }`
+          ? `http://localhost:3000/users/${user.id}/avatar?${user.avatarTime}`
           : '/Kizaru.png'
       }
       alt="CurrentUserProfileImage"

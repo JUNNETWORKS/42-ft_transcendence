@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -7,9 +7,17 @@ import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
 import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
+import { useAtom } from 'jotai';
+import { chatSocketAtom } from '@/stores/auth';
+import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { ChatMemberCard } from '@/components/ChatMemberCard';
+
+function messageCardId(message: TD.ChatRoomMessage) {
+  return `message-${message.id}`;
+}
 
 const MessagesList = (props: {
   you: TD.ChatUserRelation | null;
@@ -18,14 +26,100 @@ const MessagesList = (props: {
   members: TD.UserRelationMap;
   memberOperations: TD.MemberOperations;
 }) => {
+  const listId = useId();
+  const scrollData = useVerticalScrollAttr(listId);
+  const [prevLatestMessage, setPrevLatestMessage] =
+    useState<TD.ChatRoomMessage | null>(null);
+
+  useEffect(() => {
+    const n = props.messages.length;
+    const lm = n > 0 && props.messages[n - 1];
+    if (!lm) {
+      return;
+    }
+    setPrevLatestMessage(lm);
+    const listEl = document.getElementById(listId);
+    if (!listEl) {
+      return;
+    }
+    if (!prevLatestMessage) {
+      // [初期表示]
+      // → 最新メッセージが表示されるよう瞬間的にスクロール
+      const lastId = messageCardId(lm);
+      const lastEl = document.getElementById(lastId);
+      lastEl?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+    if (prevLatestMessage.createdAt < lm.createdAt) {
+      // [メッセージ新着]
+      // → 最新メッセージが表示されるよう自動スクロール
+      if (n < 2) {
+        return;
+      }
+      const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
+        const lastMessage = props.messages[i];
+        const lastId = messageCardId(lastMessage);
+        return document.getElementById(lastId);
+      });
+      if (!prevEl || !nextEl) {
+        return;
+      }
+      // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
+      //  - prevEl が見えている
+      //  - prevEl のボトムがリストビューの下辺以下にいる
+      // を満たすなら nextEl が見えるようにスクロール
+      const listRect = listEl.getBoundingClientRect();
+      const prevRect = prevEl.getBoundingClientRect();
+      const prevIsShown = !(
+        prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
+      );
+      const prevIsCrossingBottom =
+        Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
+      if (prevIsShown && prevIsCrossingBottom) {
+        nextEl.scrollIntoView({
+          behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+        });
+      }
+      return;
+    }
+    // [メッセージ変化]
+    // → 今見えている要素の「見かけの縦位置」を維持する
+    listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
+    // 以下の関係式が成り立つようにする:
+    // listEl.scrollHeight - listEl.scrollTop = scrollData.height - scrollData.top
+    // ※お気持ち
+    // height(領域の高さ) - top(領域の上から測った位置) は「領域の下から測った位置」となるので,
+    // これが維持されるように listEl.scrollTop をいじって辻褄を合わせている.
+  }, [props.messages, listId]);
+
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [requestKey, setRequestKey] = useState('');
+  useEffect(() => {
+    if (Math.floor(scrollData.top) > 0) {
+      return;
+    }
+    if (!mySocket) {
+      return;
+    }
+    const oldestMessage = Utils.first(props.messages);
+    const { get_room_messages } = makeCommand(mySocket, props.room.id);
+    const rk = `${oldestMessage?.id}`;
+    if (rk === requestKey) {
+      return;
+    }
+    setRequestKey(rk);
+    get_room_messages(props.room.id, 50, oldestMessage?.id);
+  }, [mySocket, scrollData, props.room.id]);
+
   return (
-    <>
+    <div id={listId} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
         const member = props.members[data.userId];
         return (
           member && (
             <ChatMessageCard
               key={data.id}
+              id={messageCardId(data)}
               message={data}
               you={props.you}
               room={props.room}
@@ -35,7 +129,7 @@ const MessagesList = (props: {
           )
         );
       })}
-    </>
+    </div>
   );
 };
 
@@ -121,7 +215,7 @@ export const ChatRoomView = (props: {
             )}
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
-          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
+          <div className="shrink grow overflow-hidden border-2 border-solid border-white">
             <MessagesList
               you={props.you}
               room={props.room}
