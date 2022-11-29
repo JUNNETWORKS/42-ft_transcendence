@@ -11,7 +11,7 @@ import { ChatService } from './chat.service';
 @Module({
   providers: [ChatGateway, ChatService],
   imports: [
-    ChatroomsModule,
+    forwardRef(() => ChatroomsModule),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     WsServerModule,

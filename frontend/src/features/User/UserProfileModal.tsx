@@ -11,6 +11,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { displayNameErrors } from './user.validator';
 import { Modal } from '@/components/Modal';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { useDropzone } from 'react-dropzone';
 import { UserAvatar } from '@/components/UserAvater';
 import { toast } from 'react-toastify';
@@ -104,6 +105,7 @@ const Disable2FACard = () => {
       }
     },
   });
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -114,8 +116,12 @@ const Disable2FACard = () => {
       <FTButton
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
-        onClick={() => {
-          if (confirm('really disable 2FA?')) {
+        onClick={async () => {
+          if (
+            await confirmModal('二要素認証を無効化しますか？', {
+              affirm: '無効化する',
+            })
+          ) {
             submit();
           }
         }}
@@ -148,6 +154,7 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
       }
     },
   });
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
@@ -158,8 +165,12 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
       <FTButton
         className="mr-2 disabled:opacity-50"
         disabled={state === 'Fetching'}
-        onClick={() => {
-          if (confirm('really enable 2FA?')) {
+        onClick={async () => {
+          if (
+            await confirmModal('二要素認証を有効化しますか？', {
+              affirm: '有効化する',
+            })
+          ) {
             submit();
           }
         }}
@@ -198,11 +209,17 @@ const Edit2FA = ({ user, setPhase, onClose }: InnerProp) => {
     },
   });
 
+  const [, confirmModal] = useConfirmModal();
   if (!personalData) {
     return null;
   }
-  const closeModal = () => {
-    if (confirm('QRコードのスキャンは完了しましたか？')) {
+  const closeModal = async () => {
+    if (
+      await confirmModal('QRコードのスキャンは完了しましたか？', {
+        affirm: '完了したので閉じる',
+        denial: 'まだ',
+      })
+    ) {
       setQrcode(null);
     }
   };

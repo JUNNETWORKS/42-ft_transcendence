@@ -3,6 +3,10 @@ import * as Utils from '@/utils';
 import { FTButton } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { RoomTypeIcon } from './RoomSetting';
+import { useState } from 'react';
+import { Modal } from '@/components/Modal';
+import { RoomPasswordInput } from './components/RoomPasswordInput';
+import { validateRoomPasswordError } from './components/RoomPassword.validator';
 
 const ChatRoomShiftButton = (props: {
   isJoined: boolean;
@@ -27,19 +31,49 @@ const ChatRoomListItem = (props: {
   room: TD.ChatRoom;
   isJoined: boolean;
   isFocused: boolean;
-  nMessages: number | undefined;
-  onJoin: (roomId: number) => void;
+  onJoin: (roomId: number, roomPassword: string, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [roomPassword, setRoomPassword] = useState('');
+  const [joinError, setJoinError] = useState('');
   const TypeIcon = RoomTypeIcon[props.room.roomType];
+
+  const onJoin = () => {
+    props.onJoin(props.room.id, roomPassword, (response: any) => {
+      if (response.status !== 'success') {
+        setJoinError(validateRoomPasswordError(response.status));
+      } else {
+        setIsOpen(false);
+        setRoomPassword('');
+        setJoinError('');
+      }
+    });
+  };
+  const closeModal = () => setIsOpen(false);
 
   return (
     <>
+      <Modal isOpen={isOpen} closeModal={closeModal}>
+        <RoomPasswordInput
+          roomPassword={roomPassword}
+          setRoomPassword={setRoomPassword}
+          joinError={joinError}
+          onJoin={onJoin}
+          onClose={closeModal}
+        />
+      </Modal>
       <div className="shrink-0 grow-0">
         <ChatRoomShiftButton
           isJoined={props.isJoined}
-          onJoin={() => props.onJoin(props.room.id)}
+          onJoin={
+            props.room.roomType === 'LOCKED'
+              ? () => {
+                  setIsOpen(true);
+                }
+              : onJoin
+          }
           onLeave={() => props.onLeave(props.room.id)}
         />
       </div>
@@ -55,10 +89,6 @@ const ChatRoomListItem = (props: {
       >
         <InlineIcon i={<TypeIcon />} />
         {props.room.roomName}{' '}
-        {(() => {
-          const n = props.nMessages;
-          return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-        })()}
       </div>
     </>
   );
@@ -68,8 +98,7 @@ export const ChatRoomListView = (props: {
   rooms: TD.ChatRoom[];
   isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
-  countMessages: (roomId: number) => number | undefined;
-  onJoin: (roomId: number) => void;
+  onJoin: (roomId: number, roomPassword: string, callback: any) => void;
   onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
 }) => {
@@ -86,7 +115,6 @@ export const ChatRoomListView = (props: {
               room={room}
               isJoined={props.isJoiningTo(room.id)}
               isFocused={props.isFocusingTo(room.id)}
-              nMessages={props.countMessages(room.id)}
               onJoin={props.onJoin}
               onLeave={props.onLeave}
               onFocus={props.onFocus}
