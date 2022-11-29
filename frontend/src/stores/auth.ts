@@ -8,7 +8,7 @@ import { structureAtom } from './structure';
 
 // 認証情報
 
-type UserPersonalData = {
+export type UserPersonalData = {
   id: number;
   email: string;
   displayName: string;

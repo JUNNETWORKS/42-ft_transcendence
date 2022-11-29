@@ -14,6 +14,7 @@ import { Modal } from '@/components/Modal';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { useDropzone } from 'react-dropzone';
 import { UserAvatar } from '@/components/UserAvater';
+import { AvatarInput } from '../DevAuth/components/AvatarInput';
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
@@ -285,10 +286,8 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [displayName, setDisplayName] = useState(user.displayName);
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
-  const [avatarError, setAvatarError] = useState<string | null>(null);
   const validationErrors = {
     ...displayNameErrors(displayName),
-    avatar: avatarError,
   };
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
@@ -312,78 +311,14 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
       }
     },
   });
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    // Do something with the files
-    setAvatarError(null);
-    const file = acceptedFiles[0];
-    if (!file) {
-      return;
-    }
-    convertBlobToDataURL(file).then((dataURL) => {
-      console.log('dataURL', dataURL);
-      console.log('name', file.name);
-      setAvatarFile({ name: file.name, dataURL });
-    });
-  }, []);
-  const extensions = ['.png', '.gif', '.jpeg', '.jpg'];
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept: {
-      'image/*': extensions,
-    },
-    maxFiles: 1,
-    maxSize: 1024 ** 2,
-    multiple: false,
-    onDrop,
-    onDropRejected(fileRejections) {
-      setAvatarFile(null);
-      const file = fileRejections[0];
-      for (const err of file.errors) {
-        switch (err.code) {
-          case 'file-too-large':
-            setAvatarError('ファイルサイズが1MBを超えています');
-            break;
-          case 'file-invalid-type':
-            setAvatarError(`可能な拡張子は ${extensions.join(', ')} です`);
-            break;
-        }
-      }
-    },
-  });
-  const innerDropZone = (() => {
-    if (avatarFile) {
-      return (
-        <img
-          className="h-full w-full object-cover"
-          src={avatarFile.dataURL}
-          alt={avatarFile.name}
-        ></img>
-      );
-    }
-    return (
-      <p className="text-sm">
-        {isDragActive
-          ? 'ここにファイルをドロップ'
-          : 'ファイルをドラッグ&ドロップ または クリックしてファイルを選択'}
-      </p>
-    );
-  })();
   return (
     <>
       <div className="flex gap-8">
-        <div>
-          <div
-            {...getRootProps()}
-            className="h-[120px] w-[120px] cursor-pointer border-[1px] border-dotted border-white"
-          >
-            <input {...getInputProps()} />
-            {innerDropZone}
-          </div>
-          {avatarFile && <div className="text-sm">{avatarFile.name}</div>}
-          <div className="text-sm text-red-400">
-            {validationErrors.avatar || netErrors.avatar || '　'}
-          </div>
-        </div>
-
+        <AvatarInput
+          avatarFile={avatarFile}
+          setAvatarFile={setAvatarFile}
+          networkError={netErrors.avatar}
+        />
         {/* <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" /> */}
 
         <div className="flex flex-col justify-around">
