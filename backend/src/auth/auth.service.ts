@@ -8,9 +8,11 @@ import { verifyOtpDto } from './dto/verify-opt.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { UserMinimum } from '../users/entities/user.entity';
-import { hash_password, UsersService } from '../users/users.service';
+import { UsersService } from '../users/users.service';
 import * as Utils from '../utils';
 import { jwtConstants } from './auth.constants';
+
+import { randomUUID } from 'crypto';
 
 export type LoginResult = {
   access_token: string;
@@ -31,7 +33,7 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     console.log(user);
     if (user) {
-      const hashed = hash_password(password);
+      const hashed = UsersService.hash_password(password);
       if (user.password === hashed) {
         console.log('succeeded');
         return user;
@@ -63,7 +65,7 @@ export class AuthService {
     const createdUser = await this.usersService.create({
       intraId,
       ...data,
-      password: '',
+      password: UsersService.hash_password(randomUUID()),
     });
     return createdUser;
   }

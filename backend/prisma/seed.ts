@@ -1,6 +1,6 @@
 import { PrismaClient, RoomType } from '@prisma/client';
 
-import { hash_password } from '../src/users/users.service';
+import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -9,7 +9,8 @@ async function main() {
       { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       {
-        displayName: 'AngeliqueAngeliqueAngelique',
+        displayName:
+          'AngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngelique',
         email:
           'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
         intraId: 2,
@@ -19,7 +20,7 @@ async function main() {
     ].map((d) => {
       return {
         ...d,
-        password: hash_password(d.displayName),
+        password: UsersService.hash_password(d.displayName),
       };
     }),
     skipDuplicates: true, // Skip 'Bobo'
