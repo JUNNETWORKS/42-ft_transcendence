@@ -58,6 +58,9 @@ export class WaitingQueue {
 
   // Match作成を試みる
   private async createMatches() {
+    if (this.users.size < 2) {
+      return;
+    }
     let userPair = new Array<number>();
     const promises = new Array<Promise<void>>();
     const users = [...this.users];
