@@ -42,7 +42,7 @@ export class ChatroomsController {
   @ApiCreatedResponse({ type: ChatroomEntity })
   async create(
     @Request() req: any,
-    @Body(new CreateChatroomPipe(), new CreateChatroomPipe())
+    @Body(new CreateChatroomPipe())
     createChatroomDto: CreateChatroomApiDto
   ) {
     const ownerId = req.user.id;
