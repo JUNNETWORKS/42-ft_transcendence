@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsInt } from 'class-validator';
+import { IsNotEmpty, IsInt, IsOptional } from 'class-validator';
 
 export class OperationGetRoomMessageDto {
   @IsNotEmpty()
@@ -14,6 +14,12 @@ export class OperationGetRoomMessageDto {
   @IsInt()
   @ApiProperty()
   take!: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @ApiProperty()
+  cursor?: number;
 
   @IsNotEmpty()
   @Type(() => Number)

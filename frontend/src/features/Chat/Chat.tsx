@@ -185,14 +185,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: (roomId: number) => {
-      if (roomId > 0) {
-        if (!Utils.isfinite(store.countMessages(roomId))) {
-          command.get_room_messages(roomId);
-        }
-      }
-    },
-
     get_room_members: (roomId: number) => {
       if (roomId > 0) {
         const mems = store.roomMembers(roomId);
@@ -240,13 +232,11 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
                 rooms={filteredRooms}
                 isJoiningTo={predicate.isJoiningTo}
                 isFocusingTo={predicate.isFocusingTo}
-                countMessages={store.countMessages}
                 onJoin={command.join}
                 onLeave={command.leave}
                 onFocus={(roomId: number) => {
                   if (predicate.isJoiningTo(roomId)) {
                     setFocusedRoomId(roomId);
-                    action.get_room_message(roomId);
                     action.get_room_members(roomId);
                   }
                 }}

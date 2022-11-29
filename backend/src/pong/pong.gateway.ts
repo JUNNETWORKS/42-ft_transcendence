@@ -1,11 +1,12 @@
+import { Logger } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
 import { Socket, Server } from 'socket.io';
+
 import { PongMatchActionDTO } from './dto/pong-match-action';
 import { OnlineMatch } from './game/online-match';
 
