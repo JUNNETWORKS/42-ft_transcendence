@@ -9,7 +9,7 @@ export type User = {
   isEnabledAvatar: boolean;
 
   avatar?: boolean;
-  avatarTime?: number;
+  avatarTime: number;
 };
 
 export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
@@ -135,6 +135,12 @@ export type UserResult = {
   action: 'create' | 'update' | 'delete';
   id: number;
   data: Partial<User>;
+};
+
+export type ChatRoomResult = {
+  id: number;
+  action: 'update';
+  data: Partial<ChatRoom>;
 };
 
 export const Mapper = {

@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';
-import { UserView } from './User';
+import { UserView } from './UserView';
 import { useUserDataReadOnly } from '@/stores/store';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { dataAtom } from '@/stores/structure';

@@ -5,18 +5,16 @@ type Props = {
   className?: string;
 };
 
-export const UserAvatar = (props: Props) => {
+export const UserAvatar = ({ user, className }: Props) => {
   return (
     <img
       src={
-        props.user.isEnabledAvatar
-          ? `http://localhost:3000/users/${props.user.id}/avatar?${
-              props.user.avatarTime || 0
-            }`
+        user.isEnabledAvatar
+          ? `http://localhost:3000/users/${user.id}/avatar?${user.avatarTime}`
           : '/Kizaru.png'
       }
       alt="CurrentUserProfileImage"
-      className={`m-3 ${props.className || 'h-14 w-14'} object-cover`}
+      className={`${className || 'm-3 h-14 w-14'} object-cover`}
     />
   );
 };

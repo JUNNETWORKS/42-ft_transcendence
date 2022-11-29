@@ -11,7 +11,8 @@ async function main() {
       {
         displayName:
           'AngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngelique',
-        email: 'angelique@prisma.io',
+        email:
+          'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
         intraId: 2,
       },
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
@@ -83,7 +84,7 @@ async function main() {
   // }
 
   for (let i = 1; i <= 3; i++) {
-    for (let j = 1; j <= 20; j++) {
+    for (let j = 1; j <= 200; j++) {
       await prisma.chatMessage.create({
         data: {
           userId: 1,
