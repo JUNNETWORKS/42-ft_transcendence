@@ -30,10 +30,20 @@ export const useUpdateUser = () => {
     ),
     addMany: useCallback(
       (data: TD.User[]) => {
-        const ds = data.map((d) => Utils.datifyObject(d, 'time'));
+        const ds = data.map((u) => {
+          const d = Utils.datifyObject(u, 'time');
+          d.avatarTime = Date.now();
+          return d;
+        });
         setUsersStore((prev) => {
           const next = { ...prev };
-          ds.forEach((d) => (next[d.id] = d));
+          ds.forEach((d) => {
+            if (next[d.id]) {
+              next[d.id] = { ...next[d.id], ...d };
+            } else {
+              next[d.id] = d;
+            }
+          });
           return next;
         });
       },
@@ -42,7 +52,7 @@ export const useUpdateUser = () => {
     updateOne: useCallback(
       (userId: number, part: Partial<TD.User>) => {
         const patched = Utils.datifyObject(part, 'time');
-        if (part.avatar) {
+        if (part.avatar || part.isEnabledAvatar) {
           patched.avatarTime = Date.now();
         }
         setUsersStore((prev) => {
