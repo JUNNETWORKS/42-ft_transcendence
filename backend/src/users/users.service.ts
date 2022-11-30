@@ -16,6 +16,7 @@ import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -202,12 +203,13 @@ export class UsersService {
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
-    const d = {
+    const d: Partial<UserEntity> = {
       ...updateUserDto,
     };
     if (d.password) {
       const p = d.password;
       d.password = UsersService.hash_password(p);
+      d.invalidateTokenIssuedBefore = new Date();
     }
     return this.prisma.user.update({
       where: { id },

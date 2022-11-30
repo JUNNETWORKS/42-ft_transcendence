@@ -49,14 +49,16 @@ const CommonCard = (props: { user: TD.User }) => {
 const EditPassword = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData] = useAtom(authAtom.personalData);
   const [password, setPassword] = useState('');
+  const loginLocal = useLoginLocal();
   const validationErrors = passwordErrors(password);
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const [state, submit] = useAPI('PATCH', `/me/password`, {
     payload: () => ({ password }),
     onFetched: (json) => {
-      console.log('result', json);
+      const data = json as { access_token: string };
       setNetErrors({});
       setPhase('Display');
+      loginLocal(data.access_token, personalData);
     },
     onFailed(e) {
       if (e instanceof APIError) {

@@ -17,8 +17,10 @@ import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
+import { UpdateMePasswordDto } from './dto/update-me-password.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
+import { UpdatePasswordPipe } from './pipe/update-password.pipe';
 import { UsersService } from './users.service';
 
 @Controller('me')
@@ -83,6 +85,25 @@ export class MeController {
       'isEnabled2FA',
       'isEnabledAvatar'
     );
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/password')
+  @UseFilters(PrismaExceptionFilter)
+  async patchPassword(
+    @Request() req: any,
+    @Body(new UpdatePasswordPipe()) updateMePasswordDto: UpdateMePasswordDto
+  ) {
+    const id = req.user.id;
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new BadRequestException('no user');
+    }
+    await this.usersService.update(id, updateMePasswordDto);
+    const access_token = this.authService.issueAccessToken(req.user);
+    // TODO: このユーザのすべてのJWTを失効させる
+    // TODO: 新しいアクセストークンを返す
+    return { status: 'ok', access_token };
   }
 
   @UseGuards(JwtAuthGuard)
