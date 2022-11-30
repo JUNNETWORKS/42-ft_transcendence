@@ -18,8 +18,9 @@ model User {
   password          String
   isEnabledAvatar   Boolean             @default(false)
   isEnabled2FA      Boolean             @default(false)
-  chatMessage       ChatMessage[]
-  joinedRoom        ChatUserRelation[]
+  chatMessage       ChatMessage[]       @relation("primary")
+  chatMessageAsSecondary ChatMessage[]  @relation("secondary")
+  joinedRoom        ChatUserRelation[]  
   ownedRoom         ChatRoom[]
   chatroomAttribute ChatUserAttribute[]
   followingUser     FriendRelation[]    @relation("followingUser")
@@ -112,8 +113,11 @@ model ChatMessage {
   id         Int      @id @default(autoincrement())
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user       User?    @relation(name: "primary", fields: [userId], references: [id], onDelete: SetNull)
   userId     Int?
+　secondaryUser   User?   @relation(name: "secondary", fields: [secondaryUserId], references: [id], onDelete: SetNull)
+  secondaryUserId Int?
   createdAt  DateTime @default(now())
   content    String
+  messageType String?
 }
