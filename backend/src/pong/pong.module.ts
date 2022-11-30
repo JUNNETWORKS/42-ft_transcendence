@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
-import { PongService } from './pong.service';
+
+import { PrismaModule } from '../prisma/prisma.module';
 import { PongController } from './pong.controller';
 import { PongGateway } from './pong.gateway';
-import { PrismaModule } from '../prisma/prisma.module';
+import { PongService } from './pong.service';
 
 @Module({
   providers: [PongService, PongGateway],

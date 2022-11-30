@@ -59,7 +59,7 @@
         },
         "pathGroups": [
           {
-            "pattern": "{src/*/dto/*.dto,./dto/*.dto}",
+            "pattern": "{src/**/dto/*.dto,./**/dto/*.dto,../**/dto/*.dto}",
             "group": "internal",
             "position": "after"
           }

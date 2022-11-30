@@ -24,6 +24,14 @@ export class ChatroomsService {
         roomMember: {
           create: createChatroomDto.roomMember,
         },
+        ...(() => {
+          const { roomType, roomPassword } = createChatroomDto;
+          if (roomType === 'LOCKED' && roomPassword) {
+            return { roomPassword: this.hash_password(roomPassword) };
+          } else {
+            return {};
+          }
+        })(),
       },
       include:
         createChatroomDto.roomType === 'DM'
@@ -80,37 +88,8 @@ export class ChatroomsService {
   }
 
   async findOne(id: number) {
-    try {
-      const res = await this.prisma.chatRoom.findUniqueOrThrow({
-        where: { id },
-      });
-      return new ChatroomEntity(res);
-    } catch (err) {
-      console.error(err);
-      // TODO: errの種類拾う
-      throw new HttpException(`${err}`, 400);
-    }
-  }
-
-  join(roomId: number, userId: number) {
-    // TODO: BANされているユーザーはjoinできない
-    return this.prisma.chatUserRelation.create({
-      data: {
-        userId: userId,
-        chatRoomId: roomId,
-      },
-    });
-  }
-
-  leave(roomId: number, userId: number) {
-    // TODO: OWNERをどう扱うか
-    return this.prisma.chatUserRelation.delete({
-      where: {
-        userId_chatRoomId: {
-          userId: userId,
-          chatRoomId: roomId,
-        },
-      },
+    return await this.prisma.chatRoom.findUnique({
+      where: { id },
     });
   }
 
@@ -271,7 +250,7 @@ export class ChatroomsService {
         ...(() => {
           if (roomType === 'LOCKED') {
             if (roomPassword) {
-              return { roomPassword: hash_password(roomPassword) }; // (C)
+              return { roomPassword: this.hash_password(roomPassword) }; // (C)
             } else {
               return {}; // (B)
             }
@@ -285,23 +264,30 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async addMember(id: number, updateRoomMemberDto: CreateRoomMemberDto) {
-    const res = await this.prisma.chatRoom.update({
-      where: { id },
+  async addMember(
+    chatRoomId: number,
+    createRoomMemberDto: CreateRoomMemberDto
+  ) {
+    const { userId, memberType } = createRoomMemberDto;
+    return await this.prisma.chatUserRelation.create({
       data: {
-        roomMember: {
-          create: updateRoomMemberDto,
-        },
+        userId,
+        chatRoomId,
+        memberType,
+      },
+      include: {
+        chatRoom: true,
+        user: true,
       },
     });
-    return new ChatroomEntity(res);
   }
 
   async updateMember(chatRoomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType } = roomMemberDto;
     const roomInfo = await this.findOne(chatRoomId);
-    if (roomInfo.ownerId === userId) {
+    // TODO: 指定されたroomが存在しなかった時の対応
+    if (roomInfo!.ownerId === userId) {
       throw new HttpException('Room owner must be administrator.', 400);
     }
 
@@ -379,15 +365,15 @@ export class ChatroomsService {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
   }
-}
 
-/**
- * 生パスワードをハッシュ化する.\
- */
-export function hash_password(password: string) {
-  return Utils.hash(
-    chatRoomConstants.secret,
-    password + chatRoomConstants.pepper,
-    1000
-  );
+  /**
+   * 生パスワードをハッシュ化する
+   */
+  hash_password(password: string) {
+    return Utils.hash(
+      chatRoomConstants.secret,
+      password + chatRoomConstants.pepper,
+      1000
+    );
+  }
 }

@@ -1,131 +1,144 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import { Link } from 'react-router-dom';
 import { SayCard } from '@/components/CommandCard';
 import { Icons } from '@/icons';
 import { Modal } from '@/components/Modal';
-import { ChatRoomSettingCard, RoomTypeIcon } from './RoomSetting';
+import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
+import { useAtom } from 'jotai';
+import { chatSocketAtom } from '@/stores/auth';
+import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { useAtom } from 'jotai';
+import { ChatMemberCard } from '@/components/ChatMemberCard';
 
-const AdminOperationBar = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const areYouOwner = props.you?.userId === props.room.ownerId;
-  const areYouAdmin = props.you?.memberType === 'ADMIN';
-  const areYouAdminLike = areYouOwner;
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-  const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
-  const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
+function messageCardId(message: TD.ChatRoomMessage) {
+  return `message-${message.id}`;
+}
 
-  return (
-    <div className="flex flex-row">
-      {isNomminatable && (
-        <FTButton
-          onClick={() =>
-            props.onNomminateClick ? props.onNomminateClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Nomminate />
-        </FTButton>
-      )}
-      {isBannable && (
-        <FTButton
-          onClick={() =>
-            props.onBanClick ? props.onBanClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Ban />
-        </FTButton>
-      )}
-      {isKickable && (
-        <FTButton
-          onClick={() =>
-            props.onKickClick ? props.onKickClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Kick />
-        </FTButton>
-      )}
-      {isMutable && (
-        <FTButton
-          onClick={() =>
-            props.onMuteClick ? props.onMuteClick(props.member) : null
-          }
-        >
-          <Icons.Chat.Operation.Mute />
-        </FTButton>
-      )}
-    </div>
-  );
-};
+const MessagesList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  messages: TD.ChatRoomMessage[];
+  members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
+}) => {
+  const listId = useId();
+  const scrollData = useVerticalScrollAttr(listId);
+  const [prevLatestMessage, setPrevLatestMessage] =
+    useState<TD.ChatRoomMessage | null>(null);
 
-const MemberCard = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    member: TD.ChatUserRelation;
-  } & TD.MemberOperations
-) => {
-  const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
-
-  const UserTypeCap = () => {
-    if (isOwner) {
-      return <Icons.Chat.Owner style={{ display: 'inline' }} />;
-    } else if (isAdmin) {
-      return <Icons.Chat.Admin style={{ display: 'inline' }} />;
+  useEffect(() => {
+    const n = props.messages.length;
+    const lm = n > 0 && props.messages[n - 1];
+    if (!lm) {
+      return;
     }
-    return null;
-  };
-  const link_path = isYou ? '/me' : `/user/${props.member.userId}`;
+    setPrevLatestMessage(lm);
+    const listEl = document.getElementById(listId);
+    if (!listEl) {
+      return;
+    }
+    if (!prevLatestMessage) {
+      // [初期表示]
+      // → 最新メッセージが表示されるよう瞬間的にスクロール
+      const lastId = messageCardId(lm);
+      const lastEl = document.getElementById(lastId);
+      lastEl?.scrollIntoView({ behavior: 'auto' });
+      return;
+    }
+    if (prevLatestMessage.createdAt < lm.createdAt) {
+      // [メッセージ新着]
+      // → 最新メッセージが表示されるよう自動スクロール
+      if (n < 2) {
+        return;
+      }
+      const [prevEl, nextEl] = ([n - 2, n - 1] as const).map((i) => {
+        const lastMessage = props.messages[i];
+        const lastId = messageCardId(lastMessage);
+        return document.getElementById(lastId);
+      });
+      if (!prevEl || !nextEl) {
+        return;
+      }
+      // (お気持ち: nextEl がリストビューの下辺にクロスしているか画面外すぐそこにいる場合だけスクロール)
+      //  - prevEl が見えている
+      //  - prevEl のボトムがリストビューの下辺以下にいる
+      // を満たすなら nextEl が見えるようにスクロール
+      const listRect = listEl.getBoundingClientRect();
+      const prevRect = prevEl.getBoundingClientRect();
+      const prevIsShown = !(
+        prevRect.bottom < listRect.top || listRect.bottom < prevRect.top
+      );
+      const prevIsCrossingBottom =
+        Math.floor(listRect.bottom) <= Math.ceil(prevRect.bottom);
+      if (prevIsShown && prevIsCrossingBottom) {
+        nextEl.scrollIntoView({
+          behavior: document.visibilityState === 'visible' ? 'smooth' : 'auto',
+        });
+      }
+      return;
+    }
+    // [メッセージ変化]
+    // → 今見えている要素の「見かけの縦位置」を維持する
+    listEl.scrollTop = scrollData.top - scrollData.height + listEl.scrollHeight;
+    // 以下の関係式が成り立つようにする:
+    // listEl.scrollHeight - listEl.scrollTop = scrollData.height - scrollData.top
+    // ※お気持ち
+    // height(領域の高さ) - top(領域の上から測った位置) は「領域の下から測った位置」となるので,
+    // これが維持されるように listEl.scrollTop をいじって辻褄を合わせている.
+  }, [props.messages, listId]);
+
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [requestKey, setRequestKey] = useState('');
+  useEffect(() => {
+    if (Math.floor(scrollData.top) > 0) {
+      return;
+    }
+    if (!mySocket) {
+      return;
+    }
+    const oldestMessage = Utils.first(props.messages);
+    const { get_room_messages } = makeCommand(mySocket, props.room.id);
+    const rk = `${oldestMessage?.id}`;
+    if (rk === requestKey) {
+      return;
+    }
+    setRequestKey(rk);
+    get_room_messages(props.room.id, 50, oldestMessage?.id);
+  }, [mySocket, scrollData, props.room.id]);
+
   return (
-    <div className="flex flex-row">
-      <div
-        className={`shrink grow cursor-pointer hover:bg-teal-700 ${
-          isYou ? 'font-bold' : ''
-        }`}
-        key={props.member.userId}
-      >
-        <Link className="block" to={link_path}>
-          {<UserTypeCap />} {props.member.user.displayName}
-        </Link>
-      </div>
-      <AdminOperationBar {...props} />
+    <div id={listId} className="h-full w-full overflow-scroll">
+      {props.messages.map((data: TD.ChatRoomMessage) => {
+        const member = props.members[data.userId];
+        return (
+          member && (
+            <ChatMessageCard
+              key={data.id}
+              id={messageCardId(data)}
+              message={data}
+              you={props.you}
+              room={props.room}
+              member={member}
+              memberOperations={props.memberOperations}
+            />
+          )
+        );
+      })}
     </div>
   );
 };
 
-const MessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
-  return (
-    <>
-      {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatMessageCard key={data.id} message={data} />
-      ))}
-    </>
-  );
-};
-
-const MembersList = (
-  props: {
-    you: TD.ChatUserRelation | null;
-    room: TD.ChatRoom;
-    members: TD.UserRelationMap;
-  } & TD.MemberOperations
-) => {
+const MembersList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.ChatRoom;
+  members: TD.UserRelationMap;
+  memberOperations: TD.MemberOperations;
+}) => {
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
@@ -150,7 +163,7 @@ const MembersList = (
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
-            <MemberCard member={member} {...Utils.omit(props, 'members')} />
+            <ChatMemberCard member={member} {...Utils.omit(props, 'members')} />
           </div>
         ))}
       </div>
@@ -181,7 +194,7 @@ export const ChatRoomView = (props: {
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
-        <ChatRoomSettingCard
+        <ChatRoomUpdateCard
           key={props.room.id}
           room={props.room}
           onSucceeded={closeModal}
@@ -202,8 +215,14 @@ export const ChatRoomView = (props: {
             )}
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
-          <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-            <MessagesList messages={props.roomMessages(props.room.id)} />
+          <div className="shrink grow overflow-hidden border-2 border-solid border-white">
+            <MessagesList
+              you={props.you}
+              room={props.room}
+              members={members}
+              messages={props.roomMessages(props.room.id)}
+              memberOperations={props.memberOperations}
+            />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
@@ -212,12 +231,12 @@ export const ChatRoomView = (props: {
             </div>
           </div>
         </div>
-        <div className="shrink-0 grow-0 basis-[20em]">
+        <div className="shrink-0 grow-0 basis-[12em]">
           <MembersList
             you={props.you}
             room={props.room}
             members={members}
-            {...props.memberOperations}
+            memberOperations={props.memberOperations}
           />
         </div>
       </div>

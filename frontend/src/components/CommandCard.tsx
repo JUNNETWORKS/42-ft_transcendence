@@ -1,6 +1,7 @@
 import * as TD from '../typedef';
 import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
 import { useStateWithResetter } from '../hooks';
+import { onEnter } from '@/utils/react';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
@@ -18,18 +19,18 @@ export const SayCard = (props: {
     resetContent();
   };
   const computed = {
-    isSendable: () => {
+    isSendable: (() => {
       if (!content.trim()) {
         return false;
       }
       return true;
-    },
+    })(),
   };
 
   return (
     <>
       <div className="shrink-0 grow-0 p-[2px]">
-        <FTButton disabled={!computed.isSendable()} onClick={sender}>
+        <FTButton disabled={!computed.isSendable} onClick={sender}>
           Send
         </FTButton>
       </div>
@@ -40,43 +41,13 @@ export const SayCard = (props: {
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
+          onKeyDown={onEnter(() => {
+            if (computed.isSendable) {
+              sender();
+            }
+          })}
         />
       </div>
     </>
-  );
-};
-
-/**
- * 新しく作成するチャットルームの情報を編集し, 外部に送出するコンポーネント
- * @param props
- * @returns
- */
-export const OpenCard = (props: {
-  sender: (argument: TD.OpenArgument) => void;
-}) => {
-  const [roomName, setRoomName, resetRoomName] = useStateWithResetter('');
-  const sender = () => {
-    // クライアント側バリデーション
-    if (!roomName.trim()) {
-      return;
-    }
-    props.sender({
-      roomName,
-      roomType: 'PUBLIC',
-    });
-    resetRoomName();
-  };
-
-  return (
-    <div>
-      <FTH4>Open</FTH4>
-      <FTTextField
-        autoComplete="off"
-        placeholder="チャットルーム名"
-        value={roomName}
-        onChange={(e) => setRoomName(e.target.value)}
-      />
-      <FTButton onClick={() => sender()}>Open</FTButton>
-    </div>
   );
 };

@@ -63,7 +63,7 @@ model BlockRelation {
 
 model ChatRoom {
   id              Int                 @id @default(autoincrement())
-  roomName        String              @unique
+  roomName        String
   roomType        RoomType            @default(PUBLIC)
   roomPassword    String?
   owner           User                @relation(fields: [ownerId], references: [id])
