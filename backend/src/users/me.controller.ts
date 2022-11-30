@@ -101,8 +101,6 @@ export class MeController {
     }
     await this.usersService.update(id, updateMePasswordDto);
     const access_token = this.authService.issueAccessToken(req.user);
-    // TODO: このユーザのすべてのJWTを失効させる
-    // TODO: 新しいアクセストークンを返す
     return { status: 'ok', access_token };
   }
 
