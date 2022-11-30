@@ -25,7 +25,7 @@ type InnerProp = Prop & {
   setUserData: (userData: UserPersonalData) => void;
 };
 
-const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
+const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
   const [displayName, setDisplayName] = useState(userData.displayName);
   const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
@@ -52,6 +52,7 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
       updateOne(u.id, u);
       setUserData({ ...userData, ...u, avatarTime: Date.now() });
       setNetErrors({});
+      onClose();
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -169,7 +170,7 @@ export const UserCreatedForm = ({ onClose }: Prop) => {
   return (
     <>
       <div className="flex w-[480px] flex-col justify-around border-4 border-white bg-black">
-        <EditCard
+        <ModifyCard
           userData={personalData}
           setUserData={(u) => setPersonalData(u)}
           onClose={onClose}
