@@ -14,6 +14,7 @@ import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { ChatMemberCard } from '@/components/ChatMemberCard';
+import { ChatSystemMessageCard } from '@/components/ChatSystemMessageCard';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;
@@ -115,18 +116,31 @@ const MessagesList = (props: {
     <div id={listId} className="h-full w-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
         const member = props.members[data.userId];
-        return (
-          member && (
-            <ChatMessageCard
+        if (data.messageType) {
+          return (
+            <ChatSystemMessageCard
               key={data.id}
               id={messageCardId(data)}
               message={data}
               you={props.you}
               room={props.room}
+              userId={data.userId}
               member={member}
               memberOperations={props.memberOperations}
             />
-          )
+          );
+        }
+        return (
+          <ChatMessageCard
+            key={data.id}
+            id={messageCardId(data)}
+            message={data}
+            you={props.you}
+            room={props.room}
+            userId={data.userId}
+            member={member}
+            memberOperations={props.memberOperations}
+          />
         );
       })}
     </div>

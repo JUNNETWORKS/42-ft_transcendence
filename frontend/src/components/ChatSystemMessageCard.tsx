@@ -8,12 +8,11 @@ import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { usePopper } from 'react-popper';
 import { AdminOperationBar } from './ChatMemberCard';
-import { UserAvatar } from './UserAvater';
 
 /**
- * メッセージを表示するコンポーネント
+ * システムメッセージを表示するコンポーネント
  */
-export const ChatMessageCard = (props: {
+export const ChatSystemMessageCard = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   message: TD.ChatRoomMessage;
@@ -22,6 +21,7 @@ export const ChatMessageCard = (props: {
   memberOperations: TD.MemberOperations;
   id: string;
 }) => {
+  const messageType = props.message.messageType;
   const user = useUserDataReadOnly(props.userId);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const [referenceElement, setReferenceElement] =
@@ -32,11 +32,32 @@ export const ChatMessageCard = (props: {
   const { styles, attributes } = usePopper(referenceElement, popperElement, {
     placement: 'auto',
   });
+  if (!messageType) {
+    return null;
+  }
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
   if (!user || isBlocked) {
     return null;
   }
+  const nameButton = (
+    <Popover.Button
+      className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
+      ref={setReferenceElement}
+    >
+      {user.displayName}
+    </Popover.Button>
+  );
+  const content = () => {
+    switch (messageType) {
+      case 'JOINED':
+        return <>{nameButton} さんが入室しました -</>;
+      case 'LEFT':
+        return <>{nameButton} さんが退出しました -</>;
+      default:
+        return <span>not implemented</span>;
+    }
+  };
   return (
     <Popover className="relative">
       <div
@@ -44,24 +65,10 @@ export const ChatMessageCard = (props: {
         key={props.message.id}
         id={props.id}
       >
-        <div className="shrink-0 grow-0">
-          <Popover.Button>
-            <UserAvatar
-              className="h-12 w-12 border-4 border-solid border-gray-600"
-              user={user}
-            />
-          </Popover.Button>
-        </div>
         <div className="flex shrink grow flex-col">
           <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
             <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-              <Popover.Button
-                className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
-                ref={setReferenceElement}
-              >
-                {user.displayName}
-              </Popover.Button>
-
+              {content()}
               <Popover.Panel
                 className="absolute z-10 border-8 border-gray-500 bg-black/90"
                 ref={setPopperElement}
@@ -76,9 +83,6 @@ export const ChatMessageCard = (props: {
             <div className="shrink-0 grow-0 px-[4px]">
               {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
             </div>
-          </div>
-          <div className="shrink grow px-2">
-            <div>{props.message.content}</div>
           </div>
         </div>
       </div>
