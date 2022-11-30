@@ -48,7 +48,7 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
       avatar: trimmedData.avatarFile?.dataURL,
     }),
     onFetched: (json) => {
-      const u = json as TD.User;
+      const { user: u } = json as { user: TD.User };
       updateOne(u.id, u);
       setUserData({ ...userData, ...u, avatarTime: Date.now() });
       setNetErrors({});

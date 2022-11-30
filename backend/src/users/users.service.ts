@@ -201,18 +201,24 @@ export class UsersService {
     };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     const d = {
       ...updateUserDto,
     };
+    let passwordUpdated = false;
     if (d.password) {
       const p = d.password;
       d.password = UsersService.hash_password(p);
+      passwordUpdated = true;
     }
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: d,
     });
+    return {
+      user,
+      passwordUpdated,
+    };
   }
 
   remove(id: number) {

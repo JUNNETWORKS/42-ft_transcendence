@@ -356,7 +356,7 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
   const [state, submit] = useAPI('PATCH', `/me`, {
     payload: () => ({ displayName, avatar: avatarFile?.dataURL }),
     onFetched: (json) => {
-      const u = json as TD.User;
+      const { user: u } = json as { user: TD.User };
       updateOne(u.id, u);
       setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});

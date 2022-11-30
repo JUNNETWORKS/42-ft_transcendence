@@ -80,20 +80,4 @@ export class UsersController {
     }
     return pick(u, 'id', 'displayName');
   }
-
-  // TODO: intraId は変更できないようにする
-  @Patch(':id')
-  @ApiOkResponse({ type: UserEntity })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    return this.usersService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  @ApiOkResponse({ type: UserEntity })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
-  }
 }
