@@ -5,10 +5,12 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
 } from '@nestjs/websockets';
+import { User } from '@prisma/client';
 import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
+import { MessageType } from 'src/chatrooms/entities/chat-message.entity';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
@@ -362,6 +364,8 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersJoin(user.id, { roomId });
+    // 入室システムメッセージを生成して通知
+    this.systemSay(roomId, user, 'JOINED');
     // 入室したことを通知
     this.wsServer.sendResults(
       'ft_join',
@@ -446,6 +450,9 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersLeave(user.id, { roomId });
+    // 退出システムメッセージを生成して通知
+    this.systemSay(roomId, user, 'LEFT');
+    // 退出したことを通知
     this.wsServer.sendResults(
       'ft_leave',
       {
@@ -932,6 +939,31 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         userId: user.id,
+      }
+    );
+  }
+
+  private async systemSay(
+    roomId: number,
+    user: User,
+    messageType: MessageType
+  ) {
+    const systemMessage = await this.chatService.postSystemMessage({
+      roomId,
+      callerId: user.id,
+      messageType,
+    });
+    this.wsServer.sendResults(
+      'ft_say',
+      {
+        ...systemMessage,
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
+      },
+      {
+        roomId,
       }
     );
   }
