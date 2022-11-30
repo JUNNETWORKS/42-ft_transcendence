@@ -41,6 +41,8 @@ export const Icons = {
   Save: Bs.BsCloudUpload,
   Cancel: Fa.FaCross,
   Add: Md.MdAdd,
+  Ok: Bs.BsCheck,
+  Bang: Bs.BsExclamationLg,
 
   User,
   Chat,

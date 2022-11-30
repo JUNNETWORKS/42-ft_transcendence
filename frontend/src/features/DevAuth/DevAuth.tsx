@@ -55,7 +55,7 @@ export const DevAuth = () => {
     loginLocal(token, user);
     console.log('user', user);
     setFtAuthState('Neutral');
-    if (user.created || !user.created) {
+    if (user.created) {
       setIsOpenCreatedForm(true);
     }
   };

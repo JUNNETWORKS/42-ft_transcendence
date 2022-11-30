@@ -20,7 +20,7 @@ export const displayNameErrors = (displayName: string) => {
   };
 };
 
-const validatePassword = (s: string) => {
+const validatePassword = (s: string, required: boolean) => {
   const trimmed = s.trim();
   const policy = {
     min: 12,
@@ -29,6 +29,11 @@ const validatePassword = (s: string) => {
     usableCharacters: /^[A-Za-z0-9/_-]+$/,
   };
   const n = trimmed.length;
+  if (n === 0) {
+    if (!required) {
+      return null;
+    }
+  }
   if (n < policy.min) {
     return `${n}/${policy.min} too short`;
   }
@@ -47,7 +52,20 @@ const validatePassword = (s: string) => {
 
 export const passwordErrors = (password: string) => {
   const errors = {
-    password: validatePassword(password),
+    password: validatePassword(password, true),
+  };
+  return {
+    ...errors,
+    some: (Object.keys(errors) as (keyof typeof errors)[]).some(
+      (key) => errors[key]
+    ),
+  };
+};
+
+export const userErrors = (displayName: string, password: string) => {
+  const errors = {
+    displayName: validateDisplayName(displayName),
+    password: validatePassword(password, false),
   };
   return {
     ...errors,

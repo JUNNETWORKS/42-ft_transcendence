@@ -13,7 +13,7 @@ import { Icons } from '@/icons';
 import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { displayNameErrors } from './user.validator';
+import { userErrors } from './user.validator';
 import { AvatarFile, AvatarInput } from './components/AvatarInput';
 
 type Prop = {
@@ -27,9 +27,10 @@ type InnerProp = Prop & {
 
 const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
   const [displayName, setDisplayName] = useState(userData.displayName);
+  const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
   const validationErrors = {
-    ...displayNameErrors(displayName),
+    ...userErrors(displayName, password),
   };
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
@@ -52,11 +53,33 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
       }
     },
   });
+  const passwordErrorContent = () => {
+    const passwordError = validationErrors.password || netErrors.password;
+    if (passwordError) {
+      return (
+        <span className="text-red-400">
+          <InlineIcon i={<Icons.Bang />} />
+          {passwordError}
+        </span>
+      );
+    }
+    if (password.length > 0) {
+      return (
+        <>
+          <span className="text-green-400">
+            <InlineIcon i={<Icons.Ok />} />
+          </span>
+          {password.length}/60
+        </>
+      );
+    }
+    return <></>;
+  };
   return (
     <>
-      <FTH1 className="p-2 text-3xl">Modify User Data</FTH1>
-      <div className="m-4 text-center">
-        現在の登録情報です。必要ならば修正してください。
+      <FTH1 className="p-2 text-3xl">Modify Your Data</FTH1>
+      <div className="p-4 text-center text-sm">
+        あなたの現在の登録情報です。必要ならば修正してください。
       </div>
       <div className="flex">
         <div>
@@ -72,17 +95,14 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
         {/* <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" /> */}
 
         <div className="shrink grow overflow-hidden">
-          <FTH4 className="">id</FTH4>
-          <p className="p-1">{userData.id}</p>
-
-          <FTH4 className="">email</FTH4>
-          <div className="overflow-hidden truncate p-1">{userData.email}</div>
+          <FTH4>id</FTH4>
+          <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
 
           <FTH4 className="">name</FTH4>
           <div className="py-1 pr-2">
             <FTTextField
               name="displayName"
-              className="w-full border-2"
+              className="w-full border-0 border-b-2"
               autoComplete="off"
               placeholder="Name:"
               value={displayName}
@@ -93,28 +113,28 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
             </div>
           </div>
 
+          <FTH4>email</FTH4>
+          <div className="overflow-hidden truncate py-1 pr-1">
+            {userData.email}
+          </div>
+
           <FTH4 className="">password</FTH4>
           <div className="py-1 pr-2">
             <FTTextField
-              name="displayName"
-              className="w-full border-2"
+              name="password"
+              className="w-full border-0 border-b-2"
               autoComplete="off"
-              placeholder="Name:"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="設定する場合は 12 - 60 文字"
+              value={password}
+              type="password"
+              onChange={(e) => setPassword(e.target.value)}
             />
-            <div className="text-red-400">
-              {validationErrors.displayName || netErrors.displayName || '　'}
-            </div>
+            <div className="h-[2em]">{passwordErrorContent()}</div>
           </div>
         </div>
       </div>
       <div className="flex justify-around p-4">
-        <FTButton
-          className="mr-2 disabled:opacity-50"
-          disabled={validationErrors.some || state === 'Fetching'}
-          onClick={submit}
-        >
+        <FTButton className="mr-2 disabled:opacity-50" onClick={onClose}>
           あとにする
         </FTButton>
         <FTButton
@@ -123,7 +143,7 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
           onClick={submit}
         >
           <InlineIcon i={<Icons.Save />} />
-          修正結果を保存
+          修正して保存
         </FTButton>
       </div>
     </>
