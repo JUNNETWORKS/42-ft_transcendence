@@ -29,12 +29,14 @@ export const FTButton = (
     HTMLButtonElement
   >
 ) => {
+  props.disabled;
   return (
     <button
       {...{ ...props }}
       className={
-        'hover:bg-white hover:text-black disabled:opacity-50 ' +
-        (props.className || '')
+        `${
+          props.disabled ? '' : 'hover:bg-white hover:text-black'
+        } disabled:opacity-50 ` + (props.className || '')
       }
       style={{
         ...(props.style || {}),

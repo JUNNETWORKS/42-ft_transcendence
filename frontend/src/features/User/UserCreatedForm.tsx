@@ -29,13 +29,24 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
   const [displayName, setDisplayName] = useState(userData.displayName);
   const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
+
+  const trimmedData = {
+    displayName: displayName.trim(),
+    password: password.trim(),
+    avatarFile,
+  };
+
   const validationErrors = {
-    ...userErrors(displayName, password),
+    ...userErrors(trimmedData.displayName, trimmedData.password),
   };
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const { updateOne } = useUpdateUser();
   const [state, submit] = useAPI('PATCH', `/me`, {
-    payload: () => ({ displayName, avatar: avatarFile?.dataURL }),
+    payload: () => ({
+      displayName: trimmedData.displayName,
+      ...(trimmedData.password ? { password: trimmedData.password } : {}),
+      avatar: trimmedData.avatarFile?.dataURL,
+    }),
     onFetched: (json) => {
       const u = json as TD.User;
       updateOne(u.id, u);
@@ -63,13 +74,13 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
         </span>
       );
     }
-    if (password.length > 0) {
+    if (trimmedData.password.length > 0) {
       return (
         <>
           <span className="text-green-400">
             <InlineIcon i={<Icons.Ok />} />
           </span>
-          {password.length}/60
+          {trimmedData.password.length}/60
         </>
       );
     }
@@ -99,7 +110,7 @@ const EditCard = ({ userData, setUserData, onClose }: InnerProp) => {
           <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
 
           <FTH4 className="">name</FTH4>
-          <div className="py-1 pr-2">
+          <div className="py-1 pb-5 pr-2">
             <FTTextField
               name="displayName"
               className="w-full border-0 border-b-2"

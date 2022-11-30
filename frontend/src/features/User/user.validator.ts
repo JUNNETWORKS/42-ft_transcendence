@@ -2,8 +2,16 @@ import { keyBy } from '@/utils';
 
 const validateDisplayName = (s: string) => {
   const trimmed = s.trim();
+  const policy = {
+    min: 1,
+    max: 20,
+  };
   if (!trimmed) {
     return 'empty?';
+  }
+  const n = trimmed.length;
+  if (n > policy.max) {
+    return `${n}/${policy.max} too long`;
   }
   return null;
 };
