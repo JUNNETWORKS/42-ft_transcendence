@@ -84,6 +84,7 @@ const EditPassword = ({ user, setPhase, onClose }: InnerProp) => {
         </div>
         <div>
           <FTTextField
+            name="password"
             className="w-[16em] border-2"
             autoComplete="off"
             placeholder="12 - 60文字"
