@@ -41,11 +41,11 @@ export const SayCard = (props: {
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
-          onKeyDown={onEnter(() => {
+          onEnter={() => {
             if (computed.isSendable) {
               sender();
             }
-          })}
+          }}
         />
       </div>
     </>
