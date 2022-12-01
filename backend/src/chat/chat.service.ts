@@ -37,6 +37,7 @@ export class ChatService {
       content: data.messageType,
       secondaryId: data.secondaryId,
       messageType: data.messageType,
+      subpayload: data.subpayload,
     });
   }
 

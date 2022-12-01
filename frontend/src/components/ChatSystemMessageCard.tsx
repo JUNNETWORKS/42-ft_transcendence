@@ -2,6 +2,7 @@ import { UserCard } from '@/features/User/UserCard';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
+import { compact } from '@/utils';
 import { Popover } from '@headlessui/react';
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
@@ -51,7 +52,21 @@ export const ChatSystemMessageCard = (props: {
   const content = () => {
     switch (messageType) {
       case 'OPENED':
-        return <>{nameButton} さんがチャットルームを作成しました -</>;
+        return <>{nameButton} さんがルームを作成しました -</>;
+      case 'UPDATED': {
+        const diff = props.message.subpayload || {};
+        const nameDiff = diff.roomName ? `ルーム名 → ${diff.roomName}` : null;
+        const typeDiff = diff.roomType ? `種別 → ${diff.roomType}` : null;
+        const diffText = compact([nameDiff, typeDiff]);
+        if (!diffText) {
+          return null;
+        }
+        return (
+          <>
+            {nameButton} さんがルームを更新しました: {diffText.join(', ')} -
+          </>
+        );
+      }
       case 'JOINED':
         return <>{nameButton} さんが入室しました -</>;
       case 'LEFT':

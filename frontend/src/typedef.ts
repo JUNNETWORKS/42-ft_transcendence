@@ -62,6 +62,7 @@ export type ChatRoomMessage = {
   createdAt: Date;
   content: string;
   messageType?: MessageType;
+  subpayload?: any;
 };
 
 export type UserRelationMap = {
@@ -174,7 +175,8 @@ export const Mapper = {
       'secondaryUserId',
       'createdAt',
       'content',
-      'messageType'
+      'messageType',
+      'subpayload'
     );
     if (r.user) {
       r.user = Mapper.user(r.user);

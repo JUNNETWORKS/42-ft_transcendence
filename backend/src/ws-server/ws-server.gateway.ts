@@ -103,11 +103,17 @@ export class WsServerGateway {
     }
   }
 
-  async systemSay(roomId: number, user: User, messageType: MessageType) {
+  async systemSay(
+    roomId: number,
+    user: User,
+    messageType: MessageType,
+    subpayload?: any
+  ) {
     const systemMessage = await this.chatService.postSystemMessage({
       roomId,
       callerId: user.id,
       messageType,
+      subpayload,
     });
     this.sendResults(
       'ft_say',

@@ -120,4 +120,5 @@ model ChatMessage {
   createdAt  DateTime @default(now())
   content    String
   messageType String?
+  subpayload Json?
 }

@@ -6,6 +6,7 @@ import {
   IsString,
   MaxLength,
   IsOptional,
+  IsObject,
 } from 'class-validator';
 
 import { MessageType, MessageTypes } from '../entities/chat-message.entity';
@@ -39,4 +40,8 @@ export class PostMessageDto {
     groups: [...MessageTypes],
   })
   messageType?: MessageType;
+
+  @IsOptional()
+  @IsObject()
+  subpayload?: any;
 }

@@ -1,5 +1,11 @@
 import { Type } from 'class-transformer';
-import { IsNotEmpty, IsInt, IsString, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsInt,
+  IsString,
+  IsOptional,
+  IsObject,
+} from 'class-validator';
 
 import { MessageType, MessageTypes } from '../entities/chat-message.entity';
 
@@ -24,4 +30,8 @@ export class OperationSystemSayDto {
     groups: [...MessageTypes],
   })
   messageType!: MessageType;
+
+  @IsOptional()
+  @IsObject()
+  subpayload?: any;
 }
