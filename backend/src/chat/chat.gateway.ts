@@ -520,6 +520,7 @@ export class ChatGateway implements OnGatewayConnection {
     );
     console.log('[newRel]', newRel);
 
+    this.wsServer.systemSayWithTarget(roomId, user, 'NOMMINATED', targetUser);
     this.wsServer.sendResults(
       'ft_nomminate',
       {
@@ -573,6 +574,8 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersLeave(targetUser.id, { roomId });
+
+    this.wsServer.systemSayWithTarget(roomId, user, 'KICKED', targetUser);
     this.wsServer.sendResults(
       'ft_kick',
       {
@@ -627,6 +630,7 @@ export class ChatGateway implements OnGatewayConnection {
     console.log(prolongedBannedEndAt);
     console.log('[new attr]', attr);
 
+    this.wsServer.systemSayWithTarget(roomId, user, 'BANNED', targetUser);
     this.wsServer.sendResults(
       'ft_ban',
       {
@@ -680,6 +684,7 @@ export class ChatGateway implements OnGatewayConnection {
     console.log(prolongedMutedEndAt);
     console.log('[new attr]', attr);
 
+    this.wsServer.systemSayWithTarget(roomId, user, 'MUTED', targetUser);
     this.wsServer.sendResults(
       'ft_mute',
       {

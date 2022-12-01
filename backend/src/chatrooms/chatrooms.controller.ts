@@ -100,7 +100,12 @@ export class ChatroomsController {
       return diff;
     })();
     if (Object.keys(updateDiff).length > 0) {
-      this.wsServer.systemSay(result.id, req.user, 'UPDATED', updateDiff);
+      this.wsServer.systemSaywithPayload(
+        result.id,
+        req.user,
+        'UPDATED',
+        updateDiff
+      );
     }
     this.wsServer.sendResults(
       'ft_chatroom',

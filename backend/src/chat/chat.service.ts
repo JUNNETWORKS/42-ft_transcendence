@@ -35,7 +35,7 @@ export class ChatService {
       chatRoomId: data.roomId,
       userId: data.callerId,
       content: data.messageType,
-      secondaryId: data.secondaryId,
+      secondaryUserId: data.secondaryId,
       messageType: data.messageType,
       subpayload: data.subpayload,
     });

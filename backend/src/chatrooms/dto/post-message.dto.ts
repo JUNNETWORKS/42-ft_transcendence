@@ -27,7 +27,7 @@ export class PostMessageDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  secondaryId?: number;
+  secondaryUserId?: number;
 
   @IsNotEmpty()
   @IsString()

@@ -126,6 +126,7 @@ const MessagesList = (props: {
               room={props.room}
               userId={data.userId}
               member={member}
+              members={props.members}
               memberOperations={props.memberOperations}
             />
           );

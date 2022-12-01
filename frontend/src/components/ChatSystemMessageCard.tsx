@@ -3,12 +3,10 @@ import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import { compact } from '@/utils';
-import { Popover } from '@headlessui/react';
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
-import { useState } from 'react';
-import { usePopper } from 'react-popper';
 import { AdminOperationBar } from './ChatMemberCard';
+import { PopoverUserName } from './PopoverUserName';
 
 /**
  * システムメッセージを表示するコンポーネント
@@ -19,20 +17,14 @@ export const ChatSystemMessageCard = (props: {
   message: TD.ChatRoomMessage;
   userId: number;
   member?: TD.ChatUserRelation;
+  members: TD.UserRelationMap;
   memberOperations: TD.MemberOperations;
   id: string;
 }) => {
   const messageType = props.message.messageType;
   const user = useUserDataReadOnly(props.userId);
+  const targetUser = useUserDataReadOnly(props.message.secondaryUserId || -1);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
-  const [referenceElement, setReferenceElement] =
-    useState<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
-    null
-  );
-  const { styles, attributes } = usePopper(referenceElement, popperElement, {
-    placement: 'auto',
-  });
   if (!messageType) {
     return null;
   }
@@ -42,13 +34,19 @@ export const ChatSystemMessageCard = (props: {
     return null;
   }
   const nameButton = (
-    <Popover.Button
-      className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
-      ref={setReferenceElement}
-    >
-      {user.displayName}
-    </Popover.Button>
+    <PopoverUserName user={user}>
+      <UserCard id={user.id}>
+        <AdminOperationBar {...props} />
+      </UserCard>
+    </PopoverUserName>
   );
+  const targetButton = targetUser ? (
+    <PopoverUserName user={targetUser}>
+      <UserCard id={targetUser.id}>
+        <AdminOperationBar {...props} member={props.members[targetUser.id]} />
+      </UserCard>
+    </PopoverUserName>
+  ) : null;
   const content = () => {
     switch (messageType) {
       case 'OPENED':
@@ -71,38 +69,67 @@ export const ChatSystemMessageCard = (props: {
         return <>{nameButton} さんが入室しました -</>;
       case 'LEFT':
         return <>{nameButton} さんが退出しました -</>;
+
+      case 'NOMMINATED':
+        if (!targetButton) {
+          return null;
+        }
+        return (
+          <>
+            {nameButton} さんが {targetButton} さんを管理者に指定しました -
+          </>
+        );
+
+      case 'BANNED':
+        if (!targetButton) {
+          return null;
+        }
+        return (
+          <>
+            {nameButton} さんが {targetButton} さんの入室を禁止しました -
+          </>
+        );
+
+      case 'KICKED':
+        if (!targetButton) {
+          return null;
+        }
+        return (
+          <>
+            {nameButton} さんが {targetButton} さんを強制退出させました -
+          </>
+        );
+
+      case 'MUTED':
+        if (!targetButton) {
+          return null;
+        }
+        return (
+          <>
+            {nameButton} さんが {targetButton} さんをミュートしました -
+          </>
+        );
+
       default:
         return <span>not implemented</span>;
     }
   };
   return (
-    <Popover className="relative">
-      <div
-        className="flex flex-row items-start px-2 py-1"
-        key={props.message.id}
-        id={props.id}
-      >
-        <div className="flex shrink grow flex-col">
-          <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
-            <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-              {content()}
-              <Popover.Panel
-                className="absolute z-10 border-8 border-gray-500 bg-black/90"
-                ref={setPopperElement}
-                style={styles.popper}
-                {...attributes.popper}
-              >
-                <UserCard id={props.message.userId}>
-                  <AdminOperationBar {...props} />
-                </UserCard>
-              </Popover.Panel>
-            </div>
-            <div className="shrink-0 grow-0 px-[4px]">
-              {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-            </div>
+    <div
+      className="flex flex-row items-start px-2 py-1"
+      key={props.message.id}
+      id={props.id}
+    >
+      <div className="flex shrink grow flex-col">
+        <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
+          <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
+            {content()}
+          </div>
+          <div className="shrink-0 grow-0 px-[4px]">
+            {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
           </div>
         </div>
       </div>
-    </Popover>
+    </div>
   );
 };
