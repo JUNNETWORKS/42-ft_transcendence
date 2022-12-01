@@ -179,7 +179,8 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [作成されたチャットルームにjoin]
     await this.wsServer.usersJoin(user.id, { roomId });
-
+    // 新規作成システムメッセージを生成して通知
+    this.wsServer.systemSay(roomId, user, 'OPENED');
     // [新しいチャットルームが作成されたことを通知する]
     this.wsServer.sendResults(
       'ft_open',
@@ -365,7 +366,7 @@ export class ChatGateway implements OnGatewayConnection {
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersJoin(user.id, { roomId });
     // 入室システムメッセージを生成して通知
-    this.systemSay(roomId, user, 'JOINED');
+    this.wsServer.systemSay(roomId, user, 'JOINED');
     // 入室したことを通知
     this.wsServer.sendResults(
       'ft_join',
@@ -451,7 +452,7 @@ export class ChatGateway implements OnGatewayConnection {
     // [roomへのjoin状態をハードリレーションに同期させる]
     await this.wsServer.usersLeave(user.id, { roomId });
     // 退出システムメッセージを生成して通知
-    this.systemSay(roomId, user, 'LEFT');
+    this.wsServer.systemSay(roomId, user, 'LEFT');
     // 退出したことを通知
     this.wsServer.sendResults(
       'ft_leave',
@@ -939,31 +940,6 @@ export class ChatGateway implements OnGatewayConnection {
       },
       {
         userId: user.id,
-      }
-    );
-  }
-
-  private async systemSay(
-    roomId: number,
-    user: User,
-    messageType: MessageType
-  ) {
-    const systemMessage = await this.chatService.postSystemMessage({
-      roomId,
-      callerId: user.id,
-      messageType,
-    });
-    this.wsServer.sendResults(
-      'ft_say',
-      {
-        ...systemMessage,
-        user: {
-          id: user.id,
-          displayName: user.displayName,
-        },
-      },
-      {
-        roomId,
       }
     );
   }

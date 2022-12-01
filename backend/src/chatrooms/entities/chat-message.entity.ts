@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export const MessageTypes = [
+  'OPENED',
+  'UPDATED',
   'JOINED',
   'LEFT',
   'NOMMINATED',

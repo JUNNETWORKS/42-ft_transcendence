@@ -41,6 +41,8 @@ export type ChatUserRelationWithRoom = ChatUserRelation & {
 };
 
 const MessageTypes = [
+  'OPENED',
+  'UPDATED',
   'JOINED',
   'LEFT',
   'NOMMINATED',

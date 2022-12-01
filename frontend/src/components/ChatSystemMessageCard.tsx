@@ -50,6 +50,8 @@ export const ChatSystemMessageCard = (props: {
   );
   const content = () => {
     switch (messageType) {
+      case 'OPENED':
+        return <>{nameButton} さんがチャットルームを作成しました -</>;
       case 'JOINED':
         return <>{nameButton} さんが入室しました -</>;
       case 'LEFT':

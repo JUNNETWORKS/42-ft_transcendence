@@ -56,6 +56,8 @@ export class ChatroomsController {
       roomMember: [owner],
     });
     this.wsServer.usersJoin(ownerId, { roomId: result.id });
+    // 新規作成システムメッセージを生成して通知
+    this.wsServer.systemSay(result.id, req.user, 'OPENED');
     this.wsServer.sendResults(
       'ft_open',
       {
