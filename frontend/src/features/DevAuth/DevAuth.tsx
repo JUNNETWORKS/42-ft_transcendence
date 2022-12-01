@@ -52,9 +52,7 @@ export const DevAuth = () => {
     setToken2FA(null);
     loginLocal(token, user);
     setFtAuthState('Neutral');
-    toast.error(`${user.displayName} としてログインしました`, {
-      autoClose: false,
-    });
+    toast(`${user.displayName} としてログインしました`);
   };
 
   // 42認証フローのチェックと状態遷移
@@ -76,11 +74,10 @@ export const DevAuth = () => {
       }
       case 'ValidatingAuthorizationCode': {
         // -> 認可コード検証APIをコール
-        verifyOAuth2AuthorizationCode(
-          ftAuthCode,
-          finalizeAuthFlow,
-          anonymizeAuthFlow
-        );
+        verifyOAuth2AuthorizationCode(ftAuthCode, finalizeAuthFlow, () => {
+          anonymizeAuthFlow();
+          toast.error(`認証に失敗しました`, { autoClose: 5000 });
+        });
         break;
       }
     }
