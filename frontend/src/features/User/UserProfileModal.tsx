@@ -1,4 +1,4 @@
-import { authAtom } from '@/stores/auth';
+import { authAtom, useLoginLocal } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
@@ -37,7 +37,10 @@ const CommonCard = (props: { user: TD.User }) => {
         </div>
         <div className="flex flex-row gap-2">
           <p className="shrink-0 grow-0 text-2xl">Name:</p>
-          <p className="shrink grow overflow-hidden text-ellipsis text-2xl">
+          <p
+            className="shrink grow overflow-hidden text-ellipsis text-2xl"
+            style={{ wordBreak: 'keep-all' }}
+          >
             {props.user.displayName}
           </p>
         </div>
@@ -49,14 +52,16 @@ const CommonCard = (props: { user: TD.User }) => {
 const EditPassword = ({ user, setPhase, onClose }: InnerProp) => {
   const [personalData] = useAtom(authAtom.personalData);
   const [password, setPassword] = useState('');
+  const loginLocal = useLoginLocal();
   const validationErrors = passwordErrors(password);
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const [state, submit] = useAPI('PATCH', `/me/password`, {
     payload: () => ({ password }),
     onFetched: (json) => {
-      console.log('result', json);
+      const data = json as { access_token: string };
       setNetErrors({});
       setPhase('Display');
+      loginLocal(data.access_token, personalData);
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -230,11 +235,12 @@ type Enable2FACardProp = { onSucceeded: (qrcode: string) => void };
  * 二要素認証を有効化するためのコンポーネント
  */
 const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [personalData] = useAtom(authAtom.personalData);
+  const loginLocal = useLoginLocal();
   const [state, submit] = useAPI('PATCH', `/me/twoFa/enable`, {
     onFetched: (json) => {
-      const data = json as { qrcode: string };
-      setPersonalData({ ...personalData!, isEnabled2FA: true });
+      const data = json as { access_token: string; qrcode: string };
+      loginLocal(data.access_token, { ...personalData!, isEnabled2FA: true });
       onSucceeded(data.qrcode);
     },
     onFailed(e) {

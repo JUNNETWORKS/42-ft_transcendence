@@ -72,11 +72,6 @@ export class AuthService {
 
   async login(user: any, completedTwoFa = false): Promise<LoginResult> {
     const iat = Date.now() / 1000;
-    const payload = {
-      email: user.email,
-      sub: user.id,
-      iat,
-    };
     const u = await this.usersService.findOne(user.id);
     if (u?.isEnabled2FA && !completedTwoFa) {
       const secretId = await this.prisma.totpSecret.findUnique({
@@ -97,10 +92,7 @@ export class AuthService {
       return result;
     }
     const result = {
-      access_token: this.jwtService.sign(payload, {
-        issuer: process.env.JWT_ISSUER,
-        audience: process.env.JWT_AUDIENCE,
-      }),
+      access_token: this.issueAccessToken(user),
       user: {
         ...Utils.pick(
           u!,
@@ -164,5 +156,17 @@ export class AuthService {
     if (!secret) return;
     const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
     return isValid;
+  }
+
+  issueAccessToken(user: any) {
+    const payload = {
+      email: user.email,
+      sub: user.id,
+      iat: Math.floor(Date.now() / 1000),
+    };
+    return this.jwtService.sign(payload, {
+      issuer: process.env.JWT_ISSUER,
+      audience: process.env.JWT_AUDIENCE,
+    });
   }
 }

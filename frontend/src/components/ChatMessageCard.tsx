@@ -57,6 +57,7 @@ export const ChatMessageCard = (props: {
               <Popover.Button
                 className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
                 ref={setReferenceElement}
+                style={{ wordBreak: 'keep-all' }}
               >
                 {user.displayName}
               </Popover.Button>

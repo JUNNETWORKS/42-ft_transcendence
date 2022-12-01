@@ -16,6 +16,7 @@ import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
+import { UserEntity } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -202,7 +203,7 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const d = {
+    const d: Partial<UserEntity> = {
       ...updateUserDto,
     };
     let passwordUpdated = false;
@@ -210,6 +211,7 @@ export class UsersService {
       const p = d.password;
       d.password = UsersService.hash_password(p);
       passwordUpdated = true;
+      d.invalidateTokenIssuedBefore = new Date();
     }
     const user = await this.prisma.user.update({
       where: { id },
@@ -274,6 +276,7 @@ export class UsersService {
         },
         data: {
           isEnabled2FA: true,
+          invalidateTokenIssuedBefore: new Date(),
         },
       }),
     ]);

@@ -31,7 +31,10 @@ const ActualView = ({ user }: ActualViewProps) => {
         <div className="inline-block shrink-0 grow-0 align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
         </div>
-        <p className="shrink grow overflow-hidden text-ellipsis">
+        <p
+          className="shrink grow overflow-hidden text-ellipsis"
+          style={{ wordBreak: 'keep-all' }}
+        >
           {user.displayName}
         </p>
         {isFriend && <Icons.User.Friend className="h-6 w-6 shrink-0 grow-0" />}

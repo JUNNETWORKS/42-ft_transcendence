@@ -98,8 +98,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     }
   })();
 
-  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
-
   /**
    * チャットコマンド
    */
