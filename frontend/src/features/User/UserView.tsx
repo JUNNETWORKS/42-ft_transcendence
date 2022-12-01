@@ -1,7 +1,7 @@
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { useAtom } from 'jotai';
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import * as dayjs from 'dayjs';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
@@ -10,57 +10,60 @@ import * as TD from '@/typedef';
 import { APIError } from '@/errors/APIError';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { DmCard } from '../DM/DmCard';
-import { Modal } from '@/components/Modal';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import { FollowButton } from './components/FollowButton';
 import { BlockButton } from './components/BlockButton';
 
-type UserCardProp = {
+type ActualViewProps = {
   user: TD.User;
 };
-const UserCard = ({ user }: UserCardProp) => {
+const ActualView = ({ user }: ActualViewProps) => {
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   // フレンドかどうか
   const isFriend = !!friends.find((f) => f.id === userId);
   const isBlocking = !!blockingUsers.find((f) => f.id === user.id);
-  // DmModal
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        <DmCard user={user} onClose={() => setIsOpen(false)} />
-      </Modal>
-      <FTH1 className="text-4xl font-bold" style={{ padding: '4px' }}>
-        <div className="inline-block align-text-bottom">
+      <FTH1 className="flex flex-row items-center p-[4px] text-4xl font-bold">
+        <div className="inline-block shrink-0 grow-0 align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
         </div>
-        {user.displayName}
-        {isFriend && <Icons.User.Friend className="inline" />}
+        <p
+          className="shrink grow overflow-hidden text-ellipsis"
+          style={{ wordBreak: 'keep-all' }}
+        >
+          {user.displayName}
+        </p>
+        {isFriend && <Icons.User.Friend className="h-6 w-6 shrink-0 grow-0" />}
+        {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
       </FTH1>
       <div className="flex flex-col gap-2">
         <FTH4>id</FTH4>
-        <div>{user.id}</div>
+        <div className="p-2">{user.id}</div>
         <FTH4>name</FTH4>
-        <div>{user.displayName}</div>
+        <div className="p-2">{user.displayName}</div>
         <FTH4>heartbeat time</FTH4>
-        <div>
+        <div className="p-2">
           {user.time ? dayjs(user.time).format('MM/DD HH:mm:ss') : 'offline'}
+        </div>
+        <FTH4>DM</FTH4>
+        <div className="px-2 py-4">
+          <DmCard user={user} />
         </div>
 
         <div>
           <FollowButton userId={user.id} isFriend={isFriend} />
           <BlockButton userId={user.id} isBlocking={isBlocking} />
-          <FTButton onClick={() => setIsOpen(true)}>DM</FTButton>
         </div>
       </div>
     </>
   );
 };
 
-const UserInnerView = (props: {
+const Presentator = (props: {
   userId: number;
   onError: (e: unknown) => void;
 }) => {
@@ -84,7 +87,7 @@ const UserInnerView = (props: {
       }
     })();
   }
-  return <UserCard user={personalData} />;
+  return <ActualView user={personalData} />;
 };
 
 export const UserView = () => {
@@ -103,7 +106,7 @@ export const UserView = () => {
           )}
         >
           <Suspense fallback={<p>Loading...</p>}>
-            <UserInnerView userId={userId} onError={setError} />
+            <Presentator userId={userId} onError={setError} />
           </Suspense>
         </ErrorBoundary>
       </div>

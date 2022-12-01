@@ -5,6 +5,7 @@ import {
   IsNotEmpty,
   IsString,
   MaxLength,
+  MinLength,
 } from 'class-validator';
 
 // https://github.com/nestjs/nest/issues/4178
@@ -29,5 +30,7 @@ export class CreateUserDto {
   intraId!: number;
 
   @IsString()
+  @MinLength(12)
+  @MaxLength(60)
   password!: string;
 }

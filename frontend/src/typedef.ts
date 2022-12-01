@@ -33,7 +33,7 @@ export type ChatUserRelation = {
   user: User;
   userId: number;
   chatRoomId: number;
-  memberType: string; // TODO: ほんとはenum
+  memberType: 'MEMBER' | 'ADMIN';
 };
 
 export type ChatUserRelationWithRoom = ChatUserRelation & {

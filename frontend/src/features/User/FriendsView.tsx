@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';
-import { UserView } from './User';
+import { UserView } from './UserView';
 import { useUserDataReadOnly } from '@/stores/store';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { dataAtom } from '@/stores/structure';
@@ -17,7 +17,12 @@ const FriendListItem = (props: { user: TD.User }) => {
         <div className={`shrink-0 grow-0 self-center`}>
           <OnlineStatusDot user={props.user} />
         </div>
-        <div className="shrink grow">{user.displayName}</div>
+        <div
+          className="shrink grow overflow-hidden text-ellipsis"
+          style={{ wordBreak: 'keep-all' }}
+        >
+          {user.displayName}
+        </div>
       </Link>
     </div>
   );
@@ -44,7 +49,7 @@ export const FriendsView = () => {
 
   return (
     <div className="flex w-full flex-row border-2 border-solid border-white">
-      <div className="h-full shrink-0 grow-0 basis-[10em]">
+      <div className="h-full max-w-[10em] shrink-0 grow-0 basis-[10em]">
         <FriendList friends={friends} />
       </div>
       <div className="h-full shrink grow">{routeElements}</div>

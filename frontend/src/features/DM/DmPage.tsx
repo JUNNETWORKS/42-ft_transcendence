@@ -56,8 +56,6 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
   );
   const userId = personalData ? personalData.id : -1;
 
-  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
-
   /**
    * DMコマンド
    */
