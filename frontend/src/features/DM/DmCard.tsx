@@ -60,11 +60,11 @@ export const DmCard = ({ user }: DmModalProps) => {
         value={content}
         placeholder="発言内容"
         onChange={(e) => setContent(e.target.value)}
-        onKeyDown={onEnter(() => {
+        onEnter={() => {
           if (isSendable) {
             submit();
           }
-        })}
+        }}
       />
     </div>
   );

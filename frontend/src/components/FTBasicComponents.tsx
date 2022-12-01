@@ -1,3 +1,5 @@
+import { omit } from '@/utils';
+import { useState } from 'react';
 import {
   styleTextFieldCommon,
   styleH3,
@@ -9,12 +11,32 @@ export const FTTextField = (
   props: React.DetailedHTMLProps<
     React.InputHTMLAttributes<HTMLInputElement>,
     HTMLInputElement
-  >
+  > & {
+    /**
+     * 日本語変換中でない時にenterキーが押された時のイベント
+     */
+    onEnter?: () => void;
+  }
 ) => {
+  const [composing, setComposing] = useState(false);
+  const onKeyDown = props.onKeyDown;
+  const sprops = omit(props, 'onEnter');
   return (
     <input
       type="text"
-      {...{ ...props }}
+      onCompositionStart={() => setComposing(true)}
+      onCompositionEnd={() => setComposing(false)}
+      {...{ ...sprops }}
+      onKeyDown={(e) => {
+        if (onKeyDown) {
+          onKeyDown(e);
+        }
+        if (e.key === 'Enter' && !composing) {
+          if (props.onEnter) {
+            props.onEnter();
+          }
+        }
+      }}
       style={{
         ...(props.style || {}),
         ...styleTextFieldCommon,
