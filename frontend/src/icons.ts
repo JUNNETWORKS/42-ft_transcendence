@@ -1,6 +1,7 @@
 import * as Fa from 'react-icons/fa';
 import * as Md from 'react-icons/md';
 import * as Io from 'react-icons/im';
+import * as Ioo from 'react-icons/io';
 import * as Bs from 'react-icons/bs';
 import * as Vsc from 'react-icons/vsc';
 
@@ -26,6 +27,13 @@ const Chat = {
   Visible: Fa.FaEye,
   Joined: Fa.FaDoorOpen,
   Yours: Fa.FaCrown,
+
+  System: {
+    Opened: Fa.FaArrowDown,
+    Updated: Vsc.VscDebugRestart,
+    Joined: Fa.FaArrowRight,
+    Left: Fa.FaArrowLeft,
+  },
 
   Operation: ChatOperation,
 };

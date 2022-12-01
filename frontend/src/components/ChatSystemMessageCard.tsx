@@ -1,8 +1,10 @@
 import { UserCard } from '@/features/User/UserCard';
+import { InlineIcon } from '@/hocs/InlineIcon';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import { compact } from '@/utils';
+import { Icons } from '@/icons';
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { AdminOperationBar } from './ChatMemberCard';
@@ -50,7 +52,12 @@ export const ChatSystemMessageCard = (props: {
   const content = () => {
     switch (messageType) {
       case 'OPENED':
-        return <>{nameButton} さんがルームを作成しました -</>;
+        return (
+          <>
+            <InlineIcon i={<Icons.Chat.System.Opened />} />
+            {nameButton}さんがルームを作成しました -
+          </>
+        );
       case 'UPDATED': {
         const diff = props.message.subpayload || {};
         const nameDiff = diff.roomName ? `ルーム名 → ${diff.roomName}` : null;
@@ -61,14 +68,25 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
+            <InlineIcon i={<Icons.Chat.System.Updated />} />
             {nameButton}さんがルームを更新しました: {diffText.join(', ')} -
           </>
         );
       }
       case 'JOINED':
-        return <>{nameButton}さんが入室しました -</>;
+        return (
+          <>
+            <InlineIcon i={<Icons.Chat.System.Joined />} />
+            {nameButton}さんが入室しました -
+          </>
+        );
       case 'LEFT':
-        return <>{nameButton}さんが退出しました -</>;
+        return (
+          <>
+            <InlineIcon i={<Icons.Chat.System.Left />} />
+            {nameButton}さんが退出しました -
+          </>
+        );
 
       case 'NOMMINATED':
         if (!targetButton) {
@@ -76,6 +94,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
+            <InlineIcon i={<Icons.Chat.Operation.Nomminate />} />
             {nameButton}さんが{targetButton}さんを管理者に指定しました -
           </>
         );
@@ -86,6 +105,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
+            <InlineIcon i={<Icons.Chat.Operation.Ban />} />
             {nameButton}さんが{targetButton}さんの入室を禁止しました -
           </>
         );
@@ -96,6 +116,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
+            <InlineIcon i={<Icons.Chat.Operation.Kick />} />
             {nameButton}さんが{targetButton}さんを強制退出させました -
           </>
         );
@@ -106,6 +127,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
+            <InlineIcon i={<Icons.Chat.Operation.Mute />} />
             {nameButton}さんが{targetButton}さんをミュートしました -
           </>
         );
