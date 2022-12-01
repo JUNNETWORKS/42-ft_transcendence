@@ -123,5 +123,5 @@ model ChatMessage {
 model MatchRate {
   user   User @relation(fields: [userId], references: [id])
   userId Int  @id
-  rate   Int
+  rate   Int  @default(1500)
 }
