@@ -61,14 +61,14 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
-            {nameButton} さんがルームを更新しました: {diffText.join(', ')} -
+            {nameButton}さんがルームを更新しました: {diffText.join(', ')} -
           </>
         );
       }
       case 'JOINED':
-        return <>{nameButton} さんが入室しました -</>;
+        return <>{nameButton}さんが入室しました -</>;
       case 'LEFT':
-        return <>{nameButton} さんが退出しました -</>;
+        return <>{nameButton}さんが退出しました -</>;
 
       case 'NOMMINATED':
         if (!targetButton) {
@@ -76,7 +76,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
-            {nameButton} さんが {targetButton} さんを管理者に指定しました -
+            {nameButton}さんが{targetButton}さんを管理者に指定しました -
           </>
         );
 
@@ -86,7 +86,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
-            {nameButton} さんが {targetButton} さんの入室を禁止しました -
+            {nameButton}さんが{targetButton}さんの入室を禁止しました -
           </>
         );
 
@@ -96,7 +96,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
-            {nameButton} さんが {targetButton} さんを強制退出させました -
+            {nameButton}さんが{targetButton}さんを強制退出させました -
           </>
         );
 
@@ -106,7 +106,7 @@ export const ChatSystemMessageCard = (props: {
         }
         return (
           <>
-            {nameButton} さんが {targetButton} さんをミュートしました -
+            {nameButton}さんが{targetButton}さんをミュートしました -
           </>
         );
 
@@ -116,7 +116,7 @@ export const ChatSystemMessageCard = (props: {
   };
   return (
     <div
-      className="flex flex-row items-start px-2 py-1"
+      className="flex flex-row items-start px-2 py-1 text-sm text-gray-400"
       key={props.message.id}
       id={props.id}
     >
