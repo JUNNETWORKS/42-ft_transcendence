@@ -37,7 +37,10 @@ const CommonCard = (props: { user: TD.User }) => {
         </div>
         <div className="flex flex-row gap-2">
           <p className="shrink-0 grow-0 text-2xl">Name:</p>
-          <p className="shrink grow overflow-hidden text-ellipsis text-2xl">
+          <p
+            className="shrink grow overflow-hidden text-ellipsis text-2xl"
+            style={{ wordBreak: 'keep-all' }}
+          >
             {props.user.displayName}
           </p>
         </div>

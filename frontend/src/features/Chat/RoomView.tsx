@@ -112,7 +112,7 @@ const MessagesList = (props: {
   }, [mySocket, scrollData, props.room.id]);
 
   return (
-    <div id={listId} className="h-full w-full overflow-scroll">
+    <div id={listId} className="h-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
         const member = props.members[data.userId];
         return (
