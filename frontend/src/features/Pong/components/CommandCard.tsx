@@ -6,7 +6,7 @@ type Props = {
 export const CommandCard = ({ text, onClick }: Props) => {
   return (
     <div
-      className="flex h-20 flex-col justify-start bg-primary p-4 font-bold"
+      className="flex h-20 cursor-pointer flex-col justify-start bg-primary p-4 font-bold"
       onClick={onClick}
     >
       <div>

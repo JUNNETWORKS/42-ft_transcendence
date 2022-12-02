@@ -11,7 +11,8 @@ import { RoomArg, RoomType, RoomName } from 'src/types/RoomType';
 const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
   const roomPrefix = {
     ChatRoom: '#',
-    Match: '%',
+    Match: '^',
+    MatchMaking: '*',
     User: '$',
     Global: '%',
   }[roomType];
@@ -21,6 +22,8 @@ const addRoomTypePrefix = (roomType: RoomType, roomName: string | number) => {
 export const generateFullRoomName = (roomArg: RoomArg): RoomName => {
   if ('roomId' in roomArg) return addRoomTypePrefix('ChatRoom', roomArg.roomId);
   if ('matchId' in roomArg) return addRoomTypePrefix('Match', roomArg.matchId);
+  if ('matchMakingId' in roomArg)
+    return addRoomTypePrefix('MatchMaking', roomArg.matchMakingId);
   else if ('userId' in roomArg)
     return addRoomTypePrefix('User', roomArg.userId);
   else if ('global' in roomArg)

@@ -1,28 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 import { usePongGame } from '../hooks/usePongGame';
-import { GameState, GameResult } from '../types';
+import { GameState } from '../types';
+import { GameResult } from '../types';
 
-export const Pong: React.FC = () => {
-  const socketRef = useRef<Socket>();
+export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
+  props
+) => {
+  const { mySocket } = props;
   const [isFinished, setIsFinished] = useState<boolean>(false);
 
   const { renderGame, drawGameOneFrame, drawGameResult } =
     usePongGame(isFinished);
 
   useEffect(() => {
-    // WebSocket initialization
-    if (!socketRef.current) {
-      socketRef.current = io('http://localhost:3000/pong');
-    }
     // Register websocket event handlers
-
-    socketRef.current.on('pong.match.state', (game: GameState) => {
-      drawGameOneFrame(game);
+    mySocket.on('pong.match.state', (gameState: GameState) => {
+      drawGameOneFrame(gameState);
     });
 
-    socketRef.current.on(
+    mySocket.on(
       'pong.match.finish',
       ({ game, result }: { game: GameState; result: GameResult }) => {
         drawGameResult(game, result);
@@ -31,14 +29,14 @@ export const Pong: React.FC = () => {
     );
 
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
-      socketRef.current?.emit('pong.match.action', {
+      mySocket.emit('pong.match.action', {
         up: e.key === 'w' || e.key === 'ArrowUp',
         down: e.key === 's' || e.key === 'ArrowDown',
       });
     };
 
     const handleKeyUp = () => {
-      socketRef.current?.emit('pong.match.action', {
+      mySocket.emit('pong.match.action', {
         up: false,
         down: false,
       });
@@ -52,7 +50,7 @@ export const Pong: React.FC = () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [drawGameOneFrame, drawGameResult]);
+  }, [drawGameOneFrame, drawGameResult, mySocket]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
