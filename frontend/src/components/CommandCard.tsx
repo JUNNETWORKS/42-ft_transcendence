@@ -1,8 +1,9 @@
-import { onEnter } from '@/utils/react';
 
 import { useStateWithResetter } from '../hooks';
 import * as TD from '../typedef';
 import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
+
+import { onEnter } from '@/utils/react';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
@@ -30,11 +31,6 @@ export const SayCard = (props: {
 
   return (
     <>
-      <div className="shrink-0 grow-0 p-[2px]">
-        <FTButton disabled={!computed.isSendable} onClick={sender}>
-          Send
-        </FTButton>
-      </div>
       <div className="shrink grow">
         <FTTextField
           className="block h-full w-full p-0"
@@ -48,6 +44,11 @@ export const SayCard = (props: {
             }
           }}
         />
+      </div>
+      <div className="shrink-0 grow-0 p-[2px] pl-2">
+        <FTButton disabled={!computed.isSendable} onClick={sender}>
+          Send
+        </FTButton>
       </div>
     </>
   );
