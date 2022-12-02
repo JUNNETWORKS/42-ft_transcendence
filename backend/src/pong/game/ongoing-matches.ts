@@ -38,9 +38,8 @@ export class OngoingMatches {
   }
 
   findMatchByPlayer(playerID: number) {
-    for (const matchID in this.matches) {
-      const match = this.matches.get(matchID);
-      if (match?.getPlayerIDs().includes(playerID)) {
+    for (const [matchID, match] of this.matches) {
+      if (match.getPlayerIDs().includes(playerID)) {
         return match;
       }
     }
