@@ -517,6 +517,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // TODO: 招待されるユーザーが存在していることの確認
     // TODO: 招待されるユーザーがbanされていないことの確認
+    // TODO: 招待されるユーザーがbanされていた時、usersから除外する（この時、banされているユーザーには通知しないことにする）
     // TODO: 招待されるユーザーが既に入室していないことの確認
 
     // [ハードリレーション更新]
