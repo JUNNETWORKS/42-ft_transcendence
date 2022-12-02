@@ -515,25 +515,40 @@ export class ChatGateway implements OnGatewayConnection {
       return { status: 'banned' };
     }
 
-    // TODO: 招待されるユーザーが存在していることの確認
-    // TODO: 招待されるユーザーがbanされていないことの確認
-    // TODO: 招待されるユーザーがbanされていた時、usersから除外する（この時、banされているユーザーには通知しないことにする）
-    // TODO: 招待されるユーザーが既に入室していないことの確認
+    const usersRel = await Promise.all(
+      data.users.map(async (userId) => {
+        return await Utils.PromiseMap({
+          user: this.usersService.findOne(userId),
+          relation: this.chatRoomService.getRelation(roomId, userId),
+          isBlocking: this.usersService.findBlocked(userId, callerId),
+        });
+      })
+    );
+    // 招待されるユーザーが存在していることの確認
+    // 招待されるユーザーが既に入室していないことの確認
+    usersRel.forEach((rel) => {
+      if (!rel.user) return { status: 'user does not exist' };
+      if (rel.relation) return { stats: 'user is joined already' };
+    });
+    // 招待するユーザーからblockされていた時、除外する（この時、banされているユーザーには通知しないことにする）
+    const targetUsers = usersRel
+      .filter((rel) => !rel.isBlocking)
+      .map((rel) => rel.user!.id);
 
     // [ハードリレーション更新]
-    const result = await this.chatRoomService.addMembers(roomId, data.users);
+    const result = await this.chatRoomService.addMembers(roomId, targetUsers);
     console.log('invite result:', result); // { count: 3 } とかになる
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await Promise.all(
-      data.users.map(async (userId) => {
+      targetUsers.map(async (userId) => {
         await this.wsServer.usersJoin(userId, { roomId });
       })
     );
 
     // 入室したユーザーに対して入室したことを通知
     await Promise.all(
-      data.users.map(async (userId) => {
+      targetUsers.map(async (userId) => {
         const relation = await this.chatRoomService.getRelationWithUser(
           roomId,
           userId
@@ -567,7 +582,7 @@ export class ChatGateway implements OnGatewayConnection {
     const members = await this.chatRoomService.getMembers(roomId);
 
     await Promise.all(
-      data.users.map(async (userId) => {
+      targetUsers.map(async (userId) => {
         await this.wsServer.sendResults(
           'ft_get_room_messages',
           {
