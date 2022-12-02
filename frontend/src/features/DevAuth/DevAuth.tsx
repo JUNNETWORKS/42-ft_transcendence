@@ -127,6 +127,10 @@ export const DevAuth = () => {
       <Modal
         closeModal={() => setIsOpenCreatedForm(false)}
         isOpen={isOpenCreatedForm}
+        traPart={{
+          enter: 'transition duration-700 ease-out',
+          leave: 'transition duration-500 ease-out',
+        }}
       >
         <UserCreatedForm onClose={() => setIsOpenCreatedForm(false)} />
       </Modal>
