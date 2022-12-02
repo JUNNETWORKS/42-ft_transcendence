@@ -82,8 +82,6 @@ export class WaitingQueue {
 
   private async createMatch(userID1: number, userID2: number) {
     const matchID = this.ongoingMatches.createMatch(userID1, userID2);
-    this.users.delete(userID1);
-    this.users.delete(userID2);
     usersLeave(
       this.wsServer,
       userID1,
