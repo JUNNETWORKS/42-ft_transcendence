@@ -478,11 +478,11 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationInviteDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
+    const caller = await this.authService.trapAuth(client);
+    if (!caller) {
       return;
     }
-    const callerId = user.id;
+    const callerId = caller.id;
     const roomId = data.roomId;
     console.log('ft_invite', data);
 
@@ -585,7 +585,7 @@ export class ChatGateway implements OnGatewayConnection {
         );
       })
     );
-    this.updateHeartbeat(user.id);
+    this.updateHeartbeat(caller.id);
     return { status: 'success' };
   }
 
