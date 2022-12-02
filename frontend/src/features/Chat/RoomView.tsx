@@ -141,6 +141,8 @@ const MembersList = (props: {
   members: TD.UserRelationMap;
   memberOperations: TD.MemberOperations;
 }) => {
+  const isPrivate = props.room.roomType === 'PRIVATE';
+
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
@@ -162,9 +164,11 @@ const MembersList = (props: {
   return (
     <div className="flex h-full flex-col">
       <FTH3 className="shrink-0 grow-0">Members</FTH3>
-      <div className="m-1">
-        <FTButton>invite</FTButton>
-      </div>
+      {isPrivate && (
+        <div className="m-1">
+          <FTButton>invite</FTButton>
+        </div>
+      )}
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
