@@ -11,14 +11,16 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
 
+import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
-import { ChatGateway } from 'src/chat/chat.gateway';
 import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
+import { UpdateMePasswordDto } from './dto/update-me-password.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
+import { UpdatePasswordPipe } from './pipe/update-password.pipe';
 import { UsersService } from './users.service';
 
 @Controller('me')
@@ -30,7 +32,7 @@ import { UsersService } from './users.service';
 export class MeController {
   constructor(
     private readonly usersService: UsersService,
-    private readonly chatGateway: ChatGateway,
+    private readonly authService: AuthService,
     private readonly wsServer: WsServerGateway
   ) {}
 
@@ -86,12 +88,30 @@ export class MeController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Patch('/password')
+  @UseFilters(PrismaExceptionFilter)
+  async patchPassword(
+    @Request() req: any,
+    @Body(new UpdatePasswordPipe()) updateMePasswordDto: UpdateMePasswordDto
+  ) {
+    const id = req.user.id;
+    const user = await this.usersService.findOne(id);
+    if (!user) {
+      throw new BadRequestException('no user');
+    }
+    await this.usersService.update(id, updateMePasswordDto);
+    const access_token = this.authService.issueAccessToken(req.user);
+    return { status: 'ok', access_token };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('twoFa/enable')
   @UseFilters(PrismaExceptionFilter)
   async enableTwoFa(@Request() req: any) {
     const id = req.user.id;
     const qrcode = await this.usersService.enableTwoFa(id);
-    return { qrcode };
+    const access_token = this.authService.issueAccessToken(req.user);
+    return { access_token, qrcode };
   }
 
   @UseGuards(JwtAuthGuard)

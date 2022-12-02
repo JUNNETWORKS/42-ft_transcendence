@@ -1,9 +1,12 @@
-import { Modal } from '@/components/Modal';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
+
+import { Modal } from '@/components/Modal';
+
 import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
-import { io } from 'socket.io-client';
-import { useNavigate } from 'react-router-dom';
+
 
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;

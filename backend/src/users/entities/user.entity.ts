@@ -22,6 +22,9 @@ export class UserEntity implements User {
 
   @ApiProperty()
   password!: string;
+
+  @ApiProperty()
+  invalidateTokenIssuedBefore!: Date | null;
 }
 
 export type UserMinimum = Omit<User, 'id'>;

@@ -1,4 +1,5 @@
 import { io } from 'socket.io-client';
+
 import * as TD from '@/typedef';
 
 export function makeCommand(
@@ -14,12 +15,15 @@ export function makeCommand(
       mySocket.emit('ft_open', data);
     },
 
-    join: (roomId: number) => {
+    join: (roomId: number, roomPassword: string, callback: any) => {
       const data = {
         roomId,
+        roomPassword,
       };
       console.log(data);
-      mySocket.emit('ft_join', data);
+      mySocket.emit('ft_join', data, (response: any) => {
+        callback(response);
+      });
     },
 
     leave: (roomId: number) => {
@@ -42,10 +46,11 @@ export function makeCommand(
       mySocket.emit('ft_say', data);
     },
 
-    get_room_messages: (roomId: number) => {
+    get_room_messages: (roomId: number, take: number, cursor?: number) => {
       const data = {
         roomId,
-        take: 50,
+        take,
+        cursor,
       };
       console.log(['get_room_messages'], data);
       mySocket.emit('ft_get_room_messages', data);

@@ -33,7 +33,7 @@ export type ChatUserRelation = {
   user: User;
   userId: number;
   chatRoomId: number;
-  memberType: string; // TODO: ほんとはenum
+  memberType: 'MEMBER' | 'ADMIN';
 };
 
 export type ChatUserRelationWithRoom = ChatUserRelation & {
@@ -135,6 +135,12 @@ export type UserResult = {
   action: 'create' | 'update' | 'delete';
   id: number;
   data: Partial<User>;
+};
+
+export type ChatRoomResult = {
+  id: number;
+  action: 'update';
+  data: Partial<ChatRoom>;
 };
 
 export const Mapper = {

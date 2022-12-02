@@ -12,9 +12,9 @@ export const ftConstants = {
   authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
   // 認可コードをアクセストークンに交換するためのURL
   tokenURL: 'https://api.intra.42.fr/oauth/token',
-  // TODO: .envファイルに出す
+  // 42auth
   clientID: process.env.AUTH_FT_CLIENT_ID!,
-  // TODO: .envファイルに出す
+  // 42auth
   clientSecret: process.env.AUTH_FT_CLIENT_SECRET!,
   // callbackURL: 'http://localhost:3000/auth/callback_ft',
   callbackURL: 'http://localhost:5173/auth',

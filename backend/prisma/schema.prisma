@@ -15,6 +15,7 @@ model User {
   email             String              @unique
   displayName       String              @unique
   intraId           Int                 @unique
+  invalidateTokenIssuedBefore  DateTime?
   password          String
   isEnabledAvatar   Boolean             @default(false)
   isEnabled2FA      Boolean             @default(false)
@@ -62,7 +63,7 @@ model BlockRelation {
 
 model ChatRoom {
   id              Int                 @id @default(autoincrement())
-  roomName        String              @unique
+  roomName        String
   roomType        RoomType            @default(PUBLIC)
   roomPassword    String?
   owner           User                @relation(fields: [ownerId], references: [id])

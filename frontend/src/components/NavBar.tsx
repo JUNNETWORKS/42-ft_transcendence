@@ -1,10 +1,12 @@
-import { Modal } from './Modal';
-import { UserProfileModal } from '@/features/User/UserProfileModal';
-import { useState } from 'react';
 import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
-import { useNavigate } from 'react-router-dom';
+
+import { Modal } from './Modal';
 import { UserAvatar } from './UserAvater';
 
 type UserCardProp = {
@@ -19,11 +21,16 @@ const UserCard = ({ user }: UserCardProp) => {
         <UserProfileModal user={user} onClose={() => setIsOpen(false)} />
       </Modal>
       <div
-        className="flex w-72 cursor-pointer gap-x-6 bg-secondary"
+        className="flex w-72 cursor-pointer flex-row items-center bg-secondary"
         onClick={() => setIsOpen(true)}
       >
-        <UserAvatar user={user} />
-        <div className="flex flex-1 items-center text-2xl">
+        <div className="shrink-0 grow-0">
+          <UserAvatar user={user} />
+        </div>
+        <div
+          className="shrink grow overflow-hidden text-ellipsis text-2xl"
+          style={{ wordBreak: 'keep-all' }}
+        >
           {user.displayName}
         </div>
       </div>

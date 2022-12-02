@@ -2,6 +2,14 @@ import { Atom } from 'jotai';
 
 type Many<T> = T | ReadonlyArray<T>;
 
+export function first<T>(list: T[]): T | undefined {
+  return list.length > 0 ? list[0] : undefined;
+}
+
+export function last<T>(list: T[]): T | undefined {
+  return list.length > 0 ? list[list.length - 1] : undefined;
+}
+
 /**
  * オブジェクト`obj`のプロパティのうち, `props`に書かれたものだけを残したものを返す.\
  * 元の`obj`は破壊しない.

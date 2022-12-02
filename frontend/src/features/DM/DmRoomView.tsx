@@ -1,16 +1,34 @@
-import * as TD from '@/typedef';
-import { FTH3 } from '@/components/FTBasicComponents';
-import { SayCard } from '@/components/CommandCard';
-import { authAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
-import { ChatMessageCard } from '@/components/ChatMessageCard';
 
-const DmRoomMessagesList = (props: { messages: TD.ChatRoomMessage[] }) => {
+import { ChatMessageCard } from '@/components/ChatMessageCard';
+import { SayCard } from '@/components/CommandCard';
+import { FTH3 } from '@/components/FTBasicComponents';
+import { authAtom } from '@/stores/auth';
+import * as TD from '@/typedef';
+
+const DmRoomMessagesList = (props: {
+  you: TD.ChatUserRelation | null;
+  room: TD.DmRoom;
+  messages: TD.ChatRoomMessage[];
+  members: TD.UserRelationMap;
+}) => {
   return (
     <>
-      {props.messages.map((data: TD.ChatRoomMessage) => (
-        <ChatMessageCard key={data.id} message={data} />
-      ))}
+      {props.messages.map((data: TD.ChatRoomMessage) => {
+        const member = props.members[data.userId];
+        return (
+          member && (
+            <ChatMessageCard
+              key={data.id}
+              message={data}
+              you={props.you}
+              room={props.room}
+              member={member}
+              memberOperations={{}}
+            />
+          )
+        );
+      })}
     </>
   );
 };
@@ -23,7 +41,10 @@ export const DmRoomView = (props: {
   room_members: (roomId: number) => TD.UserRelationMap | null;
 }) => {
   const [personalData] = useAtom(authAtom.personalData);
-  if (!personalData) return null;
+  const members = props.room_members(props.room.id);
+  if (!personalData || !members) {
+    return null;
+  }
 
   const roomName = props.room.roomMember.find(
     (member) => member.userId !== personalData.id
@@ -35,7 +56,12 @@ export const DmRoomView = (props: {
         <FTH3>{roomName}</FTH3>
         {/* 今フォーカスしているルームのメッセージ */}
         <div className="shrink grow overflow-scroll border-2 border-solid border-white">
-          <DmRoomMessagesList messages={props.room_messages(props.room.id)} />
+          <DmRoomMessagesList
+            you={props.you}
+            room={props.room}
+            members={members}
+            messages={props.room_messages(props.room.id)}
+          />
         </div>
         <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
           {/* 今フォーカスしているルームへの発言 */}

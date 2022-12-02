@@ -1,14 +1,15 @@
-import { useRoutes } from 'react-router-dom';
-import { Chat } from '@/features/Chat/Chat';
-import { PongMatchPage } from '@/features/Pong/components/MatchPage';
-import { Index } from '@/features/Index/Index';
-import { DevAuth } from '@/features/DevAuth/DevAuth';
-import { chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
-import { UserView } from '@/features/User/User';
+import { useRoutes } from 'react-router-dom';
+
+import { Chat } from '@/features/Chat/Chat';
+import { DevAuth } from '@/features/DevAuth/DevAuth';
+import { DmPage } from '@/features/DM/DmPage';
+import { Index } from '@/features/Index/Index';
+import { PongMatchPage } from '@/features/Pong/components/MatchPage';
 import { PongTopPage } from '@/features/Pong/components/TopPage';
 import { MyPageView } from '@/features/User/MyPage';
-import { DmPage } from '@/features/DM/DmPage';
+import { UserView } from '@/features/User/UserView';
+import { chatSocketAtom } from '@/stores/auth';
 
 export const AppRoutes = () => {
   const [mySocket] = useAtom(chatSocketAtom);

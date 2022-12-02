@@ -1,11 +1,12 @@
-import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import * as TD from '@/typedef';
-import * as Utils from '@/utils';
+import { useNavigate } from 'react-router-dom';
+
+import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
-import { useNavigate } from 'react-router-dom';
+import * as TD from '@/typedef';
+import * as Utils from '@/utils';
 
 export const SocketHolder = () => {
   // 「ソケット」
@@ -263,6 +264,15 @@ export const SocketHolder = () => {
           break;
         case 'delete':
           userUpdator.delOne(data.id);
+          break;
+      }
+    });
+
+    mySocket?.on('ft_chatroom', (data: TD.ChatRoomResult) => {
+      console.log('catch chatroom', data);
+      switch (data.action) {
+        case 'update':
+          roomUpdator.updateOne(data.id, data.data);
           break;
       }
     });

@@ -1,18 +1,21 @@
+import { Listbox } from '@headlessui/react';
+import { useAtom } from 'jotai';
 import { useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
-import * as TD from '@/typedef';
-import * as Utils from '@/utils';
-import { FTH3 } from '@/components/FTBasicComponents';
-import { ChatRoomView } from './RoomView';
-import { OpenCard } from '@/components/CommandCard';
-import { useAtom } from 'jotai';
-import { authAtom } from '@/stores/auth';
-import { ChatRoomListView } from './RoomList';
-import { Listbox } from '@headlessui/react';
+
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
-import { makeCommand } from './command';
+import { authAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
+import * as TD from '@/typedef';
+import * as Utils from '@/utils';
+
+import { makeCommand } from './command';
+import { ChatRoomListView } from './RoomList';
+import { ChatRoomCreateCard, ChatRoomUpdateCard } from './RoomSetting';
+import { ChatRoomView } from './RoomView';
 
 const RoomFilterOptions = ['VISIBLE', 'JOINED', 'YOURS'] as const;
 type RoomFilterOption = typeof RoomFilterOptions[number];
@@ -96,8 +99,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         );
     }
   })();
-
-  // TODO: ユーザ情報は勝手に更新されうるので, id -> User のマップがどっかにあると良さそう。そこまで気を使うかはおいといて。
 
   /**
    * チャットコマンド
@@ -184,14 +185,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
      * 実態はステート更新関数.
      * レンダリング後に副作用フックでコマンドが走る.
      */
-    get_room_message: (roomId: number) => {
-      if (roomId > 0) {
-        if (!Utils.isfinite(store.countMessages(roomId))) {
-          command.get_room_messages(roomId);
-        }
-      }
-    },
-
     get_room_members: (roomId: number) => {
       if (roomId > 0) {
         const mems = store.roomMembers(roomId);
@@ -202,57 +195,76 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     },
   };
 
-  return (
-    <div
-      className="flex w-full flex-row border-2 border-solid border-white p-2"
-      style={{ height: '50em' }}
-    >
-      <div className="flex shrink-0 grow-0 flex-col">
-        {/* 見えているチャットルーム */}
-        <div className="flex shrink grow flex-col border-2 border-solid border-white">
-          <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
-          <div className="shrink-0 grow-0 p-2 text-center">
-            <ChatRoomFilter
-              selected={selected}
-              setSelected={(next) => setSelected(next)}
-            />
-          </div>
-          <div className="flex shrink grow flex-col p-2">
-            <ChatRoomListView
-              rooms={filteredRooms}
-              isJoiningTo={predicate.isJoiningTo}
-              isFocusingTo={predicate.isFocusingTo}
-              countMessages={store.countMessages}
-              onJoin={command.join}
-              onLeave={command.leave}
-              onFocus={(roomId: number) => {
-                if (predicate.isJoiningTo(roomId)) {
-                  setFocusedRoomId(roomId);
-                  action.get_room_message(roomId);
-                  action.get_room_members(roomId);
-                }
-              }}
-            />
-          </div>
-        </div>
-        <div className="border-2 border-solid border-white">
-          <OpenCard sender={command.open} />
-        </div>
-      </div>
+  const [isOpen, setIsOpen] = useState(false);
 
-      <div className="flex shrink grow flex-col">
-        {/* 今フォーカスしているルーム */}
-        {!!computed.focusedRoom && (
-          <ChatRoomView
-            room={computed.focusedRoom}
-            memberOperations={memberOperations}
-            you={computed.you}
-            say={command.say}
-            roomMessages={store.roomMessages}
-            roomMembers={store.roomMembers}
-          />
-        )}
+  const closeModal = () => {
+    setIsOpen(false);
+  };
+
+  const openModal = () => {
+    setIsOpen(true);
+  };
+  return (
+    <>
+      <Modal closeModal={closeModal} isOpen={isOpen}>
+        <ChatRoomCreateCard
+          key="new"
+          onSucceeded={closeModal}
+          onCancel={closeModal}
+        />
+      </Modal>
+      <div
+        className="flex w-full flex-row border-2 border-solid border-white p-2"
+        style={{ height: '50em' }}
+      >
+        <div className="flex shrink-0 grow-0 flex-col">
+          {/* 見えているチャットルーム */}
+          <div className="flex shrink grow flex-col border-2 border-solid border-white">
+            <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+            <div className="shrink-0 grow-0 p-2 text-center">
+              <ChatRoomFilter
+                selected={selected}
+                setSelected={(next) => setSelected(next)}
+              />
+            </div>
+            <div className="flex shrink grow flex-col p-2">
+              <ChatRoomListView
+                rooms={filteredRooms}
+                isJoiningTo={predicate.isJoiningTo}
+                isFocusingTo={predicate.isFocusingTo}
+                onJoin={command.join}
+                onLeave={command.leave}
+                onFocus={(roomId: number) => {
+                  if (predicate.isJoiningTo(roomId)) {
+                    setFocusedRoomId(roomId);
+                    action.get_room_members(roomId);
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <div className="border-2 border-solid border-white">
+            <FTButton className="w-full" onClick={openModal}>
+              <InlineIcon i={<Icons.Add />} />
+              新規作成
+            </FTButton>
+          </div>
+        </div>
+
+        <div className="flex shrink grow flex-col">
+          {/* 今フォーカスしているルーム */}
+          {!!computed.focusedRoom && (
+            <ChatRoomView
+              room={computed.focusedRoom}
+              memberOperations={memberOperations}
+              you={computed.you}
+              say={command.say}
+              roomMessages={store.roomMessages}
+              roomMembers={store.roomMembers}
+            />
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
