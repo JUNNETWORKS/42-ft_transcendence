@@ -1,9 +1,10 @@
-import * as TD from '@/typedef';
+import { useAtom } from 'jotai';
+import { useState } from 'react';
+
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
-import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
-import { useState } from 'react';
+import * as TD from '@/typedef';
 import { onEnter } from '@/utils/react';
 
 type DmModalProps = {
@@ -60,11 +61,11 @@ export const DmCard = ({ user }: DmModalProps) => {
         value={content}
         placeholder="発言内容"
         onChange={(e) => setContent(e.target.value)}
-        onKeyDown={onEnter(() => {
+        onEnter={() => {
           if (isSendable) {
             submit();
           }
-        })}
+        }}
       />
     </div>
   );

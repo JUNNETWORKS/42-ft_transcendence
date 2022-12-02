@@ -1,7 +1,8 @@
+import { onEnter } from '@/utils/react';
+
+import { useStateWithResetter } from '../hooks';
 import * as TD from '../typedef';
 import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
-import { useStateWithResetter } from '../hooks';
-import { onEnter } from '@/utils/react';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
@@ -41,11 +42,11 @@ export const SayCard = (props: {
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}
-          onKeyDown={onEnter(() => {
+          onEnter={() => {
             if (computed.isSendable) {
               sender();
             }
-          })}
+          }}
         />
       </div>
     </>

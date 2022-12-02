@@ -35,7 +35,6 @@ export class AuthController {
     private readonly prisma: PrismaService
   ) {}
 
-  // TODO: 削除
   @UseGuards(LocalAuthGuard)
   @Post('login')
   @ApiOkResponse({ type: LoginResultEntity })

@@ -1,12 +1,14 @@
-import { UserCard } from '@/features/User/UserCard';
-import { useUserDataReadOnly } from '@/stores/store';
-import { dataAtom } from '@/stores/structure';
-import * as TD from '@/typedef';
 import { Popover } from '@headlessui/react';
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { usePopper } from 'react-popper';
+
+import { UserCard } from '@/features/User/UserCard';
+import { useUserDataReadOnly } from '@/stores/store';
+import { dataAtom } from '@/stores/structure';
+import * as TD from '@/typedef';
+
 import { AdminOperationBar } from './ChatMemberCard';
 import { UserAvatar } from './UserAvater';
 
@@ -58,6 +60,7 @@ export const ChatMessageCard = (props: {
               <Popover.Button
                 className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
                 ref={setReferenceElement}
+                style={{ wordBreak: 'keep-all' }}
               >
                 {user.displayName}
               </Popover.Button>

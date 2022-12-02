@@ -1,9 +1,12 @@
 import { atom, useAtom } from 'jotai';
+import jwtDecode from 'jwt-decode';
 import { io } from 'socket.io-client';
+
 import {
   AuthenticationFlowState,
   urlChatSocket,
 } from '@/features/DevAuth/auth';
+
 import { structureAtom } from './structure';
 
 // 認証情報
@@ -49,6 +52,16 @@ export type AppCredential = {
   token: string;
 };
 
+function getSub(credential: AppCredential | null) {
+  try {
+    const t = credential ? jwtDecode<{ sub: string }>(credential.token) : null;
+    return t?.sub || null;
+  } catch (e) {
+    console.error(e);
+  }
+  return null;
+}
+
 /**
  * ローカルに保存されているクレデンシャルのオブジェクトデータのAtom
  */
@@ -67,14 +80,20 @@ export const storedCredentialAtom = atom(
   },
   // クレデンシャルデータの更新
   (get, set, newCredential: AppCredential | null) => {
-    // 破棄・変更のいずれの場合も, ユーザに紐づく情報(atom)はすべて破棄する
-    set(authAtom.personalData, null);
-    set(structureAtom.visibleRoomsAtom, []);
-    set(structureAtom.joiningRoomsAtom, []);
-    set(structureAtom.friends, []);
-    set(structureAtom.focusedRoomIdAtom, -1);
-    set(structureAtom.messagesInRoomAtom, {});
-    set(structureAtom.membersInRoomAtom, {});
+    const maintainUserId =
+      newCredential &&
+      getSub(get(storedCredentialAtom)) === getSub(newCredential);
+    // ユーザIDが変わる場合, ユーザに紐づく情報(atom)はすべて破棄する
+    if (!maintainUserId) {
+      console.log('DESTROY ALL DATA');
+      set(authAtom.personalData, null);
+      set(structureAtom.visibleRoomsAtom, []);
+      set(structureAtom.joiningRoomsAtom, []);
+      set(structureAtom.friends, []);
+      set(structureAtom.focusedRoomIdAtom, -1);
+      set(structureAtom.messagesInRoomAtom, {});
+      set(structureAtom.membersInRoomAtom, {});
+    }
     if (!newCredential) {
       // データを破棄する場合
       localStorage.removeItem(credentialKey);

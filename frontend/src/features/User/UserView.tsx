@@ -1,18 +1,20 @@
-import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
+import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { Suspense } from 'react';
 import { useParams } from 'react-router-dom';
-import * as dayjs from 'dayjs';
-import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { Icons } from '@/icons';
-import * as TD from '@/typedef';
-import { APIError } from '@/errors/APIError';
+
+import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { DmCard } from '../DM/DmCard';
+import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import { APIError } from '@/errors/APIError';
+import { Icons } from '@/icons';
+import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
-import { FollowButton } from './components/FollowButton';
+import * as TD from '@/typedef';
+
+import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
+import { FollowButton } from './components/FollowButton';
 
 type ActualViewProps = {
   user: TD.User;
@@ -31,7 +33,10 @@ const ActualView = ({ user }: ActualViewProps) => {
         <div className="inline-block shrink-0 grow-0 align-text-bottom">
           <OnlineStatusDot key={user.id} user={user} />
         </div>
-        <p className="shrink grow overflow-hidden text-ellipsis">
+        <p
+          className="shrink grow overflow-hidden text-ellipsis"
+          style={{ wordBreak: 'keep-all' }}
+        >
           {user.displayName}
         </p>
         {isFriend && <Icons.User.Friend className="h-6 w-6 shrink-0 grow-0" />}

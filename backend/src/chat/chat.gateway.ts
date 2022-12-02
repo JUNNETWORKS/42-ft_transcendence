@@ -93,7 +93,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [オンライン状態の変化を全体に通知]
     this.incrementHeartbeat(userId);
-    // [TODO: 初期表示に必要な情報をユーザ本人に通知]
+    // [初期表示に必要な情報をユーザ本人に通知]
     this.wsServer.sendResults(
       'ft_connection',
       {
@@ -162,7 +162,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    // [TODO: パラメータが正しければチャットルームを作成する]
+    // [パラメータが正しければチャットルームを作成する]
     const createdRoom = await this.chatRoomService.create({
       roomName: data.roomName,
       roomType: data.roomType,
@@ -208,8 +208,8 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    // [TODO: 対象チャットルームの存在確認]
-    // [TODO: 実行者がチャットルームで発言可能であることの確認]
+    // [対象チャットルームの存在確認]
+    // [実行者がチャットルームで発言可能であることの確認]
     const roomId = data.roomId;
     const rel = await Utils.PromiseMap({
       relation: this.chatRoomService.getRelation(roomId, user.id),
@@ -219,7 +219,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!relation) {
       return;
     }
-    // [TODO: mute状態かどうか]
+    // [mute状態かどうか確認]
     const isMuted = rel.attr && rel.attr.mutedEndAt > new Date();
     if (isMuted) {
       console.log('** you are muted **');
@@ -356,7 +356,7 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
 
-    // [TODO: ハードリレーション更新]
+    // [ハードリレーション更新]
     const relation = await this.chatRoomService.addMember(roomId, {
       userId,
       memberType: 'MEMBER',
@@ -437,8 +437,8 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     data.callerId = user.id;
-    // [TODO: 退出対象のチャットルームが存在していることを確認]
-    // [TODO: 実行者が対象チャットルームに入室していることを確認]
+    // [退出対象のチャットルームが存在していることを確認]
+    // [実行者が対象チャットルームに入室していることを確認]
     const roomId = data.roomId;
     const relation = await this.chatRoomService.getRelation(roomId, user.id);
     if (!relation) {
@@ -446,7 +446,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     const chatRoom = relation.chatRoom;
 
-    // [TODO: ハードリレーション更新]
+    // [ハードリレーション更新]
     await this.chatRoomService.removeMember(roomId, user.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
@@ -484,8 +484,8 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    // [TODO: 送信者がjoinしているか？]
-    // [TODO: ターゲットがjoinしているか？]
+    // [送信者がjoinしているか？]
+    // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
     const callerId = user.id;
     const targetId = data.userId;
@@ -496,7 +496,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!rels.caller || !rels.target) {
       return;
     }
-    // [TODO: 送信者がADMINまたはオーナーか？]
+    // [送信者がADMINまたはオーナーか？]
     const room = rels.target.chatRoom;
     if (
       !this.chatService.isCallerNomminatableTarget(
@@ -509,7 +509,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     const targetUser = rels.target.user;
-    // [TODO: ターゲットリレーションの `memberType` を `ADMIN` に更新する]
+    // [ターゲットリレーションの `memberType` を `ADMIN` に更新する]
     await this.chatRoomService.updateMember(roomId, {
       ...rels.target,
       memberType: 'ADMIN',
@@ -543,8 +543,8 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    // [TODO: 送信者がjoinしているか？]
-    // [TODO: 対象者がjoinしているか？]
+    // [送信者がjoinしているか？]
+    // [対象者がjoinしているか？]
     const roomId = data.roomId;
     const rels = await this.chatService.getCallerAndTargetRelation(
       roomId,
@@ -556,7 +556,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!rels.targetRelation || !rels.callerRelation) {
       return;
     }
-    // [TODO: 送信者がADMINまたはオーナーか？]
+    // [送信者がADMINまたはオーナーか？]
     const room = rels.targetRelation.chatRoom;
     if (
       !this.chatService.isCallerKickableTarget(
@@ -569,7 +569,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     const targetUser = rels.targetRelation.user;
-    // [TODO: ハードリレーション更新]
+    // [ハードリレーション更新]
     await this.chatRoomService.removeMember(roomId, targetUser.id);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
@@ -598,8 +598,8 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    // [TODO: 送信者がjoinしているか？]
-    // [TODO: ターゲットがjoinしているか？]
+    // [送信者がjoinしているか？]
+    // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
     const callerId = user.id;
     const targetId = data.userId;
@@ -611,7 +611,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!rels.caller || !rels.target) {
       return;
     }
-    // [TODO: 送信者がADMINまたはオーナーか？]
+    // [送信者がADMINまたはオーナーか？]
     const room = rels.target.chatRoom;
     if (
       !this.chatService.isCallerBannableTarget(room, rels.caller, rels.target)
@@ -620,7 +620,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     const targetUser = rels.target.user;
-    // [TODO: ターゲットのChatUserAttributeの `bannedEndAt` を更新する]
+    // [ターゲットのChatUserAttributeの `bannedEndAt` を更新する]
     // なければ新規に作る
     const prolongedBannedEndAt = new Date(Date.now() + constants.banDuration);
     console.log('[old attr]', rels.targetAttr);
@@ -652,8 +652,8 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    // [TODO: 送信者がjoinしているか？]
-    // [TODO: ターゲットがjoinしているか？]
+    // [送信者がjoinしているか？]
+    // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
     const callerId = user.id;
     const targetId = data.userId;
@@ -665,7 +665,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!rels.caller || !rels.target) {
       return;
     }
-    // [TODO: 送信者がADMINまたはオーナーか？]
+    // [送信者がADMINまたはオーナーか？]
     const room = rels.target.chatRoom;
     if (
       !this.chatService.isCallerMutableTarget(room, rels.caller, rels.target)
@@ -674,7 +674,7 @@ export class ChatGateway implements OnGatewayConnection {
       return;
     }
     const targetUser = rels.target.user;
-    // [TODO: ターゲットのChatUserAttributeの `mutedEndAt` を更新する]
+    // [ターゲットのChatUserAttributeの `mutedEndAt` を更新する]
     // なければ新規に作る
     const prolongedMutedEndAt = new Date(Date.now() + constants.muteDuration);
     console.log('[old attr]', rels.targetAttr);
@@ -781,13 +781,13 @@ export class ChatGateway implements OnGatewayConnection {
       console.log('** unexisting target user **');
       return;
     }
-    // [TODO: すでにリレーションが存在していないことを確認]
+    // [すでにリレーションが存在していないことを確認]
     if (rel.existing) {
       console.log('** already being friend **');
       return;
     }
 
-    // [TODO: ハードリレーション更新]
+    // [ハードリレーション更新]
     await this.usersService.addFriend(user.id, targetId);
 
     // フォロー**した**ことを通知
@@ -832,13 +832,13 @@ export class ChatGateway implements OnGatewayConnection {
       console.log('** unexisting target user **');
       return;
     }
-    // [TODO: リレーションが存在していることを確認]
+    // [リレーションが存在していることを確認]
     if (!rel.existing) {
       console.log('** not being friend **');
       return;
     }
 
-    // [TODO: ハードリレーション更新]
+    // [ハードリレーション更新]
     await this.usersService.removeFriend(user.id, targetId);
 
     // フォロー**した**ことを通知

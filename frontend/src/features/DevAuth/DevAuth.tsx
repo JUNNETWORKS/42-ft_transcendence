@@ -1,19 +1,21 @@
+import { useAtom } from 'jotai';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { Modal } from '@/components/Modal';
+import { useQuery } from '@/hooks';
 import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
+
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
 } from './auth';
-import { useQuery } from '@/hooks';
-import { useAtom } from 'jotai';
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   DevAuthenticatedCard,
   DevAuthLoginCard,
   DevAuthValidatingCard,
   TotpAuthForm,
 } from './AuthCard';
-import { Modal } from '@/components/Modal';
 
 export const DevAuth = () => {
   const [authState] = useAtom(authAtom.authFlowState);

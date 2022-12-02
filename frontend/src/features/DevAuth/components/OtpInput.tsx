@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { FTTextField } from '../../../components/FTBasicComponents';
 
 const RE_DIGIT = new RegExp(/^\d+$/);

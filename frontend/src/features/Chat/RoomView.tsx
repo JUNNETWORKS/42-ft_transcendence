@@ -1,20 +1,22 @@
+import { useAtom } from 'jotai';
 import { useEffect, useId, useMemo, useState } from 'react';
-import * as TD from '@/typedef';
-import * as Utils from '@/utils';
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+
+import { ChatMemberCard } from '@/components/ChatMemberCard';
+import { ChatMessageCard } from '@/components/ChatMessageCard';
+import { ChatSystemMessageCard } from '@/components/ChatSystemMessageCard';
 import { SayCard } from '@/components/CommandCard';
-import { Icons } from '@/icons';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
-import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
-import { useAtom } from 'jotai';
+import { Icons } from '@/icons';
 import { chatSocketAtom } from '@/stores/auth';
-import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
-import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { ChatMemberCard } from '@/components/ChatMemberCard';
-import { ChatSystemMessageCard } from '@/components/ChatSystemMessageCard';
+import * as TD from '@/typedef';
+import * as Utils from '@/utils';
+
+import { makeCommand } from './command';
+import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;
@@ -113,7 +115,7 @@ const MessagesList = (props: {
   }, [mySocket, scrollData, props.room.id]);
 
   return (
-    <div id={listId} className="h-full w-full overflow-scroll">
+    <div id={listId} className="h-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
         const member = props.members[data.userId];
         if (data.messageType) {

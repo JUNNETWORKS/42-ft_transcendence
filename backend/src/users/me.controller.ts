@@ -11,6 +11,7 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
 
+import { AuthService } from 'src/auth/auth.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
@@ -31,6 +32,7 @@ import { UsersService } from './users.service';
 export class MeController {
   constructor(
     private readonly usersService: UsersService,
+    private readonly authService: AuthService,
     private readonly wsServer: WsServerGateway
   ) {}
 
@@ -44,7 +46,7 @@ export class MeController {
   @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseFilters(PrismaExceptionFilter)
-  async patch(@Request() req: any, @Body() updateMeDto: UpdateMeDto) {
+  async patch(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
     const id = req.user.id;
     // displayName の唯一性チェック
     // -> unique 制約に任せる
@@ -52,19 +54,19 @@ export class MeController {
     if (!user) {
       throw new BadRequestException('no user');
     }
-    const isEnabledAvatar = !!updateMeDto.avatar || user.isEnabledAvatar;
+    const isEnabledAvatar = !!updateUserDto.avatar || user.isEnabledAvatar;
     const ordinary = this.usersService.update(id, {
-      ...Utils.pick(updateMeDto, 'displayName'),
+      ...Utils.pick(updateUserDto, 'displayName'),
       isEnabledAvatar,
     });
-    const avatar = updateMeDto.avatar
-      ? this.usersService.upsertAvatar(id, updateMeDto.avatar)
+    const avatar = updateUserDto.avatar
+      ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
       : Promise.resolve('skipped');
     const result = await Utils.PromiseMap({ ordinary, avatar });
     {
       const data = {
-        ...Utils.omit(updateMeDto, 'avatar'),
-        ...(updateMeDto.avatar ? { avatar: true } : {}),
+        ...Utils.omit(updateUserDto, 'avatar'),
+        ...(updateUserDto.avatar ? { avatar: true } : {}),
       };
       this.wsServer.sendResults(
         'ft_user',
@@ -98,9 +100,8 @@ export class MeController {
       throw new BadRequestException('no user');
     }
     await this.usersService.update(id, updateMePasswordDto);
-    // TODO: このユーザのすべてのJWTを失効させる
-    // TODO: 新しいアクセストークンを返す
-    return { status: 'ok' };
+    const access_token = this.authService.issueAccessToken(req.user);
+    return { status: 'ok', access_token };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -109,7 +110,8 @@ export class MeController {
   async enableTwoFa(@Request() req: any) {
     const id = req.user.id;
     const qrcode = await this.usersService.enableTwoFa(id);
-    return { qrcode };
+    const access_token = this.authService.issueAccessToken(req.user);
+    return { access_token, qrcode };
   }
 
   @UseGuards(JwtAuthGuard)

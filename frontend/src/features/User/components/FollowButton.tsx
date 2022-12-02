@@ -1,6 +1,7 @@
+import { useAtom } from 'jotai';
+
 import { FTButton } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
-import { useAtom } from 'jotai';
 
 export const FollowButton = (props: { userId: number; isFriend: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);

@@ -1,5 +1,5 @@
-import { ReactNode, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { ReactNode, Fragment } from 'react';
 
 type Props = {
   children: ReactNode;

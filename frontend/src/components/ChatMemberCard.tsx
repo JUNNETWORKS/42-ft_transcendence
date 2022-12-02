@@ -1,13 +1,15 @@
-import * as TD from '@/typedef';
-import { FTButton, FTH4 } from '@/components/FTBasicComponents';
-import { Icons } from '@/icons';
-import { UserAvatar } from './UserAvater';
-import { useUserDataReadOnly } from '@/stores/store';
 import { Popover } from '@headlessui/react';
 import { useState } from 'react';
 import { usePopper } from 'react-popper';
+
+import { FTButton, FTH4 } from '@/components/FTBasicComponents';
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
+import { useUserDataReadOnly } from '@/stores/store';
+import * as TD from '@/typedef';
+
+import { UserAvatar } from './UserAvater';
 
 export const AdminOperationBar = (props: {
   you: TD.ChatUserRelation | null;
@@ -114,8 +116,9 @@ export const ChatMemberCard = (props: {
         <div
           className={`shrink grow cursor-pointer ${
             isYou ? 'font-bold' : ''
-          } overflow-hidden text-ellipsis text-left`}
+          } max-w-[10em] overflow-hidden text-ellipsis text-left`}
           key={props.member.userId}
+          style={{ wordBreak: 'keep-all' }}
         >
           {user.displayName}
         </div>
