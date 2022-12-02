@@ -1,14 +1,13 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 
 import { usePongGame } from '../hooks/usePongGame';
-import { Player, GameState, GameSettings } from '../types';
+import { GameState } from '../types';
 import { GameResult } from '../types';
 
 export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
   props
 ) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const { mySocket } = props;
   const [isFinished, setIsFinished] = useState<boolean>(false);
 
