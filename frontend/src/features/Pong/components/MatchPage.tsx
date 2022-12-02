@@ -28,21 +28,29 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       }
     );
 
-    // add event listeners
-    window.addEventListener('keydown', (e) => {
+    const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       mySocket.emit('pong.match.action', {
         up: e.key === 'w' || e.key === 'ArrowUp',
         down: e.key === 's' || e.key === 'ArrowDown',
       });
-    });
-    window.addEventListener('keyup', (e) => {
+    };
+
+    const handleKeyUp = () => {
       mySocket.emit('pong.match.action', {
         up: false,
         down: false,
       });
-    });
-    // TODO: 必要なら windown の keydown/keyup をremoveすること
-  }, [drawGameOneFrame, drawGameResult]);
+    };
+
+    // add event listeners
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [drawGameOneFrame, drawGameResult, mySocket]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
