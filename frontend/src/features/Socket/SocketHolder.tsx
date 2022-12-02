@@ -5,11 +5,13 @@ import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
+import { useNavigate } from 'react-router-dom';
 
 export const SocketHolder = () => {
   // 「ソケット」
   // 認証されていない場合はnull
   const [mySocket] = useAtom(chatSocketAtom);
+  const navigate = useNavigate();
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
@@ -263,6 +265,13 @@ export const SocketHolder = () => {
           userUpdator.delOne(data.id);
           break;
       }
+    });
+
+    mySocket?.on('pong.match_making.done', (data) => {
+      const matchID = data.matchID;
+      console.log(`マッチメイキング完了! matchID: ${matchID}`);
+      // 対戦ページに遷移する
+      navigate(`/pong/matches/${matchID}`);
     });
 
     return () => {

@@ -1,28 +1,14 @@
 import { Modal } from '@/components/Modal';
-import React, { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
-import { io, Socket } from 'socket.io-client';
+import { io } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
 
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // マッチメイキング完了通知
-    mySocket.on('pong.match_making.done', (data) => {
-      const matchID = data.matchID;
-      console.log(`マッチメイキング完了! matchID: ${matchID}`);
-      // 対戦ページに遷移する
-      navigate(`/pong/matches/${matchID}`);
-    });
-
-    return () => {
-      mySocket.off('pong.match_making.done');
-    };
-  }, []);
 
   const cancelWaiting = () => {
     mySocket.emit('pong.match_making.leave');
