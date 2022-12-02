@@ -1,12 +1,14 @@
+import { useAtom } from 'jotai';
 import { useMemo } from 'react';
 import { io } from 'socket.io-client';
-import * as Utils from '@/utils';
+
 import { FTH3 } from '@/components/FTBasicComponents';
-import { DmRoomView } from './DmRoomView';
-import { useAtom } from 'jotai';
 import { authAtom } from '@/stores/auth';
-import { DmRoomListView } from './DmRoomList';
 import { dataAtom, structureAtom } from '@/stores/structure';
+import * as Utils from '@/utils';
+
+import { DmRoomListView } from './DmRoomList';
+import { DmRoomView } from './DmRoomView';
 
 function makeCommand(mySocket: ReturnType<typeof io>, focusedRoomId: number) {
   return {

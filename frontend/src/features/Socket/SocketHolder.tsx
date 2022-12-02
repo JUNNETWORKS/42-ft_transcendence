@@ -1,10 +1,11 @@
-import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import * as TD from '@/typedef';
-import * as Utils from '@/utils';
+
+import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import { structureAtom } from '@/stores/structure';
+import * as TD from '@/typedef';
+import * as Utils from '@/utils';
 
 export const SocketHolder = () => {
   // 「ソケット」

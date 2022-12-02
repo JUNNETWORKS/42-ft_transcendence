@@ -1,13 +1,15 @@
-import { useUpdateRoom } from '@/stores/store';
+import { Listbox } from '@headlessui/react';
+import { Dispatch, SetStateAction, useState } from 'react';
+import { toast } from 'react-toastify';
+
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
+import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
-import { Listbox } from '@headlessui/react';
-import { Dispatch, SetStateAction, useState } from 'react';
+
 import { roomErrors } from './room.validator';
-import { toast } from 'react-toastify';
 
 export const RoomTypeIcon = {
   PUBLIC: Icons.Chat.Public,

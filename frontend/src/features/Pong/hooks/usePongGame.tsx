@@ -1,6 +1,7 @@
 import { useCallback, useRef } from 'react';
-import { useCanvasSize } from './useCanvasSize';
+
 import { GameResult, GameSettings, GameState } from '../types';
+import { useCanvasSize } from './useCanvasSize';
 
 const pongBlack = '#000000';
 const pongWhite = '#FFFFFE';

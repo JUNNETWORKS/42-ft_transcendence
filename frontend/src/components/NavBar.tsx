@@ -1,10 +1,12 @@
-import { Modal } from './Modal';
-import { UserProfileModal } from '@/features/User/UserProfileModal';
-import { useState } from 'react';
 import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
+import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
-import { useNavigate } from 'react-router-dom';
+
+import { Modal } from './Modal';
 import { UserAvatar } from './UserAvater';
 
 type UserCardProp = {

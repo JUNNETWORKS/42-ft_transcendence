@@ -1,20 +1,22 @@
-import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
+import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import * as dayjs from 'dayjs';
-import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { Icons } from '@/icons';
-import * as TD from '@/typedef';
-import { APIError } from '@/errors/APIError';
+
+import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
-import { dataAtom, structureAtom } from '@/stores/structure';
-import { FollowButton } from './components/FollowButton';
-import { BlockButton } from './components/BlockButton';
+import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { UserAvatar } from '@/components/UserAvater';
+import { APIError } from '@/errors/APIError';
+import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
+import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
+import { dataAtom, structureAtom } from '@/stores/structure';
+import * as TD from '@/typedef';
+
 import { DmCard } from '../DM/DmCard';
+import { BlockButton } from './components/BlockButton';
+import { FollowButton } from './components/FollowButton';
 
 type ActualCardProp = {
   user: TD.User;

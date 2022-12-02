@@ -1,6 +1,7 @@
+import { atom, useAtom } from 'jotai';
+
 import { FTButton } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
-import { atom, useAtom } from 'jotai';
 
 type ConfirmArg = {
   body: string;
