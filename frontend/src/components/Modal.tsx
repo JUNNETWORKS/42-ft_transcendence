@@ -32,7 +32,7 @@ export const Modal = ({
   };
   return (
     <Transition show={isOpen} as={Fragment}>
-      <Dialog open={isOpen} onClose={closeModal}>
+      <Dialog onClose={closeModal}>
         <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
         <div className="fixed inset-0 flex items-center justify-center ">
           <Transition.Child {...effectiveTransitionParams} as={Fragment}>
