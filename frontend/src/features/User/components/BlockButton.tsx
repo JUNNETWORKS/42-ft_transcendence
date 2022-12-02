@@ -1,6 +1,7 @@
+import { useAtom } from 'jotai';
+
 import { FTButton } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
-import { useAtom } from 'jotai';
 
 export const BlockButton = (props: { userId: number; isBlocking: boolean }) => {
   const [mySocket] = useAtom(chatSocketAtom);

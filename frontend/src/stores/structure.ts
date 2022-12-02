@@ -1,6 +1,8 @@
 import { atom, useAtom } from 'jotai';
-import * as TD from '../typedef';
+
 import * as Utils from '@/utils';
+
+import * as TD from '../typedef';
 import { storeAtoms } from './store';
 
 // オブジェクトストラクチャー

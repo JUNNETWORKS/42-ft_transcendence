@@ -1,19 +1,22 @@
-import { authAtom, useLoginLocal } from '@/stores/auth';
-import { useUpdateUser } from '@/stores/store';
-import { FTButton, FTTextField } from '@/components/FTBasicComponents';
-import { APIError } from '@/errors/APIError';
-import { InlineIcon } from '@/hocs/InlineIcon';
-import { useAPI } from '@/hooks';
-import { Icons } from '@/icons';
-import * as TD from '@/typedef';
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { displayNameErrors, passwordErrors } from './user.validator';
+
+import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
-import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { UserAvatar } from '@/components/UserAvater';
+import { APIError } from '@/errors/APIError';
+import { InlineIcon } from '@/hocs/InlineIcon';
+import { useAPI } from '@/hooks';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { Icons } from '@/icons';
+import { authAtom, useLoginLocal } from '@/stores/auth';
+import { useUpdateUser } from '@/stores/store';
+import * as TD from '@/typedef';
+
 import { AvatarFile, AvatarInput } from './components/AvatarInput';
+import { displayNameErrors, passwordErrors } from './user.validator';
+
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 

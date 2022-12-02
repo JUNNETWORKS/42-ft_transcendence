@@ -1,7 +1,7 @@
-import * as Fa from 'react-icons/fa';
-import * as Md from 'react-icons/md';
-import * as Io from 'react-icons/im';
 import * as Bs from 'react-icons/bs';
+import * as Fa from 'react-icons/fa';
+import * as Io from 'react-icons/im';
+import * as Md from 'react-icons/md';
 import * as Vsc from 'react-icons/vsc';
 
 // 場面に応じたアイコンを一括して割り当てるためのファイル

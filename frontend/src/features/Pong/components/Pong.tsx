@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { GameState, GameResult } from '../types';
 import { io, Socket } from 'socket.io-client';
+
 import { usePongGame } from '../hooks/usePongGame';
+import { GameState, GameResult } from '../types';
 
 export const Pong: React.FC = () => {
   const socketRef = useRef<Socket>();

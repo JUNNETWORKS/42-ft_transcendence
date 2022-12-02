@@ -17,6 +17,17 @@
     },
     "tailwindcss": {
       "config": "./tailwind.config.cjs"
+    },
+    "import/parsers": {
+      "@typescript-eslint/parser": [".ts", ".tsx"]
+    },
+    "import/resolver": {
+      "typescript": {
+        "alwaysTryTypes": true,
+        "typescript": true,
+        "node": true,
+        "project": "./"
+      }
     }
   },
   "plugins": [
@@ -26,7 +37,8 @@
     "jest",
     "jest-dom",
     "testing-library",
-    "tailwindcss"
+    "tailwindcss",
+    "import"
   ],
   "extends": [
     "eslint:recommended",
@@ -51,6 +63,27 @@
   ],
   "rules": {
     "react/jsx-uses-react": "off",
-    "react/react-in-jsx-scope": "off"
+    "react/react-in-jsx-scope": "off",
+    "import/order": [
+      "error",
+      {
+        "groups": [
+          "external",
+          "internal",
+          [
+            "parent",
+            "sibling"
+          ],
+          "object",
+          "type",
+          "index"
+        ],
+        "newlines-between": "always",
+        "alphabetize": {
+          "order": "asc",
+          "caseInsensitive": true
+        }
+      }
+    ]
   }
 }

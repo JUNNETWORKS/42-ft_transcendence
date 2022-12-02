@@ -1,11 +1,13 @@
 import { atom, useAtom } from 'jotai';
+import jwtDecode from 'jwt-decode';
 import { io } from 'socket.io-client';
+
 import {
   AuthenticationFlowState,
   urlChatSocket,
 } from '@/features/DevAuth/auth';
+
 import { structureAtom } from './structure';
-import jwtDecode from 'jwt-decode';
 
 // 認証情報
 

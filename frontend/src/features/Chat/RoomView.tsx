@@ -1,19 +1,21 @@
+import { useAtom } from 'jotai';
 import { useEffect, useId, useMemo, useState } from 'react';
-import * as TD from '@/typedef';
-import * as Utils from '@/utils';
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+
+import { ChatMemberCard } from '@/components/ChatMemberCard';
+import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { SayCard } from '@/components/CommandCard';
-import { Icons } from '@/icons';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
-import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
-import { useAtom } from 'jotai';
+import { Icons } from '@/icons';
 import { chatSocketAtom } from '@/stores/auth';
-import { makeCommand } from './command';
 import { dataAtom } from '@/stores/structure';
-import { ChatMessageCard } from '@/components/ChatMessageCard';
-import { ChatMemberCard } from '@/components/ChatMemberCard';
+import * as TD from '@/typedef';
+import * as Utils from '@/utils';
+
+import { makeCommand } from './command';
+import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;

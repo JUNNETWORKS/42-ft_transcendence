@@ -1,7 +1,9 @@
-import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
+
+import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
+
 import { verifyCredential } from './auth';
 
 /**
