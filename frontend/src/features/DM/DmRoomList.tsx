@@ -1,8 +1,9 @@
+import { useAtom } from 'jotai';
+
 import { authAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
-import { useAtom } from 'jotai';
 
 const DmRoomListItem = (props: {
   room: TD.DmRoom;

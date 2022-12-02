@@ -1,7 +1,8 @@
-import * as TD from '@/typedef';
-import { useUserDataReadOnly } from '@/stores/store';
 import { useEffect, useState } from 'react';
+
 import { Icons } from '@/icons';
+import { useUserDataReadOnly } from '@/stores/store';
+import * as TD from '@/typedef';
 
 const activeTimeMs = 60 * 1000;
 

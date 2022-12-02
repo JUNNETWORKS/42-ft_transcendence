@@ -1,5 +1,7 @@
-import { authAtom } from '@/stores/auth';
-import { urlLoginFt } from './auth';
+import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { Oval } from 'react-loader-spinner';
+
 import {
   FTH1,
   FTH3,
@@ -8,14 +10,14 @@ import {
   FTSubmit,
   FTTextField,
 } from '@/components/FTBasicComponents';
-import { useAPI } from '@/hooks';
-import { useAtom } from 'jotai';
-import { useState } from 'react';
-import { passwordErrors, selfErrors } from './auth.validator';
 import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
+import { useAPI } from '@/hooks';
+import { authAtom } from '@/stores/auth';
+
+import { urlLoginFt } from './auth';
+import { passwordErrors, selfErrors } from './auth.validator';
 import { useOtp } from './hooks/useOtp';
-import { Oval } from 'react-loader-spinner';
 
 /**
  * TOTP入力フォーム

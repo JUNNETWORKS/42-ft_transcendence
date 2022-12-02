@@ -1,11 +1,13 @@
-import { useUpdateRoom } from '@/stores/store';
+import { Listbox } from '@headlessui/react';
+import { Dispatch, SetStateAction, useState } from 'react';
+
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
+import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
-import { Listbox } from '@headlessui/react';
-import { Dispatch, SetStateAction, useState } from 'react';
+
 import { roomErrors } from './room.validator';
 
 export const RoomTypeIcon = {

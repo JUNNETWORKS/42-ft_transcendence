@@ -1,5 +1,6 @@
-import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import React from 'react';
+
+import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 
 type RoomPasswordInputProps = {
   roomPassword: string;

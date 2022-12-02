@@ -1,10 +1,12 @@
 import { useAtom } from 'jotai';
-import * as TD from '@/typedef';
 import { Link, useRoutes } from 'react-router-dom';
-import { UserView } from './UserView';
-import { useUserDataReadOnly } from '@/stores/store';
+
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
+import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
+import * as TD from '@/typedef';
+
+import { UserView } from './UserView';
 
 const FriendListItem = (props: { user: TD.User }) => {
   const user = useUserDataReadOnly(props.user.id);

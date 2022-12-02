@@ -1,5 +1,7 @@
-import { Modal } from '@/components/Modal';
 import { useState } from 'react';
+
+import { Modal } from '@/components/Modal';
+
 import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
 
