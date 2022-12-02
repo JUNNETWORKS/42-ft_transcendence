@@ -1,4 +1,5 @@
 import { Server } from 'socket.io';
+
 import { OnlineMatch } from './online-match';
 import { PlayerInput } from './types/game-state';
 
@@ -9,11 +10,13 @@ export class OngoingMatches {
 
   constructor(wsServer: Server) {
     this.wsServer = wsServer;
+    this.matches = new Map<string, OnlineMatch>();
   }
 
   createMatch(userID1: number, userID2: number) {
     const match = new OnlineMatch(this.wsServer, userID1, userID2);
     // プレイヤーにマッチが開始されたことを通知する
+    this.matches.set(match.getMatchID(), match);
     return match.getMatchID();
   }
 
