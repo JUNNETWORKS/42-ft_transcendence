@@ -6,8 +6,6 @@ import { chatSocketAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 
-import { onEnter } from '@/utils/react';
-
 type DmModalProps = {
   user: TD.User;
 };

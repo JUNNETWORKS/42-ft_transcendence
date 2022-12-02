@@ -1,9 +1,6 @@
-
 import { useStateWithResetter } from '../hooks';
 import * as TD from '../typedef';
 import { FTTextField, FTButton, FTH4 } from './FTBasicComponents';
-
-import { onEnter } from '@/utils/react';
 
 /**
  * 発言を編集し, sendボタン押下で外部(props.sender)に送出するコンポーネント
