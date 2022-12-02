@@ -1,9 +1,10 @@
-import * as TD from '@/typedef';
+import { useAtom } from 'jotai';
+import { useState } from 'react';
+
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
-import { useAtom } from 'jotai';
 import { dataAtom } from '@/stores/structure';
-import { useState } from 'react';
+import * as TD from '@/typedef';
 import { onEnter } from '@/utils/react';
 
 type DmModalProps = {

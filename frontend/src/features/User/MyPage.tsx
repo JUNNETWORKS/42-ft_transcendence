@@ -1,9 +1,11 @@
-import { authAtom } from '@/stores/auth';
-import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useAtom } from 'jotai';
 import { Link, useRoutes } from 'react-router-dom';
-import { FriendsView } from './FriendsView';
+
+import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
+import { authAtom } from '@/stores/auth';
+
 import { BlockingView } from './BlockingView';
+import { FriendsView } from './FriendsView';
 
 export const MyPageView = () => {
   const [personalData] = useAtom(authAtom.personalData);
