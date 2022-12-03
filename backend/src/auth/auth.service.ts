@@ -28,7 +28,7 @@ export class AuthService {
     private prisma: PrismaService
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string) {
     console.log(email, password);
     const user = await this.usersService.findByEmail(email);
     console.log(user);
@@ -36,11 +36,12 @@ export class AuthService {
       const hashed = UsersService.hash_password(password);
       if (user.password === hashed) {
         console.log('succeeded');
-        return user;
+        return [true, user] as const;
       }
       console.log('FAIL');
+      return [false, user] as const;
     }
-    return null;
+    return [false, null] as const;
   }
 
   /**
@@ -150,7 +151,9 @@ export class AuthService {
         id: secretId,
       },
     });
-    if (!secret) return;
+    if (!secret) {
+      return false;
+    }
     const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
     return isValid;
   }
