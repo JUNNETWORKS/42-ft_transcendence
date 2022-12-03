@@ -10,6 +10,7 @@ import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
@@ -37,6 +38,32 @@ export class UsersService {
 
   findOne(id: number) {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  findMany({ take, cursor }: UserFindManyDto) {
+    if (take > 0) {
+      return this.prisma.user.findMany({
+        take,
+        where: {
+          id: cursor ? { gt: cursor } : undefined,
+        },
+        select: {
+          id: true,
+          displayName: true,
+        },
+      });
+    } else {
+      return this.prisma.user.findMany({
+        take,
+        where: {
+          id: cursor ? { lte: cursor } : undefined,
+        },
+        select: {
+          id: true,
+          displayName: true,
+        },
+      });
+    }
   }
 
   findByEmail(email: string) {

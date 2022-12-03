@@ -7,10 +7,9 @@ import {
   Param,
   Delete,
   ParseIntPipe,
-  UseGuards,
-  UseFilters,
   Res,
   Req,
+  Query,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
@@ -19,6 +18,7 @@ import { pick } from 'src/utils';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -37,8 +37,8 @@ export class UsersController {
 
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
-  findAll() {
-    return this.usersService.findAll();
+  findMany(@Query() userFindMAnyDto: UserFindManyDto) {
+    return this.usersService.findMany(userFindMAnyDto);
   }
 
   @Get(':id/avatar')
