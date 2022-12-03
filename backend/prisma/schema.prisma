@@ -163,11 +163,9 @@ model MatchConfig {
 
 // マッチとユーザーの関連テーブル
 model MatchUserRelation {
-  id Int @id @default(autoincrement())
-
-  user   User @relation(fields: [userID], references: [id])
-  userID Int  @unique
-
+  id          Int         @id @default(autoincrement())
+  user        User        @relation(fields: [userID], references: [id])
+  userID      Int         @unique
   matchResult MatchResult @relation(fields: [matchID], references: [id])
   matchID     String      @unique
 }
