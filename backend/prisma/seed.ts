@@ -23,7 +23,7 @@ async function main() {
           ...d,
           password: UsersService.hash_password(d.displayName),
           userRankPoint: {
-            create: { rankPoint: 1500 },
+            create: {},
           },
         },
       });
