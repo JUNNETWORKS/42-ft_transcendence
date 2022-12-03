@@ -22,7 +22,7 @@ export class WaitingQueues {
 
   // 待機キューを追加する
   appendQueue(queue: WaitingQueue): void {
-    this.queues.set(queue.id, queue);
+    this.queues.set(queue.matchType, queue);
   }
 
   // 待機キューを削除する
