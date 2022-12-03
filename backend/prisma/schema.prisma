@@ -130,3 +130,23 @@ model UserRankPoint {
   userId             Int                 @unique
   rankPoint Int
 }
+
+
+// 試合結果
+//
+// 勝者敗者はスコアから算出可能なのでDBには保存しない｡
+model MatchResult {
+  id                String              @id // UUIDv4; 外部から与える
+  matchType         MatchType
+  userID1           Int     // User.id
+  userScore1        Int
+  userID2           Int     // User.id
+  userScore2        Int
+  endAt             DateTime  // 試合終了日時
+}
+
+enum MatchType {
+  RANK
+  CASUAL
+  PRIVATE
+}
