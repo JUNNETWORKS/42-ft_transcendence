@@ -15,6 +15,7 @@ import {
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
 
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { pick } from 'src/utils';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -71,6 +72,7 @@ export class UsersController {
     avatar.getStream().pipe(res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOkResponse({ type: UserEntity })
   async findOne(@Param('id', ParseIntPipe) id: number) {
