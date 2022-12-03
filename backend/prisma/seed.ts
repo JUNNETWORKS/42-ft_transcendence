@@ -1,34 +1,38 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, User } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
+type F = ReturnType<typeof prisma.user.create>[];
+
 async function main() {
-  const createMany = await Promise.all(
-    [
-      { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
-      { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
-      {
-        displayName:
-          'AngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngelique',
-        email:
-          'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
-        intraId: 2,
-      },
-      { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
-      { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
-    ].map((d) => {
-      return prisma.user.create({
-        data: {
-          ...d,
-          password: UsersService.hash_password(d.displayName),
-          userRankPoint: {
-            create: {},
+  const createMany = await [
+    { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
+    { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
+    {
+      displayName:
+        'AngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngelique',
+      email:
+        'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
+      intraId: 2,
+    },
+    { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
+    { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
+  ].reduce((prev: Promise<User[]>, d) => {
+    return prev.then((leadings) => {
+      return prisma.user
+        .create({
+          data: {
+            ...d,
+            password: UsersService.hash_password(d.displayName),
+            userRankPoint: {
+              create: {},
+            },
           },
-        },
-      });
-    })
-  );
+        })
+        .then((u) => [...leadings, u]);
+    });
+  }, Promise.resolve<User[]>([]));
   console.log(createMany);
 
   await prisma.chatRoom.createMany({
