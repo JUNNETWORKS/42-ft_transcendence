@@ -27,8 +27,8 @@ model User {
   followedUser                FriendRelation[]    @relation("followedUser")
   blockingUser                BlockRelation[]     @relation("blockingUser")
   blockedUser                 BlockRelation[]     @relation("blockedUser")
-
-  userRankPoint UserRankPoint?
+  userRankPoint               UserRankPoint?
+  matchUserRelation           MatchUserRelation[]
 }
 
 model UserAvatar {
@@ -135,15 +135,15 @@ model UserRankPoint {
 //
 // 勝者敗者はスコアから算出可能なのでDBには保存しない｡
 model MatchResult {
-  id         String    @id // UUIDv4; 外部から与える
-  matchType  MatchType
-  userID1    Int // User.id
-  userScore1 Int
-  userID2    Int // User.id
-  userScore2 Int
-  endAt      DateTime // 試合終了日時
-
-  config MatchConfig?
+  id                String              @id // UUIDv4; 外部から与える
+  matchType         MatchType
+  userID1           Int // User.id
+  userScore1        Int
+  userID2           Int // User.id
+  userScore2        Int
+  endAt             DateTime // 試合終了日時
+  matchUserRelation MatchUserRelation[]
+  config            MatchConfig?
 }
 
 enum MatchType {
@@ -159,4 +159,15 @@ model MatchConfig {
   matchID  String      @unique
   maxScore Int // 何点取ったら勝利か
   speed    Float // 球の速度
+}
+
+// マッチとユーザーの関連テーブル
+model MatchUserRelation {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userID], references: [id])
+  userID Int  @unique
+
+  matchResult MatchResult @relation(fields: [matchID], references: [id])
+  matchID     String      @unique
 }
