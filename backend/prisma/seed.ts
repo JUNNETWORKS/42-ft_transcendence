@@ -1,11 +1,11 @@
-import { PrismaClient, RoomType } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
 async function main() {
-  const createMany = await prisma.user.createMany({
-    data: [
+  const createMany = await Promise.all(
+    [
       { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
       { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
       {
@@ -18,13 +18,17 @@ async function main() {
       { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
       { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
     ].map((d) => {
-      return {
-        ...d,
-        password: UsersService.hash_password(d.displayName),
-      };
-    }),
-    skipDuplicates: true, // Skip 'Bobo'
-  });
+      return prisma.user.create({
+        data: {
+          ...d,
+          password: UsersService.hash_password(d.displayName),
+          userRankPoint: {
+            create: { rankPoint: 1500 },
+          },
+        },
+      });
+    })
+  );
   console.log(createMany);
 
   await prisma.chatRoom.createMany({

@@ -11,22 +11,24 @@ datasource db {
 }
 
 model User {
-  id                Int                 @id @default(autoincrement())
-  email             String              @unique
-  displayName       String              @unique
-  intraId           Int                 @unique
-  invalidateTokenIssuedBefore  DateTime?
-  password          String
-  isEnabledAvatar   Boolean             @default(false)
-  isEnabled2FA      Boolean             @default(false)
-  chatMessage       ChatMessage[]
-  joinedRoom        ChatUserRelation[]
-  ownedRoom         ChatRoom[]
-  chatroomAttribute ChatUserAttribute[]
-  followingUser     FriendRelation[]    @relation("followingUser")
-  followedUser      FriendRelation[]    @relation("followedUser")
-  blockingUser      BlockRelation[]     @relation("blockingUser")
-  blockedUser       BlockRelation[]     @relation("blockedUser")
+  id                          Int                 @id @default(autoincrement())
+  email                       String              @unique
+  displayName                 String              @unique
+  intraId                     Int                 @unique
+  invalidateTokenIssuedBefore DateTime?
+  password                    String
+  isEnabledAvatar             Boolean             @default(false)
+  isEnabled2FA                Boolean             @default(false)
+  chatMessage                 ChatMessage[]
+  joinedRoom                  ChatUserRelation[]
+  ownedRoom                   ChatRoom[]
+  chatroomAttribute           ChatUserAttribute[]
+  followingUser               FriendRelation[]    @relation("followingUser")
+  followedUser                FriendRelation[]    @relation("followedUser")
+  blockingUser                BlockRelation[]     @relation("blockingUser")
+  blockedUser                 BlockRelation[]     @relation("blockedUser")
+
+  userRankPoint               UserRankPoint?
 }
 
 model UserAvatar {
@@ -117,4 +119,14 @@ model ChatMessage {
   userId     Int?
   createdAt  DateTime @default(now())
   content    String
+}
+
+// ユーザーのランクポイント
+//
+// ランクポイントはランクマッチの勝敗によって変動する｡
+model UserRankPoint {
+  id        Int   @id @default(autoincrement())
+  user               User       @relation(fields: [userId], references: [id])
+  userId             Int                 @unique
+  rankPoint Int
 }
