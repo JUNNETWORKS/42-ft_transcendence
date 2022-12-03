@@ -1,14 +1,7 @@
-import {
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  ParseIntPipe,
-  Query,
-} from '@nestjs/common';
-import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
 import { PongService } from './pong.service';
 

@@ -15,6 +15,7 @@ import {
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
 
+import { PongService } from 'src/pong/pong.service';
 import { pick } from 'src/utils';
 
 import { CreateUserDto } from './dto/create-user.dto';
@@ -26,7 +27,10 @@ import { UsersService } from './users.service';
 @Controller('users')
 @ApiTags('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly pongService: PongService
+  ) {}
 
   // TODO: 削除
   @Post()
@@ -95,5 +99,10 @@ export class UsersController {
   @ApiOkResponse({ type: UserEntity })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.remove(id);
+  }
+
+  @Get(':id/pong/results')
+  getUserPongResults(@Param('id', ParseIntPipe) id: number) {
+    return this.pongService.fetchUserMatchResults(id);
   }
 }
