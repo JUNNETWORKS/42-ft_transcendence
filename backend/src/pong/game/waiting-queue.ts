@@ -1,3 +1,4 @@
+import { MatchType } from '@prisma/client';
 import { Server } from 'socket.io';
 
 import {
@@ -11,9 +12,7 @@ import { OngoingMatches } from './ongoing-matches';
 
 // マッチメイキングの待機キュー
 export class WaitingQueue {
-  // Queueを識別するための文字列｡他のQueueと重複してはいけない｡
-  // このIDは招待リンクなどに使われる
-  public readonly id: string;
+  public readonly matchType: MatchType;
   // 待機キュー本体
   private users: Set<number>;
   // WSサーバー
@@ -21,8 +20,12 @@ export class WaitingQueue {
   // マッチを作成したらここに追加する
   private ongoingMatches: OngoingMatches;
 
-  constructor(id: string, ongoingMatches: OngoingMatches, wsServer: Server) {
-    this.id = id;
+  constructor(
+    matchType: MatchType,
+    ongoingMatches: OngoingMatches,
+    wsServer: Server
+  ) {
+    this.matchType = matchType;
     this.users = new Set<number>();
     this.wsServer = wsServer;
     this.ongoingMatches = ongoingMatches;
@@ -34,7 +37,7 @@ export class WaitingQueue {
     usersJoin(
       this.wsServer,
       userID,
-      generateFullRoomName({ matchMakingId: this.id })
+      generateFullRoomName({ matchMakingId: this.matchType })
     );
     this.createMatches();
   }
@@ -46,7 +49,7 @@ export class WaitingQueue {
       usersLeave(
         this.wsServer,
         userID,
-        generateFullRoomName({ matchMakingId: this.id })
+        generateFullRoomName({ matchMakingId: this.matchType })
       );
     }
   }
@@ -81,16 +84,20 @@ export class WaitingQueue {
   }
 
   private async createMatch(userID1: number, userID2: number) {
-    const matchID = this.ongoingMatches.createMatch(userID1, userID2);
+    const matchID = this.ongoingMatches.createMatch(
+      userID1,
+      userID2,
+      this.matchType
+    );
     usersLeave(
       this.wsServer,
       userID1,
-      generateFullRoomName({ matchMakingId: this.id })
+      generateFullRoomName({ matchMakingId: this.matchType })
     );
     usersLeave(
       this.wsServer,
       userID2,
-      generateFullRoomName({ matchMakingId: this.id })
+      generateFullRoomName({ matchMakingId: this.matchType })
     );
     sendResultRoom(
       this.wsServer,
