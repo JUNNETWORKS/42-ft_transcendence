@@ -1,5 +1,11 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
 import { Socket } from 'socket.io';
@@ -82,13 +88,11 @@ export class AuthService {
       });
       const result = {
         required2fa: true,
-        access_token: this.jwtService.sign(
-          { secretId: secretId?.id, next: 'totp', iat },
-          {
-            issuer: process.env.JWT_ISSUER,
-            audience: process.env.JWT_AUDIENCE,
-          }
-        ),
+        access_token: this.issueAccessToken(user, {
+          secretId: secretId?.id,
+          next: 'totp',
+          iat,
+        }),
       };
       return result;
     }
@@ -158,13 +162,18 @@ export class AuthService {
     return isValid;
   }
 
-  issueAccessToken(user: any) {
-    const payload = {
+  issueAccessToken(user: User, payload: any = null) {
+    console.log(user);
+    if (user.lockUntil && new Date() < user.lockUntil) {
+      console.log(`USER ${user.id} IS NOW LOCKED!!`);
+      throw new UnauthorizedException();
+    }
+    const actualPayload = payload || {
       email: user.email,
       sub: user.id,
       iat: Math.floor(Date.now() / 1000),
     };
-    return this.jwtService.sign(payload, {
+    return this.jwtService.sign(actualPayload, {
       issuer: process.env.JWT_ISSUER,
       audience: process.env.JWT_AUDIENCE,
     });
