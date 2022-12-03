@@ -16,6 +16,7 @@ model User {
   displayName                 String              @unique
   intraId                     Int                 @unique
   invalidateTokenIssuedBefore DateTime?
+  lockUntil                   DateTime?
   password                    String
   isEnabledAvatar             Boolean             @default(false)
   isEnabled2FA                Boolean             @default(false)
