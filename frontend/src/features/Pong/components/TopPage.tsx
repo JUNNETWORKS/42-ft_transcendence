@@ -18,11 +18,11 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     setIsWaiting(false);
   };
 
-  const startMatchMaking = (queueID: string) => {
+  const startMatchMaking = (matchType: string) => {
     if (isWaiting) {
       return;
     }
-    mySocket.emit('pong.match_making.entry', { queueID: queueID });
+    mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
   return (
