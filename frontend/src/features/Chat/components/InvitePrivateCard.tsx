@@ -5,7 +5,7 @@ export const InvitePrivateCard = () => {
   // TODO: ユーザーをListboxとかで一覧表示する（このとき自分を表示しない）
   // TODO: ページング実装（[<-], [->]みたいなボタンで）
   // TODO: 実行者が選択したユーザーをft_inviteで投げる
-  // TODO: ft_inviteのレスポンスを表示する
+  // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
   return (
     <div className="flex flex-row">
