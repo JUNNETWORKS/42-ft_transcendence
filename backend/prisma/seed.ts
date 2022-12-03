@@ -3,8 +3,6 @@ import { PrismaClient, User } from '@prisma/client';
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
 
-type F = ReturnType<typeof prisma.user.create>[];
-
 async function main() {
   const createMany = await [
     { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
