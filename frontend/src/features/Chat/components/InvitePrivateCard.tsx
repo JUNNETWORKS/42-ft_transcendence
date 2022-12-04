@@ -1,7 +1,7 @@
 import { useAtom } from 'jotai';
 import { Suspense, useState } from 'react';
 
-import { FTButton } from '@/components/FTBasicComponents';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { authAtom } from '@/stores/auth';
 import { displayUser } from '@/typedef';
 
@@ -20,11 +20,14 @@ export const InvitePrivateCard = () => {
 
   if (!personalData) return null;
   return (
-    <div className="flex flex-col">
-      <Suspense fallback={<div>Loading...</div>}>
-        <InvitePrivateUserList url={url} users={users} setUsers={setUsers} />
-      </Suspense>
-      <div className="flex flex-row">
+    <div className="flex w-60 flex-col border-2 border-solid border-white bg-black">
+      <FTH3>invite to private room</FTH3>
+      <div className="flex flex-row p-2">
+        <Suspense fallback={<div>Loading...</div>}>
+          <InvitePrivateUserList url={url} users={users} setUsers={setUsers} />
+        </Suspense>
+      </div>
+      <div className="flex flex-row justify-around p-2">
         <FTButton
           onClick={() => {
             setUsers([]);
