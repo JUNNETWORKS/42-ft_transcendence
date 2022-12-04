@@ -1,14 +1,114 @@
+import * as dayjs from 'dayjs';
+import { useAtom } from 'jotai';
+
 import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import { compact } from '@/utils';
-import { Icons } from '@/icons';
-import * as dayjs from 'dayjs';
-import { useAtom } from 'jotai';
+
 import { AdminOperationBar } from './ChatMemberCard';
 import { PopoverUserName } from './PopoverUserName';
+
+type ContentProp = {
+  message: TD.ChatRoomMessage;
+  PrimaryChild: () => JSX.Element;
+  SecondaryChild?: () => JSX.Element;
+};
+
+const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
+  const messageType = message.messageType;
+  const nameButton = <PrimaryChild />;
+  const targetButton = SecondaryChild ? <SecondaryChild /> : null;
+
+  switch (messageType) {
+    case 'OPENED':
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.Opened />} />
+          {nameButton}さんがルームを作成しました -
+        </>
+      );
+    case 'UPDATED': {
+      const diff = message.subpayload || {};
+      const nameDiff = diff.roomName ? `ルーム名 → ${diff.roomName}` : null;
+      const typeDiff = diff.roomType ? `種別 → ${diff.roomType}` : null;
+      const diffText = compact([nameDiff, typeDiff]);
+      if (!diffText) {
+        return null;
+      }
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.Updated />} />
+          {nameButton}さんがルームを更新しました: {diffText.join(', ')} -
+        </>
+      );
+    }
+    case 'JOINED':
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.Joined />} />
+          {nameButton}さんが入室しました -
+        </>
+      );
+    case 'LEFT':
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.Left />} />
+          {nameButton}さんが退出しました -
+        </>
+      );
+
+    case 'NOMMINATED':
+      if (!targetButton) {
+        return null;
+      }
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.Operation.Nomminate />} />
+          {nameButton}さんが{targetButton}さんを管理者に指定しました -
+        </>
+      );
+
+    case 'BANNED':
+      if (!targetButton) {
+        return null;
+      }
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.Operation.Ban />} />
+          {nameButton}さんが{targetButton}さんの入室を禁止しました -
+        </>
+      );
+
+    case 'KICKED':
+      if (!targetButton) {
+        return null;
+      }
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.Operation.Kick />} />
+          {nameButton}さんが{targetButton}さんを強制退出させました -
+        </>
+      );
+
+    case 'MUTED':
+      if (!targetButton) {
+        return null;
+      }
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.Operation.Mute />} />
+          {nameButton}さんが{targetButton}さんをミュートしました -
+        </>
+      );
+
+    default:
+      return <span>not implemented</span>;
+  }
+};
 
 /**
  * システムメッセージを表示するコンポーネント
@@ -35,107 +135,6 @@ export const ChatSystemMessageCard = (props: {
   if (!user || isBlocked) {
     return null;
   }
-  const nameButton = (
-    <PopoverUserName user={user}>
-      <UserCard id={user.id}>
-        <AdminOperationBar {...props} />
-      </UserCard>
-    </PopoverUserName>
-  );
-  const targetButton = targetUser ? (
-    <PopoverUserName user={targetUser}>
-      <UserCard id={targetUser.id}>
-        <AdminOperationBar {...props} member={props.members[targetUser.id]} />
-      </UserCard>
-    </PopoverUserName>
-  ) : null;
-  const content = () => {
-    switch (messageType) {
-      case 'OPENED':
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.System.Opened />} />
-            {nameButton}さんがルームを作成しました -
-          </>
-        );
-      case 'UPDATED': {
-        const diff = props.message.subpayload || {};
-        const nameDiff = diff.roomName ? `ルーム名 → ${diff.roomName}` : null;
-        const typeDiff = diff.roomType ? `種別 → ${diff.roomType}` : null;
-        const diffText = compact([nameDiff, typeDiff]);
-        if (!diffText) {
-          return null;
-        }
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.System.Updated />} />
-            {nameButton}さんがルームを更新しました: {diffText.join(', ')} -
-          </>
-        );
-      }
-      case 'JOINED':
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.System.Joined />} />
-            {nameButton}さんが入室しました -
-          </>
-        );
-      case 'LEFT':
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.System.Left />} />
-            {nameButton}さんが退出しました -
-          </>
-        );
-
-      case 'NOMMINATED':
-        if (!targetButton) {
-          return null;
-        }
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.Operation.Nomminate />} />
-            {nameButton}さんが{targetButton}さんを管理者に指定しました -
-          </>
-        );
-
-      case 'BANNED':
-        if (!targetButton) {
-          return null;
-        }
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.Operation.Ban />} />
-            {nameButton}さんが{targetButton}さんの入室を禁止しました -
-          </>
-        );
-
-      case 'KICKED':
-        if (!targetButton) {
-          return null;
-        }
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.Operation.Kick />} />
-            {nameButton}さんが{targetButton}さんを強制退出させました -
-          </>
-        );
-
-      case 'MUTED':
-        if (!targetButton) {
-          return null;
-        }
-        return (
-          <>
-            <InlineIcon i={<Icons.Chat.Operation.Mute />} />
-            {nameButton}さんが{targetButton}さんをミュートしました -
-          </>
-        );
-
-      default:
-        return <span>not implemented</span>;
-    }
-  };
   return (
     <div
       className="flex flex-row items-start px-2 py-1 text-sm text-gray-400"
@@ -145,7 +144,28 @@ export const ChatSystemMessageCard = (props: {
       <div className="flex shrink grow flex-col">
         <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
           <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-            {content()}
+            <Content
+              message={props.message}
+              PrimaryChild={() => (
+                <PopoverUserName user={user}>
+                  <UserCard id={user.id}>
+                    <AdminOperationBar {...props} />
+                  </UserCard>
+                </PopoverUserName>
+              )}
+              SecondaryChild={() =>
+                targetUser && (
+                  <PopoverUserName user={targetUser}>
+                    <UserCard id={targetUser.id}>
+                      <AdminOperationBar
+                        {...props}
+                        member={props.members[targetUser.id]}
+                      />
+                    </UserCard>
+                  </PopoverUserName>
+                )
+              }
+            />
           </div>
           <div className="shrink-0 grow-0 px-[4px]">
             {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}

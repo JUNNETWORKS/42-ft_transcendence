@@ -154,7 +154,7 @@ export const UserCard = (props: { id?: number; children?: ReactNode }) => {
   const userId = parseInt(id || props.id?.toString() || '');
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
+    <div className="flex flex-1 flex-col items-center justify-center gap-32 text-white">
       <div className="w-[20rem] basis-1 border-4 border-white">
         <ErrorBoundary
           FallbackComponent={(error) => (
