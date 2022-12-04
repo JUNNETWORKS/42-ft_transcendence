@@ -4,6 +4,7 @@ export const InvitePrivateUserList = (props: {
   url: string;
   users: displayUser[];
   setUsers: React.Dispatch<React.SetStateAction<displayUser[]>>;
+  submit: (targetUser: number) => void;
 }) => {
   if (props.users.length === 0) {
     throw (async () => {
@@ -19,7 +20,8 @@ export const InvitePrivateUserList = (props: {
       {props.users.map((user) => {
         return (
           <div
-            className="w-full overflow-hidden text-ellipsis border-2 border-solid border-white bg-black p-1"
+            onClick={() => props.submit(user.id)}
+            className="w-full cursor-pointer overflow-hidden text-ellipsis border-2 border-solid border-white bg-black p-1"
             key={user.id}
           >
             {user.displayName}

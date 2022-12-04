@@ -2,29 +2,43 @@ import { useAtom } from 'jotai';
 import { Suspense, useState } from 'react';
 
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import { authAtom } from '@/stores/auth';
-import { displayUser } from '@/typedef';
+import { authAtom, chatSocketAtom } from '@/stores/auth';
+import { displayUser, ChatRoom } from '@/typedef';
 
 import { InvitePrivateUserList } from './InvitePrivateUserList';
 
-export const InvitePrivateCard = () => {
+export const InvitePrivateCard = (props: { room: ChatRoom }) => {
+  const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 2;
   const [cursor, setCursor] = useState(0);
   const [users, setUsers] = useState<displayUser[]>([]);
   const url = `http://localhost:3000/users?take=${take}&cursor=${cursor}`;
 
-  // TODO: ユーザーをListboxとかで一覧表示する（このとき自分を表示しない）
-  // TODO: 実行者が選択したユーザーをft_inviteで投げる
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
-  if (!personalData) return null;
+  if (!personalData || !mySocket) return null;
+
+  const submit = (targetUser: number) => {
+    const data = {
+      roomId: props.room.id,
+      users: [targetUser],
+    };
+    console.log(data);
+    mySocket.emit('ft_invite', data);
+  };
+
   return (
     <div className="flex w-60 flex-col border-2 border-solid border-white bg-black">
       <FTH3>invite to private room</FTH3>
       <div className="flex flex-row p-2">
         <Suspense fallback={<div>Loading...</div>}>
-          <InvitePrivateUserList url={url} users={users} setUsers={setUsers} />
+          <InvitePrivateUserList
+            url={url}
+            users={users}
+            setUsers={setUsers}
+            submit={submit}
+          />
         </Suspense>
       </div>
       <div className="flex flex-row justify-around p-2">
