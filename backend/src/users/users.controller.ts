@@ -14,7 +14,7 @@ import * as express from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { pick } from 'src/utils';
 
-import { InvitableUserFindManyDto } from './dto/ivitable-user-find-many.dto';
+import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -26,12 +26,10 @@ export class UsersController {
 
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
-  findInvitableUser(
-    @Query() invitableUserFindMAnyDto: InvitableUserFindManyDto
-  ) {
-    return this.usersService.findInvitableUserMany(invitableUserFindMAnyDto);
+  findMany(@Query() userFindMAnyDto: UserFindManyDto) {
+    return this.usersService.findMany(userFindMAnyDto);
   }
-
+  
   @Get(':id/avatar')
   async getAvatar(
     @Req() req: express.Request,
