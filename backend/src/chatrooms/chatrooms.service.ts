@@ -13,6 +13,12 @@ import * as Utils from '../utils';
 import { chatRoomConstants } from './chatrooms.constant';
 import { ChatroomEntity } from './entities/chatroom.entity';
 
+const selectForUser = {
+  id: true,
+  displayName: true,
+  isEnabledAvatar: true,
+};
+
 @Injectable()
 export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
@@ -82,14 +88,25 @@ export class ChatroomsService {
           id,
         },
         orderBy: { id: 'asc' },
+        include: {
+          owner: {
+            select: selectForUser,
+          },
+        },
       });
     })();
-    return res.map((o) => new ChatroomEntity(o));
+    console.log(res);
+    return res;
   }
 
   async findOne(id: number) {
     return await this.prisma.chatRoom.findUnique({
       where: { id },
+      include: {
+        owner: {
+          select: selectForUser,
+        },
+      },
     });
   }
 
@@ -144,6 +161,9 @@ export class ChatroomsService {
                     },
                   }
                 : false,
+            owner: {
+              select: selectForUser,
+            },
           },
         },
       },

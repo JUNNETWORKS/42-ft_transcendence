@@ -56,13 +56,18 @@ export class ChatroomsController {
       roomMember: [owner],
     });
     this.wsServer.usersJoin(ownerId, { roomId: result.id });
-    this.wsServer.sendResults(
-      'ft_open',
-      {
-        ...pick(result, 'id', 'roomName', 'roomType', 'ownerId'),
-      },
-      result.roomType === 'PRIVATE' ? { userId: ownerId } : { global: 'global' }
-    );
+    const room = await this.chatroomsService.findOne(result.id);
+    if (room) {
+      this.wsServer.sendResults(
+        'ft_open',
+        {
+          ...pick(room, 'id', 'roomName', 'roomType', 'ownerId', 'owner'),
+        },
+        result.roomType === 'PRIVATE'
+          ? { userId: ownerId }
+          : { global: 'global' }
+      );
+    }
     return result;
   }
 

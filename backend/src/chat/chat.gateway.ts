@@ -98,10 +98,26 @@ export class ChatGateway implements OnGatewayConnection {
         userId,
         displayName: user.displayName,
         visibleRooms: visibleRooms.map((r) =>
-          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+          Utils.pick(
+            r,
+            'id',
+            'roomName',
+            'roomType',
+            'ownerId',
+            'updatedAt',
+            'owner'
+          )
         ),
         joiningRooms: joiningRooms.map((r) =>
-          Utils.pick(r, 'id', 'roomName', 'roomType', 'ownerId', 'updatedAt')
+          Utils.pick(
+            r,
+            'id',
+            'roomName',
+            'roomType',
+            'ownerId',
+            'updatedAt',
+            'owner'
+          )
         ),
         dmRooms: dmRooms.map((r) =>
           Utils.pick(

@@ -21,6 +21,7 @@ export type ChatRoom = {
   roomName: string;
   roomType: RoomType;
   ownerId: number;
+  owner?: User;
   createdAt: Date;
   updatedAt: Date;
 };

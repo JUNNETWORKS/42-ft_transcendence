@@ -2,7 +2,10 @@ import { useState } from 'react';
 
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
+import { UserAvatar } from '@/components/UserAvater';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
+import { useUserDataReadOnly } from '@/stores/store';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
@@ -20,7 +23,11 @@ const ListItem = (props: {
   const [isOpen, setIsOpen] = useState(false);
   const [roomPassword, setRoomPassword] = useState('');
   const [joinError, setJoinError] = useState('');
+  const owner = useUserDataReadOnly(props.room.ownerId);
   const TypeIcon = RoomTypeIcon[props.room.roomType];
+  if (!owner) {
+    return null;
+  }
 
   const onJoin = () => {
     props.onJoin(props.room.id, roomPassword, (response: any) => {
@@ -46,21 +53,35 @@ const ListItem = (props: {
         />
       </Modal>
       <div
-        className="m-2 h-[200px] basis-[360px] overflow-hidden border-2 border-solid border-white"
+        className="m-2 flex basis-[16em] flex-col overflow-hidden border-2 border-solid border-gray-400 p-1"
         key={props.room.id}
       >
-        <FTH3 className="flex min-w-0 flex-row items-center text-xl">
+        <div className="flex min-w-0 flex-row items-center text-xl">
           <div className="shrink-0 grow-0">
             <InlineIcon i={<TypeIcon />} />
           </div>
           <div className="shrink grow overflow-hidden text-ellipsis">
             {props.room.roomName}
           </div>
-        </FTH3>
+        </div>
+        <div className="flex shrink grow flex-row items-center">
+          <div className="shrink-0 grow-0">
+            <UserAvatar className="m-1 h-8 w-8" user={owner} />
+          </div>
+          <InlineIcon i={<Icons.Chat.Owner />} />
+          <div
+            className={`shrink grow overflow-hidden text-ellipsis text-left`}
+            style={{ wordBreak: 'keep-all' }}
+          >
+            {owner.displayName}
+          </div>
 
-        <FTButton className="w-[4em]" onClick={() => onJoin()}>
-          Join
-        </FTButton>
+          <div className="shrink-0 grow-0">
+            <FTButton className="w-[4em]" onClick={() => onJoin()}>
+              Join
+            </FTButton>
+          </div>
+        </div>
       </div>
     </>
   );

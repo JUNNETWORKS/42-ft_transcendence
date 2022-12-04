@@ -16,7 +16,9 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const [, setVisibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const [visibleRooms, setVisibleRooms] = useAtom(
+    structureAtom.visibleRoomsAtom
+  );
   const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
@@ -38,7 +40,6 @@ export const SocketHolder = () => {
       return;
     }
 
-    type SockType = typeof mySocket;
     type PS = Parameters<typeof mySocket.on>;
 
     const listeners: [PS[0], PS[1]][] = [];
@@ -56,6 +57,12 @@ export const SocketHolder = () => {
         userUpdator.addMany(data.blockingUsers);
         roomUpdator.addMany(data.visibleRooms);
         roomUpdator.addMany(data.joiningRooms);
+        userUpdator.addMany(
+          Utils.compact(data.visibleRooms.map((r) => r.owner))
+        );
+        userUpdator.addMany(
+          Utils.compact(data.joiningRooms.map((r) => r.owner))
+        );
         dmRoomUpdator.addMany(data.dmRooms);
       },
     ]);
@@ -86,11 +93,14 @@ export const SocketHolder = () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        setVisibleRooms((prev) => {
-          const next = [...prev];
-          next.push(room);
-          return next;
-        });
+        setVisibleRooms(
+          (() => {
+            if (visibleRooms.find((r) => r.id === room.id)) {
+              return visibleRooms;
+            }
+            return [...visibleRooms, room];
+          })()
+        );
         if (room.ownerId === userId) {
           setJoiningRooms((prev) => {
             const next = [...prev];
@@ -99,6 +109,9 @@ export const SocketHolder = () => {
           });
         }
         roomUpdator.addOne(room);
+        if (room.owner) {
+          userUpdator.addOne(room.owner);
+        }
       },
     ]);
 
