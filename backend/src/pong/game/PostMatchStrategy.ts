@@ -23,7 +23,9 @@ export class PostMatchStrategy {
 
   onFinishRankMatch(match: OnlineMatch): void {
     this.pongService.createMatchResult(match);
-    // TODO: ランク計算処理
+    if (match.winnerID && match.loserID) {
+      this.pongService.updateRankPoint(match.winnerID, match.loserID);
+    }
   }
 
   onFinishCasualMatch(match: OnlineMatch): void {
