@@ -37,8 +37,8 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
           </button>
         </div>
       </Modal>
-      <div className="mx-20 flex flex-1 items-center justify-center gap-20">
-        <div className="flex shrink-0 grow-[2] flex-col gap-8">
+      <div className="grid grid-cols-pongTopPage items-center justify-center gap-20 overflow-scroll px-20">
+        <div className="flex shrink-0 flex-col gap-10">
           <CommandCard
             text="カジュアルマッチをプレイ"
             onClick={() => {

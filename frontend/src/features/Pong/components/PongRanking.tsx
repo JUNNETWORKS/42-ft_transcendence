@@ -53,7 +53,7 @@ export const PongRanking = () => {
   };
 
   return (
-    <div className="grow-[1]">
+    <div className="overflow-hidden">
       <p className="text-5xl font-bold leading-tight">Ranking</p>
       <div className=" h-2 w-[360] bg-primary"></div>
       <ErrorBoundary>
