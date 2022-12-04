@@ -27,7 +27,7 @@ export class Match {
   static readonly barRightX = Match.fieldWidth * 0.9;
   static readonly barDy = 10;
   //rule
-  static readonly maxScore = 50000;
+  static readonly maxScore = 15;
   static readonly kickoffMaxAngle = 60; // in degree
 
   static readonly sideIndex = {
