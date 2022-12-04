@@ -10,7 +10,7 @@ import * as TD from '@/typedef';
 import { compact } from '@/utils';
 
 import { AdminOperationBar } from './ChatMemberCard';
-import { PopoverUserName } from './PopoverUserName';
+import { PopoverUserCard } from './PopoverUserCard';
 
 type ContentProp = {
   message: TD.ChatRoomMessage;
@@ -135,22 +135,22 @@ export const ChatSystemMessageCard = (props: {
             <Content
               message={props.message}
               PrimaryChild={() => (
-                <PopoverUserName user={user}>
+                <PopoverUserCard user={user}>
                   <UserCard id={user.id}>
                     <AdminOperationBar {...props} />
                   </UserCard>
-                </PopoverUserName>
+                </PopoverUserCard>
               )}
               SecondaryChild={() =>
                 targetUser && (
-                  <PopoverUserName user={targetUser}>
+                  <PopoverUserCard user={targetUser}>
                     <UserCard id={targetUser.id}>
                       <AdminOperationBar
                         {...props}
                         member={props.members[targetUser.id]}
                       />
                     </UserCard>
-                  </PopoverUserName>
+                  </PopoverUserCard>
                 )
               }
             />

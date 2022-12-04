@@ -10,7 +10,7 @@ type Prop = {
   children: ReactNode;
 };
 
-export const PopoverUserName = ({ user, button, children }: Prop) => {
+export const PopoverUserCard = ({ user, button, children }: Prop) => {
   const [referenceElement, setReferenceElement] =
     useState<HTMLButtonElement | null>(null);
   const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(

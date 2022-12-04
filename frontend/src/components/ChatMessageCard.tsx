@@ -8,7 +8,7 @@ import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 
 import { AdminOperationBar } from './ChatMemberCard';
-import { PopoverUserName } from './PopoverUserName';
+import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
 /**
@@ -50,14 +50,14 @@ export const ChatMessageCard = (props: {
       id={props.id}
     >
       <div className="shrink-0 grow-0">
-        <PopoverUserName button={avatarButton}>
+        <PopoverUserCard button={avatarButton}>
           {popoverContent}
-        </PopoverUserName>
+        </PopoverUserCard>
       </div>
       <div className="flex shrink grow flex-col">
         <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
           <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-            <PopoverUserName user={user}>{popoverContent}</PopoverUserName>
+            <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>
           </div>
           <div className="shrink-0 grow-0 px-[4px]">
             {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
