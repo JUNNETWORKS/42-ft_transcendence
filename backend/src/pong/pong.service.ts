@@ -65,4 +65,30 @@ export class PongService {
     });
     return results.map((result) => pick(result, 'rankPoint', 'user'));
   }
+
+  updateRankPoint(winnerID: number, loserID: number) {
+    const point = 10;
+    this.prisma.$transaction([
+      this.prisma.userRankPoint.update({
+        where: {
+          userId: winnerID,
+        },
+        data: {
+          rankPoint: {
+            increment: point,
+          },
+        },
+      }),
+      this.prisma.userRankPoint.update({
+        where: {
+          userId: loserID,
+        },
+        data: {
+          rankPoint: {
+            decrement: point,
+          },
+        },
+      }),
+    ]);
+  }
 }
