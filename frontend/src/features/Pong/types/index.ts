@@ -1,3 +1,5 @@
+import { User } from '@/typedef';
+
 // サーバー側で保持しているゲーム中に変化しない情報
 // サーバーでの計算に用いる情報フィールドサイズ
 // これとcanvasサイズの比を書けて描画する｡
@@ -58,9 +60,5 @@ export type GameResult = {
 
 export type UserForRanking = {
   rankPoint: number;
-  user: {
-    displayName: string;
-    id: number;
-    isEnabledAvatar: true;
-  };
+  user: User;
 };

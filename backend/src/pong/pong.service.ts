@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import { pick } from 'src/utils';
-
 import { PrismaService } from '../prisma/prisma.service';
 import { OnlineMatch } from './game/online-match';
 
@@ -63,6 +61,6 @@ export class PongService {
         },
       },
     });
-    return results.map((result) => pick(result, 'rankPoint', 'user'));
+    return results;
   }
 }
