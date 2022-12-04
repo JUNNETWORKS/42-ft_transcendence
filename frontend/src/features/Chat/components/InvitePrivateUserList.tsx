@@ -15,7 +15,7 @@ export const InvitePrivateUserList = (props: {
   }
 
   return (
-    <div className="flex min-w-0 flex-col">
+    <div className="flex w-full min-w-0 flex-col">
       {props.users.map((user) => {
         return (
           <div
