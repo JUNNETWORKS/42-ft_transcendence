@@ -11,8 +11,9 @@ export const InvitePrivateUserList = (props: {
         method: 'GET',
         mode: 'cors',
       });
-      console.log('res:', await res.json());
-      props.setUsers(await res.json());
+      const json = await res.json();
+      console.log('res:', json);
+      props.setUsers(json as displayUser[]);
     })();
   }
 

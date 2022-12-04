@@ -43,9 +43,6 @@ export const InvitePrivateCard = () => {
           {'->'}
         </FTButton>
       </div>
-      <div className="shrink-0 grow-0">
-        <FTButton onClick={() => ({})}>招待</FTButton>
-      </div>
     </div>
   );
 };
