@@ -28,6 +28,7 @@ export class Match {
   static readonly barDy = 10;
   //rule
   static readonly maxScore = 15;
+  static readonly kickoffMaxAngle = 60; // in degree
 
   static readonly sideIndex = {
     left: 0,
@@ -38,7 +39,7 @@ export class Match {
   players: [Player, Player];
   winner: PongWinner;
 
-  constructor(playerID1: string, playerID2: string) {
+  constructor(playerID1: number, playerID2: number) {
     this.winner = 'none';
     this.ball = this.regenerateBall();
     this.players = [
@@ -85,12 +86,10 @@ export class Match {
 
   // 中央からランダムな方向へボールを飛ばす
   regenerateBall = (): Ball => {
-    const rad = Math.random() * (2 * Math.PI);
+    const rad =
+      (Math.random() * 2 - 1) * Match.kickoffMaxAngle * (Math.PI / 180);
     const position = { x: Match.fieldWidth / 2, y: Match.fieldHeight / 2 };
     const velocity = { x: Math.cos(rad), y: Math.sin(rad) };
-    if (velocity.x < 0) {
-      velocity.x = -velocity.x;
-    }
     return {
       position,
       velocity,
@@ -251,7 +250,7 @@ export class Match {
   };
 
   // playerID のバーをdir方向に動かす
-  moveBar = (playerID: string, input: PlayerInput): void => {
+  moveBar = (playerID: number, input: PlayerInput): void => {
     const idx = this.getPlayerIdx(playerID);
     if (idx < 0) {
       return;
@@ -345,7 +344,7 @@ export class Match {
     };
   };
 
-  private getPlayerIdx = (playerID: string): number => {
+  private getPlayerIdx = (playerID: number): number => {
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].id == playerID) {
         return i;

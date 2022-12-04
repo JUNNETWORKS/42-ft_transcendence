@@ -19,6 +19,5 @@ import { WsServerModule } from './ws-server/ws-server.module';
     PongModule,
     WsServerModule,
   ],
-  providers: [PongGateway],
 })
 export class AppModule {}
