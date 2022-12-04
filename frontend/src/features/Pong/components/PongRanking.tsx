@@ -32,7 +32,7 @@ const RenderRanking = ({
     })();
   }
   return (
-    <ul className="mt-2 flex flex-col gap-3">
+    <ul className="mt-2 flex max-h-[60vh] flex-col gap-3 overflow-scroll">
       {ranking &&
         ranking.map((item, index) => {
           const rankPlace = index + 1; //index０が1位なので1足して調整
