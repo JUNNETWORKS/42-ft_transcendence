@@ -58,6 +58,7 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
           <InvitePrivateUserList
             url={url}
             users={users}
+            room={props.room}
             setUsers={setUsers}
             submit={submit}
           />
