@@ -32,7 +32,7 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
   const [cursor, setCursor] = useState(0);
   const [users, setUsers] = useState<displayUser[]>([]);
   const [error, setError] = useState('');
-  const url = `http://localhost:3000/users?take=${take}&cursor=${cursor}`;
+  const url = `http://localhost:3000/users?roomId=${props.room.id}&take=${take}&cursor=${cursor}`;
 
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 

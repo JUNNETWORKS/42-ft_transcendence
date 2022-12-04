@@ -9,8 +9,8 @@ import {
 import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
+import { InvitableUserFindManyDto } from './dto/ivitable-user-find-many.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
@@ -47,12 +47,17 @@ export class UsersService {
     return this.prisma.user.findUnique({ where: { id } });
   }
 
-  findMany({ take, cursor }: UserFindManyDto) {
+  findInvitableUserMany({ roomId, take, cursor }: InvitableUserFindManyDto) {
     if (take > 0) {
       return this.prisma.user.findMany({
         take,
         where: {
           id: cursor ? { gt: cursor } : undefined,
+          NOT: {
+            joinedRoom: {
+              some: { chatRoomId: roomId },
+            },
+          },
         },
         select: {
           id: true,
@@ -64,6 +69,11 @@ export class UsersService {
         take,
         where: {
           id: cursor ? { lte: cursor } : undefined,
+          NOT: {
+            joinedRoom: {
+              some: { chatRoomId: roomId },
+            },
+          },
         },
         select: {
           id: true,

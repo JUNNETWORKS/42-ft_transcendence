@@ -2,7 +2,13 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsInt, IsOptional } from 'class-validator';
 
-export class UserFindManyDto {
+export class InvitableUserFindManyDto {
+  @IsNotEmpty()
+  @Type(() => Number)
+  @IsInt()
+  @ApiProperty()
+  roomId!: number;
+
   @IsNotEmpty()
   @Type(() => Number)
   @IsInt()
