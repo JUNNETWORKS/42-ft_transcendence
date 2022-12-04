@@ -143,6 +143,7 @@ const MembersList = (props: {
   memberOperations: TD.MemberOperations;
 }) => {
   const isPrivate = props.room.roomType === 'PRIVATE';
+  const isOwner = props.room.ownerId === props.you?.userId;
 
   const computed = {
     members: useMemo(() => {
@@ -165,7 +166,7 @@ const MembersList = (props: {
   return (
     <div className="flex h-full flex-col">
       <FTH3 className="shrink-0 grow-0">Members</FTH3>
-      {isPrivate && <InvitePrivateButton room={props.room} />}
+      {isPrivate && isOwner && <InvitePrivateButton room={props.room} />}
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
