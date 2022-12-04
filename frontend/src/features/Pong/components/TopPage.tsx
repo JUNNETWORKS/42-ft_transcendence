@@ -1,15 +1,27 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 import { Modal } from '@/components/Modal';
 
 import { CommandCard } from './CommandCard';
 import { RankingCard } from './RankingCard';
 
-export const GamePage = () => {
+export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
+  const navigate = useNavigate();
 
   const cancelWaiting = () => {
+    mySocket.emit('pong.match_making.leave');
     setIsWaiting(false);
+  };
+
+  const startMatchMaking = (matchType: string) => {
+    if (isWaiting) {
+      return;
+    }
+    mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
   return (
@@ -31,20 +43,20 @@ export const GamePage = () => {
             text="カジュアルマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching casual');
+              startMatchMaking('CASUAL');
             }}
           />
           <CommandCard
             text="ランクマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching rank');
+              startMatchMaking('RANK');
             }}
           />
           <CommandCard
             text="もどる"
             onClick={() => {
-              console.log('backPage');
+              navigate('/');
             }}
           />
         </div>

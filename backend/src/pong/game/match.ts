@@ -38,7 +38,7 @@ export class Match {
   players: [Player, Player];
   winner: PongWinner;
 
-  constructor(playerID1: string, playerID2: string) {
+  constructor(playerID1: number, playerID2: number) {
     this.winner = 'none';
     this.ball = this.regenerateBall();
     this.players = [
@@ -251,7 +251,7 @@ export class Match {
   };
 
   // playerID のバーをdir方向に動かす
-  moveBar = (playerID: string, input: PlayerInput): void => {
+  moveBar = (playerID: number, input: PlayerInput): void => {
     const idx = this.getPlayerIdx(playerID);
     if (idx < 0) {
       return;
@@ -345,7 +345,7 @@ export class Match {
     };
   };
 
-  private getPlayerIdx = (playerID: string): number => {
+  private getPlayerIdx = (playerID: number): number => {
     for (let i = 0; i < this.players.length; i++) {
       if (this.players[i].id == playerID) {
         return i;
