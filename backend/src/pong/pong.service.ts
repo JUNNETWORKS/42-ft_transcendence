@@ -68,8 +68,8 @@ export class PongService {
 
   updateRankPoint(winnerID: number, loserID: number) {
     const point = 10;
-    this.prisma.$transaction([
-      this.prisma.userRankPoint.update({
+    this.prisma.$transaction(async (tx) => {
+      await tx.userRankPoint.update({
         where: {
           userId: winnerID,
         },
@@ -78,17 +78,36 @@ export class PongService {
             increment: point,
           },
         },
-      }),
-      this.prisma.userRankPoint.update({
+      });
+      const currentLoserRankPoint = await tx.userRankPoint.findFirst({
         where: {
           userId: loserID,
         },
-        data: {
-          rankPoint: {
-            decrement: point,
+      });
+      if (
+        currentLoserRankPoint &&
+        currentLoserRankPoint.rankPoint - point < 0
+      ) {
+        await tx.userRankPoint.update({
+          where: {
+            userId: loserID,
           },
-        },
-      }),
-    ]);
+          data: {
+            rankPoint: 0,
+          },
+        });
+      } else {
+        await tx.userRankPoint.update({
+          where: {
+            userId: loserID,
+          },
+          data: {
+            rankPoint: {
+              decrement: point,
+            },
+          },
+        });
+      }
+    });
   }
 }
