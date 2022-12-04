@@ -44,31 +44,29 @@ export const ChatMessageCard = (props: {
     </UserCard>
   );
   return (
-    <Popover className="relative">
-      <div
-        className="flex flex-row items-start px-2 py-1"
-        key={props.message.id}
-        id={props.id}
-      >
-        <div className="shrink-0 grow-0">
-          <PopoverUserName button={avatarButton}>
-            {popoverContent}
-          </PopoverUserName>
+    <div
+      className="flex flex-row items-start px-2 py-1"
+      key={props.message.id}
+      id={props.id}
+    >
+      <div className="shrink-0 grow-0">
+        <PopoverUserName button={avatarButton}>
+          {popoverContent}
+        </PopoverUserName>
+      </div>
+      <div className="flex shrink grow flex-col">
+        <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
+          <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
+            <PopoverUserName user={user}>{popoverContent}</PopoverUserName>
+          </div>
+          <div className="shrink-0 grow-0 px-[4px]">
+            {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
+          </div>
         </div>
-        <div className="flex shrink grow flex-col">
-          <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
-            <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-              <PopoverUserName user={user}>{popoverContent}</PopoverUserName>
-            </div>
-            <div className="shrink-0 grow-0 px-[4px]">
-              {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}
-            </div>
-          </div>
-          <div className="shrink grow px-2">
-            <div>{props.message.content}</div>
-          </div>
+        <div className="shrink grow px-2">
+          <div>{props.message.content}</div>
         </div>
       </div>
-    </Popover>
+    </div>
   );
 };

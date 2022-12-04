@@ -42,8 +42,8 @@ export function omit<T extends object, U extends keyof T>(
   return d;
 }
 
-export function compact<T>(arr: T[]): T[] {
-  return arr.filter((a) => !!a);
+export function compact<T>(arr: T[]) {
+  return arr.filter((a) => !!a) as Exclude<T, null | undefined>[];
 }
 
 export function datifyObject<T extends object, U extends keyof T>(

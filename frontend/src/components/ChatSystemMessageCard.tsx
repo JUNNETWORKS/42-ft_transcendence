@@ -36,7 +36,7 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
       const nameDiff = diff.roomName ? `ルーム名 → ${diff.roomName}` : null;
       const typeDiff = diff.roomType ? `種別 → ${diff.roomType}` : null;
       const diffText = compact([nameDiff, typeDiff]);
-      if (!diffText) {
+      if (diffText.length === 0) {
         return null;
       }
       return (
@@ -62,9 +62,6 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
       );
 
     case 'NOMMINATED':
-      if (!targetButton) {
-        return null;
-      }
       return (
         <>
           <InlineIcon i={<Icons.Chat.Operation.Nomminate />} />
@@ -73,9 +70,6 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
       );
 
     case 'BANNED':
-      if (!targetButton) {
-        return null;
-      }
       return (
         <>
           <InlineIcon i={<Icons.Chat.Operation.Ban />} />
@@ -84,9 +78,6 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
       );
 
     case 'KICKED':
-      if (!targetButton) {
-        return null;
-      }
       return (
         <>
           <InlineIcon i={<Icons.Chat.Operation.Kick />} />
@@ -95,9 +86,6 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
       );
 
     case 'MUTED':
-      if (!targetButton) {
-        return null;
-      }
       return (
         <>
           <InlineIcon i={<Icons.Chat.Operation.Mute />} />
