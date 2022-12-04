@@ -39,7 +39,7 @@ const User = {
 export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
-  Cancel: Fa.FaCross,
+  Cancel: Md.MdClose,
   Add: Md.MdAdd,
 
   User,
