@@ -55,3 +55,12 @@ export type GameResult = {
   winner: Player;
   loser: Player;
 };
+
+export type UserForRanking = {
+  rankPoint: number;
+  user: {
+    displayName: string;
+    id: number;
+    isEnabledAvatar: true;
+  };
+};

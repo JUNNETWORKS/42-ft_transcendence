@@ -4,16 +4,8 @@ import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 
+import { UserForRanking } from '../types';
 import { RankingCard } from './RankingCard';
-
-type UserForRanking = {
-  rankPoint: number;
-  user: {
-    displayName: string;
-    id: number;
-    isEnabledAvatar: true;
-  };
-};
 
 const RenderRanking = ({
   ranking,
@@ -41,11 +33,13 @@ const RenderRanking = ({
   }
   return (
     <ul className="mt-2 flex flex-col gap-3">
-      <RankingCard id={1} />
-      <RankingCard id={2} />
-      <RankingCard id={3} />
-      <RankingCard id={4} />
-      <RankingCard id={5} />
+      {ranking &&
+        ranking.map((item, index) => {
+          const rankPlace = index + 1; //index０が1位なので1足して調整
+          return (
+            <RankingCard key={item.user.id} rankPlace={rankPlace} user={item} />
+          );
+        })}
     </ul>
   );
 };
