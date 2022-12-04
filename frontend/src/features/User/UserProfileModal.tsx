@@ -17,7 +17,6 @@ import * as TD from '@/typedef';
 
 import { displayNameErrors, passwordErrors } from './user.validator';
 
-
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
 type Prop = {

@@ -5,6 +5,7 @@ import { useLocation } from 'react-router-dom';
 import { storedCredentialAtom } from '@/stores/auth';
 
 import { APIError } from './errors/APIError';
+import { callAPI } from './hooks/useAPICaller';
 
 /**
  * 通常の`useState`の返り値に加えて, stateを初期値に戻す関数`resetter`を返す.
@@ -95,26 +96,12 @@ export const useAPI = (
       args: {
         payload?: any;
       } = {}
-    ) => {
-      const headers: HeadersInit = {};
-      if (payload) {
-        headers['Content-Type'] = 'application/json';
-      }
-      const payloadObject = args.payload || (payload ? payload() : null);
-      const payloadPart = payloadObject
-        ? { body: JSON.stringify(payloadObject) }
-        : {};
-      const usedCredential = option.credential || credential;
-      if (usedCredential) {
-        headers['Authorization'] = `Bearer ${usedCredential.token}`;
-      }
-      return fetch(`http://localhost:3000${endpoint}`, {
-        method,
-        headers,
-        mode: 'cors',
-        ...payloadPart,
-      });
-    },
+    ) =>
+      callAPI(method, endpoint, {
+        credential: option.credential || credential,
+        payloadFunc: payload,
+        payload: args.payload,
+      }),
     (res) =>
       (async () => {
         try {
