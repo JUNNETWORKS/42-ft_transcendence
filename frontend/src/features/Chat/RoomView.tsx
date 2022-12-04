@@ -256,7 +256,7 @@ export const ChatRoomView = (props: {
             </div>
           </div>
         </div>
-        <div className="shrink-0 grow-0 basis-[12em]">
+        <div className="shrink-0 grow-0 basis-[16em]">
           <MembersList
             you={props.you}
             room={props.room}

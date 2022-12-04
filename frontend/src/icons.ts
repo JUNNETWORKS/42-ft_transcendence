@@ -15,7 +15,7 @@ const ChatOperation = {
 };
 
 const Chat = {
-  Owner: Fa.FaCrown,
+  Owner: Md.MdStar,
   Admin: Fa.FaCog,
 
   Public: Md.MdPublic,
@@ -25,7 +25,7 @@ const Chat = {
 
   Visible: Fa.FaEye,
   Joined: Fa.FaDoorOpen,
-  Yours: Fa.FaCrown,
+  Yours: Md.MdStar,
 
   Operation: ChatOperation,
 };

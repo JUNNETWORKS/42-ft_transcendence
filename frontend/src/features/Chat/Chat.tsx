@@ -1,4 +1,3 @@
-import { Listbox } from '@headlessui/react';
 import { useAtom } from 'jotai';
 import { useMemo, useState } from 'react';
 import { io } from 'socket.io-client';
@@ -14,59 +13,9 @@ import * as Utils from '@/utils';
 
 import { makeCommand } from './command';
 import { ChatRoomListView } from './RoomList';
-import { ChatRoomCreateCard, ChatRoomUpdateCard } from './RoomSetting';
+import { ChatRoomCreateCard } from './RoomSetting';
 import { ChatRoomView } from './RoomView';
-
-const RoomFilterOptions = ['VISIBLE', 'JOINED', 'YOURS'] as const;
-type RoomFilterOption = typeof RoomFilterOptions[number];
-const RoomFilterOptionIcon = {
-  VISIBLE: Icons.Chat.Visible,
-  JOINED: Icons.Chat.Joined,
-  YOURS: Icons.Chat.Yours,
-};
-
-const ChatRoomFilter = (props: {
-  selected: RoomFilterOption;
-  setSelected: (next: RoomFilterOption) => void;
-}) => {
-  const filterOptions = RoomFilterOptions.map((t) => ({
-    option: t,
-    icon: RoomFilterOptionIcon[t],
-  }));
-  const SelectedType = filterOptions.find(
-    (rt) => rt.option === props.selected
-  )!;
-  return (
-    <>
-      <Listbox
-        value={SelectedType}
-        onChange={(next: { option: RoomFilterOption; icon: any }) =>
-          props.setSelected(next.option)
-        }
-      >
-        <Listbox.Button>
-          Showing
-          <InlineIcon i={<SelectedType.icon />} />
-          {SelectedType.option}
-        </Listbox.Button>
-        <Listbox.Options className="bg-black">
-          {filterOptions.map((Item) => {
-            return (
-              <Listbox.Option
-                className="cursor-pointer p-[2px] text-center hover:bg-teal-800"
-                key={Item.option}
-                value={Item}
-              >
-                <InlineIcon i={<Item.icon />} />
-                {Item.option}
-              </Listbox.Option>
-            );
-          })}
-        </Listbox.Options>
-      </Listbox>
-    </>
-  );
-};
+import { VisibleRoomList } from './VisibleRoomList';
 
 /**
  * @returns チャットインターフェースコンポーネント
@@ -83,22 +32,10 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     structureAtom.focusedRoomIdAtom
   );
   const userId = personalData ? personalData.id : -1;
-  const [selected, setSelected] = useState<RoomFilterOption>(
-    RoomFilterOptions[0]
-  );
 
-  const filteredRooms = (() => {
-    switch (selected) {
-      case 'VISIBLE':
-        return visibleRooms;
-      case 'YOURS':
-        return visibleRooms.filter((r) => r.ownerId === personalData?.id);
-      case 'JOINED':
-        return visibleRooms.filter(
-          (r) => !!joiningRooms.find((rr) => rr.id === r.id)
-        );
-    }
-  })();
+  const joinedRooms = visibleRooms.filter(
+    (r) => !!joiningRooms.find((rr) => rr.id === r.id)
+  );
 
   /**
    * チャットコマンド
@@ -204,6 +141,37 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const openModal = () => {
     setIsOpen(true);
   };
+
+  const contentInRightPain = (() => {
+    if (computed.focusedRoom) {
+      return (
+        <ChatRoomView
+          room={computed.focusedRoom}
+          memberOperations={memberOperations}
+          you={computed.you}
+          say={command.say}
+          roomMessages={store.roomMessages}
+          roomMembers={store.roomMembers}
+        />
+      );
+    } else {
+      return (
+        <VisibleRoomList
+          rooms={visibleRooms}
+          isJoiningTo={predicate.isJoiningTo}
+          isFocusingTo={predicate.isFocusingTo}
+          onJoin={command.join}
+          onFocus={(roomId: number) => {
+            if (predicate.isJoiningTo(roomId)) {
+              setFocusedRoomId(roomId);
+              action.get_room_members(roomId);
+            }
+          }}
+        />
+      );
+    }
+  })();
+
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
@@ -217,19 +185,19 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         className="flex w-full flex-row border-2 border-solid border-white p-2"
         style={{ height: '50em' }}
       >
-        <div className="flex shrink-0 grow-0 flex-col">
+        <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
           {/* 見えているチャットルーム */}
-          <div className="flex shrink grow flex-col border-2 border-solid border-white">
+          <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
             <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
-            <div className="shrink-0 grow-0 p-2 text-center">
-              <ChatRoomFilter
-                selected={selected}
-                setSelected={(next) => setSelected(next)}
-              />
+            <div className="shrink-0 grow-0 p-2">
+              <FTButton className="w-full" onClick={openModal}>
+                <InlineIcon i={<Icons.Add />} />
+                新規作成
+              </FTButton>
             </div>
-            <div className="flex shrink grow flex-col p-2">
+            <div className="flex shrink grow flex-col overflow-hidden p-2">
               <ChatRoomListView
-                rooms={filteredRooms}
+                rooms={joinedRooms}
                 isJoiningTo={predicate.isJoiningTo}
                 isFocusingTo={predicate.isFocusingTo}
                 onJoin={command.join}
@@ -243,27 +211,9 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
               />
             </div>
           </div>
-          <div className="border-2 border-solid border-white">
-            <FTButton className="w-full" onClick={openModal}>
-              <InlineIcon i={<Icons.Add />} />
-              新規作成
-            </FTButton>
-          </div>
         </div>
 
-        <div className="flex shrink grow flex-col">
-          {/* 今フォーカスしているルーム */}
-          {!!computed.focusedRoom && (
-            <ChatRoomView
-              room={computed.focusedRoom}
-              memberOperations={memberOperations}
-              you={computed.you}
-              say={command.say}
-              roomMessages={store.roomMessages}
-              roomMembers={store.roomMembers}
-            />
-          )}
-        </div>
+        <div className="flex shrink grow flex-col">{contentInRightPain}</div>
       </div>
     </>
   );
