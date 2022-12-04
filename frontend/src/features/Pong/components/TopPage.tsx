@@ -5,8 +5,7 @@ import { io } from 'socket.io-client';
 import { Modal } from '@/components/Modal';
 
 import { CommandCard } from './CommandCard';
-import { RankingCard } from './RankingCard';
-
+import { PongRanking } from './PongRanking';
 
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
@@ -61,17 +60,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
             }}
           />
         </div>
-        <div className="grow-[1]">
-          <p className="text-5xl font-bold leading-tight">Ranking</p>
-          <div className=" h-2 w-[360] bg-primary"></div>
-          <ul className="mt-2 flex flex-col gap-3">
-            <RankingCard id={1} />
-            <RankingCard id={2} />
-            <RankingCard id={3} />
-            <RankingCard id={4} />
-            <RankingCard id={5} />
-          </ul>
-        </div>
+        <PongRanking />
       </div>
     </>
   );
