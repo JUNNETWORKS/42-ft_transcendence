@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
+import { storeAtoms } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import { sortBy } from '@/utils';
@@ -28,6 +29,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
+  const [rooms] = useAtom(storeAtoms.rooms);
   const [focusedRoomId, setFocusedRoomId] = useAtom(
     structureAtom.focusedRoomIdAtom
   );
@@ -38,10 +40,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     (r) => r.createdAt,
     true
   );
-  const joinedRooms = visibleRooms.filter(
-    (r) => !!joiningRooms.find((rr) => rr.id === r.id)
-  );
-
   /**
    * チャットコマンド
    */
@@ -75,10 +73,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
       return ms;
     }, [messagesInRoom, focusedRoomId]),
 
-    focusedRoom: useMemo(
-      () => visibleRooms.find((r) => r.id === focusedRoomId),
-      [visibleRooms, focusedRoomId]
-    ),
+    focusedRoom: useMemo(() => rooms[focusedRoomId], [rooms, focusedRoomId]),
 
     you: useMemo(() => {
       if (!userId) {
@@ -199,7 +194,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
             </div>
             <div className="flex shrink grow flex-col overflow-hidden p-2">
               <ChatRoomListView
-                rooms={joinedRooms}
+                rooms={joiningRooms}
                 isJoiningTo={predicate.isJoiningTo}
                 isFocusingTo={predicate.isFocusingTo}
                 onJoin={command.join}

@@ -126,3 +126,58 @@ export const useUpdateVisibleRooms = () => {
   };
   return updater;
 };
+
+export const useUpdateJoiningRooms = () => {
+  const [rooms, setRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const storeUpdater = useUpdateRoom();
+
+  const addOne = (data: TD.ChatRoom) => {
+    setRooms((prev) => {
+      if (prev.find((r) => r.id === data.id)) {
+        return prev;
+      }
+      const next = [...prev, data];
+      return Utils.sortBy(
+        Utils.sortBy(next, (r) => r.id, true),
+        (r) => r.createdAt,
+        true
+      );
+    });
+    storeUpdater.addOne(data);
+  };
+  const addMany = (data: TD.ChatRoom[]) => {
+    setRooms((prev) => {
+      const next = [...prev];
+      data.forEach((d) => {
+        if (prev.find((r) => r.id === d.id)) {
+          return;
+        }
+        next.push(d);
+      });
+      if (next.length === prev.length) {
+        return prev;
+      }
+      return Utils.sortBy(
+        Utils.sortBy(next, (r) => r.id, true),
+        (r) => r.createdAt,
+        true
+      );
+    });
+    storeUpdater.addMany(data);
+  };
+  const delOne = (data: TD.ChatRoom) => {
+    setRooms((prev) => {
+      if (!prev.find((r) => r.id === data.id)) {
+        return prev;
+      }
+      return prev.filter((r) => r.id !== data.id);
+    });
+  };
+  const updater = {
+    visibleRooms: rooms,
+    addOne,
+    addMany,
+    delOne,
+  };
+  return updater;
+};

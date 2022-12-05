@@ -4,7 +4,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
-import { structureAtom } from '@/stores/structure';
+import {
+  structureAtom,
+  useUpdateJoiningRooms,
+  useUpdateVisibleRooms,
+} from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
@@ -16,10 +20,7 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const [visibleRooms, setVisibleRooms] = useAtom(
-    structureAtom.visibleRoomsAtom
-  );
-  const [, setJoiningRooms] = useAtom(structureAtom.joiningRoomsAtom);
+  const [visibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
   const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
   const [blockingUsers, setBlockingUsers] = useAtom(
@@ -33,9 +34,10 @@ export const SocketHolder = () => {
   const userUpdator = useUpdateUser();
   const roomUpdator = useUpdateRoom();
   const dmRoomUpdator = useUpdateDmRoom();
+  const visibleRoomsUpdater = useUpdateVisibleRooms();
+  const joiningRoomsUpdater = useUpdateJoiningRooms();
 
   useEffect(() => {
-    console.log('mySocket?', !!mySocket);
     if (!mySocket) {
       return;
     }
@@ -48,8 +50,8 @@ export const SocketHolder = () => {
       'ft_connection',
       (data: TD.ConnectionResult) => {
         console.log('catch connection', data);
-        setJoiningRooms(data.joiningRooms);
-        setVisibleRooms(data.visibleRooms);
+        joiningRoomsUpdater.addMany(data.joiningRooms);
+        visibleRoomsUpdater.addMany(data.visibleRooms);
         setDmRooms(data.dmRooms);
         setFriends(data.friends);
         setBlockingUsers(data.blockingUsers);
@@ -93,20 +95,9 @@ export const SocketHolder = () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         };
-        setVisibleRooms(
-          (() => {
-            if (visibleRooms.find((r) => r.id === room.id)) {
-              return visibleRooms;
-            }
-            return [...visibleRooms, room];
-          })()
-        );
+        visibleRoomsUpdater.addOne(room);
         if (room.ownerId === userId) {
-          setJoiningRooms((prev) => {
-            const next = [...prev];
-            next.push(room);
-            return next;
-          });
+          joiningRoomsUpdater.addOne(room);
         }
         roomUpdator.addOne(room);
         if (room.owner) {
@@ -157,15 +148,7 @@ export const SocketHolder = () => {
         if (user.id === userId) {
           // 自分に関する通知
           console.log('for self');
-          setJoiningRooms((prev) => {
-            const sameRoom = prev.find((r) => r.id === room.id);
-            if (sameRoom) {
-              return prev;
-            }
-            const newRoomList = [...prev];
-            newRoomList.push(room);
-            return newRoomList;
-          });
+          joiningRoomsUpdater.addOne(room);
         } else {
           // 他人に関する通知
           console.log('for other');
@@ -190,14 +173,7 @@ export const SocketHolder = () => {
         if (user.id === userId) {
           // 自分に関する通知
           console.log('for self');
-          setJoiningRooms((prev) => {
-            stateMutater.unfocusRoom();
-            const newRoomList = prev.filter((r) => r.id !== room.id);
-            if (newRoomList.length === prev.length) {
-              return prev;
-            }
-            return newRoomList;
-          });
+          joiningRoomsUpdater.delOne(room);
         } else {
           // 他人に関する通知
           console.log('for other');
@@ -218,14 +194,7 @@ export const SocketHolder = () => {
         if (user.id === userId) {
           // 自分に関する通知
           console.log('for self');
-          setJoiningRooms((prev) => {
-            stateMutater.unfocusRoom();
-            const newRoomList = prev.filter((r) => r.id !== room.id);
-            if (newRoomList.length === prev.length) {
-              return prev;
-            }
-            return newRoomList;
-          });
+          joiningRoomsUpdater.delOne(room);
         } else {
           // 他人に関する通知
           console.log('for other');
