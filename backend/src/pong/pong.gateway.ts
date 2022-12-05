@@ -14,6 +14,7 @@ import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
 
 import { OngoingMatches } from './game/ongoing-matches';
+import { PostMatchStrategy } from './game/PostMatchStrategy';
 import { WaitingQueue } from './game/waiting-queue';
 import { WaitingQueues } from './game/waiting-queues';
 
@@ -26,11 +27,17 @@ export class PongGateway {
   private waitingQueues: WaitingQueues;
   private readonly logger = new Logger('Match WS');
 
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly postMatchStrategy: PostMatchStrategy
+  ) {}
 
   afterInit(server: Server) {
     this.wsServer = server;
-    this.ongoingMatches = new OngoingMatches(this.wsServer);
+    this.ongoingMatches = new OngoingMatches(
+      this.wsServer,
+      this.postMatchStrategy
+    );
     this.waitingQueues = new WaitingQueues();
   }
 
@@ -81,7 +88,7 @@ export class PongGateway {
       return;
     }
     // 待機キューにユーザーを追加する
-    const queue = this.waitingQueues.getQueue(data.queueID);
+    const queue = this.waitingQueues.getQueue(data.matchType);
     queue?.append(user.id);
   }
 

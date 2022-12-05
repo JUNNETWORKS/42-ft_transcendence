@@ -5,8 +5,7 @@ import { io } from 'socket.io-client';
 import { Modal } from '@/components/Modal';
 
 import { CommandCard } from './CommandCard';
-import { RankingCard } from './RankingCard';
-
+import { PongRanking } from './PongRanking';
 
 export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
@@ -18,11 +17,11 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     setIsWaiting(false);
   };
 
-  const startMatchMaking = (queueID: string) => {
+  const startMatchMaking = (matchType: string) => {
     if (isWaiting) {
       return;
     }
-    mySocket.emit('pong.match_making.entry', { queueID: queueID });
+    mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
   return (
@@ -38,8 +37,8 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
           </button>
         </div>
       </Modal>
-      <div className="mx-20 flex flex-1 items-center justify-center gap-20">
-        <div className="flex shrink-0 grow-[2] flex-col gap-8">
+      <div className="grid grid-cols-pongTopPage items-center justify-center gap-20 overflow-scroll px-20 py-12">
+        <div className="flex shrink-0 flex-col gap-10">
           <CommandCard
             text="カジュアルマッチをプレイ"
             onClick={() => {
@@ -61,17 +60,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
             }}
           />
         </div>
-        <div className="grow-[1]">
-          <p className="text-5xl font-bold leading-tight">Ranking</p>
-          <div className=" h-2 w-[360] bg-primary"></div>
-          <ul className="mt-2 flex flex-col gap-3">
-            <RankingCard id={1} />
-            <RankingCard id={2} />
-            <RankingCard id={3} />
-            <RankingCard id={4} />
-            <RankingCard id={5} />
-          </ul>
-        </div>
+        <PongRanking />
       </div>
     </>
   );
