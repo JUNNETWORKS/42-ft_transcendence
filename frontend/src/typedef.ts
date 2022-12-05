@@ -26,6 +26,11 @@ export type ChatRoom = {
   updatedAt: Date;
 };
 
+export type ChatRoomJoinData = {
+  chatRoom: ChatRoom;
+  createdAt: Date;
+};
+
 export type DmRoom = ChatRoom & {
   roomMember: ChatUserRelation[];
 };
@@ -65,7 +70,7 @@ export type ConnectionResult = {
   userId: number;
   displayName: string;
   visibleRooms: ChatRoom[];
-  joiningRooms: ChatRoom[];
+  joiningRooms: ChatRoomJoinData[];
   dmRooms: DmRoom[];
   friends: User[];
   blockingUsers: User[];

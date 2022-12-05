@@ -186,9 +186,7 @@ export class UsersService {
         userId: id,
       }),
       visiblePublic: this.chatRoomService.findMany({ take: 40 }),
-      joiningRooms: this.chatRoomService
-        .getRoomsJoining(id)
-        .then((rs) => rs.map((r) => r.chatRoom)),
+      joiningRooms: this.chatRoomService.getRoomsJoining(id),
       dmRooms: this.chatRoomService
         .getRoomsJoining(id, 'DM_ONLY')
         .then((rs) => rs.map((r) => r.chatRoom)),
@@ -198,10 +196,7 @@ export class UsersService {
       ),
     });
     return {
-      visibleRooms: Utils.sortBy(
-        [...r.visiblePublic, ...r.visiblePrivate],
-        (r) => r.id
-      ),
+      visibleRooms: [...r.visiblePublic, ...r.visiblePrivate],
       joiningRooms: r.joiningRooms,
       dmRooms: r.dmRooms,
       friends: r.friends,

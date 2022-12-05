@@ -20,7 +20,6 @@ export const SocketHolder = () => {
 
   // 認証フローのチェックと状態遷移
   const [personalData] = useAtom(authAtom.personalData);
-  const [visibleRooms] = useAtom(structureAtom.visibleRoomsAtom);
   const [, setDmRooms] = useAtom(structureAtom.dmRoomsAtom);
   const [friends, setFriends] = useAtom(structureAtom.friends);
   const [blockingUsers, setBlockingUsers] = useAtom(
@@ -57,13 +56,11 @@ export const SocketHolder = () => {
         setBlockingUsers(data.blockingUsers);
         userUpdator.addMany(data.friends);
         userUpdator.addMany(data.blockingUsers);
-        roomUpdator.addMany(data.visibleRooms);
-        roomUpdator.addMany(data.joiningRooms);
         userUpdator.addMany(
           Utils.compact(data.visibleRooms.map((r) => r.owner))
         );
         userUpdator.addMany(
-          Utils.compact(data.joiningRooms.map((r) => r.owner))
+          Utils.compact(data.joiningRooms.map((r) => r.chatRoom.owner))
         );
         dmRoomUpdator.addMany(data.dmRooms);
       },
@@ -97,7 +94,10 @@ export const SocketHolder = () => {
         };
         visibleRoomsUpdater.addOne(room);
         if (room.ownerId === userId) {
-          joiningRoomsUpdater.addOne(room);
+          joiningRoomsUpdater.addOne({
+            chatRoom: room,
+            createdAt: room.createdAt,
+          });
         }
         roomUpdator.addOne(room);
         if (room.owner) {
@@ -148,7 +148,7 @@ export const SocketHolder = () => {
         if (user.id === userId) {
           // 自分に関する通知
           console.log('for self');
-          joiningRoomsUpdater.addOne(room);
+          joiningRoomsUpdater.addOne({ chatRoom: room, createdAt: new Date() });
         } else {
           // 他人に関する通知
           console.log('for other');

@@ -78,9 +78,10 @@ export class ChatGateway implements OnGatewayConnection {
     // [ユーザがjoinしているチャットルーム(ハードリレーション)の取得]
     const { visibleRooms, joiningRooms, dmRooms, friends, blockingUsers } =
       await this.usersService.collectStartingInformations(userId);
-    const joiningRoomNames = [...joiningRooms, ...dmRooms].map((r) =>
-      generateFullRoomName({ roomId: r.id })
-    );
+    const joiningRoomNames = [
+      ...joiningRooms.map((r) => r.chatRoom),
+      ...dmRooms,
+    ].map((r) => generateFullRoomName({ roomId: r.id }));
     console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
@@ -109,9 +110,9 @@ export class ChatGateway implements OnGatewayConnection {
             'owner'
           )
         ),
-        joiningRooms: joiningRooms.map((r) =>
-          Utils.pick(
-            r,
+        joiningRooms: joiningRooms.map((r) => ({
+          chatRoom: Utils.pick(
+            r.chatRoom,
             'id',
             'roomName',
             'roomType',
@@ -119,8 +120,9 @@ export class ChatGateway implements OnGatewayConnection {
             'createdAt',
             'updatedAt',
             'owner'
-          )
-        ),
+          ),
+          createdAt: r.createdAt,
+        })),
         dmRooms: dmRooms.map((r) =>
           Utils.pick(
             r,

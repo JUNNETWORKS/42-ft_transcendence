@@ -7,10 +7,8 @@ import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
-import { storeAtoms } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
-import { sortBy } from '@/utils';
 
 import { makeCommand } from './command';
 import { ChatRoomListView } from './RoomList';
@@ -29,17 +27,10 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
-  const [rooms] = useAtom(storeAtoms.rooms);
   const [focusedRoomId, setFocusedRoomId] = useAtom(
     structureAtom.focusedRoomIdAtom
   );
   const userId = personalData ? personalData.id : -1;
-
-  const listedRooms = sortBy(
-    sortBy(visibleRooms, (r) => r.id, true),
-    (r) => r.createdAt,
-    true
-  );
   /**
    * チャットコマンド
    */
@@ -56,7 +47,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
    */
   const predicate = {
     isJoiningTo: (roomId: number) =>
-      !!joiningRooms.find((r) => r.id === roomId),
+      !!joiningRooms.find((r) => r.chatRoom.id === roomId),
     isFocusingTo: (roomId: number) => focusedRoomId === roomId,
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
@@ -73,7 +64,10 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
       return ms;
     }, [messagesInRoom, focusedRoomId]),
 
-    focusedRoom: useMemo(() => rooms[focusedRoomId], [rooms, focusedRoomId]),
+    focusedRoom: useMemo(
+      () => joiningRooms.find((r) => r.chatRoom.id === focusedRoomId),
+      [joiningRooms, focusedRoomId]
+    ),
 
     you: useMemo(() => {
       if (!userId) {
@@ -146,7 +140,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     if (computed.focusedRoom) {
       return (
         <ChatRoomView
-          room={computed.focusedRoom}
+          room={computed.focusedRoom.chatRoom}
           memberOperations={memberOperations}
           you={computed.you}
           say={command.say}
@@ -157,7 +151,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     } else {
       return (
         <VisibleRoomList
-          rooms={listedRooms}
+          rooms={visibleRooms}
           isJoiningTo={predicate.isJoiningTo}
           isFocusingTo={predicate.isFocusingTo}
           onJoin={command.join}
@@ -194,7 +188,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
             </div>
             <div className="flex shrink grow flex-col overflow-hidden p-2">
               <ChatRoomListView
-                rooms={joiningRooms}
+                rooms={joiningRooms.map((r) => r.chatRoom)}
                 isJoiningTo={predicate.isJoiningTo}
                 isFocusingTo={predicate.isFocusingTo}
                 onJoin={command.join}

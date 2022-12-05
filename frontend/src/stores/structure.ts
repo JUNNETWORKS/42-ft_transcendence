@@ -12,7 +12,7 @@ export const structureAtom = {
   // 見えているチャットルームの一覧
   visibleRoomsAtom: atom<TD.ChatRoom[]>([]),
   // join しているチャットルームの一覧
-  joiningRoomsAtom: atom<TD.ChatRoom[]>([]),
+  joiningRoomsAtom: atom<TD.ChatRoomJoinData[]>([]),
   // dmルームの一覧
   dmRoomsAtom: atom<TD.DmRoom[]>([]),
   // フレンドの一覧
@@ -46,9 +46,13 @@ const derivedAtom = {
   visibleRoomsAtom: atom((get) =>
     transformBy(get(structureAtom.visibleRoomsAtom), get(storeAtoms.rooms))
   ),
-  joiningRoomsAtom: atom((get) =>
-    transformBy(get(structureAtom.joiningRoomsAtom), get(storeAtoms.rooms))
-  ),
+  joiningRoomsAtom: atom((get) => {
+    const stored = get(storeAtoms.rooms);
+    return get(structureAtom.joiningRoomsAtom).map((r) => ({
+      chatRoom: stored[r.chatRoom.id] || r.chatRoom,
+      createdAt: r.createdAt,
+    }));
+  }),
   dmRoomsAtom: atom((get) =>
     transformBy(get(structureAtom.dmRoomsAtom), get(storeAtoms.dmRooms))
   ),
@@ -131,46 +135,44 @@ export const useUpdateJoiningRooms = () => {
   const [rooms, setRooms] = useAtom(structureAtom.joiningRoomsAtom);
   const storeUpdater = useUpdateRoom();
 
-  const addOne = (data: TD.ChatRoom) => {
+  const addOne = (data: TD.ChatRoomJoinData) => {
     setRooms((prev) => {
-      if (prev.find((r) => r.id === data.id)) {
+      if (prev.find((r) => r.chatRoom.id === data.chatRoom.id)) {
         return prev;
       }
-      const next = [...prev, data];
+      const next = [...prev, Utils.datifyObject(data)];
       return Utils.sortBy(
-        Utils.sortBy(next, (r) => r.id, true),
-        (r) => r.createdAt,
-        true
+        Utils.sortBy(next, (r) => r.createdAt, true),
+        (r) => r.createdAt
       );
     });
-    storeUpdater.addOne(data);
+    storeUpdater.addOne(data.chatRoom);
   };
-  const addMany = (data: TD.ChatRoom[]) => {
+  const addMany = (data: TD.ChatRoomJoinData[]) => {
     setRooms((prev) => {
       const next = [...prev];
       data.forEach((d) => {
-        if (prev.find((r) => r.id === d.id)) {
+        if (prev.find((r) => r.chatRoom.id === d.chatRoom.id)) {
           return;
         }
-        next.push(d);
+        next.push(Utils.datifyObject(d));
       });
       if (next.length === prev.length) {
         return prev;
       }
       return Utils.sortBy(
-        Utils.sortBy(next, (r) => r.id, true),
-        (r) => r.createdAt,
-        true
+        Utils.sortBy(next, (r) => r.chatRoom.id, true),
+        (r) => r.createdAt
       );
     });
-    storeUpdater.addMany(data);
+    storeUpdater.addMany(data.map((r) => r.chatRoom));
   };
   const delOne = (data: TD.ChatRoom) => {
     setRooms((prev) => {
-      if (!prev.find((r) => r.id === data.id)) {
+      if (!prev.find((r) => r.chatRoom.id === data.id)) {
         return prev;
       }
-      return prev.filter((r) => r.id !== data.id);
+      return prev.filter((r) => r.chatRoom.id !== data.id);
     });
   };
   const updater = {

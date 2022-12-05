@@ -90,9 +90,13 @@ export function datify(data: any) {
  * @param value
  * @returns
  */
-export function sortBy<T, U>(array: T[], value: (a: T) => U, reversed = false) {
+export function sortBy<T, U>(
+  array: T[],
+  value: (a: T) => U,
+  inDescending = false
+) {
   const decorated = array.map((e) => ({ e, v: value(e) }));
-  const lt = reversed ? +1 : -1;
+  const lt = inDescending ? +1 : -1;
   const gt = -lt;
   decorated.sort((a, b) => {
     if (a.v < b.v) {
