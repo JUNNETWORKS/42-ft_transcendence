@@ -8,14 +8,14 @@ import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
-import { Icons } from '@/icons';
+import { Icons, RoomTypeIcon } from '@/icons';
 import { chatSocketAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
 import { makeCommand } from './command';
-import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
+import { ChatRoomUpdateCard } from './RoomSetting';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;
@@ -189,16 +189,9 @@ export const ChatRoomView = (props: {
   if (!mySocket) {
     return null;
   }
-
   const command = makeCommand(mySocket, props.room.id);
-
-  const closeModal = () => {
-    setIsOpen(false);
-  };
-
-  const openModal = () => {
-    setIsOpen(true);
-  };
+  const closeModal = () => setIsOpen(false);
+  const openModal = () => setIsOpen(true);
   const TypeIcon = RoomTypeIcon[props.room.roomType];
   return (
     <>

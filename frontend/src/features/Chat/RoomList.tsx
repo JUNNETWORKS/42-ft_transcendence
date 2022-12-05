@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { RoomTypeIcon } from '@/icons';
 import * as TD from '@/typedef';
 
 import { validateRoomPasswordError } from './components/RoomPassword.validator';
 import { RoomPasswordInput } from './components/RoomPasswordInput';
-import { RoomTypeIcon } from './RoomSetting';
 
 const ChatRoomListItem = (props: {
   room: TD.ChatRoom;

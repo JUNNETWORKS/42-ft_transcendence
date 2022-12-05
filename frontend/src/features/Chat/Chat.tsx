@@ -9,7 +9,6 @@ import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
-import * as Utils from '@/utils';
 
 import { makeCommand } from './command';
 import { ChatRoomListView } from './RoomList';

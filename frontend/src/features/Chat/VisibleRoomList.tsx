@@ -4,14 +4,12 @@ import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { UserAvatar } from '@/components/UserAvater';
 import { InlineIcon } from '@/hocs/InlineIcon';
-import { Icons } from '@/icons';
+import { Icons, RoomTypeIcon } from '@/icons';
 import { useUserDataReadOnly } from '@/stores/store';
 import * as TD from '@/typedef';
-import * as Utils from '@/utils';
 
 import { validateRoomPasswordError } from './components/RoomPassword.validator';
 import { RoomPasswordInput } from './components/RoomPasswordInput';
-import { RoomTypeIcon } from './RoomSetting';
 
 const ListItem = (props: {
   room: TD.ChatRoom;
@@ -30,15 +28,19 @@ const ListItem = (props: {
   }
 
   const onJoin = () => {
-    props.onJoin(props.room.id, roomPassword, (response: any) => {
-      if (response.status !== 'success') {
-        setJoinError(validateRoomPasswordError(response.status));
-      } else {
-        setIsOpen(false);
-        setRoomPassword('');
-        setJoinError('');
-      }
-    });
+    if (props.room.roomType === 'LOCKED' && !isOpen) {
+      setIsOpen(true);
+    } else {
+      props.onJoin(props.room.id, roomPassword, (response: any) => {
+        if (response.status !== 'success') {
+          setJoinError(validateRoomPasswordError(response.status));
+        } else {
+          setIsOpen(false);
+          setRoomPassword('');
+          setJoinError('');
+        }
+      });
+    }
   };
   const closeModal = () => setIsOpen(false);
   const Button = () => {

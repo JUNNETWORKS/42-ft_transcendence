@@ -48,3 +48,10 @@ export const Icons = {
   Android: Fa.FaAndroid,
   IOS: Fa.FaApple,
 };
+
+export const RoomTypeIcon = {
+  PUBLIC: Icons.Chat.Public,
+  PRIVATE: Icons.Chat.Private,
+  LOCKED: Icons.Chat.Locked,
+  DM: Icons.Chat.DM,
+};
