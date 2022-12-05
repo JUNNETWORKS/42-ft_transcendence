@@ -104,6 +104,7 @@ export class ChatGateway implements OnGatewayConnection {
             'roomName',
             'roomType',
             'ownerId',
+            'createdAt',
             'updatedAt',
             'owner'
           )
@@ -115,6 +116,7 @@ export class ChatGateway implements OnGatewayConnection {
             'roomName',
             'roomType',
             'ownerId',
+            'createdAt',
             'updatedAt',
             'owner'
           )
@@ -126,6 +128,7 @@ export class ChatGateway implements OnGatewayConnection {
             'roomName',
             'roomType',
             'ownerId',
+            'createdAt',
             'updatedAt',
             'roomMember'
           )

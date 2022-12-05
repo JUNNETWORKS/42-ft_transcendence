@@ -90,6 +90,7 @@ model ChatUserRelation {
   chatRoom   ChatRoom   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
   memberType MemberType @default(MEMBER)
+  createdAt  DateTime   @default(now())
 
   @@id([userId, chatRoomId])
 }

@@ -87,7 +87,7 @@ export class ChatroomsService {
           })(),
           id,
         },
-        orderBy: { id: 'asc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
         include: {
           owner: {
             select: selectForUser,
@@ -166,6 +166,9 @@ export class ChatroomsService {
             },
           },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }
