@@ -4,6 +4,8 @@ export const useVerticalScrollAttr = (elementId: string) => {
   const isProcessing = useRef(false);
   const [top, setTop] = useState(0);
   const [height, setHeight] = useState(0);
+  const [clientHeight, setClientHeight] = useState(0);
+  const [bottom, setBottom] = useState(0);
 
   useEffect(() => {
     const el = document.getElementById(elementId);
@@ -20,6 +22,8 @@ export const useVerticalScrollAttr = (elementId: string) => {
         isProcessing.current = false;
         setTop(el.scrollTop);
         setHeight(el.scrollHeight);
+        setClientHeight(el.clientHeight);
+        setBottom(el.scrollHeight - el.clientHeight - el.scrollTop);
       });
     };
     // スクロールイベントの登録
@@ -31,5 +35,5 @@ export const useVerticalScrollAttr = (elementId: string) => {
   }, [elementId]);
 
   // スクロール量を返却する
-  return { top, height };
+  return { top, height, clientHeight, bottom };
 };

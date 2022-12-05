@@ -1,9 +1,10 @@
 import { atom, useAtom } from 'jotai';
+import { useCallback } from 'react';
 
 import * as Utils from '@/utils';
 
 import * as TD from '../typedef';
-import { storeAtoms } from './store';
+import { storeAtoms, useUpdateRoom } from './store';
 
 // オブジェクトストラクチャー
 
@@ -78,4 +79,50 @@ export const dataAtom = {
     );
     return [members] as const;
   },
+};
+
+export const useUpdateVisibleRooms = () => {
+  const [rooms, setRooms] = useAtom(structureAtom.visibleRoomsAtom);
+  const storeUpdater = useUpdateRoom();
+
+  const addOne = (data: TD.ChatRoom) => {
+    setRooms((prev) => {
+      if (prev.find((r) => r.id === data.id)) {
+        return prev;
+      }
+      const next = [...prev, data];
+      return Utils.sortBy(
+        Utils.sortBy(next, (r) => r.id, true),
+        (r) => r.createdAt,
+        true
+      );
+    });
+    storeUpdater.addOne(data);
+  };
+  const addMany = (data: TD.ChatRoom[]) => {
+    setRooms((prev) => {
+      const next = [...prev];
+      data.forEach((d) => {
+        if (prev.find((r) => r.id === d.id)) {
+          return;
+        }
+        next.push(d);
+      });
+      if (next.length === prev.length) {
+        return prev;
+      }
+      return Utils.sortBy(
+        Utils.sortBy(next, (r) => r.id, true),
+        (r) => r.createdAt,
+        true
+      );
+    });
+    storeUpdater.addMany(data);
+  };
+  const updater = {
+    visibleRooms: rooms,
+    addOne,
+    addMany,
+  };
+  return updater;
 };

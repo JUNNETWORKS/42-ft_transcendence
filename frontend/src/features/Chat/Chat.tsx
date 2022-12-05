@@ -9,6 +9,7 @@ import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
+import { sortBy } from '@/utils';
 
 import { makeCommand } from './command';
 import { ChatRoomListView } from './RoomList';
@@ -32,6 +33,11 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   );
   const userId = personalData ? personalData.id : -1;
 
+  const listedRooms = sortBy(
+    sortBy(visibleRooms, (r) => r.id, true),
+    (r) => r.createdAt,
+    true
+  );
   const joinedRooms = visibleRooms.filter(
     (r) => !!joiningRooms.find((rr) => rr.id === r.id)
   );
@@ -156,7 +162,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     } else {
       return (
         <VisibleRoomList
-          rooms={visibleRooms}
+          rooms={listedRooms}
           isJoiningTo={predicate.isJoiningTo}
           isFocusingTo={predicate.isFocusingTo}
           onJoin={command.join}

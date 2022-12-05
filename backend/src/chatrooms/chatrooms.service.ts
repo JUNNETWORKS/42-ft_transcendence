@@ -55,11 +55,6 @@ export class ChatroomsService {
   async findMany(getChatroomsDto: GetChatroomsDto) {
     const { take, cursor, category } = getChatroomsDto;
     const res = await (async () => {
-      const id = cursor
-        ? take > 0
-          ? { gt: cursor }
-          : { lt: cursor }
-        : undefined;
       if (category === 'PRIVATE') {
         if (typeof getChatroomsDto.userId !== 'number') {
           throw new BadRequestException();
@@ -85,9 +80,11 @@ export class ChatroomsService {
                 };
             }
           })(),
-          id,
         },
         orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        ...(typeof cursor === 'number'
+          ? { cursor: { id: cursor }, skip: 1 }
+          : {}),
         include: {
           owner: {
             select: selectForUser,
