@@ -142,4 +142,19 @@ export class OnlineMatch {
   get playerScores() {
     return [this.match.players[0].score, this.match.players[1].score];
   }
+
+  get winnerID() {
+    if (this.match.winner === 'none') {
+      return undefined;
+    }
+    return this.match.players[Match.sideIndex[this.match.winner]].id;
+  }
+
+  get loserID() {
+    if (this.match.winner === 'none') {
+      return undefined;
+    }
+    const loserSide = this.match.winner === 'right' ? 'left' : 'right';
+    return this.match.players[Match.sideIndex[loserSide]].id;
+  }
 }
