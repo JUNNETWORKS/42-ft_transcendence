@@ -188,7 +188,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
           {/* 見えているチャットルーム */}
           <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
-            <FTH3 className="shrink-0 grow-0">ChatRooms</FTH3>
+            <FTH3 className="shrink-0 grow-0">You Joined</FTH3>
             <div className="shrink-0 grow-0 p-2">
               <FTButton className="w-full" onClick={openModal}>
                 <InlineIcon i={<Icons.Add />} />

@@ -81,9 +81,10 @@ export const ChatRoomListView = (props: {
           /* クリックしたルームにフォーカスを当てる */
           <div
             className={`my-1 flex min-w-0 flex-row border-2 border-solid ${
-              isFocused ? 'border-gray-400' : 'border-gray-700'
+              isFocused ? 'border-gray-400' : 'border-transparent'
             } p-[2px] hover:border-white`}
             key={room.id}
+            title={room.roomName}
           >
             <ChatRoomListItem
               room={room}

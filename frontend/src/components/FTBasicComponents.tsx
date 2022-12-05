@@ -57,12 +57,12 @@ export const FTButton = (
     <button
       {...{ ...props }}
       className={
-        'hover:bg-white hover:text-black disabled:opacity-50 ' +
-        (props.className || '')
+        (props.className || '') +
+        ' border-[2px] border-solid border-white py-[2px] px-[6px]' +
+        ' hover:bg-white hover:text-black disabled:opacity-50'
       }
       style={{
         ...(props.style || {}),
-        ...styleButtonCommon,
       }}
     />
   );
@@ -78,9 +78,12 @@ export const FTSubmit = (
     <input
       {...{ ...props }}
       type="submit"
+      className={
+        (props.className || '') +
+        ' border-[2px] border-solid border-white py-[2px] px-[6px]'
+      }
       style={{
         ...(props.style || {}),
-        ...styleButtonCommon,
       }}
     />
   );

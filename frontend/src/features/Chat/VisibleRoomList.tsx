@@ -41,6 +41,24 @@ const ListItem = (props: {
     });
   };
   const closeModal = () => setIsOpen(false);
+  const Button = () => {
+    if (props.isJoined) {
+      return (
+        <FTButton
+          className="w-[4em] border-white bg-white text-black hover:bg-black hover:text-white"
+          onClick={() => props.onFocus(props.room.id)}
+        >
+          View
+        </FTButton>
+      );
+    } else {
+      return (
+        <FTButton className="w-[4em] text-white" onClick={() => onJoin()}>
+          Join
+        </FTButton>
+      );
+    }
+  };
   return (
     <>
       <Modal isOpen={isOpen} closeModal={closeModal}>
@@ -53,33 +71,37 @@ const ListItem = (props: {
         />
       </Modal>
       <div
-        className="m-2 flex basis-[16em] flex-col overflow-hidden border-2 border-solid border-gray-400 p-1"
+        className={`m-2 flex basis-[16em] flex-col overflow-hidden border-2 border-solid ${
+          props.isJoined ? 'border-gray-100' : 'border-gray-600 text-gray-400'
+        } p-1 hover:border-gray-100 hover:bg-gray-800 hover:text-white`}
         key={props.room.id}
       >
-        <div className="flex min-w-0 flex-row items-center text-xl">
+        <div className={`flex min-w-0 flex-row items-center`}>
           <div className="shrink-0 grow-0">
             <InlineIcon i={<TypeIcon />} />
           </div>
-          <div className="shrink grow overflow-hidden text-ellipsis">
+          <div
+            className="shrink grow overflow-hidden text-ellipsis"
+            title={props.room.roomName}
+          >
             {props.room.roomName}
           </div>
         </div>
-        <div className="flex shrink grow flex-row items-center">
+        <div className="flex shrink grow flex-row items-center p-[2px]">
           <div className="shrink-0 grow-0">
-            <UserAvatar className="m-1 h-8 w-8" user={owner} />
+            <UserAvatar className="m-1 h-7 w-7" user={owner} />
           </div>
-          <InlineIcon i={<Icons.Chat.Owner />} />
+          <InlineIcon className="p-0" i={<Icons.Chat.Owner />} />
           <div
-            className={`shrink grow overflow-hidden text-ellipsis text-left`}
+            className={`shrink grow overflow-hidden text-ellipsis text-left text-sm`}
             style={{ wordBreak: 'keep-all' }}
+            title={owner.displayName}
           >
             {owner.displayName}
           </div>
 
           <div className="shrink-0 grow-0">
-            <FTButton className="w-[4em]" onClick={() => onJoin()}>
-              Join
-            </FTButton>
+            <Button />
           </div>
         </div>
       </div>
@@ -95,19 +117,22 @@ export const VisibleRoomList = (props: {
   onFocus: (roomId: number) => void;
 }) => {
   return (
-    <div className="flex flex-row flex-wrap overflow-scroll">
-      {props.rooms.map((room: TD.ChatRoom) => {
-        return (
-          <ListItem
-            key={room.id}
-            room={room}
-            isJoined={props.isJoiningTo(room.id)}
-            isFocused={props.isFocusingTo(room.id)}
-            onJoin={props.onJoin}
-            onFocus={props.onFocus}
-          />
-        );
-      })}
+    <div className="flex flex-col overflow-hidden">
+      <FTH3 className="shrink-0 grow-0">Chatrooms</FTH3>
+      <div className="flex shrink grow flex-row flex-wrap overflow-scroll p-1">
+        {props.rooms.map((room: TD.ChatRoom) => {
+          return (
+            <ListItem
+              key={room.id}
+              room={room}
+              isJoined={props.isJoiningTo(room.id)}
+              isFocused={props.isFocusingTo(room.id)}
+              onJoin={props.onJoin}
+              onFocus={props.onFocus}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };
