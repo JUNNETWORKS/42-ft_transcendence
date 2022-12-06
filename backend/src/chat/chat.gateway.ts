@@ -146,49 +146,8 @@ export class ChatGateway implements OnGatewayConnection {
   }
 
   /**
-   * チャットルームを作成する
-   * @param data
-   * @param client
+   * チャットルームを作成する -> POST /chatrooms
    */
-  @SubscribeMessage('ft_open')
-  async handleOpen(
-    @MessageBody() data: OperationOpenDto,
-    @ConnectedSocket() client: Socket
-  ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
-    data.callerId = user.id;
-    // [パラメータが正しければチャットルームを作成する]
-    const createdRoom = await this.chatRoomService.create({
-      roomName: data.roomName,
-      roomType: data.roomType,
-      ownerId: user.id,
-      roomMember: [
-        {
-          userId: user.id,
-          memberType: 'ADMIN',
-        },
-      ],
-    });
-    console.log('created', createdRoom);
-    const roomId = createdRoom.id;
-
-    // [作成されたチャットルームにjoin]
-    await this.wsServer.usersJoin(user.id, { roomId });
-
-    // [新しいチャットルームが作成されたことを通知する]
-    this.wsServer.sendResults(
-      'ft_open',
-      {
-        ...createdRoom,
-      },
-      {
-        global: 'global',
-      }
-    );
-  }
 
   /**
    * チャットルームにおける発言
