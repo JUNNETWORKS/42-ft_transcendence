@@ -23,7 +23,6 @@ import { OperationKickDto } from 'src/chatrooms/dto/operation-kick.dto';
 import { OperationLeaveDto } from 'src/chatrooms/dto/operation-leave.dto';
 import { OperationMuteDto } from 'src/chatrooms/dto/operation-mute.dto';
 import { OperationNomminateDto } from 'src/chatrooms/dto/operation-nomminate.dto';
-import { OperationOpenDto } from 'src/chatrooms/dto/operation-open.dto';
 import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 import { OperationTellDto } from 'src/chatrooms/dto/operation-tell.dto';
 import { OperationUnblockDto } from 'src/chatrooms/dto/operation-unblock.dto';
