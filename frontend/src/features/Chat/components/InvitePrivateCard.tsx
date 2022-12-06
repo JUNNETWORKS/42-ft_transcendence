@@ -36,6 +36,7 @@ export const InvitePrivateCard = (props: {
   const [users, setUsers] = useState<displayUser[]>([]);
   const [error, setError] = useState('');
   const [isFetched, setIsFetched] = useState(false);
+  const [isLastPage, setIsLastPage] = useState(false);
   const url = `http://localhost:3000/users?take=${take}&cursor=${cursor}`;
 
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
@@ -64,8 +65,8 @@ export const InvitePrivateCard = (props: {
             url={url}
             isFetched={isFetched}
             setIsFetched={setIsFetched}
+            setIsLastPage={setIsLastPage}
             users={users}
-            room={props.room}
             setUsers={setUsers}
             submit={submit}
           />
@@ -75,20 +76,21 @@ export const InvitePrivateCard = (props: {
       <div className="flex flex-row justify-around p-2">
         <FTButton
           onClick={() => {
-            setUsers([]);
             setIsFetched(false);
+            setIsLastPage(false);
             const newCursor = cursor - take >= 0 ? cursor - take : 0;
             setCursor(newCursor);
           }}
+          disabled={cursor === 0}
         >
           {'<-'}
         </FTButton>
         <FTButton
           onClick={() => {
-            setUsers([]);
             setIsFetched(false);
             setCursor(cursor + take);
           }}
+          disabled={isLastPage}
         >
           {'->'}
         </FTButton>

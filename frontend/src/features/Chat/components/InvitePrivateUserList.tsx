@@ -1,21 +1,25 @@
-import { ChatRoom, displayUser } from '@/typedef';
+import { displayUser } from '@/typedef';
 
 export const InvitePrivateUserList = (props: {
   url: string;
   isFetched: boolean;
   setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsLastPage: React.Dispatch<React.SetStateAction<boolean>>;
   users: displayUser[];
-  room: ChatRoom;
   setUsers: React.Dispatch<React.SetStateAction<displayUser[]>>;
   submit: (targetUser: number) => void;
 }) => {
   if (!props.isFetched) {
     throw (async () => {
       const res = await fetch(props.url);
-      const json = await res.json();
+      const json = (await res.json()) as displayUser[];
       console.log('res:', json);
       props.setIsFetched(true);
-      props.setUsers(json as displayUser[]);
+      if (json.length === 0) {
+        props.setIsLastPage(true);
+        return;
+      }
+      props.setUsers(json);
     })();
   }
 
