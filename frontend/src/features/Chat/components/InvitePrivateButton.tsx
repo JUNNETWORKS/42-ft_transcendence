@@ -12,7 +12,10 @@ export const InvitePrivateButton = (props: { room: ChatRoom }) => {
   return (
     <>
       <Modal isOpen={isOpen} closeModal={() => setIsOpen(false)}>
-        <InvitePrivateCard room={props.room}></InvitePrivateCard>
+        <InvitePrivateCard
+          room={props.room}
+          closeModal={() => setIsOpen(false)}
+        ></InvitePrivateCard>
       </Modal>
       <div className="m-1">
         <FTButton onClick={() => setIsOpen(true)}>invite</FTButton>

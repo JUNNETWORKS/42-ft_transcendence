@@ -25,13 +25,17 @@ const validateError = (response: { status: string }) => {
   }
 };
 
-export const InvitePrivateCard = (props: { room: ChatRoom }) => {
+export const InvitePrivateCard = (props: {
+  room: ChatRoom;
+  closeModal: () => void;
+}) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 2;
   const [cursor, setCursor] = useState(0);
   const [users, setUsers] = useState<displayUser[]>([]);
   const [error, setError] = useState('');
+  const [isFetched, setIsFetched] = useState(false);
   const url = `http://localhost:3000/users?take=${take}&cursor=${cursor}`;
 
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
@@ -47,6 +51,7 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
     setError('');
     mySocket.emit('ft_invite', data, (response: { status: string }) => {
       if (response.status !== 'success') setError(validateError(response));
+      else props.closeModal();
     });
   };
 
@@ -57,6 +62,8 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
         <Suspense fallback={<div>Loading...</div>}>
           <InvitePrivateUserList
             url={url}
+            isFetched={isFetched}
+            setIsFetched={setIsFetched}
             users={users}
             room={props.room}
             setUsers={setUsers}
@@ -69,6 +76,7 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
         <FTButton
           onClick={() => {
             setUsers([]);
+            setIsFetched(false);
             const newCursor = cursor - take >= 0 ? cursor - take : 0;
             setCursor(newCursor);
           }}
@@ -78,6 +86,7 @@ export const InvitePrivateCard = (props: { room: ChatRoom }) => {
         <FTButton
           onClick={() => {
             setUsers([]);
+            setIsFetched(false);
             setCursor(cursor + take);
           }}
         >
