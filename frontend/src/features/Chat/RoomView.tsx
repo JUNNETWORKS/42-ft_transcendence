@@ -199,6 +199,11 @@ export const ChatRoomView = (props: {
   const isOwner = props.room.ownerId === props.you?.userId;
   const [isOpen, setIsOpen] = useState(false);
   const [members] = dataAtom.useMembersInRoom(props.room.id);
+  const [mySocket] = useAtom(chatSocketAtom);
+  if (!mySocket) {
+    return null;
+  }
+  const command = makeCommand(mySocket, props.room.id);
 
   const closeModal = () => {
     setIsOpen(false);
@@ -230,6 +235,12 @@ export const ChatRoomView = (props: {
                 <Icons.Setting className="inline" />
               </FTButton>
             )}
+
+            <FTButton
+              onClick={() => command.pong_private_match_create(props.room.id)}
+            >
+              プライベートマッチ
+            </FTButton>
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">

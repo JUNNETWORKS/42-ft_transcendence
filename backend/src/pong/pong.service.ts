@@ -1,7 +1,5 @@
 import { Injectable } from '@nestjs/common';
 
-import { pick } from 'src/utils';
-
 import { PrismaService } from '../prisma/prisma.service';
 import { OnlineMatch } from './game/online-match';
 
@@ -63,6 +61,51 @@ export class PongService {
         },
       },
     });
-    return results.map((result) => pick(result, 'rankPoint', 'user'));
+    return results;
+  }
+
+  updateRankPoint(winnerID: number, loserID: number) {
+    const point = 10;
+    this.prisma.$transaction(async (tx) => {
+      await tx.userRankPoint.update({
+        where: {
+          userId: winnerID,
+        },
+        data: {
+          rankPoint: {
+            increment: point,
+          },
+        },
+      });
+      const currentLoserRankPoint = await tx.userRankPoint.findFirst({
+        where: {
+          userId: loserID,
+        },
+      });
+      if (
+        currentLoserRankPoint &&
+        currentLoserRankPoint.rankPoint - point < 0
+      ) {
+        await tx.userRankPoint.update({
+          where: {
+            userId: loserID,
+          },
+          data: {
+            rankPoint: 0,
+          },
+        });
+      } else {
+        await tx.userRankPoint.update({
+          where: {
+            userId: loserID,
+          },
+          data: {
+            rankPoint: {
+              decrement: point,
+            },
+          },
+        });
+      }
+    });
   }
 }

@@ -9,7 +9,7 @@ export const Layout = ({ children }: Props) => {
   return (
     <div className="flex h-screen flex-col">
       <NavBar />
-      <div className="flex flex-1">{children}</div>
+      <div className="flex flex-1 overflow-hidden">{children}</div>
     </div>
   );
 };

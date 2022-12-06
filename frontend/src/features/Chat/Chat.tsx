@@ -213,10 +213,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
           onCancel={closeModal}
         />
       </Modal>
-      <div
-        className="flex w-full flex-row border-2 border-solid border-white p-2"
-        style={{ height: '50em' }}
-      >
+      <div className="flex w-full flex-row border-2 border-solid border-white p-2">
         <div className="flex shrink-0 grow-0 flex-col">
           {/* 見えているチャットルーム */}
           <div className="flex shrink grow flex-col border-2 border-solid border-white">

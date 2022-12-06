@@ -352,6 +352,13 @@ export const SocketHolder = () => {
       },
     ]);
 
+    listeners.push([
+      'pong.private_match.created',
+      (data) => {
+        console.log('[receipt]', data);
+      },
+    ]);
+
     listeners.forEach((l) => mySocket.on(...l));
 
     return () => {
