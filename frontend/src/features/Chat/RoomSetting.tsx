@@ -1,5 +1,6 @@
 import { Listbox } from '@headlessui/react';
 import { Dispatch, SetStateAction, useState } from 'react';
+import { toast } from 'react-toastify';
 
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
@@ -188,6 +189,7 @@ export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
       if (onSucceeded) {
         onSucceeded();
       }
+      toast('チャットルームを作成しました');
     },
   });
 
@@ -229,6 +231,7 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
       if (onSucceeded) {
         onSucceeded();
       }
+      toast('ルーム情報を更新しました');
     },
   });
 

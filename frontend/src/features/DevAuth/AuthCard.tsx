@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Oval } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
 
 import {
   FTH1,
@@ -265,6 +266,7 @@ export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
           <FTButton
             onClick={() => {
               if (props.onLogout) props.onLogout();
+              toast('ログアウトしました');
             }}
           >
             Logout
