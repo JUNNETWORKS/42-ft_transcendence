@@ -99,5 +99,13 @@ export function makeCommand(
       };
       mySocket.emit('ft_mute', data);
     },
+
+    pong_private_match_create: (roomId: number) => {
+      console.log('[pong.private_match.create]', roomId);
+      const data = {
+        roomId,
+      };
+      mySocket.emit('pong.private_match.create', data);
+    },
   };
 }

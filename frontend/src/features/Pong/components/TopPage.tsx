@@ -1,15 +1,27 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 import { Modal } from '@/components/Modal';
 
 import { CommandCard } from './CommandCard';
-import { RankingCard } from './RankingCard';
+import { PongRanking } from './PongRanking';
 
-export const GamePage = () => {
+export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
+  const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
+  const navigate = useNavigate();
 
   const cancelWaiting = () => {
+    mySocket.emit('pong.match_making.leave');
     setIsWaiting(false);
+  };
+
+  const startMatchMaking = (matchType: string) => {
+    if (isWaiting) {
+      return;
+    }
+    mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
   return (
@@ -25,40 +37,30 @@ export const GamePage = () => {
           </button>
         </div>
       </Modal>
-      <div className="mx-20 flex flex-1 items-center justify-center gap-20">
-        <div className="flex shrink-0 grow-[2] flex-col gap-8">
+      <div className="grid grid-cols-pongTopPage items-center justify-center gap-20 overflow-scroll px-20 py-12">
+        <div className="flex shrink-0 flex-col gap-10">
           <CommandCard
             text="カジュアルマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching casual');
+              startMatchMaking('CASUAL');
             }}
           />
           <CommandCard
             text="ランクマッチをプレイ"
             onClick={() => {
               setIsWaiting(true);
-              console.log('start matching rank');
+              startMatchMaking('RANK');
             }}
           />
           <CommandCard
             text="もどる"
             onClick={() => {
-              console.log('backPage');
+              navigate('/');
             }}
           />
         </div>
-        <div className="grow-[1]">
-          <p className="text-5xl font-bold leading-tight">Ranking</p>
-          <div className=" h-2 w-[360] bg-primary"></div>
-          <ul className="mt-2 flex flex-col gap-3">
-            <RankingCard id={1} />
-            <RankingCard id={2} />
-            <RankingCard id={3} />
-            <RankingCard id={4} />
-            <RankingCard id={5} />
-          </ul>
-        </div>
+        <PongRanking />
       </div>
     </>
   );

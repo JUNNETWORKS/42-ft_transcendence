@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
@@ -16,7 +17,6 @@ import * as TD from '@/typedef';
 
 import { AvatarFile, AvatarInput } from './components/AvatarInput';
 import { displayNameErrors, passwordErrors } from './user.validator';
-
 
 type Phase = 'Display' | 'Edit' | '' | 'Edit2FA' | 'EditPassword';
 
@@ -196,6 +196,7 @@ const Disable2FACard = () => {
   const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
     onFinished: () => {
       setPersonalData({ ...personalData!, isEnabled2FA: false });
+      toast.info('二要素認証が無効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -245,6 +246,7 @@ const Enable2FACard = ({ onSucceeded }: Enable2FACardProp) => {
       const data = json as { access_token: string; qrcode: string };
       loginLocal(data.access_token, { ...personalData!, isEnabled2FA: true });
       onSucceeded(data.qrcode);
+      toast.info('二要素認証が有効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
       if (e instanceof APIError) {
@@ -370,6 +372,7 @@ const EditAttribute = ({ user, setPhase, onClose }: InnerProp) => {
       setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});
       setPhase('Display');
+      toast('ユーザ情報を更新しました');
     },
     onFailed(e) {
       if (e instanceof APIError) {

@@ -28,7 +28,14 @@ export class UsersService {
   ) {}
 
   create(createUserDto: CreateUserDto) {
-    return this.prisma.user.create({ data: createUserDto });
+    return this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        userRankPoint: {
+          create: {},
+        },
+      },
+    });
   }
 
   findAll() {

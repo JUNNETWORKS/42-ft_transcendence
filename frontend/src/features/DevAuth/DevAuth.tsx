@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { Modal } from '@/components/Modal';
 import { useQuery } from '@/hooks';
@@ -60,6 +61,7 @@ export const DevAuth = () => {
     if (user.created) {
       setIsOpenCreatedForm(true);
     }
+    toast(`${user.displayName} としてログインしました`);
   };
 
   // 42認証フローのチェックと状態遷移
@@ -81,11 +83,10 @@ export const DevAuth = () => {
       }
       case 'ValidatingAuthorizationCode': {
         // -> 認可コード検証APIをコール
-        verifyOAuth2AuthorizationCode(
-          ftAuthCode,
-          finalizeAuthFlow,
-          anonymizeAuthFlow
-        );
+        verifyOAuth2AuthorizationCode(ftAuthCode, finalizeAuthFlow, () => {
+          anonymizeAuthFlow();
+          toast.error(`認証に失敗しました`, { autoClose: 5000 });
+        });
         break;
       }
     }
