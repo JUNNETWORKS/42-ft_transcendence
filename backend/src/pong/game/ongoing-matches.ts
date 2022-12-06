@@ -24,6 +24,7 @@ export class OngoingMatches {
       (matchID: string) => this.removeMatch(matchID),
       this.postMatchStrategy
     );
+    match.start();
     // プレイヤーにマッチが開始されたことを通知する
     this.matches.set(match.matchID, match);
     return match.matchID;
