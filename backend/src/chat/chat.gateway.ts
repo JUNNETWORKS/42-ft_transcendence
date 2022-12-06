@@ -204,7 +204,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     // [対象チャットルームの存在確認]
     // [実行者がチャットルームで発言可能であることの確認]
     const roomId = data.roomId;
@@ -224,7 +223,10 @@ export class ChatGateway implements OnGatewayConnection {
     }
 
     // 発言を作成
-    const chatMessage = await this.chatService.postMessageBySay(data);
+    const chatMessage = await this.chatService.postMessageBySay({
+      ...data,
+      userId: user.id,
+    });
     // 発言内容を通知
     this.wsServer.sendResults(
       'ft_say',
@@ -256,14 +258,13 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     // DMルームの作成
     const dmRoom = await this.chatRoomService.create({
-      roomName: `dm-uId${data.callerId}-uId${data.userId}`,
+      roomName: `dm-uId${user.id}-uId${data.userId}`,
       roomType: 'DM',
-      ownerId: data.callerId,
+      ownerId: user.id,
       roomMember: [
-        { userId: data.callerId, memberType: 'ADMIN' },
+        { userId: user.id, memberType: 'ADMIN' },
         { userId: data.userId, memberType: 'ADMIN' },
       ],
     });
@@ -280,7 +281,7 @@ export class ChatGateway implements OnGatewayConnection {
     const chatMessage = await this.chatService.postMessageBySay({
       roomId,
       content: data.content,
-      callerId: data.callerId,
+      userId: user.id,
     });
     // 発言内容を通知
     this.wsServer.sendResults(
@@ -313,7 +314,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     const userId = user.id;
     const roomId = data.roomId;
     console.log('ft_join', data);
@@ -431,7 +431,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     // [退出対象のチャットルームが存在していることを確認]
     // [実行者が対象チャットルームに入室していることを確認]
     const roomId = data.roomId;
@@ -479,10 +478,9 @@ export class ChatGateway implements OnGatewayConnection {
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
-    const callerId = user.id;
     const targetId = data.userId;
     const rels = await Utils.PromiseMap({
-      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      caller: this.chatRoomService.getRelationWithUser(roomId, user.id),
       target: this.chatRoomService.getRelationWithUser(roomId, targetId),
     });
     if (!rels.caller || !rels.target) {
@@ -590,10 +588,9 @@ export class ChatGateway implements OnGatewayConnection {
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
-    const callerId = user.id;
     const targetId = data.userId;
     const rels = await Utils.PromiseMap({
-      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      caller: this.chatRoomService.getRelationWithUser(roomId, user.id),
       target: this.chatRoomService.getRelationWithUser(roomId, targetId),
       targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
     });
@@ -643,10 +640,9 @@ export class ChatGateway implements OnGatewayConnection {
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
-    const callerId = user.id;
     const targetId = data.userId;
     const rels = await Utils.PromiseMap({
-      caller: this.chatRoomService.getRelationWithUser(roomId, callerId),
+      caller: this.chatRoomService.getRelationWithUser(roomId, user.id),
       target: this.chatRoomService.getRelationWithUser(roomId, targetId),
       targetAttr: this.chatRoomService.getAttribute(roomId, targetId),
     });
@@ -697,7 +693,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
       take: data.take,
@@ -730,7 +725,6 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
-    data.callerId = user.id;
     const members = await this.chatRoomService.getMembers(data.roomId);
     this.wsServer.sendResults(
       'ft_get_room_members',

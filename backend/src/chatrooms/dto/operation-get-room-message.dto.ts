@@ -20,10 +20,4 @@ export class OperationGetRoomMessageDto {
   @IsInt()
   @ApiProperty()
   cursor?: number;
-
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsInt()
-  @ApiProperty()
-  callerId!: number;
 }

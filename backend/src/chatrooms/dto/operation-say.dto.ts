@@ -14,10 +14,4 @@ export class OperationSayDto {
   @MaxLength(100)
   @ApiProperty()
   content!: string;
-
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsInt()
-  @ApiProperty()
-  callerId!: number;
 }
