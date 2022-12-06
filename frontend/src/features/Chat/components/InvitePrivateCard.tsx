@@ -37,7 +37,6 @@ export const InvitePrivateCard = (props: {
   const [error, setError] = useState('');
   const [isFetched, setIsFetched] = useState(false);
   const [isLastPage, setIsLastPage] = useState(false);
-  const url = `http://localhost:3000/users?take=${take}&cursor=${cursor}`;
 
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
@@ -62,7 +61,9 @@ export const InvitePrivateCard = (props: {
       <div className="flex flex-row p-2">
         <Suspense fallback={<div>Loading...</div>}>
           <InvitePrivateUserList
-            url={url}
+            take={take}
+            cursor={cursor}
+            setCursor={setCursor}
             isFetched={isFetched}
             setIsFetched={setIsFetched}
             setIsLastPage={setIsLastPage}
