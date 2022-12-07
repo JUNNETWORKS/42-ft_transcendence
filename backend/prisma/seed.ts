@@ -16,6 +16,10 @@ async function main() {
     },
     { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
     { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
+    { displayName: 'dummy1', email: 'dummy1@prisma.io', intraId: 5 },
+    { displayName: 'dummy2', email: 'dummy2@prisma.io', intraId: 6 },
+    { displayName: 'dummy3', email: 'dummy3@prisma.io', intraId: 7 },
+    { displayName: 'dummy4', email: 'dummy4@prisma.io', intraId: 8 },
   ].reduce((prev: Promise<User[]>, d) => {
     return prev.then((leadings) => {
       return prisma.user
