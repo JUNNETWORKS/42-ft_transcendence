@@ -29,7 +29,7 @@ export const AppRoutes = () => {
     { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
     { path: '/dm', element: guardElement || <DmPage mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
-    { path: '/me/*', element: <MyPageView /> },
+    { path: '/me/*', element: guardElement || <MyPageView /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
 

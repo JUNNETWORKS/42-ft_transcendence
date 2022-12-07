@@ -2,28 +2,52 @@ import { useAtom } from 'jotai';
 import { Link, useRoutes } from 'react-router-dom';
 
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { authAtom } from '@/stores/auth';
+import { UserAvatar } from '@/components/UserAvater';
+import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { authAtom, useLogout } from '@/stores/auth';
 
 import { BlockingView } from './BlockingView';
 import { FriendsView } from './FriendsView';
 
-export const MyPageView = () => {
-  const [personalData] = useAtom(authAtom.personalData);
-
-  const presentator = personalData && (
+const MyPageContent = () => {
+  const [user] = useAtom(authAtom.personalData);
+  const [, confirmModal] = useConfirmModal();
+  const logout = useLogout();
+  if (!user) {
+    return null;
+  }
+  return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-      <div className="basis-1 border-4 border-white" style={{ width: '28rem' }}>
-        <FTH1
-          className="text-4xl font-bold"
-          style={{ padding: '4px', wordBreak: 'keep-all' }}
-        >
-          is You!
+      <div className="w-[28rem] basis-1 border-4 border-white">
+        <FTH1 className="flex flex-row items-center p-[4px] text-5xl font-bold">
+          <p
+            className="shrink grow overflow-hidden text-ellipsis"
+            style={{ wordBreak: 'keep-all' }}
+          >
+            {user.displayName}
+          </p>
         </FTH1>
-        <div className="flex flex-col gap-2">
-          <FTH4>name</FTH4>
-          <div>{personalData.displayName}</div>
-          <FTH4>email</FTH4>
-          <div>{personalData.email}</div>
+
+        <div className="flex flex-col">
+          <div className="flex flex-row">
+            <div className="shrink-0 grow-0">
+              <FTH4>&nbsp;</FTH4>
+              <UserAvatar
+                className="h-24 w-24 border-8 border-solid border-gray-700"
+                user={user}
+              />
+            </div>
+            <div className="shrink grow overflow-hidden">
+              <FTH4 className="">id</FTH4>
+              <p className="p-1">{user.id}</p>
+
+              <>
+                <FTH4 className="">email</FTH4>
+                <div className="overflow-hidden truncate p-1">{user.email}</div>
+              </>
+            </div>
+          </div>
+
           <div>
             <Link to="/me/friends" className="border-2 p-2">
               Friends
@@ -34,13 +58,33 @@ export const MyPageView = () => {
             <FTButton>Stats(stub)</FTButton>
             <FTButton>Blocked(stub)</FTButton>
           </div>
+
+          <div className="my-4 flex flex-col bg-gray-800 p-6">
+            <div className="text-center">
+              <FTButton
+                onClick={async () => {
+                  if (
+                    await confirmModal('ログアウトしますか？', {
+                      affirm: 'ログアウトする',
+                    })
+                  ) {
+                    logout();
+                  }
+                }}
+              >
+                Logout
+              </FTButton>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
+};
 
+export const MyPageView = () => {
   const myPageRoutes = [
-    { path: '/', element: presentator },
+    { path: '/', element: <MyPageContent /> },
     { path: '/friends/*', element: <FriendsView /> },
     { path: '/blocking/*', element: <BlockingView /> },
   ];
