@@ -1,6 +1,4 @@
-import { PrismaClient, User } from '@prisma/client';
-
-import { RoomType } from 'src/chatrooms/dto/operation-open.dto';
+import { PrismaClient, RoomType, User } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
@@ -17,8 +15,13 @@ async function main() {
       intraId: 2,
     },
     { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
-    { displayName: 'badass', email: 'badass@prisma.io', intraId: 4 },
-  ].reduce((prev: Promise<User[]>, d) => {
+    { displayName: 'Lorem', email: 'Lorem@prisma.io', intraId: 4 },
+    { displayName: 'ipsum', email: 'ipsum@prisma.io', intraId: 5 },
+    { displayName: 'dolor', email: 'dolor@prisma.io', intraId: 6 },
+    { displayName: 'sit', email: 'sit@prisma.io', intraId: 7 },
+    { displayName: 'amet', email: 'amet@prisma.io', intraId: 8 },
+    { displayName: 'consectetur', email: 'badass@prisma.io', intraId: 9 },
+  ].reduce((prev: Promise<User[]>, d, i) => {
     return prev.then((leadings) => {
       return prisma.user
         .create({
@@ -26,7 +29,9 @@ async function main() {
             ...d,
             password: UsersService.hash_password(d.displayName),
             userRankPoint: {
-              create: {},
+              create: {
+                rankPoint: 100 * i,
+              },
             },
           },
         })

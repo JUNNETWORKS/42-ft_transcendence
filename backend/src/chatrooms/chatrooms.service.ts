@@ -302,6 +302,13 @@ export class ChatroomsService {
     });
   }
 
+  // usersに指定したユーザーをmemberとしてルームに追加する
+  async addMembers(chatRoomId: number, users: number[]) {
+    return await this.prisma.chatUserRelation.createMany({
+      data: users.map((userId) => ({ chatRoomId, userId })),
+    });
+  }
+
   async updateMember(chatRoomId: number, roomMemberDto: RoomMemberDto) {
     // ONWERはmemberTypeを変更できない。
     const { userId, memberType } = roomMemberDto;

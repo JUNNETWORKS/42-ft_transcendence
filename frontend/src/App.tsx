@@ -3,8 +3,10 @@ import { SocketHolder } from '@/features/Socket/SocketHolder';
 import { AppProvider } from '@/providers/AppProvider';
 import { AppRoutes } from '@/routes/AppRoutes';
 
-import '../index.css';
+import { ToastHolder } from './features/Toaster/ToastHolder';
 import { useConfirmModalComponent } from './hooks/useConfirmModal';
+
+import '../index.css';
 
 export const App = () => {
   const ConfirmModal = useConfirmModalComponent();
@@ -13,6 +15,7 @@ export const App = () => {
       <AppRoutes />
       <AuthChecker />
       <SocketHolder />
+      <ToastHolder />
       <ConfirmModal />
     </AppProvider>
   );
