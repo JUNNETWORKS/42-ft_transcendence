@@ -23,8 +23,9 @@ export class OnlineMatch {
   private readonly roomName: string;
   private readonly match: Match;
   private readonly postMatchStrategy: PostMatchStrategy;
-  private readonly gameStateSyncTimer: NodeJS.Timer;
   private readonly wsServer: Server;
+  private readonly removeFromOngoingMatches: (matchID: string) => void;
+  private gameStateSyncTimer: NodeJS.Timer;
 
   public readonly matchType: MatchType;
 
@@ -44,6 +45,9 @@ export class OnlineMatch {
     this.match = new Match(userID1, userID2);
     this.joinAsSpectator(userID1);
     this.joinAsSpectator(userID2);
+  }
+
+  start() {
     this.gameStateSyncTimer = setInterval(() => {
       this.match.update();
 
@@ -66,7 +70,7 @@ export class OnlineMatch {
             result,
           });
           this.close();
-          removeFromOngoingMatches(this.ID);
+          this.removeFromOngoingMatches(this.ID);
           this.postMatchStrategy.getOnFinish(this.matchType)(this);
         }
       }
