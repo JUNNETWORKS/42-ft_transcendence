@@ -95,7 +95,7 @@ const Disable2FAButton = () => {
   }
   return (
     <FTButton
-      className="mr-2 disabled:opacity-50"
+      className="disabled:opacity-50"
       disabled={state === 'Fetching'}
       onClick={async () => {
         if (
@@ -141,7 +141,7 @@ const Enable2FAButton = ({ onSucceeded }: Enable2FACardProp) => {
   }
   return (
     <FTButton
-      className="mr-2 disabled:opacity-50"
+      className="disabled:opacity-50"
       disabled={state === 'Fetching'}
       onClick={async () => {
         if (
@@ -160,10 +160,11 @@ const Enable2FAButton = ({ onSucceeded }: Enable2FACardProp) => {
 
 type Prop = {
   user: UserPersonalData;
+  onClickPassword: () => void;
 };
 
 // Lv2.
-export const TwoFABlock = ({ user }: Prop) => {
+export const AuthBlock = ({ user, onClickPassword }: Prop) => {
   const [qrcode, setQrcode] = useState<string | null>(null);
   const [, confirmModal] = useConfirmModal();
   const closeModal = async () => {
@@ -187,10 +188,17 @@ export const TwoFABlock = ({ user }: Prop) => {
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-        2-Factor Authentication (2FA)
+        Authentication & Security
       </FTH3>
-      <div className="flex flex-row items-center justify-center gap-2 p-4">
-        <div>
+      <div className="flex flex-row items-center justify-center gap-2 p-3">
+        <div className="basis-[12em] text-center">パスワード</div>
+        <div className="basis-[8em] text-center">
+          <FTButton onClick={onClickPassword}>変更する</FTButton>
+        </div>
+      </div>
+
+      <div className="flex flex-row items-center justify-center gap-2 p-3">
+        <div className="basis-[12em] text-center">
           二要素認証を
           {user.isEnabled2FA ? (
             <p className="inline-block w-[5em] font-bold text-green-400">
@@ -200,7 +208,7 @@ export const TwoFABlock = ({ user }: Prop) => {
             <p className="inline-block w-[5em] text-gray-300">利用しない</p>
           )}
         </div>
-        <div>{button}</div>
+        <div className="basis-[8em] text-center">{button}</div>
       </div>
     </div>
   );

@@ -10,9 +10,10 @@ import { Icons } from '@/icons';
 import { authAtom, useLogout } from '@/stores/auth';
 
 import { BlockingView } from './BlockingView';
+import { AuthBlock } from './components/AuthBlock';
+import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
 import { ProfileBlock } from './components/ProfileBlock';
-import { TwoFABlock } from './components/TwoFABlock';
 import { FriendsView } from './FriendsView';
 
 const LogoutBlock = () => {
@@ -41,7 +42,7 @@ const LogoutBlock = () => {
 
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalType, setModalType] = useState<'edit' | null>(null);
+  const [modalType, setModalType] = useState<'edit' | 'password' | null>(null);
   const [user] = useAtom(authAtom.personalData);
   if (!user) {
     return null;
@@ -50,6 +51,11 @@ const MyPageContent = () => {
     switch (modalType) {
       case 'edit':
         return <EditProfileCard user={user} onClose={() => setIsOpen(false)} />;
+      case 'password':
+        return (
+          <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
+        );
+
       default:
         return null;
     }
@@ -57,7 +63,9 @@ const MyPageContent = () => {
   return (
     <>
       <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        {modalContent}
+        <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+          {modalContent}
+        </div>
       </Modal>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
@@ -96,7 +104,13 @@ const MyPageContent = () => {
               <FTButton>Blocked(stub)</FTButton>
             </div>
 
-            <TwoFABlock user={user} />
+            <AuthBlock
+              user={user}
+              onClickPassword={() => {
+                setIsOpen(true);
+                setModalType('password');
+              }}
+            />
 
             <LogoutBlock />
           </div>

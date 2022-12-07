@@ -129,7 +129,7 @@ export const EditProfileCard = ({ user, onClose }: Prop) => {
     );
   })();
   return (
-    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+    <>
       <div className="flex gap-8">
         <div>
           <div
@@ -174,6 +174,6 @@ export const EditProfileCard = ({ user, onClose }: Prop) => {
           Save
         </FTButton>
       </div>
-    </div>
+    </>
   );
 };
