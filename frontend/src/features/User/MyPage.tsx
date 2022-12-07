@@ -14,7 +14,6 @@ import { EditProfileCard } from './components/EditProfileCard';
 import { ProfileBlock } from './components/ProfileBlock';
 import { FriendsView } from './FriendsView';
 
-
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState<'edit' | null>(null);
@@ -49,7 +48,7 @@ const MyPageContent = () => {
             </p>
             <div className="shrink-0 grow-0 self-end">
               <FTButton
-                className="text-xl"
+                className="text-2xl"
                 onClick={() => {
                   setIsOpen(true);
                   setModalType('edit');
