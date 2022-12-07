@@ -1,4 +1,88 @@
+import { ReactNode } from 'react';
+import { Oval } from 'react-loader-spinner';
+
 import { displayUser } from '@/typedef';
+
+const Params = {
+  itemHeight: 45,
+};
+
+type EnclosureProp = {
+  height: number;
+  onClick?: () => void;
+  children?: ReactNode;
+};
+
+const Enclosure = ({ height, onClick, children }: EnclosureProp) => {
+  const baseClassName = 'flex w-full shrink-0 grow-0 items-center bg-black p-1';
+  const className = `${baseClassName} ${
+    children ? 'border-2 border-solid border-white' : ''
+  } ${onClick ? 'cursor-pointer' : 'justify-center'}`;
+  return (
+    <div
+      className={className}
+      style={{ flexBasis: `${height}px` }}
+      onClick={() => {
+        onClick ? onClick() : null;
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
+type PlaceholderProp = {
+  take: number;
+};
+
+/**
+ * ローディング中に高さをガチャらせないためのコンポーネント
+ */
+export const InvitePrivateUserListLoading = ({ take }: PlaceholderProp) => {
+  return (
+    <Enclosure height={Params.itemHeight * take}>
+      <Oval
+        height={40}
+        width={40}
+        color="#ffffff"
+        visible={true}
+        secondaryColor="#eeeeee"
+      />
+    </Enclosure>
+  );
+};
+
+/**
+ * 取得ユーザ数が0だった場合に「もうユーザがいない」ことを知らせるコンポーネント
+ */
+const BlankList = ({ take }: PlaceholderProp) => {
+  return (
+    <Enclosure height={Params.itemHeight * take}>
+      <p>no more users</p>
+    </Enclosure>
+  );
+};
+
+type ItemProp = {
+  submit: (targetUser: number) => void;
+  user?: displayUser;
+};
+
+/**
+ * `user`がない場合は枠線なしで隙間だけ開ける
+ */
+const ListItem = ({ submit, user }: ItemProp) => {
+  return (
+    <Enclosure
+      height={Params.itemHeight}
+      onClick={user ? () => submit(user.id) : undefined}
+    >
+      {user && (
+        <p className="overflow-hidden text-ellipsis">{user.displayName}</p>
+      )}
+    </Enclosure>
+  );
+};
 
 type InvitePrivateUserListProps = {
   take: number;
@@ -23,19 +107,25 @@ export const InvitePrivateUserList = (props: InvitePrivateUserListProps) => {
     })();
   }
 
+  if (props.users.length === 0) {
+    return <BlankList take={props.take} />;
+  }
+  const arr: number[] = [];
+  for (let i = 0; i < props.take; ++i) {
+    arr.push(i);
+  }
   return (
-    <div className="flex w-full min-w-0 flex-col">
-      {props.users.map((user) => {
+    <>
+      {arr.map((_, i) => {
+        const user = props.users[i];
         return (
-          <div
-            onClick={() => props.submit(user.id)}
-            className="w-full cursor-pointer overflow-hidden text-ellipsis border-2 border-solid border-white bg-black p-1"
-            key={user.id}
-          >
-            {user.displayName}
-          </div>
+          <ListItem
+            key={user ? user.id : `nothing-${i}`}
+            submit={props.submit}
+            user={user}
+          />
         );
       })}
-    </div>
+    </>
   );
 };

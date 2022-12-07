@@ -5,7 +5,10 @@ import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { displayUser, ChatRoom } from '@/typedef';
 
-import { InvitePrivateUserList } from './InvitePrivateUserList';
+import {
+  InvitePrivateUserList,
+  InvitePrivateUserListLoading,
+} from './InvitePrivateUserList';
 
 const validateError = (response: { status: string }) => {
   switch (response.status) {
@@ -61,18 +64,20 @@ export const InvitePrivateCard = (props: {
     <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
       <FTH3>invite to private room</FTH3>
       <div className="flex flex-row p-2">
-        <Suspense fallback={<div>Loading...</div>}>
-          <InvitePrivateUserList
-            take={take}
-            cursor={cursor}
-            setCursor={setCursor}
-            isFetched={isFetched}
-            setIsFetched={setIsFetched}
-            users={users}
-            setUsers={setUsers}
-            submit={submit}
-          />
-        </Suspense>
+        <div className="flex w-full min-w-0 flex-col">
+          <Suspense fallback={<InvitePrivateUserListLoading take={take} />}>
+            <InvitePrivateUserList
+              take={take}
+              cursor={cursor}
+              setCursor={setCursor}
+              isFetched={isFetched}
+              setIsFetched={setIsFetched}
+              users={users}
+              setUsers={setUsers}
+              submit={submit}
+            />
+          </Suspense>
+        </div>
       </div>
       <div className="text-red-400">{error !== '' ? error : '　'}</div>
       <div className="flex flex-row justify-around p-2">
