@@ -12,14 +12,37 @@ import { authAtom, useLogout } from '@/stores/auth';
 import { BlockingView } from './BlockingView';
 import { EditProfileCard } from './components/EditProfileCard';
 import { ProfileBlock } from './components/ProfileBlock';
+import { TwoFABlock } from './components/TwoFABlock';
 import { FriendsView } from './FriendsView';
+
+const LogoutBlock = () => {
+  const [, confirmModal] = useConfirmModal();
+  const logout = useLogout();
+  return (
+    <div className="my-4 flex flex-col bg-gray-800 p-6">
+      <div className="text-center">
+        <FTButton
+          onClick={async () => {
+            if (
+              await confirmModal('ログアウトしますか？', {
+                affirm: 'ログアウトする',
+              })
+            ) {
+              logout();
+            }
+          }}
+        >
+          Logout
+        </FTButton>
+      </div>
+    </div>
+  );
+};
 
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState<'edit' | null>(null);
   const [user] = useAtom(authAtom.personalData);
-  const [, confirmModal] = useConfirmModal();
-  const logout = useLogout();
   if (!user) {
     return null;
   }
@@ -73,23 +96,9 @@ const MyPageContent = () => {
               <FTButton>Blocked(stub)</FTButton>
             </div>
 
-            <div className="my-4 flex flex-col bg-gray-800 p-6">
-              <div className="text-center">
-                <FTButton
-                  onClick={async () => {
-                    if (
-                      await confirmModal('ログアウトしますか？', {
-                        affirm: 'ログアウトする',
-                      })
-                    ) {
-                      logout();
-                    }
-                  }}
-                >
-                  Logout
-                </FTButton>
-              </div>
-            </div>
+            <TwoFABlock user={user} />
+
+            <LogoutBlock />
           </div>
         </div>
       </div>
