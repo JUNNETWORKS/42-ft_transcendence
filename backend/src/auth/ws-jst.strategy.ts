@@ -20,9 +20,7 @@ export class WsJwtStrategy extends PassportStrategy(Strategy, 'wsjwt') {
 
   async validate(payload: any) {
     try {
-      console.log('payload:', payload);
       const result = await this.jwtStrategy.validate(payload);
-      console.log('result:', result);
       return result;
     } catch (e) {
       if (e instanceof HttpException) {
