@@ -8,12 +8,18 @@ import {
 import { Socket, Server } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
+import {
+  generateFullRoomName,
+  sendResultRoom,
+} from 'src/utils/socket/SocketRoom';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
+import { PongPrivateMatchCreateDTO } from './dto/pong-private-match-create.dto';
 
 import { OngoingMatches } from './game/ongoing-matches';
+import { PendingPrivateMatches } from './game/pending-private-matches';
 import { PostMatchStrategy } from './game/PostMatchStrategy';
 import { WaitingQueue } from './game/waiting-queue';
 import { WaitingQueues } from './game/waiting-queues';
@@ -24,6 +30,7 @@ import { WaitingQueues } from './game/waiting-queues';
 export class PongGateway {
   private wsServer!: Server;
   private ongoingMatches: OngoingMatches;
+  private pendingPrivateMatches: PendingPrivateMatches;
   private waitingQueues: WaitingQueues;
   private readonly logger = new Logger('Match WS');
 
@@ -39,6 +46,11 @@ export class PongGateway {
       this.postMatchStrategy
     );
     this.waitingQueues = new WaitingQueues();
+    this.pendingPrivateMatches = new PendingPrivateMatches(
+      this.wsServer,
+      this.ongoingMatches,
+      this.postMatchStrategy
+    );
   }
 
   onApplicationBootstrap() {
@@ -46,12 +58,14 @@ export class PongGateway {
     const rankQueue = new WaitingQueue(
       'RANK',
       this.ongoingMatches,
-      this.wsServer
+      this.wsServer,
+      this.postMatchStrategy
     );
     const casualQueue = new WaitingQueue(
       'CASUAL',
       this.ongoingMatches,
-      this.wsServer
+      this.wsServer,
+      this.postMatchStrategy
     );
     this.waitingQueues.appendQueue(rankQueue);
     this.waitingQueues.appendQueue(casualQueue);
