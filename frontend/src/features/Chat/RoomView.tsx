@@ -16,6 +16,7 @@ import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
 import { makeCommand } from './command';
+import { InvitePrivateButton } from './components/InvitePrivateButton';
 import { ChatRoomUpdateCard, RoomTypeIcon } from './RoomSetting';
 
 function messageCardId(message: TD.ChatRoomMessage) {
@@ -156,6 +157,9 @@ const MembersList = (props: {
   members: TD.UserRelationMap;
   memberOperations: TD.MemberOperations;
 }) => {
+  const isPrivate = props.room.roomType === 'PRIVATE';
+  const isOwner = props.room.ownerId === props.you?.userId;
+
   const computed = {
     members: useMemo(() => {
       const mems: TD.ChatUserRelation[] = [];
@@ -177,6 +181,7 @@ const MembersList = (props: {
   return (
     <div className="flex h-full flex-col">
       <FTH3 className="shrink-0 grow-0">Members</FTH3>
+      {isPrivate && isOwner && <InvitePrivateButton room={props.room} />}
       <div className="shrink grow">
         {computed.members.map((member) => (
           <div key={member.userId}>
