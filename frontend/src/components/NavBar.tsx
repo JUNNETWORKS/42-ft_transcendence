@@ -28,7 +28,7 @@ const UserCard = ({ user }: UserCardProp) => {
           <UserAvatar user={user} />
         </div>
         <div
-          className="shrink grow overflow-hidden text-ellipsis text-2xl"
+          className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap text-2xl"
           style={{ wordBreak: 'keep-all' }}
         >
           {user.displayName}

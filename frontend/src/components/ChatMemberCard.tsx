@@ -116,7 +116,7 @@ export const ChatMemberCard = (props: {
         <div
           className={`shrink grow cursor-pointer ${
             isYou ? 'font-bold' : ''
-          } max-w-[10em] overflow-hidden text-ellipsis text-left`}
+          } max-w-[10em] overflow-hidden text-ellipsis whitespace-nowrap text-left`}
           key={props.member.userId}
           style={{ wordBreak: 'keep-all' }}
         >
