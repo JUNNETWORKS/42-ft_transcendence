@@ -16,9 +16,9 @@ type Prop =
     };
 
 // Lv2.
-export const MyProfileBlock = ({ user, isYou }: Prop) => {
+export const ProfileBlock = ({ user, isYou }: Prop) => {
   return (
-    <>
+    <div className="flex flex-row">
       <div className="shrink-0 grow-0">
         <FTH4>&nbsp;</FTH4>
         <UserAvatar
@@ -46,6 +46,6 @@ export const MyProfileBlock = ({ user, isYou }: Prop) => {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 };

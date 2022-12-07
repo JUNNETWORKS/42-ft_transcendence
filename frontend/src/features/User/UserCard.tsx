@@ -5,7 +5,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { UserAvatar } from '@/components/UserAvater';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { Icons } from '@/icons';
@@ -17,7 +16,7 @@ import * as TD from '@/typedef';
 import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
-import { MyProfileBlock } from './components/MyProfileBlock';
+import { ProfileBlock } from './components/ProfileBlock';
 
 type ActualCardProp = {
   user: TD.User;
@@ -52,11 +51,9 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
         {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
       </FTH1>
       <div className="flex flex-col">
-        <div className="flex flex-row">
-          <MyProfileBlock
-            {...(isYou ? { user: personalData, isYou } : { user, isYou })}
-          />
-        </div>
+        <ProfileBlock
+          {...(isYou ? { user: personalData, isYou } : { user, isYou })}
+        />
 
         {children}
 

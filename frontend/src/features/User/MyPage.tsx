@@ -1,13 +1,12 @@
 import { useAtom } from 'jotai';
 import { Link, useRoutes } from 'react-router-dom';
 
-import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
-import { UserAvatar } from '@/components/UserAvater';
+import { FTButton, FTH1 } from '@/components/FTBasicComponents';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { authAtom, useLogout } from '@/stores/auth';
 
 import { BlockingView } from './BlockingView';
-import { MyProfileBlock } from './components/MyProfileBlock';
+import { ProfileBlock } from './components/ProfileBlock';
 import { FriendsView } from './FriendsView';
 
 const MyPageContent = () => {
@@ -30,9 +29,7 @@ const MyPageContent = () => {
         </FTH1>
 
         <div className="flex flex-col">
-          <div className="flex flex-row">
-            <MyProfileBlock user={user} isYou={true} />
-          </div>
+          <ProfileBlock user={user} isYou={true} />
 
           <div>
             <Link to="/me/friends" className="border-2 p-2">
