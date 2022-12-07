@@ -20,7 +20,7 @@ const LogoutBlock = () => {
   const [, confirmModal] = useConfirmModal();
   const logout = useLogout();
   return (
-    <div className="my-4 flex flex-col bg-gray-800 p-6">
+    <div className="flex flex-col bg-gray-800 p-6">
       <div className="text-center">
         <FTButton
           onClick={async () => {
@@ -93,15 +93,22 @@ const MyPageContent = () => {
           <div className="flex flex-col">
             <ProfileBlock user={user} isYou={true} />
 
-            <div>
-              <Link to="/me/friends" className="border-2 p-2">
+            <div className="flex flex-row items-center justify-center gap-4 p-3">
+              <Link to="/dm" className="min-w-[4em] border-2 p-2 text-center">
+                DM
+              </Link>
+              <Link
+                to="/me/friends"
+                className="min-w-[4em] border-2 p-2 text-center"
+              >
                 Friends
               </Link>
-              <Link to="/me/blocking" className="border-2 p-2">
+              <Link
+                to="/me/blocking"
+                className="min-w-[4em] border-2 p-2 text-center"
+              >
                 BlockingUsers
               </Link>
-              <FTButton>Stats(stub)</FTButton>
-              <FTButton>Blocked(stub)</FTButton>
             </div>
 
             <AuthBlock
