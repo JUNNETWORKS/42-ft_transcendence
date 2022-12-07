@@ -1,4 +1,3 @@
-import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -54,13 +53,6 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
       </FTH1>
       <div className="flex flex-col">
         <div className="flex flex-row">
-          <div className="shrink-0 grow-0">
-            <FTH4>&nbsp;</FTH4>
-            <UserAvatar
-              className="h-24 w-24 border-8 border-solid border-gray-700"
-              user={user}
-            />
-          </div>
           <MyProfileBlock
             {...(isYou ? { user: personalData, isYou } : { user, isYou })}
           />

@@ -31,14 +31,6 @@ const MyPageContent = () => {
 
         <div className="flex flex-col">
           <div className="flex flex-row">
-            <div className="shrink-0 grow-0">
-              <FTH4>&nbsp;</FTH4>
-              <UserAvatar
-                className="h-24 w-24 border-8 border-solid border-gray-700"
-                user={user}
-              />
-            </div>
-
             <MyProfileBlock user={user} isYou={true} />
           </div>
 
