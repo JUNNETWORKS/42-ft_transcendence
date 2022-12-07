@@ -31,12 +31,11 @@ export const InvitePrivateCard = (props: {
 }) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
-  const take = 2;
+  const take = 5;
   const [cursor, setCursor] = useState(0);
   const [users, setUsers] = useState<displayUser[]>([]);
   const [error, setError] = useState('');
   const [isFetched, setIsFetched] = useState(false);
-  const [isLastPage, setIsLastPage] = useState(false);
 
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
@@ -55,6 +54,9 @@ export const InvitePrivateCard = (props: {
     });
   };
 
+  const prevIsDisabled = cursor <= 0;
+  const nextIsDisabled = users.length < take;
+
   return (
     <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
       <FTH3>invite to private room</FTH3>
@@ -66,7 +68,6 @@ export const InvitePrivateCard = (props: {
             setCursor={setCursor}
             isFetched={isFetched}
             setIsFetched={setIsFetched}
-            setIsLastPage={setIsLastPage}
             users={users}
             setUsers={setUsers}
             submit={submit}
@@ -78,11 +79,10 @@ export const InvitePrivateCard = (props: {
         <FTButton
           onClick={() => {
             setIsFetched(false);
-            setIsLastPage(false);
             const newCursor = cursor - take >= 0 ? cursor - take : 0;
             setCursor(newCursor);
           }}
-          disabled={cursor === 0}
+          disabled={prevIsDisabled}
         >
           {'<-'}
         </FTButton>
@@ -91,7 +91,7 @@ export const InvitePrivateCard = (props: {
             setIsFetched(false);
             setCursor(cursor + take);
           }}
-          disabled={isLastPage}
+          disabled={nextIsDisabled}
         >
           {'->'}
         </FTButton>

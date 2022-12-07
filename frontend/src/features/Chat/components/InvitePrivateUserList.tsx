@@ -6,7 +6,6 @@ type InvitePrivateUserListProps = {
   setCursor: React.Dispatch<React.SetStateAction<number>>;
   isFetched: boolean;
   setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsLastPage: React.Dispatch<React.SetStateAction<boolean>>;
   users: displayUser[];
   setUsers: React.Dispatch<React.SetStateAction<displayUser[]>>;
   submit: (targetUser: number) => void;
@@ -20,11 +19,6 @@ export const InvitePrivateUserList = (props: InvitePrivateUserListProps) => {
       const json = (await res.json()) as displayUser[];
       console.log('res:', json);
       props.setIsFetched(true);
-      if (json.length === 0) {
-        props.setIsLastPage(true);
-        props.setCursor(props.cursor - props.take);
-        return;
-      }
       props.setUsers(json);
     })();
   }
