@@ -13,6 +13,7 @@ import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
 
+import { OperationInviteDto } from './dto/operation-invite.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
 import { OperationBlockDto } from 'src/chatrooms/dto/operation-block.dto';
 import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
@@ -465,6 +466,143 @@ export class ChatGateway implements OnGatewayConnection {
       }
     );
     this.updateHeartbeat(user.id);
+  }
+
+  /**
+   * privateルームへの招待（強制入室
+   * @param data
+   * @param client
+   */
+  @SubscribeMessage('ft_invite')
+  async handleInvite(
+    @MessageBody() data: OperationInviteDto,
+    @ConnectedSocket() client: Socket
+  ) {
+    const caller = await this.authService.trapAuth(client);
+    if (!caller) {
+      return;
+    }
+    const callerId = caller.id;
+    const roomId = data.roomId;
+    console.log('ft_invite', data);
+
+    const rel = await Utils.PromiseMap({
+      room: this.chatRoomService.findOne(roomId),
+      relation: this.chatRoomService.getRelation(roomId, callerId),
+      attr: this.chatRoomService.getAttribute(roomId, callerId),
+    });
+
+    // [ 入室対象のチャットルームが存在していることを確認 ]
+    if (!rel.room) {
+      return { status: 'not found' };
+    }
+    const room = rel.room;
+    // [ 実行者がオーナーであることの確認 ]
+    if (room.ownerId !== callerId) {
+      return { status: 'caller is not owner' };
+    }
+    // [ 実行者が入室していることの確認 ]
+    {
+      const relation = rel.relation;
+      if (!relation) {
+        return { status: 'caller is not joined' };
+      }
+    }
+    // TODO: オーナーはbanされることがあるか確認
+    // [ 実行者がbanされていないことを確認 ]
+    if (rel.attr && rel.attr.bannedEndAt > new Date()) {
+      console.log('** you are banned **');
+      return { status: 'banned' };
+    }
+
+    const usersRel = await Promise.all(
+      data.users.map(async (userId) => {
+        return await Utils.PromiseMap({
+          user: this.usersService.findOne(userId),
+          relation: this.chatRoomService.getRelation(roomId, userId),
+          isBlocking: this.usersService.findBlocked(userId, callerId),
+        });
+      })
+    );
+    // 招待されるユーザーが存在していることの確認
+    // 招待されるユーザーが既に入室していないことの確認
+    usersRel.forEach((rel) => {
+      if (!rel.user) return { status: 'user does not exist' };
+      if (rel.relation) return { stats: 'user is joined already' };
+    });
+    // 招待するユーザーからblockされていた時、除外する（この時、banされているユーザーには通知しないことにする）
+    const targetUsers = usersRel
+      .filter((rel) => !rel.isBlocking)
+      .map((rel) => rel.user!.id);
+
+    // [ハードリレーション更新]
+    const result = await this.chatRoomService.addMembers(roomId, targetUsers);
+    console.log('invite result:', result); // { count: 3 } とかになる
+
+    // [roomへのjoin状態をハードリレーションに同期させる]
+    await Promise.all(
+      targetUsers.map(async (userId) => {
+        await this.wsServer.usersJoin(userId, { roomId });
+      })
+    );
+
+    // 入室したユーザーに対して入室したことを通知
+    await Promise.all(
+      targetUsers.map(async (userId) => {
+        const relation = await this.chatRoomService.getRelationWithUser(
+          roomId,
+          userId
+        );
+        this.wsServer.sendResults(
+          'ft_join',
+          {
+            relation,
+            room: {
+              id: roomId,
+              roomName: room.roomName,
+            },
+            user: {
+              id: userId,
+              displayName: relation?.user.displayName,
+            },
+          },
+          {
+            userId,
+            roomId,
+          }
+        );
+      })
+    );
+
+    // チャットルームの内容を通知
+    const messages = await this.chatRoomService.getMessages({
+      roomId,
+      take: 50,
+    });
+    const members = await this.chatRoomService.getMembers(roomId);
+
+    await Promise.all(
+      targetUsers.map(async (userId) => {
+        await this.wsServer.sendResults(
+          'ft_get_room_messages',
+          {
+            id: roomId,
+            messages,
+          },
+          { userId }
+        );
+        await this.wsServer.sendResults(
+          'ft_get_room_members',
+          {
+            id: roomId,
+            members,
+          },
+          { userId }
+        );
+      })
+    );
+    this.updateHeartbeat(caller.id);
+    return { status: 'success' };
   }
 
   @SubscribeMessage('ft_nomminate')
