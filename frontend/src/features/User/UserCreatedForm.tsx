@@ -1,5 +1,7 @@
-import { authAtom, UserPersonalData } from '@/stores/auth';
-import { useUpdateUser } from '@/stores/store';
+import { useAtom } from 'jotai';
+import { useState } from 'react';
+import { useId } from 'react';
+
 import {
   FTButton,
   FTH1,
@@ -10,11 +12,12 @@ import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
+import { authAtom, UserPersonalData } from '@/stores/auth';
+import { useUpdateUser } from '@/stores/store';
 import * as TD from '@/typedef';
-import { useAtom } from 'jotai';
-import { useState } from 'react';
-import { userErrors } from './user.validator';
+
 import { AvatarFile, AvatarInput } from './components/AvatarInput';
+import { userErrors } from './user.validator';
 
 type Prop = {
   onClose: () => void;
@@ -29,6 +32,9 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
   const [displayName, setDisplayName] = useState(userData.displayName);
   const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
+  const submitId = useId();
+  const fieldIds = [useId(), useId()];
+  const [nameId, passwordId] = fieldIds;
 
   const trimmedData = {
     displayName: displayName.trim(),
@@ -87,6 +93,36 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
     }
     return <></>;
   };
+  const moveFocus = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    let submittable = false;
+    let downward: boolean;
+    switch (e.key) {
+      case 'Enter':
+        submittable = true;
+        downward = true;
+        break;
+      case 'ArrowDown':
+        downward = true;
+        break;
+      case 'ArrowUp':
+        downward = false;
+        break;
+      default:
+        return;
+    }
+    const elem = e.target as HTMLElement;
+    const cid = elem.id;
+    if (cid) {
+      const i = fieldIds.indexOf(cid);
+      if (i === fieldIds.length - 1 && downward && submittable) {
+        document.getElementById(submitId)?.click();
+      } else if (i >= 0 && downward) {
+        document.getElementById(fieldIds[i + 1])?.focus();
+      } else if (i > 0 && !downward) {
+        document.getElementById(fieldIds[i - 1])?.focus();
+      }
+    }
+  };
   return (
     <>
       <FTH1 className="p-2 text-3xl">Modify Your Data</FTH1>
@@ -111,13 +147,15 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
           <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
 
           <FTH4 className="">name</FTH4>
-          <div className="py-1 pb-5 pr-2">
+          <div className="py-1 pb-5">
             <FTTextField
+              id={nameId}
               name="displayName"
-              className="w-full border-0 border-b-2"
+              className="w-full border-0 border-b-2 focus:bg-gray-700"
               autoComplete="off"
               placeholder="Name:"
               value={displayName}
+              onActualKeyDown={moveFocus}
               onChange={(e) => setDisplayName(e.target.value)}
             />
             <div className="text-red-400">
@@ -131,14 +169,16 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
           </div>
 
           <FTH4 className="">password</FTH4>
-          <div className="py-1 pr-2">
+          <div className="py-1">
             <FTTextField
+              id={passwordId}
               name="password"
-              className="w-full border-0 border-b-2"
+              className="w-full border-0 border-b-2 focus:bg-gray-700"
               autoComplete="off"
               placeholder="設定する場合は 12 - 60 文字"
               value={password}
               type="password"
+              onActualKeyDown={moveFocus}
               onChange={(e) => setPassword(e.target.value)}
             />
             <div className="h-[2em]">{passwordErrorContent()}</div>
@@ -150,6 +190,7 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
           あとにする
         </FTButton>
         <FTButton
+          id={submitId}
           className="mr-2 disabled:opacity-50"
           disabled={validationErrors.some || state === 'Fetching'}
           onClick={submit}
