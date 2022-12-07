@@ -7,14 +7,6 @@ export function makeCommand(
   focusedRoomId: number
 ) {
   return {
-    open: (args: TD.OpenArgument) => {
-      const data = {
-        ...args,
-      };
-      console.log(data);
-      mySocket.emit('ft_open', data);
-    },
-
     join: (roomId: number, roomPassword: string, callback: any) => {
       const data = {
         roomId,
