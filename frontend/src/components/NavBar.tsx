@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { authAtom } from '@/stores/auth';
@@ -64,7 +64,9 @@ export const NavBar = () => {
     <>
       <div className="bg-primary bg-navbar-img">
         <div className="flex h-20 place-content-between">
-          <p className="flex w-72 items-center justify-center text-5xl">HOME</p>
+          <p className="flex w-72 items-center justify-center text-5xl">
+            <Link to="/">HOME</Link>
+          </p>
           {presentator}
         </div>
       </div>
