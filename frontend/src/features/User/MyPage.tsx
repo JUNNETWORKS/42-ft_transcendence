@@ -7,6 +7,7 @@ import { useConfirmModal } from '@/hooks/useConfirmModal';
 import { authAtom, useLogout } from '@/stores/auth';
 
 import { BlockingView } from './BlockingView';
+import { MyProfileBlock } from './components/MyProfileBlock';
 import { FriendsView } from './FriendsView';
 
 const MyPageContent = () => {
@@ -37,15 +38,8 @@ const MyPageContent = () => {
                 user={user}
               />
             </div>
-            <div className="shrink grow overflow-hidden">
-              <FTH4 className="">id</FTH4>
-              <p className="p-1">{user.id}</p>
 
-              <>
-                <FTH4 className="">email</FTH4>
-                <div className="overflow-hidden truncate p-1">{user.email}</div>
-              </>
-            </div>
+            <MyProfileBlock user={user} isYou={true} />
           </div>
 
           <div>
