@@ -6,10 +6,16 @@ import {
   NotFoundException,
   StreamableFile,
 } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
+import { User } from '@prisma/client';
 import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { OperationBlockDto } from 'src/chatrooms/dto/operation-block.dto';
+import { OperationFollowDto } from 'src/chatrooms/dto/operation-follow.dto';
+import { OperationUnblockDto } from 'src/chatrooms/dto/operation-unblock.dto';
+import { OperationUnfollowDto } from 'src/chatrooms/dto/operation-unfollow.dto';
 
 import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
@@ -24,6 +30,7 @@ export class UsersService {
     @Inject(forwardRef(() => AuthService))
     private authService: AuthService,
     private prisma: PrismaService,
+    @Inject(forwardRef(() => ChatroomsService))
     private chatRoomService: ChatroomsService
   ) {}
 
@@ -317,6 +324,69 @@ export class UsersService {
       avatar: new StreamableFile(avatar.avatar),
       lastModified: avatar.lastModified,
     };
+  }
+
+  async execFollowUnfollow(
+    action: 'follow' | 'unfollow',
+    user: User,
+    data: OperationFollowDto | OperationUnfollowDto
+  ) {
+    const targetId = data.userId;
+
+    if (user.id === data.userId) {
+      throw new WsException('is you!!');
+    }
+    const rel = await Utils.PromiseMap({
+      target: this.findOne(targetId),
+      existing: this.findFriend(user.id, targetId),
+    });
+    if (!rel.target) {
+      throw new WsException('** unexisting target user **');
+    }
+
+    if (action === 'follow') {
+      if (rel.existing) {
+        throw new WsException('** is already friend **');
+      }
+      await this.addFriend(user.id, targetId);
+    } else {
+      if (!rel.existing) {
+        throw new WsException('** is not a friend **');
+      }
+      await this.removeFriend(user.id, targetId);
+    }
+    return rel.target;
+  }
+
+  async execBlockUnblock(
+    action: 'block' | 'unblock',
+    user: User,
+    data: OperationBlockDto | OperationUnblockDto
+  ) {
+    const targetId = data.userId;
+
+    if (user.id === data.userId) {
+      throw new WsException('is you!!');
+    }
+    const rel = await Utils.PromiseMap({
+      target: this.findOne(targetId),
+      existing: this.findBlocked(user.id, targetId),
+    });
+    if (!rel.target) {
+      throw new WsException('** unexisting target user **');
+    }
+    if (action === 'block') {
+      if (rel.existing) {
+        throw new WsException('** already being blocked **');
+      }
+      await this.block(user.id, targetId);
+    } else {
+      if (!rel.existing) {
+        throw new WsException('** not yet blocked **');
+      }
+      await this.unblock(user.id, targetId);
+    }
+    return rel.target;
   }
 
   /**

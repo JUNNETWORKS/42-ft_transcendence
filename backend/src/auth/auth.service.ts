@@ -71,6 +71,7 @@ export class AuthService {
   }
 
   async login(user: any, completedTwoFa = false): Promise<LoginResult> {
+    console.log(user);
     const iat = Date.now() / 1000;
     const u = await this.usersService.findOne(user.id);
     if (u?.isEnabled2FA && !completedTwoFa) {

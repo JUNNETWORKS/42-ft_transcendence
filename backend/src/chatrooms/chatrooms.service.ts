@@ -1,9 +1,14 @@
 import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import { WsException } from '@nestjs/websockets';
+import { User } from '@prisma/client';
 
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
 import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
+import { OperationJoinDto } from './dto/operation-join.dto';
+import { OperationLeaveDto } from './dto/operation-leave.dto';
+import { OperationTellDto } from './dto/operation-tell.dto';
 import { PostMessageDto } from './dto/post-message.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
@@ -362,14 +367,84 @@ export class ChatroomsService {
   }
 
   postMessage(data: PostMessageDto) {
-    // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
+  }
+
+  async createDmRoom(user: User, data: OperationTellDto) {
+    return this.create({
+      roomName: `dm-uId${user.id}-uId${data.userId}`,
+      roomType: 'DM',
+      ownerId: user.id,
+      roomMember: [
+        { userId: user.id, memberType: 'ADMIN' },
+        { userId: data.userId, memberType: 'ADMIN' },
+      ],
+    });
+  }
+
+  async execJoin(user: User, data: OperationJoinDto) {
+    const userId = user.id;
+    const roomId = data.roomId;
+    console.log('ft_join', data);
+
+    const rel = await Utils.PromiseMap({
+      room: this.findOne(roomId),
+      relation: this.getRelation(roomId, user.id),
+      attr: this.getAttribute(roomId, user.id),
+    });
+
+    // [ 入室対象のチャットルームが存在していることを確認 ]
+    if (!rel.room) {
+      throw new WsException('not found');
+    }
+    const room = rel.room;
+    // [ 既に入室していないか確認 ]
+    if (rel.relation) {
+      throw new WsException('joined already');
+    }
+    // [ 実行者がbanされていないことを確認 ]
+    if (rel.attr && rel.attr.bannedEndAt > new Date()) {
+      console.log('** you are banned **');
+      throw new WsException('banned');
+    }
+    // lockedの場合、パスワードのチェック
+    if (room.roomType === 'LOCKED') {
+      if (!data.roomPassword) {
+        throw new WsException('no password');
+      }
+      // hash化されたパスワードをチェックする
+      const hashed = this.hash_password(data.roomPassword);
+      if (room.roomPassword !== hashed) {
+        throw new WsException('invalid password');
+      }
+    }
+
+    // [ハードリレーション更新]
+    const relation = await this.addMember(roomId, {
+      userId,
+      memberType: 'MEMBER',
+    });
+    return relation;
+  }
+
+  async execLeave(user: User, data: OperationLeaveDto) {
+    // [退出対象のチャットルームが存在していることを確認]
+    // [実行者が対象チャットルームに入室していることを確認]
+    const roomId = data.roomId;
+    const relation = await this.getRelation(roomId, user.id);
+    if (!relation) {
+      throw new WsException('not joined');
+    }
+
+    // [ハードリレーション更新]
+    await this.removeMember(roomId, user.id);
+    return relation;
   }
 
   /**
    * 生パスワードをハッシュ化する
    */
-  hash_password(password: string) {
+  private hash_password(password: string) {
     return Utils.hash(
       chatRoomConstants.secret,
       password + chatRoomConstants.pepper,

@@ -6,16 +6,17 @@ import { ChatroomsModule } from '../chatrooms/chatrooms.module';
 import { UsersModule } from '../users/users.module';
 import { WsServerModule } from '../ws-server/ws-server.module';
 import { ChatGateway } from './chat.gateway';
+import { Heartbeat } from './chat.heartbeat';
 import { ChatService } from './chat.service';
 
 @Module({
-  providers: [ChatGateway, ChatService],
+  providers: [ChatGateway, ChatService, Heartbeat],
   imports: [
     forwardRef(() => ChatroomsModule),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
     WsServerModule,
   ],
-  exports: [ChatGateway],
+  exports: [ChatGateway, ChatService],
 })
 export class ChatModule {}

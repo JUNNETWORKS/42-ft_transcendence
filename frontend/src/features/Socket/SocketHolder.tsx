@@ -125,7 +125,7 @@ export const SocketHolder = () => {
       'ft_say',
       (data: TD.SayResult) => {
         const message = TD.Mapper.chatRoomMessage(data);
-        console.log('catch say');
+        console.log('catch say', data);
         const roomId = data.chatRoomId;
         stateMutater.addMessagesToRoom(roomId, [message]);
       },
