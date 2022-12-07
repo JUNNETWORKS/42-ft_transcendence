@@ -15,16 +15,7 @@ export class OngoingMatches {
     this.matches = new Map<string, OnlineMatch>();
   }
 
-  createMatch(userID1: number, userID2: number, matchType: MatchType) {
-    const match = new OnlineMatch(
-      this.wsServer,
-      userID1,
-      userID2,
-      matchType,
-      (matchID: string) => this.removeMatch(matchID),
-      this.postMatchStrategy
-    );
-    // プレイヤーにマッチが開始されたことを通知する
+  appendMatch(match: OnlineMatch) {
     this.matches.set(match.matchID, match);
     return match.matchID;
   }
