@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { authAtom } from '@/stores/auth';
