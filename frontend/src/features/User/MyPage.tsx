@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Link, useRoutes } from 'react-router-dom';
+import { Link, useNavigate, useRoutes } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { FTButton, FTH1 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
@@ -19,6 +20,7 @@ import { FriendsView } from './FriendsView';
 const LogoutBlock = () => {
   const [, confirmModal] = useConfirmModal();
   const logout = useLogout();
+  const navigate = useNavigate();
   return (
     <div className="flex flex-col bg-gray-800 p-6">
       <div className="text-center">
@@ -30,6 +32,8 @@ const LogoutBlock = () => {
               })
             ) {
               logout();
+              toast('ログアウトしました');
+              navigate('/');
             }
           }}
         >
