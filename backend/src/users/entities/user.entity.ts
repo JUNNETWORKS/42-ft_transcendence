@@ -25,6 +25,9 @@ export class UserEntity implements User {
 
   @ApiProperty()
   invalidateTokenIssuedBefore!: Date | null;
+
+  @ApiProperty()
+  pulseTime!: Date | null;
 }
 
 export type UserMinimum = Omit<User, 'id'>;

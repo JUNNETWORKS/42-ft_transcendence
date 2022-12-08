@@ -1066,6 +1066,11 @@ export class ChatGateway implements OnGatewayConnection {
     } catch (e) {
       console.error(e);
     }
+    try {
+      this.usersService.pulse(user.id);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   private decrementHeartbeat(userId: number) {

@@ -257,6 +257,13 @@ export class UsersService {
     };
   }
 
+  async pulse(id: number) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { pulseTime: new Date() },
+    });
+  }
+
   remove(id: number) {
     return this.prisma.user.delete({ where: { id } });
   }
