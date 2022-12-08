@@ -29,7 +29,7 @@ export class UsersController {
   findMany(@Query() userFindMAnyDto: UserFindManyDto) {
     return this.usersService.findMany(userFindMAnyDto);
   }
-  
+
   @Get(':id/avatar')
   async getAvatar(
     @Req() req: express.Request,

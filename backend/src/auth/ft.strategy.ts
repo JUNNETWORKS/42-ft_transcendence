@@ -37,11 +37,11 @@ export class FtStrategy extends PassportStrategy(Strategy, '42') {
         login: intra_nickname,
         email,
       } = await result.json();
-      const user = await this.authService.retrieveUser(intra_id, {
+      const { user, created } = await this.authService.retrieveUser(intra_id, {
         displayName: intra_nickname,
         email,
       });
-      cb(null, user);
+      cb(null, { ...user, created });
     } catch (e) {
       cb(e, null);
     }
