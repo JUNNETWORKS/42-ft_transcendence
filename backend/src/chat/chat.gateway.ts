@@ -5,6 +5,7 @@ import {
   WebSocketGateway,
   OnGatewayConnection,
 } from '@nestjs/websockets';
+import { User } from '@prisma/client';
 import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
@@ -163,6 +164,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     // [対象チャットルームの存在確認]
     // [実行者がチャットルームで発言可能であることの確認]
@@ -198,7 +200,6 @@ export class ChatGateway implements OnGatewayConnection {
         roomId,
       }
     );
-    this.updateHeartbeat(user.id);
   }
 
   /**
@@ -215,6 +216,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     // DMルームの作成
     const dmRoom = await this.chatRoomService.create({
@@ -255,7 +257,6 @@ export class ChatGateway implements OnGatewayConnection {
         roomId,
       }
     );
-    this.updateHeartbeat(user.id);
   }
 
   /**
@@ -272,6 +273,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     const userId = user.id;
     const roomId = data.roomId;
@@ -372,7 +374,6 @@ export class ChatGateway implements OnGatewayConnection {
         );
       })(),
     });
-    this.updateHeartbeat(user.id);
     return { status: 'success' };
   }
 
@@ -390,6 +391,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     // [退出対象のチャットルームが存在していることを確認]
     // [実行者が対象チャットルームに入室していることを確認]
@@ -423,7 +425,6 @@ export class ChatGateway implements OnGatewayConnection {
         userId: user.id,
       }
     );
-    this.updateHeartbeat(user.id);
   }
 
   /**
@@ -440,6 +441,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!caller) {
       return;
     }
+    this.pulse(caller);
     const callerId = caller.id;
     const roomId = data.roomId;
     console.log('ft_invite', data);
@@ -559,7 +561,6 @@ export class ChatGateway implements OnGatewayConnection {
         );
       })
     );
-    this.updateHeartbeat(caller.id);
     return { status: 'success' };
   }
 
@@ -572,6 +573,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -630,6 +632,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     // [送信者がjoinしているか？]
     // [対象者がjoinしているか？]
     const roomId = data.roomId;
@@ -683,6 +686,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -736,6 +740,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -793,6 +798,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
@@ -826,6 +832,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     data.callerId = user.id;
     const members = await this.chatRoomService.getMembers(data.roomId);
     this.wsServer.sendResults(
@@ -849,6 +856,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     const targetId = data.userId;
     console.log('ft_follow', data);
 
@@ -904,6 +912,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     const targetId = data.userId;
     console.log('ft_unfollow', data);
 
@@ -955,6 +964,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     const targetId = data.userId;
     console.log('ft_block', data);
 
@@ -1000,6 +1010,7 @@ export class ChatGateway implements OnGatewayConnection {
     if (!user) {
       return;
     }
+    this.pulse(user);
     const targetId = data.userId;
     console.log('ft_unblock', data);
 
@@ -1043,14 +1054,18 @@ export class ChatGateway implements OnGatewayConnection {
     this.sendHeartbeat(userId);
   }
 
-  private updateHeartbeat(userId: number) {
-    const r = this.heartbeatDict[userId];
+  private pulse(user: User) {
+    const r = this.heartbeatDict[user.id];
     if (!r) {
       return;
     }
     r.time = Date.now();
-    this.heartbeatDict[userId] = r;
-    this.sendHeartbeat(userId);
+    this.heartbeatDict[user.id] = r;
+    try {
+      this.sendHeartbeat(user.id);
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   private decrementHeartbeat(userId: number) {
