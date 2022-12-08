@@ -62,6 +62,7 @@ export const DevAuth = () => {
       setIsOpenCreatedForm(true);
     }
     toast(`${user.displayName} としてログインしました`);
+    navigation('/', { replace: true });
   };
 
   // 42認証フローのチェックと状態遷移
