@@ -64,7 +64,9 @@ export const SocketHolder = () => {
       'ft_heartbeat',
       (data: TD.HeartbeatResult) => {
         console.log('catch heartbeat', data);
-        userUpdator.updateOne(data.userId, { time: data.time });
+        userUpdator.updateOne(data.userId, {
+          pulseTime: Utils.datify(data.time),
+        });
       },
     ]);
 

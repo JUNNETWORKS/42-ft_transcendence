@@ -50,7 +50,9 @@ const ActualView = ({ user }: ActualViewProps) => {
         <div className="p-2">{user.displayName}</div>
         <FTH4>heartbeat time</FTH4>
         <div className="p-2">
-          {user.time ? dayjs(user.time).format('MM/DD HH:mm:ss') : 'offline'}
+          {user.pulseTime
+            ? dayjs(user.pulseTime).format('MM/DD HH:mm:ss')
+            : 'offline'}
         </div>
         <FTH4>DM</FTH4>
         <div className="px-2 py-4">

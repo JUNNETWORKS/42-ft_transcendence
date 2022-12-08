@@ -75,8 +75,8 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
               <>
                 <FTH4 className="">status</FTH4>
                 <p className="p-1">
-                  {user.time
-                    ? dayjs(user.time).format('MM/DD HH:mm:ss')
+                  {user.pulseTime
+                    ? dayjs(user.pulseTime).format('MM/DD HH:mm:ss')
                     : 'offline'}
                 </p>
               </>

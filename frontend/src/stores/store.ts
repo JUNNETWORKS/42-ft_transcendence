@@ -23,7 +23,7 @@ export const useUpdateUser = () => {
   const updater = {
     addOne: useCallback(
       (data: TD.User) => {
-        const d = Utils.datifyObject(data);
+        const d = Utils.datifyObject(data, 'pulseTime');
         if (d.avatar) {
           d.isEnabledAvatar = true;
         }
@@ -35,7 +35,7 @@ export const useUpdateUser = () => {
     addMany: useCallback(
       (data: TD.User[]) => {
         const ds = data.map((u) => {
-          const d = Utils.datifyObject(u, 'time');
+          const d = Utils.datifyObject(u, 'pulseTime');
           if (d.avatar) {
             d.isEnabledAvatar = true;
           }
@@ -58,7 +58,7 @@ export const useUpdateUser = () => {
     ),
     updateOne: useCallback(
       (userId: number, part: Partial<TD.User>) => {
-        const patched = Utils.datifyObject(part, 'time');
+        const patched = Utils.datifyObject(part, 'pulseTime');
         if (part.avatar || part.isEnabledAvatar) {
           patched.isEnabledAvatar = true;
           patched.avatarTime = Date.now();
@@ -89,7 +89,7 @@ export const useUpdateUser = () => {
           }
           return {
             ...prev,
-            [userId]: { ...Utils.omit(d, 'time') },
+            [userId]: { ...Utils.omit(d, 'pulseTime') },
           };
         });
       },

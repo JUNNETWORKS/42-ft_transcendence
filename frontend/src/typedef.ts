@@ -5,7 +5,7 @@ import * as Utils from '@/utils';
 export type User = {
   id: number;
   displayName: string;
-  time?: Date;
+  pulseTime?: Date;
   isEnabledAvatar: boolean;
 
   avatar?: boolean;

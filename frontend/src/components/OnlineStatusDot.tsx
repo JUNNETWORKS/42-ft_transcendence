@@ -9,8 +9,8 @@ const activeTimeMs = 60 * 1000;
 export const OnlineStatusDot = (props: { user: TD.User }) => {
   const user = useUserDataReadOnly(props.user.id);
   const onlineStatusColor = (user: TD.User) => {
-    if (user && user.time) {
-      if (Date.now() - user.time.getTime() < activeTimeMs) {
+    if (user && user.pulseTime) {
+      if (Date.now() - user.pulseTime.getTime() < activeTimeMs) {
         return 'text-green-500';
       } else {
         return 'text-orange-500';

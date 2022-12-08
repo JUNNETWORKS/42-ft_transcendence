@@ -56,6 +56,9 @@ export function datify(data: any) {
   if (isNull(data)) {
     return undefined;
   }
+  if (typeof data === 'string') {
+    return new Date(data);
+  }
   if (data instanceof Date) {
     return data;
   }
