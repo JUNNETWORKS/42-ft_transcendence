@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { UserProfileModal } from '@/features/User/UserProfileModal';
 import { authAtom } from '@/stores/auth';
@@ -60,12 +60,32 @@ export const NavBar = () => {
   ) : (
     <AnonymousCard />
   );
+  const location = useLocation();
+  const firstPath = (() => {
+    const [fp] = location.pathname.split('/').filter((w) => !!w);
+    return fp || '';
+  })();
+  const caption = (() => {
+    switch (firstPath) {
+      case '':
+        return 'TOP';
+      case 'pong':
+        return 'PONG';
+      case 'chat':
+        return 'SOCIAL';
+      case 'auth':
+        return 'AUTH';
+      case 'me':
+        return 'ME';
+    }
+  })();
+
   return (
     <>
       <div className="bg-primary bg-navbar-img">
         <div className="flex h-20 place-content-between">
           <p className="flex w-72 items-center justify-center text-5xl">
-            <Link to="/">HOME</Link>
+            {caption}
           </p>
           {presentator}
         </div>
