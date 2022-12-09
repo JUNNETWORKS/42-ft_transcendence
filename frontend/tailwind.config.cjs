@@ -7,6 +7,9 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx}",],
   theme: {
     extend: {
+      gridTemplateColumns: {
+        'pongTopPage': 'minmax(500px, 1fr) minmax(400px, 1fr)',
+      },
       backgroundImage: {
         'navbar-img': "url('./src/assets/NavBar.svg')",
       },

@@ -62,7 +62,7 @@ export class AuthService {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
       // ユーザがいた -> そのまま返す
-      return user;
+      return { user, created: false };
     }
     // ユーザがいない -> ユーザを登録
     // MEMO: ユニーク制約が破られた時には PrismaClientKnownRequestError が飛んでくる
@@ -74,7 +74,7 @@ export class AuthService {
       ...data,
       password: UsersService.hash_password(randomUUID()),
     });
-    return createdUser;
+    return { user: createdUser, created: true };
   }
 
   async login(user: any, completedTwoFa = false): Promise<LoginResult> {
@@ -98,21 +98,24 @@ export class AuthService {
     }
     const result = {
       access_token: this.issueAccessToken(user),
-      user: Utils.pick(
-        u!,
-        'id',
-        'displayName',
-        'email',
-        'isEnabled2FA',
-        'isEnabledAvatar'
-      ),
+      user: {
+        ...Utils.pick(
+          u!,
+          'id',
+          'displayName',
+          'email',
+          'isEnabled2FA',
+          'isEnabledAvatar'
+        ),
+        created: !!user.created,
+      },
     };
     return result;
   }
 
   async trapAuth(client: Socket) {
     if (client.handshake.auth) {
-      const { token, sub } = client.handshake.auth;
+      const { token } = client.handshake.auth;
       // token による認証
       if (token) {
         const verified = this.jwtService.verify(token, {
@@ -129,15 +132,6 @@ export class AuthService {
               return user;
             }
           }
-        }
-      }
-      // subによる認証スキップ
-      // TODO: 提出時には絶対に除去すること!!!!
-      if (sub) {
-        const userId = parseInt(sub);
-        const user = await this.usersService.findOne(userId);
-        if (user) {
-          return user;
         }
       }
     }

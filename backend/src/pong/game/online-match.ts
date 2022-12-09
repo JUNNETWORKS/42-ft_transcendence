@@ -1,4 +1,5 @@
-import { Server, Socket } from 'socket.io';
+import { MatchType } from '@prisma/client';
+import { Server } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
 
 import {
@@ -9,6 +10,7 @@ import {
 } from 'src/utils/socket/SocketRoom';
 
 import { Match } from './match';
+import { PostMatchStrategy } from './PostMatchStrategy';
 import { MatchResult, PlayerInput } from './types/game-state';
 
 // このクラスは以下に対して責任を持つ
@@ -20,13 +22,25 @@ export class OnlineMatch {
   private readonly ID: string;
   private readonly roomName: string;
   private readonly match: Match;
+  private readonly postMatchStrategy: PostMatchStrategy;
   private readonly gameStateSyncTimer: NodeJS.Timer;
   private readonly wsServer: Server;
 
-  constructor(wsServer: Server, userID1: number, userID2: number) {
+  public readonly matchType: MatchType;
+
+  constructor(
+    wsServer: Server,
+    userID1: number,
+    userID2: number,
+    matchType: MatchType,
+    removeFromOngoingMatches: (matchID: string) => void,
+    postMatchStrategy: PostMatchStrategy
+  ) {
     this.wsServer = wsServer;
+    this.postMatchStrategy = postMatchStrategy;
     this.ID = uuidv4();
     this.roomName = generateFullRoomName({ matchId: this.ID });
+    this.matchType = matchType;
     this.match = new Match(userID1, userID2);
     this.joinAsSpectator(userID1);
     this.joinAsSpectator(userID2);
@@ -52,6 +66,8 @@ export class OnlineMatch {
             result,
           });
           this.close();
+          removeFromOngoingMatches(this.ID);
+          this.postMatchStrategy.getOnFinish(this.matchType)(this);
         }
       }
     }, 16.66); // 60fps
@@ -115,12 +131,30 @@ export class OnlineMatch {
     }
   }
 
-  getMatchID() {
+  get matchID() {
     return this.ID;
   }
 
-  // プレイヤーとして参加しているユーザーを返す
-  getPlayerIDs() {
+  get playerIDs() {
     return [this.match.players[0].id, this.match.players[1].id];
+  }
+
+  get playerScores() {
+    return [this.match.players[0].score, this.match.players[1].score];
+  }
+
+  get winnerID() {
+    if (this.match.winner === 'none') {
+      return undefined;
+    }
+    return this.match.players[Match.sideIndex[this.match.winner]].id;
+  }
+
+  get loserID() {
+    if (this.match.winner === 'none') {
+      return undefined;
+    }
+    const loserSide = this.match.winner === 'right' ? 'left' : 'right';
+    return this.match.players[Match.sideIndex[loserSide]].id;
   }
 }

@@ -1,3 +1,3 @@
 export type PongMatchMakingEntryDTO = {
-  queueID: 'RANK' | 'CASUAL';
+  matchType: 'RANK' | 'CASUAL';
 };

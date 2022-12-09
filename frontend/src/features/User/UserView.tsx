@@ -7,6 +7,7 @@ import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { APIError } from '@/errors/APIError';
+import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { Icons } from '@/icons';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
@@ -72,13 +73,11 @@ const Presentator = (props: {
   const userId = props.userId;
   const { addOne } = useUpdateUser();
   const personalData = useUserDataReadOnly(userId);
+  const callAPI = useAPICallerWithCredential();
   if (!personalData) {
     throw (async () => {
       try {
-        const result = await fetch(`http://localhost:3000/users/${userId}`, {
-          method: 'GET',
-          mode: 'cors',
-        });
+        const result = await callAPI('GET', `/users/${userId}`);
         if (!result.ok) {
           throw new APIError(result.statusText, result);
         }

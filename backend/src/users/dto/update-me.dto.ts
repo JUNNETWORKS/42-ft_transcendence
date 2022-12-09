@@ -1,15 +1,9 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { PickType } from '@nestjs/swagger';
 
-export class UpdateMeDto {
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(20)
-  @ApiProperty()
-  displayName!: string;
+import { CreateUserDto } from './create-user.dto';
 
-  @IsString()
-  @IsOptional()
-  @ApiProperty()
-  avatar?: string;
-}
+export class UpdateMeDto extends PickType(CreateUserDto, [
+  'displayName',
+  'password',
+  'avatar',
+] as const) {}

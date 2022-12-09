@@ -52,6 +52,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       console.log('required 2fa');
       throw new UnauthorizedException('required 2fa');
     }
-    return { ...user };
+    return user;
   }
 }

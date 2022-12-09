@@ -166,7 +166,8 @@ model MatchConfig {
 model MatchUserRelation {
   id          Int         @id @default(autoincrement())
   user        User        @relation(fields: [userID], references: [id])
-  userID      Int         @unique
+  userID      Int
   matchResult MatchResult @relation(fields: [matchID], references: [id])
-  matchID     String      @unique
+  matchID     String
+  @@unique([userID, matchID])
 }

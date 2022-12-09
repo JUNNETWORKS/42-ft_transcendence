@@ -1,24 +1,20 @@
 import {
   Controller,
   Get,
-  Post,
-  Body,
-  Patch,
   Param,
-  Delete,
   ParseIntPipe,
   UseGuards,
-  UseFilters,
   Res,
   Req,
+  Query,
 } from '@nestjs/common';
-import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
 
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { pick } from 'src/utils';
 
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -28,17 +24,10 @@ import { UsersService } from './users.service';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  // TODO: 削除
-  @Post()
-  @ApiCreatedResponse({ type: UserEntity })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
-  }
-
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
-  findAll() {
-    return this.usersService.findAll();
+  findMany(@Query() userFindMAnyDto: UserFindManyDto) {
+    return this.usersService.findMany(userFindMAnyDto);
   }
 
   @Get(':id/avatar')
@@ -71,6 +60,7 @@ export class UsersController {
     avatar.getStream().pipe(res);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   @ApiOkResponse({ type: UserEntity })
   async findOne(@Param('id', ParseIntPipe) id: number) {
@@ -79,21 +69,5 @@ export class UsersController {
       return null;
     }
     return pick(u, 'id', 'displayName');
-  }
-
-  // TODO: intraId は変更できないようにする
-  @Patch(':id')
-  @ApiOkResponse({ type: UserEntity })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    return this.usersService.update(id, updateUserDto);
-  }
-
-  @Delete(':id')
-  @ApiOkResponse({ type: UserEntity })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.remove(id);
   }
 }

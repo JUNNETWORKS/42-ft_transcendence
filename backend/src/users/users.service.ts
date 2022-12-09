@@ -10,6 +10,7 @@ import { authenticator } from 'otplib';
 
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { passwordConstants } from '../auth/auth.constants';
 import { AuthService } from '../auth/auth.service';
@@ -28,7 +29,14 @@ export class UsersService {
   ) {}
 
   create(createUserDto: CreateUserDto) {
-    return this.prisma.user.create({ data: createUserDto });
+    return this.prisma.user.create({
+      data: {
+        ...createUserDto,
+        userRankPoint: {
+          create: {},
+        },
+      },
+    });
   }
 
   findAll() {
@@ -37,6 +45,32 @@ export class UsersService {
 
   findOne(id: number) {
     return this.prisma.user.findUnique({ where: { id } });
+  }
+
+  findMany({ take, cursor }: UserFindManyDto) {
+    if (take > 0) {
+      return this.prisma.user.findMany({
+        take,
+        where: {
+          id: cursor ? { gt: cursor } : undefined,
+        },
+        select: {
+          id: true,
+          displayName: true,
+        },
+      });
+    } else {
+      return this.prisma.user.findMany({
+        take,
+        where: {
+          id: cursor ? { lte: cursor } : undefined,
+        },
+        select: {
+          id: true,
+          displayName: true,
+        },
+      });
+    }
   }
 
   findByEmail(email: string) {
@@ -202,19 +236,25 @@ export class UsersService {
     };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     const d: Partial<UserEntity> = {
       ...updateUserDto,
     };
+    let passwordUpdated = false;
     if (d.password) {
       const p = d.password;
       d.password = UsersService.hash_password(p);
+      passwordUpdated = true;
       d.invalidateTokenIssuedBefore = new Date();
     }
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: d,
     });
+    return {
+      user,
+      passwordUpdated,
+    };
   }
 
   remove(id: number) {
