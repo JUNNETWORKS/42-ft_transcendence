@@ -151,7 +151,15 @@ export const VisibleRoomList = (props: {
         roomUpdator.addMany(rooms);
       })
       .catch((error) => setRequestKey(''));
-  }, [fetcher, mySocket, oldestItem, requestKey, roomUpdator, scrollData]);
+  }, [
+    fetcher,
+    listId,
+    mySocket,
+    oldestItem,
+    requestKey,
+    roomUpdator,
+    scrollData,
+  ]);
 
   return (
     <div className="flex shrink grow flex-col overflow-hidden">

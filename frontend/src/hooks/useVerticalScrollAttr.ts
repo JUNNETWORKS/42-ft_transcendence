@@ -26,6 +26,7 @@ export const useVerticalScrollAttr = (elementId: string) => {
       isProcessing.current = true;
       // Window.requestAnimationFrame()でpositionYステートの更新を間引く
       window.requestAnimationFrame(updateGeometry);
+      isProcessing.current = false;
     };
     // スクロールイベントの登録
     el.addEventListener('scroll', handler, { passive: true });
