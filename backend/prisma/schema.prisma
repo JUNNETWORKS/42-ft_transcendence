@@ -143,9 +143,9 @@ model Match {
   matchType         MatchType
   matchStatus       MatchStatus
   userID1           Int // User.id
-  userScore1        Int // 点が入るとリアルタイムに更新する。初期スコアは0
+  userScore1        Int                 @default(0) // 点が入るとリアルタイムに更新する。初期スコアは0
   userID2           Int // User.id
-  userScore2        Int
+  userScore2        Int                 @default(0)
   startAt           DateTime? // プライベートマッチは開始しない可能性があるからNullableにする
   endAt             DateTime? // 試合終了日時
   matchUserRelation MatchUserRelation[]
