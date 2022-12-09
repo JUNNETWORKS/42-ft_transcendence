@@ -7,6 +7,7 @@ import { Modal } from '@/components/Modal';
 import { useQuery } from '@/hooks';
 import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
 
+import { UserCreatedForm } from '../User/UserCreatedForm';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
@@ -39,6 +40,8 @@ export const DevAuth = () => {
   const [ftAuthCode] = useState(initialAuthCode);
   const loginLocal = useLoginLocal();
   const logout = useLogout();
+  const [token2FA, setToken2FA] = useState<string | null>(null);
+  const [isOpenCreatedForm, setIsOpenCreatedForm] = useState(false);
 
   const anonymizeAuthFlow = () => {
     logout();
@@ -53,8 +56,13 @@ export const DevAuth = () => {
     }
     setToken2FA(null);
     loginLocal(token, user);
+    console.log('user', user);
     setFtAuthState('Neutral');
+    if (user.created) {
+      setIsOpenCreatedForm(true);
+    }
     toast(`${user.displayName} としてログインしました`);
+    navigation('/', { replace: true });
   };
 
   // 42認証フローのチェックと状態遷移
@@ -84,8 +92,6 @@ export const DevAuth = () => {
       }
     }
   }, [ftAuthState]);
-
-  const [token2FA, setToken2FA] = useState<string | null>(null);
 
   const presentator = (() => {
     switch (ftAuthState) {
@@ -121,6 +127,18 @@ export const DevAuth = () => {
           />
         )}
       </Modal>
+
+      <Modal
+        closeModal={() => setIsOpenCreatedForm(false)}
+        isOpen={isOpenCreatedForm}
+        traPart={{
+          enter: 'delay-200 transition duration-[500ms] ease-out',
+          leave: 'transition duration-[500ms] ease-out',
+        }}
+      >
+        <UserCreatedForm onClose={() => setIsOpenCreatedForm(false)} />
+      </Modal>
+
       <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
         <div
           className="basis-1 border-4 border-white"

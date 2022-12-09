@@ -16,7 +16,7 @@ export const AppRoutes = () => {
   const authElement = <DevAuth />;
   const guardElement = !mySocket ? authElement : null;
   const commonRoutes = [
-    { path: '/', element: <Index /> },
+    { path: '/', element: guardElement || <Index /> },
     {
       path: '/pong',
       element: guardElement || <PongTopPage mySocket={mySocket!} />,
@@ -30,7 +30,7 @@ export const AppRoutes = () => {
     { path: '/dm', element: guardElement || <DmPage mySocket={mySocket!} /> },
     { path: '/user/:id', element: guardElement || <UserView /> },
     { path: '/me/*', element: guardElement || <MyPageView /> },
-    { path: '/*', element: <Index /> },
+    { path: '/*', element: guardElement || <Index /> },
   ];
   const routeElements = useRoutes([...commonRoutes]);
 
