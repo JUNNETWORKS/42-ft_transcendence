@@ -34,6 +34,7 @@ const User = {
   StatusDot: Vsc.VscCircleFilled,
   Friend: Fa.FaUserFriends,
   Block: Md.MdBlock,
+  Edit: Fa.FaEdit,
 };
 
 export const Icons = {

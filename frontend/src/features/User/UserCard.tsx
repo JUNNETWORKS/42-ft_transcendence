@@ -1,4 +1,3 @@
-import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -6,7 +5,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
-import { UserAvatar } from '@/components/UserAvater';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { Icons } from '@/icons';
@@ -18,6 +16,7 @@ import * as TD from '@/typedef';
 import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
+import { ProfileBlock } from './components/ProfileBlock';
 
 type ActualCardProp = {
   user: TD.User;
@@ -43,7 +42,7 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
           <OnlineStatusDot key={user.id} user={user} />
         </div>
         <p
-          className="shrink grow overflow-hidden text-ellipsis"
+          className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
           style={{ wordBreak: 'keep-all' }}
         >
           {user.displayName}
@@ -52,37 +51,9 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
         {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
       </FTH1>
       <div className="flex flex-col">
-        <div className="flex flex-row">
-          <div className="shrink-0 grow-0">
-            <FTH4>&nbsp;</FTH4>
-            <UserAvatar
-              className="h-24 w-24 border-8 border-solid border-gray-700"
-              user={user}
-            />
-          </div>
-          <div className="shrink grow overflow-hidden">
-            <FTH4 className="">id</FTH4>
-            <p className="p-1">{user.id}</p>
-
-            {isYou ? (
-              <>
-                <FTH4 className="">email</FTH4>
-                <div className="overflow-hidden truncate p-1">
-                  {personalData.email}
-                </div>
-              </>
-            ) : (
-              <>
-                <FTH4 className="">status</FTH4>
-                <p className="p-1">
-                  {user.time
-                    ? dayjs(user.time).format('MM/DD HH:mm:ss')
-                    : 'offline'}
-                </p>
-              </>
-            )}
-          </div>
-        </div>
+        <ProfileBlock
+          {...(isYou ? { user: personalData, isYou } : { user, isYou })}
+        />
 
         {children}
 

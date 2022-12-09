@@ -57,7 +57,7 @@ export const ChatMessageCard = (props: {
           <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
             <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
               <Popover.Button
-                className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
+                className="max-w-[20em] overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold hover:underline"
                 ref={setReferenceElement}
                 style={{ wordBreak: 'keep-all' }}
               >
