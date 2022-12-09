@@ -27,6 +27,13 @@ const Chat = {
   Joined: Fa.FaDoorOpen,
   Yours: Md.MdStar,
 
+  System: {
+    Opened: Fa.FaArrowDown,
+    Updated: Vsc.VscDebugRestart,
+    Joined: Fa.FaArrowRight,
+    Left: Fa.FaArrowLeft,
+  },
+
   Operation: ChatOperation,
 };
 
@@ -34,6 +41,7 @@ const User = {
   StatusDot: Vsc.VscCircleFilled,
   Friend: Fa.FaUserFriends,
   Block: Md.MdBlock,
+  Edit: Fa.FaEdit,
 };
 
 export const Icons = {
@@ -41,6 +49,8 @@ export const Icons = {
   Save: Bs.BsCloudUpload,
   Cancel: Md.MdClose,
   Add: Md.MdAdd,
+  Ok: Bs.BsCheck,
+  Bang: Bs.BsExclamationLg,
 
   User,
   Chat,

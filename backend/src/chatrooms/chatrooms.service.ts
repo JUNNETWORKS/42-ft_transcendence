@@ -351,41 +351,28 @@ export class ChatroomsService {
   async getMessages(getMessageDto: GetMessagesDto) {
     // TODO: userとchatroomの関係確認。-> pipe?
     const { roomId, take, cursor } = getMessageDto;
-    if (take > 0) {
-      return await this.prisma.chatMessage.findMany({
-        take: -take,
-        where: {
-          chatRoomId: roomId,
-          id: cursor ? { lt: cursor } : undefined,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              displayName: true,
-            },
+    return await this.prisma.chatMessage.findMany({
+      take: -take,
+      where: {
+        chatRoomId: roomId,
+        id: cursor ? (take > 0 ? { lt: cursor } : { gt: cursor }) : undefined,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            displayName: true,
           },
         },
-        orderBy: { id: 'asc' },
-      });
-    } else {
-      return await this.prisma.chatMessage.findMany({
-        take: -take,
-        where: {
-          chatRoomId: roomId,
-          id: cursor ? { gt: cursor } : undefined,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              displayName: true,
-            },
+        secondaryUser: {
+          select: {
+            id: true,
+            displayName: true,
           },
         },
-        orderBy: { id: 'asc' },
-      });
-    }
+      },
+      orderBy: { id: 'asc' },
+    });
   }
 
   postMessage(data: PostMessageDto) {

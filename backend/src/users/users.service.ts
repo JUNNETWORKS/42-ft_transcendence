@@ -231,19 +231,25 @@ export class UsersService {
     };
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: UpdateUserDto) {
     const d: Partial<UserEntity> = {
       ...updateUserDto,
     };
+    let passwordUpdated = false;
     if (d.password) {
       const p = d.password;
       d.password = UsersService.hash_password(p);
+      passwordUpdated = true;
       d.invalidateTokenIssuedBefore = new Date();
     }
-    return this.prisma.user.update({
+    const user = await this.prisma.user.update({
       where: { id },
       data: d,
     });
+    return {
+      user,
+      passwordUpdated,
+    };
   }
 
   remove(id: number) {
