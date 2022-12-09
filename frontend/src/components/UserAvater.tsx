@@ -1,7 +1,11 @@
 import * as TD from '@/typedef';
 
 type Props = {
-  user: TD.User;
+  user: {
+    id: number;
+    isEnabledAvatar: boolean;
+    avatarTime: number;
+  };
   className?: string;
 };
 

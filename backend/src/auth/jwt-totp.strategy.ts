@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+import { stall } from './auth-utils';
 import { jwtConstants } from './auth.constants';
 
 // Strategy をどこからインポートするかが重要
@@ -22,14 +23,16 @@ export class JwtTotpStrategy extends PassportStrategy(Strategy, 'jwt-totp') {
   }
 
   async validate(payload: any) {
-    // validate にはデコード済みのJWTのペイロードが渡ってくる.
-    // 主張 = ペイロードの中身
-    // 検証 = 署名が正しいことの確認
-    // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
-    if (payload.next !== 'totp') {
-      console.log('invalid');
-      throw new UnauthorizedException('invalid');
-    }
-    return { secretId: payload.secretId };
+    return stall(500, async () => {
+      // validate にはデコード済みのJWTのペイロードが渡ってくる.
+      // 主張 = ペイロードの中身
+      // 検証 = 署名が正しいことの確認
+      // TODO: JWTの鍵をユーザごとに変える方法はあるだろうか?
+      if (payload.next !== 'totp') {
+        console.log('invalid');
+        throw new UnauthorizedException('invalid');
+      }
+      return { secretId: payload.secretId };
+    });
   }
 }

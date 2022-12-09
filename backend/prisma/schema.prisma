@@ -16,10 +16,12 @@ model User {
   displayName                 String              @unique
   intraId                     Int                 @unique
   invalidateTokenIssuedBefore DateTime?
+  lockUntil                   DateTime?
   password                    String
   isEnabledAvatar             Boolean             @default(false)
   isEnabled2FA                Boolean             @default(false)
-  chatMessage                 ChatMessage[]
+  chatMessage                 ChatMessage[]       @relation("primary")
+  chatMessageAsSecondary      ChatMessage[]       @relation("secondary")
   joinedRoom                  ChatUserRelation[]
   ownedRoom                   ChatRoom[]
   chatroomAttribute           ChatUserAttribute[]
@@ -90,6 +92,7 @@ model ChatUserRelation {
   chatRoom   ChatRoom   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
   memberType MemberType @default(MEMBER)
+  createdAt  DateTime   @default(now())
 
   @@id([userId, chatRoomId])
 }
@@ -112,13 +115,17 @@ enum MemberType {
 }
 
 model ChatMessage {
-  id         Int      @id @default(autoincrement())
-  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
-  chatRoomId Int
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId     Int?
-  createdAt  DateTime @default(now())
-  content    String
+  id              Int      @id @default(autoincrement())
+  chatRoom        ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoomId      Int
+  user            User?    @relation(name: "primary", fields: [userId], references: [id], onDelete: SetNull)
+  userId          Int?
+  secondaryUser   User?    @relation(name: "secondary", fields: [secondaryUserId], references: [id], onDelete: SetNull)
+  secondaryUserId Int?
+  createdAt       DateTime @default(now())
+  content         String
+  messageType     String?
+  subpayload      Json?
 }
 
 // ユーザーのランクポイント

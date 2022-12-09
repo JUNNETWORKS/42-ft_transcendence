@@ -33,11 +33,11 @@ export const RoomPasswordInput = ({
         </div>
       </div>
       <div className="flex flex-row justify-center p-2">
-        <FTButton className="mx-4" onClick={onJoin}>
-          Join
-        </FTButton>
         <FTButton className="mx-4" onClick={onClose}>
           Cancel
+        </FTButton>
+        <FTButton className="mx-4" onClick={onJoin}>
+          Join
         </FTButton>
       </div>
     </div>

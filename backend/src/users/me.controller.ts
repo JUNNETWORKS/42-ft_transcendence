@@ -36,17 +36,22 @@ export class MeController {
     private readonly wsServer: WsServerGateway
   ) {}
 
+  // GET /me
   @UseGuards(JwtAuthGuard)
   @Get('')
   async get(@Request() req: any) {
     const user = await this.usersService.findOne(req.user.id);
-    return Utils.pick(user!, 'id', 'displayName', 'email');
+    if (!user) {
+      throw new BadRequestException('no user');
+    }
+    return Utils.pick(user, 'id', 'displayName', 'email');
   }
 
+  // PATCH /me
   @UseGuards(JwtAuthGuard)
   @Patch('')
   @UseFilters(PrismaExceptionFilter)
-  async patch(@Request() req: any, @Body() updateUserDto: UpdateMeDto) {
+  async patch(@Request() req: any, @Body() updateMeDto: UpdateMeDto) {
     const id = req.user.id;
     // displayName の唯一性チェック
     // -> unique 制約に任せる
@@ -54,19 +59,24 @@ export class MeController {
     if (!user) {
       throw new BadRequestException('no user');
     }
-    const isEnabledAvatar = !!updateUserDto.avatar || user.isEnabledAvatar;
+    // [DB保存]
+    // TODO: こここそトランザクションなんじゃないの
+    const isEnabledAvatar = !!updateMeDto.avatar || user.isEnabledAvatar;
+    // 本体
     const ordinary = this.usersService.update(id, {
-      ...Utils.pick(updateUserDto, 'displayName'),
+      ...Utils.pick(updateMeDto, 'displayName', 'password'),
       isEnabledAvatar,
     });
-    const avatar = updateUserDto.avatar
-      ? this.usersService.upsertAvatar(id, updateUserDto.avatar)
+    // アバター
+    const avatar = updateMeDto.avatar
+      ? this.usersService.upsertAvatar(id, updateMeDto.avatar)
       : Promise.resolve('skipped');
+    // [後処理]
     const result = await Utils.PromiseMap({ ordinary, avatar });
     {
       const data = {
-        ...Utils.omit(updateUserDto, 'avatar'),
-        ...(updateUserDto.avatar ? { avatar: true } : {}),
+        ...Utils.omit(updateMeDto, 'avatar'),
+        ...(updateMeDto.avatar ? { avatar: true } : {}),
       };
       this.wsServer.sendResults(
         'ft_user',
@@ -78,15 +88,20 @@ export class MeController {
         { global: 'global' }
       );
     }
-    return Utils.pick(
-      result.ordinary,
-      'id',
-      'displayName',
-      'isEnabled2FA',
-      'isEnabledAvatar'
-    );
+    // TODO: パスワードが変更されているなら, このユーザのすべてのJWTを失効させる
+    // TODO: さらに, 新しいアクセストークンを返す
+    return {
+      user: Utils.pick(
+        result.ordinary.user,
+        'id',
+        'displayName',
+        'isEnabled2FA',
+        'isEnabledAvatar'
+      ),
+    };
   }
 
+  // PATCH /me/password
   @UseGuards(JwtAuthGuard)
   @Patch('/password')
   @UseFilters(PrismaExceptionFilter)
