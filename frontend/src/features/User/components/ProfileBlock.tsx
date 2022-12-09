@@ -5,6 +5,13 @@ import { UserAvatar } from '@/components/UserAvater';
 import { UserPersonalData } from '@/stores/auth';
 import { User } from '@/typedef';
 
+const statusText = (user: User) => {
+  if (user.pulseTime) {
+    return dayjs(user.pulseTime).format('MM/DD HH:mm:ss');
+  }
+  return 'offline';
+};
+
 type Prop =
   | {
       user: UserPersonalData;
@@ -38,11 +45,7 @@ export const ProfileBlock = ({ user, isYou }: Prop) => {
         ) : (
           <>
             <FTH4 className="">status</FTH4>
-            <p className="p-1">
-              {user.pulseTime
-                ? dayjs(user.pulseTime).format('MM/DD HH:mm:ss')
-                : 'offline'}
-            </p>
+            <p className="p-1">{statusText(user)}</p>
           </>
         )}
       </div>

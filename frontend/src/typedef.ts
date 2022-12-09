@@ -97,7 +97,7 @@ export type ConnectionResult = {
 
 export type HeartbeatResult = {
   userId: number;
-  time: Date;
+  pulseTime?: Date;
 };
 
 export type OfflineResult = {

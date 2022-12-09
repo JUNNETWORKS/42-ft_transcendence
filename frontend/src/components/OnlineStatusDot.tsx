@@ -1,23 +1,27 @@
 import { useEffect, useState } from 'react';
 
 import { Icons } from '@/icons';
-import { useUserDataReadOnly } from '@/stores/store';
 import * as TD from '@/typedef';
 
 const activeTimeMs = 60 * 1000;
 
-export const OnlineStatusDot = (props: { user: TD.User }) => {
-  const user = useUserDataReadOnly(props.user.id);
+type Prop = {
+  user: TD.User;
+};
+
+// Lv. 2
+export const OnlineStatusDot = ({ user }: Prop) => {
   const onlineStatusColor = (user: TD.User) => {
-    if (user && user.pulseTime) {
-      if (Date.now() - user.pulseTime.getTime() < activeTimeMs) {
-        return 'text-green-500';
-      } else {
-        return 'text-orange-500';
+    if (user) {
+      if (user.pulseTime) {
+        if (Date.now() - user.pulseTime.getTime() < activeTimeMs) {
+          return 'text-green-500';
+        } else {
+          return 'text-orange-500';
+        }
       }
-    } else {
-      return 'text-slate-500';
     }
+    return 'text-slate-500';
   };
   const [color, setColor] = useState(onlineStatusColor(user));
   useEffect(() => {

@@ -1087,7 +1087,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     this.wsServer.sendResults(
       'ft_heartbeat',
-      { userId, time: r.time },
+      { userId, pulseTime: r.time },
       { global: 'global' }
     );
   }
