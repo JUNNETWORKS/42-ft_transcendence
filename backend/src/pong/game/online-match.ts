@@ -22,9 +22,7 @@ export class OnlineMatch {
   private readonly ID: string;
   private readonly roomName: string;
   private readonly match: Match;
-  private readonly postMatchStrategy: PostMatchStrategy;
   private readonly wsServer: Server;
-  private readonly removeFromOngoingMatches: (matchID: string) => void;
   private gameStateSyncTimer: NodeJS.Timer;
 
   public readonly matchType: MatchType;
@@ -34,8 +32,8 @@ export class OnlineMatch {
     userID1: number,
     userID2: number,
     matchType: MatchType,
-    removeFromOngoingMatches: (matchID: string) => void,
-    postMatchStrategy: PostMatchStrategy
+    private readonly removeFromOngoingMatches: (matchID: string) => void,
+    private readonly postMatchStrategy: PostMatchStrategy
   ) {
     this.wsServer = wsServer;
     this.postMatchStrategy = postMatchStrategy;
@@ -71,7 +69,7 @@ export class OnlineMatch {
           });
           this.close();
           this.removeFromOngoingMatches(this.ID);
-          this.postMatchStrategy.getOnFinish(this.matchType)(this);
+          this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
       }
     }, 16.66); // 60fps

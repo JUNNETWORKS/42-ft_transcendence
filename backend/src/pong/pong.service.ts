@@ -41,6 +41,31 @@ export class PongService {
     });
   }
 
+  async updateMatchScore(match: OnlineMatch) {
+    await this.prisma.match.update({
+      where: {
+        id: match.matchID,
+      },
+      data: {
+        userID1: match.playerIDs[0],
+        userScore1: match.playerScores[0],
+        userID2: match.playerIDs[1],
+        userScore2: match.playerScores[1],
+      },
+    });
+  }
+
+  async updateMatchStatus(matchID: string, status: MatchStatus) {
+    await this.prisma.match.update({
+      where: {
+        id: matchID,
+      },
+      data: {
+        matchStatus: status,
+      },
+    });
+  }
+
   async fetchUserRanking(count = 10) {
     const results = await this.prisma.userRankPoint.findMany({
       take: count,

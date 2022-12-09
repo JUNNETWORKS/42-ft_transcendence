@@ -98,7 +98,7 @@ export class WaitingQueue {
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
-    this.pongService.createMatch;
+    await this.pongService.createMatch(match);
     const matchID = match;
     usersLeave(
       this.wsServer,
