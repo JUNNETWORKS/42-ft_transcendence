@@ -30,27 +30,9 @@ const UserCard = ({ user }: UserCardProp) => {
   );
 };
 
-const AnonymousCard = () => {
-  return (
-    <>
-      <div className="flex w-72 cursor-pointer gap-x-6 bg-secondary">
-        <Link to="/me" className="flex shrink grow flex-row items-center">
-          <p className="flex w-72 items-center justify-center text-5xl">
-            LOGIN
-          </p>
-        </Link>
-      </div>
-    </>
-  );
-};
-
 export const NavBar = () => {
   const [personalData] = useAtom(authAtom.personalData);
-  const presentator = personalData ? (
-    <UserCard user={personalData} />
-  ) : (
-    <AnonymousCard />
-  );
+  const presentator = personalData ? <UserCard user={personalData} /> : null;
   const location = useLocation();
   const firstPath = (() => {
     const [fp] = location.pathname.split('/').filter((w) => !!w);
