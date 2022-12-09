@@ -10,7 +10,7 @@ import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
 import { Socket } from 'socket.io';
 
-import { verifyOtpDto } from './dto/verify-opt.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { UserMinimum } from '../users/entities/user.entity';

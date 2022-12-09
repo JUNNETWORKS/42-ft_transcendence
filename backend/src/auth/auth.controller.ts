@@ -17,7 +17,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 
-import { verifyOtpDto } from './dto/verify-opt.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
 import { AuthLocker } from './auth.locker';
 import { AuthService } from './auth.service';
@@ -93,9 +93,9 @@ export class AuthController {
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
     console.log('req.user', req.user);
-    const { isValid, topt: totp } = await Utils.PromiseMap({
+    const { isValid, totp } = await Utils.PromiseMap({
       isValid: this.authService.verifyOtp(req.user.secretId, dto),
-      topt: this.prisma.totpSecret.findUnique({
+      totp: this.prisma.totpSecret.findUnique({
         where: {
           id: req.user.secretId,
         },
