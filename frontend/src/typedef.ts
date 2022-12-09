@@ -24,8 +24,14 @@ export type ChatRoom = {
   roomName: string;
   roomType: RoomType;
   ownerId: number;
+  owner?: User;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type ChatRoomJoinData = {
+  chatRoom: ChatRoom;
+  createdAt: Date;
 };
 
 export type DmRoom = ChatRoom & {
@@ -43,13 +49,29 @@ export type ChatUserRelationWithRoom = ChatUserRelation & {
   chatRoom: ChatRoom;
 };
 
+const MessageTypes = [
+  'OPENED',
+  'UPDATED',
+  'JOINED',
+  'LEFT',
+  'NOMMINATED',
+  'BANNED',
+  'MUTED',
+  'KICKED',
+] as const;
+export type MessageType = typeof MessageTypes[number];
+
 export type ChatRoomMessage = {
   id: number;
   chatRoomId: number;
   user: User;
   userId: number;
+  secondaryUser?: User;
+  secondaryUserId?: number;
   createdAt: Date;
   content: string;
+  messageType?: MessageType;
+  subpayload?: any;
 };
 
 export type UserRelationMap = {
@@ -67,7 +89,7 @@ export type ConnectionResult = {
   userId: number;
   displayName: string;
   visibleRooms: ChatRoom[];
-  joiningRooms: ChatRoom[];
+  joiningRooms: ChatRoomJoinData[];
   dmRooms: DmRoom[];
   friends: User[];
   blockingUsers: User[];
@@ -158,8 +180,12 @@ export const Mapper = {
       'chatRoomId',
       'user',
       'userId',
+      'secondaryUser',
+      'secondaryUserId',
       'createdAt',
-      'content'
+      'content',
+      'messageType',
+      'subpayload'
     );
     if (r.user) {
       r.user = Mapper.user(r.user);

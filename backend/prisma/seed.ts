@@ -1,4 +1,4 @@
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, RoomType, User } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
@@ -40,39 +40,51 @@ async function main() {
   }, Promise.resolve<User[]>([]));
   console.log(createMany);
 
-  await prisma.chatRoom.createMany({
-    data: [
-      {
-        roomName: 'chatroom1',
-        roomType: 'PUBLIC',
-        ownerId: 1,
-      },
-      {
-        roomName: 'chatroom2',
-        roomType: 'PUBLIC',
-        ownerId: 1,
-      },
-      {
-        roomName: 'chatroom3',
-        roomType: 'PUBLIC',
-        ownerId: 1,
-      },
-      {
-        roomName: 'test-dm1',
-        roomType: 'DM',
-        ownerId: 1,
-      },
-      {
-        roomName: 'test-dm2',
-        roomType: 'DM',
-        ownerId: 2,
-      },
-      {
-        roomName: 'test-dm3',
-        roomType: 'DM',
-        ownerId: 1,
-      },
-    ],
+  const data: {
+    roomName: string;
+    roomType: RoomType;
+    ownerId: number;
+  }[] = [
+    {
+      roomName: 'chatroom1',
+      roomType: 'PUBLIC',
+      ownerId: 1,
+    },
+    {
+      roomName: 'chatroom2',
+      roomType: 'PUBLIC',
+      ownerId: 1,
+    },
+    {
+      roomName: 'chatroom3',
+      roomType: 'PUBLIC',
+      ownerId: 1,
+    },
+    {
+      roomName: 'test-dm1',
+      roomType: 'DM',
+      ownerId: 1,
+    },
+    {
+      roomName: 'test-dm2',
+      roomType: 'DM',
+      ownerId: 2,
+    },
+    {
+      roomName: 'test-dm3',
+      roomType: 'DM',
+      ownerId: 1,
+    },
+  ];
+  for (let i = 1; i <= 512; ++i) {
+    data.push({
+      roomName: `chatroom-v${i + 1}`,
+      roomType: 'PUBLIC',
+      ownerId: createMany[Math.floor(Math.random() * createMany.length)].id,
+    });
+  }
+  const r = await prisma.chatRoom.createMany({
+    data,
     skipDuplicates: true,
   });
 
@@ -97,7 +109,7 @@ async function main() {
   // }
 
   for (let i = 1; i <= 3; i++) {
-    for (let j = 1; j <= 200; j++) {
+    for (let j = 1; j <= 512; j++) {
       await prisma.chatMessage.create({
         data: {
           userId: 1,

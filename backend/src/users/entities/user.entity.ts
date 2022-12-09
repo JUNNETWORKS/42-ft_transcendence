@@ -28,6 +28,9 @@ export class UserEntity implements User {
 
   @ApiProperty()
   pulseTime!: Date | null;
+
+  @ApiProperty()
+  lockUntil!: Date | null;
 }
 
 export type UserMinimum = Omit<User, 'id'>;

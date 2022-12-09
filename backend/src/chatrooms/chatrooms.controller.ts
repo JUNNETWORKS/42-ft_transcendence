@@ -8,6 +8,9 @@ import {
   Put,
   UseGuards,
   Request,
+  Get,
+  Query,
+  NotFoundException,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
@@ -17,6 +20,7 @@ import { pick } from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { CreateChatroomApiDto } from './dto/create-chatroom-api.dto';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
@@ -56,6 +60,8 @@ export class ChatroomsController {
       roomMember: [owner],
     });
     this.wsServer.usersJoin(ownerId, { roomId: result.id });
+    // 新規作成システムメッセージを生成して通知
+    this.wsServer.systemSay(result.id, req.user, 'OPENED');
     this.wsServer.sendResults(
       'ft_open',
       {
@@ -70,15 +76,40 @@ export class ChatroomsController {
   @Put(':roomId')
   @ApiOkResponse({ type: ChatroomEntity })
   async updateRoom(
+    @Request() req: any,
     @Param('roomId', ParseIntPipe) roomId: number,
     @Body(new UpdateRoomPipe())
     updateRoomDto: UpdateRoomDto
   ) {
     console.log('updating:', updateRoomDto);
+    const current = await this.chatroomsService.findOne(roomId);
+    if (!current) {
+      throw new NotFoundException('no such room');
+    }
     const result = await this.chatroomsService.updateRoom(
-      roomId,
+      current.id,
       updateRoomDto
     );
+    // 新規作成システムメッセージを生成して通知
+    // (**差分**をsubpayloadに入れておく)
+    const updateDiff = (() => {
+      const diff: any = {};
+      if (current.roomName !== result.roomName) {
+        diff.roomName = result.roomName;
+      }
+      if (current.roomType !== result.roomType) {
+        diff.roomType = result.roomType;
+      }
+      return diff;
+    })();
+    if (Object.keys(updateDiff).length > 0) {
+      this.wsServer.systemSaywithPayload(
+        result.id,
+        req.user,
+        'UPDATED',
+        updateDiff
+      );
+    }
     this.wsServer.sendResults(
       'ft_chatroom',
       {
@@ -97,5 +128,12 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   remove(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.remove(roomId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getRooms(@Query() query: GetChatroomsDto) {
+    console.log('query', query);
+    return this.chatroomsService.findMany(query);
   }
 }

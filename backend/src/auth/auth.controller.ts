@@ -17,8 +17,9 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 
-import { verifyOtpDto } from './dto/verify-opt.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
+import { AuthLocker } from './auth.locker';
 import { AuthService } from './auth.service';
 import { LoginResultEntity } from './entities/auth.entity';
 import { FtAuthGuard } from './ft-auth.guard';
@@ -32,7 +33,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly usersService: UsersService,
-    private readonly prisma: PrismaService
+    private readonly prisma: PrismaService,
+    private readonly locker: AuthLocker
   ) {}
 
   @UseGuards(LocalAuthGuard)
@@ -90,21 +92,27 @@ export class AuthController {
   @UseGuards(JwtTotpAuthGuard)
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {
-    const isValid = await this.authService.verifyOtp(req.user.secretId, dto);
+    console.log('req.user', req.user);
+    const { isValid, totp } = await Utils.PromiseMap({
+      isValid: this.authService.verifyOtp(req.user.secretId, dto),
+      totp: this.prisma.totpSecret.findUnique({
+        where: {
+          id: req.user.secretId,
+        },
+      }),
+    });
     if (!isValid) {
+      if (totp) {
+        await this.locker.markFailure(totp.userId);
+      }
       throw new UnauthorizedException();
     }
-    const topt = await this.prisma.totpSecret.findUnique({
-      where: {
-        id: req.user.secretId,
-      },
-    });
-    if (!topt) {
+    if (!totp) {
       throw new BadRequestException();
     }
     const user = await this.prisma.user.findUnique({
       where: {
-        id: topt.userId,
+        id: totp.userId,
       },
     });
     return this.authService.login(user, true);

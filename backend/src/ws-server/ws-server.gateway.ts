@@ -1,8 +1,17 @@
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { User } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 
+import { ChatService } from 'src/chat/chat.service';
+import {
+  MessageTypeSingle,
+  MessageTypeWithPayload,
+  MessageTypeWithTarget,
+} from 'src/chatrooms/entities/chat-message.entity';
 import { RoomArg } from 'src/types/RoomType';
 import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
+
+import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dto';
 
 // TODO: namespace共通化
 @WebSocketGateway({
@@ -12,6 +21,8 @@ import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 export class WsServerGateway {
   @WebSocketServer()
   server: Server;
+
+  constructor(private readonly chatService: ChatService) {}
 
   /**
    * 指定したユーザーIDのルームにjoinしているclientのsocketを取得する
@@ -96,5 +107,62 @@ export class WsServerGateway {
       console.log('sending downlink to client:', target.client.id, op, payload);
       target.client.emit(op, payload);
     }
+  }
+
+  async systemSay(roomId: number, user: User, messageType: MessageTypeSingle) {
+    this.systemSayCore(roomId, user, {
+      roomId,
+      callerId: user.id,
+      messageType,
+    });
+  }
+
+  async systemSaywithPayload(
+    roomId: number,
+    user: User,
+    messageType: MessageTypeWithPayload,
+    subpayload: any
+  ) {
+    this.systemSayCore(roomId, user, {
+      roomId,
+      callerId: user.id,
+      messageType,
+      subpayload,
+    });
+  }
+
+  async systemSayWithTarget(
+    roomId: number,
+    user: User,
+    messageType: MessageTypeWithTarget,
+    target: User
+  ) {
+    this.systemSayCore(roomId, user, {
+      roomId,
+      callerId: user.id,
+      messageType,
+      secondaryId: target.id,
+    });
+  }
+
+  private async systemSayCore(
+    roomId: number,
+    user: User,
+    data: OperationSystemSayDto
+  ) {
+    const systemMessage = await this.chatService.postSystemMessage(data);
+    this.sendResults(
+      'ft_say',
+      {
+        ...systemMessage,
+        user: {
+          id: user.id,
+          displayName: user.displayName,
+        },
+      },
+      {
+        roomId,
+      }
+    );
   }
 }

@@ -62,6 +62,7 @@ export const DevAuth = () => {
       setIsOpenCreatedForm(true);
     }
     toast(`${user.displayName} としてログインしました`);
+    navigation('/', { replace: true });
   };
 
   // 42認証フローのチェックと状態遷移
@@ -130,6 +131,10 @@ export const DevAuth = () => {
       <Modal
         closeModal={() => setIsOpenCreatedForm(false)}
         isOpen={isOpenCreatedForm}
+        traPart={{
+          enter: 'delay-200 transition duration-[500ms] ease-out',
+          leave: 'transition duration-[500ms] ease-out',
+        }}
       >
         <UserCreatedForm onClose={() => setIsOpenCreatedForm(false)} />
       </Modal>

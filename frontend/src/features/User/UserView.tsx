@@ -35,7 +35,7 @@ const ActualView = ({ user }: ActualViewProps) => {
           <OnlineStatusDot key={user.id} user={user} />
         </div>
         <p
-          className="shrink grow overflow-hidden text-ellipsis"
+          className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
           style={{ wordBreak: 'keep-all' }}
         >
           {user.displayName}
