@@ -99,7 +99,7 @@ export class WaitingQueue {
     );
     this.ongoingMatches.appendMatch(match);
     await this.pongService.createMatch(match);
-    const matchID = match;
+    const matchID = match.matchID;
     usersLeave(
       this.wsServer,
       userID1,
