@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { MatchStatus } from '@prisma/client';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { OnlineMatch } from './game/online-match';
@@ -7,16 +8,16 @@ import { OnlineMatch } from './game/online-match';
 export class PongService {
   constructor(private prisma: PrismaService) {}
 
-  async createMatchResult(match: OnlineMatch) {
-    await this.prisma.matchResult.create({
+  async createMatch(match: OnlineMatch) {
+    await this.prisma.match.create({
       data: {
         id: match.matchID,
         matchType: match.matchType,
+        matchStatus: MatchStatus.PREPARING,
         userID1: match.playerIDs[0],
         userScore1: match.playerScores[0],
         userID2: match.playerIDs[1],
         userScore2: match.playerScores[1],
-        endAt: new Date(),
 
         // TODO: Configを実装したらベタ書きを辞める
         // TODO: Configを非Nullableにする

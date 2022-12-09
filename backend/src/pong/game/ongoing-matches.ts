@@ -1,17 +1,11 @@
-import { MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
-
 import { OnlineMatch } from './online-match';
-import { PostMatchStrategy } from './PostMatchStrategy';
 import { PlayerInput } from './types/game-state';
 
 // 全ての進行中のマッチ管理するクラス
 export class OngoingMatches {
-  private readonly wsServer: Server;
   private matches: Map<string, OnlineMatch>;
 
-  constructor(wsServer: Server, private postMatchStrategy: PostMatchStrategy) {
-    this.wsServer = wsServer;
+  constructor() {
     this.matches = new Map<string, OnlineMatch>();
   }
 

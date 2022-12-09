@@ -16,13 +16,12 @@ import {
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
-import { PongPrivateMatchCreateDTO } from './dto/pong-private-match-create.dto';
 
 import { OngoingMatches } from './game/ongoing-matches';
-import { PendingPrivateMatches } from './game/pending-private-matches';
 import { PostMatchStrategy } from './game/PostMatchStrategy';
 import { WaitingQueue } from './game/waiting-queue';
 import { WaitingQueues } from './game/waiting-queues';
+import { PongService } from './pong.service';
 
 // TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
 // フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡
@@ -30,27 +29,19 @@ import { WaitingQueues } from './game/waiting-queues';
 export class PongGateway {
   private wsServer!: Server;
   private ongoingMatches: OngoingMatches;
-  private pendingPrivateMatches: PendingPrivateMatches;
   private waitingQueues: WaitingQueues;
   private readonly logger = new Logger('Match WS');
 
   constructor(
     private readonly authService: AuthService,
+    private readonly pongService: PongService,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {}
 
   afterInit(server: Server) {
     this.wsServer = server;
-    this.ongoingMatches = new OngoingMatches(
-      this.wsServer,
-      this.postMatchStrategy
-    );
+    this.ongoingMatches = new OngoingMatches();
     this.waitingQueues = new WaitingQueues();
-    this.pendingPrivateMatches = new PendingPrivateMatches(
-      this.wsServer,
-      this.ongoingMatches,
-      this.postMatchStrategy
-    );
   }
 
   onApplicationBootstrap() {
@@ -59,12 +50,14 @@ export class PongGateway {
       'RANK',
       this.ongoingMatches,
       this.wsServer,
+      this.pongService,
       this.postMatchStrategy
     );
     const casualQueue = new WaitingQueue(
       'CASUAL',
       this.ongoingMatches,
       this.wsServer,
+      this.pongService,
       this.postMatchStrategy
     );
     this.waitingQueues.appendQueue(rankQueue);
