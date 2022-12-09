@@ -127,5 +127,6 @@ export class WaitingQueue {
       }
     );
     match.start();
+    await this.pongService.updateMatchStatus(matchID, 'IN_PROGRESS');
   }
 }
