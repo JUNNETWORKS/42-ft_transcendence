@@ -113,6 +113,24 @@ export function mapValues<T extends object, U>(
   return r;
 }
 
+export function minBy<T, U>(array: T[], aligner: (t: T) => U): T | undefined {
+  let minVal: { val: U; t: T } | null = null;
+  for (const t of array) {
+    const val = aligner(t);
+    minVal = !minVal || val < minVal.val ? { val, t } : minVal;
+  }
+  return minVal ? minVal.t : undefined;
+}
+
+export function maxBy<T, U>(array: T[], aligner: (t: T) => U): T | undefined {
+  let maxVal: { val: U; t: T } | null = null;
+  for (const t of array) {
+    const val = aligner(t);
+    maxVal = !maxVal || val > maxVal.val ? { val, t } : maxVal;
+  }
+  return maxVal ? maxVal.t : undefined;
+}
+
 export function isfinite(val: any): val is number {
   return typeof val === 'number' && isFinite(val);
 }

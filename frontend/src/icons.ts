@@ -41,6 +41,7 @@ const User = {
   StatusDot: Vsc.VscCircleFilled,
   Friend: Fa.FaUserFriends,
   Block: Md.MdBlock,
+  Edit: Fa.FaEdit,
 };
 
 export const Icons = {
@@ -48,6 +49,8 @@ export const Icons = {
   Save: Bs.BsCloudUpload,
   Cancel: Fa.FaCross,
   Add: Md.MdAdd,
+  Ok: Bs.BsCheck,
+  Bang: Bs.BsExclamationLg,
 
   User,
   Chat,
