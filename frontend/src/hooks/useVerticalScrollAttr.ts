@@ -12,19 +12,20 @@ export const useVerticalScrollAttr = (elementId: string) => {
     if (!el) {
       return;
     }
+    const updateGeometry = () => {
+      setTop(el.scrollTop);
+      setHeight(el.scrollHeight);
+      setClientHeight(el.clientHeight);
+      setBottom(el.scrollHeight - el.clientHeight - el.scrollTop);
+    };
+    updateGeometry();
     const handler = () => {
       if (isProcessing.current) {
         return;
       }
       isProcessing.current = true;
       // Window.requestAnimationFrame()でpositionYステートの更新を間引く
-      window.requestAnimationFrame(() => {
-        isProcessing.current = false;
-        setTop(el.scrollTop);
-        setHeight(el.scrollHeight);
-        setClientHeight(el.clientHeight);
-        setBottom(el.scrollHeight - el.clientHeight - el.scrollTop);
-      });
+      window.requestAnimationFrame(updateGeometry);
     };
     // スクロールイベントの登録
     el.addEventListener('scroll', handler, { passive: true });
