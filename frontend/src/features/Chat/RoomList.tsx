@@ -73,7 +73,7 @@ export const ChatRoomListView = (props: {
   onFocus: (roomId: number) => void;
 }) => {
   return (
-    <div className="overflow-scroll">
+    <div className="overflow-y-auto overflow-x-hidden">
       {props.rooms.map((room: TD.ChatRoom) => {
         const isJoined = props.isJoiningTo(room.id);
         const isFocused = props.isFocusingTo(room.id);

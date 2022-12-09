@@ -158,7 +158,7 @@ export const VisibleRoomList = (props: {
       <FTH3 className="shrink-0 grow-0">Chatrooms</FTH3>
       <div
         id={listId}
-        className="flex shrink grow flex-row flex-wrap overflow-scroll p-1"
+        className="flex shrink grow flex-row flex-wrap overflow-y-auto overflow-x-hidden p-1"
       >
         {props.rooms.map((room: TD.ChatRoom) => {
           return (
