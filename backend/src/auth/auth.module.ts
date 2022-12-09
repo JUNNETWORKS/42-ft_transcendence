@@ -11,6 +11,7 @@ import { FtStrategy } from './ft.strategy';
 import { JwtTotpStrategy } from './jwt-totp.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
+import { WsJwtStrategy } from './ws-jst.strategy';
 
 @Module({
   controllers: [AuthController],
@@ -18,6 +19,7 @@ import { LocalStrategy } from './local.strategy';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    WsJwtStrategy,
     FtStrategy,
     JwtTotpStrategy,
   ],

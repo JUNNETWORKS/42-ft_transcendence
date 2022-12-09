@@ -1,3 +1,4 @@
+import { UseGuards } from '@nestjs/common';
 import {
   MessageBody,
   ConnectedSocket,
@@ -8,10 +9,12 @@ import {
 import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
+import { WsAuthGuard } from 'src/auth/ws-auth.guard';
 import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { UsersService } from 'src/users/users.service';
 import * as Utils from 'src/utils';
 import { generateFullRoomName, joinChannel } from 'src/utils/socket/SocketRoom';
+import { getUserFromClient } from 'src/utils/socket/ws-auth';
 
 import { OperationInviteDto } from './dto/operation-invite.dto';
 import { OperationBanDto } from 'src/chatrooms/dto/operation-ban.dto';
@@ -44,6 +47,7 @@ const constants = {
   cors: true,
   namespace: 'chat',
 })
+@UseGuards(WsAuthGuard)
 export class ChatGateway implements OnGatewayConnection {
   private heartbeatDict: {
     [userId: number]: {
@@ -159,10 +163,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationSayDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     // [対象チャットルームの存在確認]
     // [実行者がチャットルームで発言可能であることの確認]
@@ -211,10 +212,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationTellDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     // DMルームの作成
     const dmRoom = await this.chatRoomService.create({
@@ -268,10 +266,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationJoinDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     const userId = user.id;
     const roomId = data.roomId;
@@ -386,10 +381,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationLeaveDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     // [退出対象のチャットルームが存在していることを確認]
     // [実行者が対象チャットルームに入室していることを確認]
@@ -568,10 +560,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationNomminateDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -626,10 +615,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationKickDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     // [送信者がjoinしているか？]
     // [対象者がjoinしているか？]
     const roomId = data.roomId;
@@ -679,10 +665,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationBanDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -732,10 +715,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationMuteDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     // [送信者がjoinしているか？]
     // [ターゲットがjoinしているか？]
     const roomId = data.roomId;
@@ -789,10 +769,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationGetRoomMessageDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     const messages = await this.chatRoomService.getMessages({
       roomId: data.roomId,
@@ -822,10 +799,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationGetRoomMembersDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     data.callerId = user.id;
     const members = await this.chatRoomService.getMembers(data.roomId);
     this.wsServer.sendResults(
@@ -845,10 +819,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationFollowDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     const targetId = data.userId;
     console.log('ft_follow', data);
 
@@ -900,10 +871,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationUnfollowDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     const targetId = data.userId;
     console.log('ft_unfollow', data);
 
@@ -951,10 +919,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationBlockDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     const targetId = data.userId;
     console.log('ft_block', data);
 
@@ -996,10 +961,7 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationUnblockDto,
     @ConnectedSocket() client: Socket
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      return;
-    }
+    const user = getUserFromClient(client);
     const targetId = data.userId;
     console.log('ft_unblock', data);
 
