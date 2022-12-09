@@ -27,6 +27,13 @@ const Chat = {
   Joined: Fa.FaDoorOpen,
   Yours: Fa.FaCrown,
 
+  System: {
+    Opened: Fa.FaArrowDown,
+    Updated: Vsc.VscDebugRestart,
+    Joined: Fa.FaArrowRight,
+    Left: Fa.FaArrowLeft,
+  },
+
   Operation: ChatOperation,
 };
 

@@ -14,15 +14,19 @@ import { UserAvatar } from './UserAvater';
 export const AdminOperationBar = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
-  member: TD.ChatUserRelation;
+  member?: TD.ChatUserRelation;
   memberOperations: TD.MemberOperations;
 }) => {
+  if (!props.member) {
+    return null;
+  }
+  const member = props.member;
   const areYouOwner = props.you?.userId === props.room.ownerId;
   const areYouAdmin = props.you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
   const isYou = props.you?.userId === props.member.user.id;
-  const isAdmin = props.member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === props.member.user.id;
+  const isAdmin = member.memberType === 'ADMIN';
+  const isOwner = props.room.ownerId === member.user.id;
   const isAdminableFor = !isYou && (areYouOwner || (areYouAdmin && !isOwner));
   if (!isAdminableFor) {
     return null;
@@ -41,7 +45,7 @@ export const AdminOperationBar = (props: {
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isNomminatable}
           onClick={() =>
-            ops.onNomminateClick ? ops.onNomminateClick(props.member) : null
+            ops.onNomminateClick ? ops.onNomminateClick(member) : null
           }
         >
           <Icons.Chat.Operation.Nomminate />
@@ -49,25 +53,21 @@ export const AdminOperationBar = (props: {
         <FTButton
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isBannable}
-          onClick={() => (ops.onBanClick ? ops.onBanClick(props.member) : null)}
+          onClick={() => (ops.onBanClick ? ops.onBanClick(member) : null)}
         >
           <Icons.Chat.Operation.Ban />
         </FTButton>
         <FTButton
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isKickable}
-          onClick={() =>
-            ops.onKickClick ? ops.onKickClick(props.member) : null
-          }
+          onClick={() => (ops.onKickClick ? ops.onKickClick(member) : null)}
         >
           <Icons.Chat.Operation.Kick />
         </FTButton>
         <FTButton
           className="mx-1 text-2xl disabled:opacity-50"
           disabled={!isMutable}
-          onClick={() =>
-            ops.onMuteClick ? ops.onMuteClick(props.member) : null
-          }
+          onClick={() => (ops.onMuteClick ? ops.onMuteClick(member) : null)}
         >
           <Icons.Chat.Operation.Mute />
         </FTButton>
