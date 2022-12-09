@@ -1,10 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
 import { Socket } from 'socket.io';
 
-import { verifyOtpDto } from './dto/verify-opt.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { UserMinimum } from '../users/entities/user.entity';
@@ -28,7 +34,7 @@ export class AuthService {
     private prisma: PrismaService
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string) {
     console.log(email, password);
     const user = await this.usersService.findByEmail(email);
     console.log(user);
@@ -36,11 +42,12 @@ export class AuthService {
       const hashed = UsersService.hash_password(password);
       if (user.password === hashed) {
         console.log('succeeded');
-        return user;
+        return [true, user] as const;
       }
       console.log('FAIL');
+      return [false, user] as const;
     }
-    return null;
+    return [false, null] as const;
   }
 
   /**
@@ -81,13 +88,11 @@ export class AuthService {
       });
       const result = {
         required2fa: true,
-        access_token: this.jwtService.sign(
-          { secretId: secretId?.id, next: 'totp', iat },
-          {
-            issuer: process.env.JWT_ISSUER,
-            audience: process.env.JWT_AUDIENCE,
-          }
-        ),
+        access_token: this.issueAccessToken(user, {
+          secretId: secretId?.id,
+          next: 'totp',
+          iat,
+        }),
       };
       return result;
     }
@@ -144,18 +149,25 @@ export class AuthService {
         id: secretId,
       },
     });
-    if (!secret) return;
+    if (!secret) {
+      return false;
+    }
     const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
     return isValid;
   }
 
-  issueAccessToken(user: any) {
-    const payload = {
+  issueAccessToken(user: User, payload: any = null) {
+    console.log(user);
+    if (user.lockUntil && new Date() < user.lockUntil) {
+      console.log(`USER ${user.id} IS NOW LOCKED!!`);
+      throw new UnauthorizedException();
+    }
+    const actualPayload = payload || {
       email: user.email,
       sub: user.id,
       iat: Math.floor(Date.now() / 1000),
     };
-    return this.jwtService.sign(payload, {
+    return this.jwtService.sign(actualPayload, {
       issuer: process.env.JWT_ISSUER,
       audience: process.env.JWT_AUDIENCE,
     });
