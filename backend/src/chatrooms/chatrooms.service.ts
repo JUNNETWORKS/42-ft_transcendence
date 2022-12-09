@@ -13,6 +13,12 @@ import * as Utils from '../utils';
 import { chatRoomConstants } from './chatrooms.constant';
 import { ChatroomEntity } from './entities/chatroom.entity';
 
+const selectForUser = {
+  id: true,
+  displayName: true,
+  isEnabledAvatar: true,
+};
+
 @Injectable()
 export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
@@ -49,11 +55,6 @@ export class ChatroomsService {
   async findMany(getChatroomsDto: GetChatroomsDto) {
     const { take, cursor, category } = getChatroomsDto;
     const res = await (async () => {
-      const id = cursor
-        ? take > 0
-          ? { gt: cursor }
-          : { lt: cursor }
-        : undefined;
       if (category === 'PRIVATE') {
         if (typeof getChatroomsDto.userId !== 'number') {
           throw new BadRequestException();
@@ -79,17 +80,30 @@ export class ChatroomsService {
                 };
             }
           })(),
-          id,
         },
-        orderBy: { id: 'asc' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        ...(typeof cursor === 'number'
+          ? { cursor: { id: cursor }, skip: 1 }
+          : {}),
+        include: {
+          owner: {
+            select: selectForUser,
+          },
+        },
       });
     })();
-    return res.map((o) => new ChatroomEntity(o));
+    console.log(res);
+    return res;
   }
 
   async findOne(id: number) {
     return await this.prisma.chatRoom.findUnique({
       where: { id },
+      include: {
+        owner: {
+          select: selectForUser,
+        },
+      },
     });
   }
 
@@ -144,8 +158,14 @@ export class ChatroomsService {
                     },
                   }
                 : false,
+            owner: {
+              select: selectForUser,
+            },
           },
         },
+      },
+      orderBy: {
+        createdAt: 'desc',
       },
     });
   }

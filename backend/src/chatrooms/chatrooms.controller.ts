@@ -8,6 +8,8 @@ import {
   Put,
   UseGuards,
   Request,
+  Get,
+  Query,
   NotFoundException,
 } from '@nestjs/common';
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
@@ -18,6 +20,7 @@ import { pick } from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { CreateChatroomApiDto } from './dto/create-chatroom-api.dto';
+import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
@@ -125,5 +128,12 @@ export class ChatroomsController {
   @ApiOkResponse({ type: ChatroomEntity })
   remove(@Param('roomId', ParseIntPipe) roomId: number) {
     return this.chatroomsService.remove(roomId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get()
+  getRooms(@Query() query: GetChatroomsDto) {
+    console.log('query', query);
+    return this.chatroomsService.findMany(query);
   }
 }

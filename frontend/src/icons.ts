@@ -15,7 +15,7 @@ const ChatOperation = {
 };
 
 const Chat = {
-  Owner: Fa.FaCrown,
+  Owner: Md.MdStar,
   Admin: Fa.FaCog,
 
   Public: Md.MdPublic,
@@ -25,7 +25,7 @@ const Chat = {
 
   Visible: Fa.FaEye,
   Joined: Fa.FaDoorOpen,
-  Yours: Fa.FaCrown,
+  Yours: Md.MdStar,
 
   System: {
     Opened: Fa.FaArrowDown,
@@ -47,7 +47,7 @@ const User = {
 export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
-  Cancel: Fa.FaCross,
+  Cancel: Md.MdClose,
   Add: Md.MdAdd,
   Ok: Bs.BsCheck,
   Bang: Bs.BsExclamationLg,
@@ -57,4 +57,11 @@ export const Icons = {
 
   Android: Fa.FaAndroid,
   IOS: Fa.FaApple,
+};
+
+export const RoomTypeIcon = {
+  PUBLIC: Icons.Chat.Public,
+  PRIVATE: Icons.Chat.Private,
+  LOCKED: Icons.Chat.Locked,
+  DM: Icons.Chat.DM,
 };

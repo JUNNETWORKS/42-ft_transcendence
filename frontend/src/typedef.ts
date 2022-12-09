@@ -24,8 +24,14 @@ export type ChatRoom = {
   roomName: string;
   roomType: RoomType;
   ownerId: number;
+  owner?: User;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type ChatRoomJoinData = {
+  chatRoom: ChatRoom;
+  createdAt: Date;
 };
 
 export type DmRoom = ChatRoom & {
@@ -83,7 +89,7 @@ export type ConnectionResult = {
   userId: number;
   displayName: string;
   visibleRooms: ChatRoom[];
-  joiningRooms: ChatRoom[];
+  joiningRooms: ChatRoomJoinData[];
   dmRooms: DmRoom[];
   friends: User[];
   blockingUsers: User[];

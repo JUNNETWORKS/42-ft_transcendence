@@ -1,33 +1,12 @@
 import { useState } from 'react';
 
-import { FTButton } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { RoomTypeIcon } from '@/icons';
 import * as TD from '@/typedef';
-import * as Utils from '@/utils';
 
 import { validateRoomPasswordError } from './components/RoomPassword.validator';
 import { RoomPasswordInput } from './components/RoomPasswordInput';
-import { RoomTypeIcon } from './RoomSetting';
-
-const ChatRoomShiftButton = (props: {
-  isJoined: boolean;
-  onJoin: () => void;
-  onLeave: () => void;
-}) => {
-  return props.isJoined ? (
-    <FTButton
-      className="w-[4em] bg-white text-black hover:bg-black hover:text-white"
-      onClick={() => props.onLeave()}
-    >
-      Leave
-    </FTButton>
-  ) : (
-    <FTButton className="w-[4em]" onClick={() => props.onJoin()}>
-      Join
-    </FTButton>
-  );
-};
 
 const ChatRoomListItem = (props: {
   room: TD.ChatRoom;
@@ -66,31 +45,20 @@ const ChatRoomListItem = (props: {
           onClose={closeModal}
         />
       </Modal>
-      <div className="shrink-0 grow-0">
-        <ChatRoomShiftButton
-          isJoined={props.isJoined}
-          onJoin={
-            props.room.roomType === 'LOCKED'
-              ? () => {
-                  setIsOpen(true);
-                }
-              : onJoin
-          }
-          onLeave={() => props.onLeave(props.room.id)}
-        />
-      </div>
       <div
-        className="grow p-[4px]"
+        className="flex min-w-0 shrink grow cursor-pointer flex-row p-[4px] hover:bg-gray-700"
         style={{
-          flexBasis: '1px',
-          cursor: props.isJoined ? 'pointer' : 'unset',
-          fontWeight: props.isJoined ? 'bold' : 'normal',
-          ...(props.isFocused ? { borderLeft: '12px solid teal' } : {}),
+          fontWeight: props.isFocused ? 'bold' : 'normal',
+          ...(props.isFocused ? { borderRight: '12px solid teal' } : {}),
         }}
         onClick={() => props.onFocus(props.room.id)}
       >
-        <InlineIcon i={<TypeIcon />} />
-        {props.room.roomName}{' '}
+        <div className="shrink-0 grow-0">
+          <InlineIcon i={<TypeIcon />} />
+        </div>
+        <div className="shrink grow overflow-hidden text-ellipsis">
+          {props.room.roomName}
+        </div>
       </div>
     </>
   );
@@ -105,18 +73,23 @@ export const ChatRoomListView = (props: {
   onFocus: (roomId: number) => void;
 }) => {
   return (
-    <>
+    <div className="overflow-y-auto overflow-x-hidden">
       {props.rooms.map((room: TD.ChatRoom) => {
+        const isJoined = props.isJoiningTo(room.id);
+        const isFocused = props.isFocusingTo(room.id);
         return (
           /* クリックしたルームにフォーカスを当てる */
           <div
-            className="flex flex-row border-2 border-solid border-white p-[2px]"
+            className={`my-1 flex min-w-0 flex-row border-2 border-solid ${
+              isFocused ? 'border-gray-400' : 'border-transparent'
+            } p-[2px] hover:border-white`}
             key={room.id}
+            title={room.roomName}
           >
             <ChatRoomListItem
               room={room}
-              isJoined={props.isJoiningTo(room.id)}
-              isFocused={props.isFocusingTo(room.id)}
+              isJoined={isJoined}
+              isFocused={isFocused}
               onJoin={props.onJoin}
               onLeave={props.onLeave}
               onFocus={props.onFocus}
@@ -124,6 +97,6 @@ export const ChatRoomListView = (props: {
           </div>
         );
       })}
-    </>
+    </div>
   );
 };
