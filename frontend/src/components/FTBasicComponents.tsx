@@ -17,17 +17,23 @@ export const FTTextField = (
     /**
      * 日本語変換中でない時にenterキーが押された時のイベント
      */
-    onEnter?: () => void;
+    onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    /**
+     * 日本語変換中でない時にキーが押された時のイベント
+     */
+    onActualKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   }
 ) => {
   const [composing, setComposing] = useState(false);
   const onKeyDown = props.onKeyDown;
-  const sprops = omit(props, 'onEnter');
+  const sprops = omit(props, 'onEnter', 'onActualKeyDown', 'className');
+  const className = (props.className || '') + ' bg-black';
   return (
     <input
       type="text"
       onCompositionStart={() => setComposing(true)}
       onCompositionEnd={() => setComposing(false)}
+      className={className}
       {...{ ...sprops }}
       onKeyDown={(e) => {
         if (onKeyDown) {
@@ -35,7 +41,12 @@ export const FTTextField = (
         }
         if (e.key === 'Enter' && !composing) {
           if (props.onEnter) {
-            props.onEnter();
+            props.onEnter(e);
+          }
+        }
+        if (!composing) {
+          if (props.onActualKeyDown) {
+            props.onActualKeyDown(e);
           }
         }
       }}
@@ -53,13 +64,15 @@ export const FTButton = (
     HTMLButtonElement
   >
 ) => {
+  props.disabled;
   return (
     <button
       {...{ ...props }}
       className={
         (props.className || '') +
         ' border-[2px] border-solid border-white py-[2px] px-[6px]' +
-        ' hover:bg-white hover:text-black disabled:opacity-50'
+        (props.disabled ? ' ' : ' hover:bg-white hover:text-black') +
+        ' disabled:opacity-50'
       }
       style={{
         ...(props.style || {}),

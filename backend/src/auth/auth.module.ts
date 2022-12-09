@@ -6,11 +6,13 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { UsersModule } from '../users/users.module';
 import { jwtConstants } from './auth.constants';
 import { AuthController } from './auth.controller';
+import { AuthLocker } from './auth.locker';
 import { AuthService } from './auth.service';
 import { FtStrategy } from './ft.strategy';
 import { JwtTotpStrategy } from './jwt-totp.strategy';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
+import { WsJwtStrategy } from './ws-jst.strategy';
 
 @Module({
   controllers: [AuthController],
@@ -18,8 +20,10 @@ import { LocalStrategy } from './local.strategy';
     AuthService,
     LocalStrategy,
     JwtStrategy,
+    WsJwtStrategy,
     FtStrategy,
     JwtTotpStrategy,
+    AuthLocker,
   ],
   imports: [
     forwardRef(() => UsersModule),

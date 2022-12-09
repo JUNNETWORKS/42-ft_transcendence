@@ -1,4 +1,4 @@
-import { Logger } from '@nestjs/common';
+import { Logger, UseGuards } from '@nestjs/common';
 import {
   ConnectedSocket,
   MessageBody,
@@ -8,6 +8,8 @@ import {
 import { Socket, Server } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
+import { WsAuthGuard } from 'src/auth/ws-auth.guard';
+import { getUserFromClient } from 'src/utils/socket/ws-auth';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
@@ -21,6 +23,7 @@ import { WaitingQueues } from './game/waiting-queues';
 // TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
 // フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡
 @WebSocketGateway({ cors: true, namespace: '/chat' })
+@UseGuards(WsAuthGuard)
 export class PongGateway {
   private wsServer!: Server;
   private ongoingMatches: OngoingMatches;
@@ -77,11 +80,7 @@ export class PongGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PongMatchMakingEntryDTO
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      console.log('USER is not logged in!!');
-      return;
-    }
+    const user = getUserFromClient(client);
 
     if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
       // TODO: 既に待機キューに参加している場合はエラーを返す
@@ -97,11 +96,7 @@ export class PongGateway {
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PongMatchMakingLeaveDTO
   ) {
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      console.log('USER is not logged in!!');
-      return;
-    }
+    const user = getUserFromClient(client);
 
     // 待機キューからユーザーを削除する
     const queue = this.waitingQueues.getQueueByPlayerID(user.id);
@@ -114,11 +109,7 @@ export class PongGateway {
     @MessageBody() playerAction: PongMatchActionDTO
   ) {
     console.log('pong.match.action');
-    const user = await this.authService.trapAuth(client);
-    if (!user) {
-      console.log('USER is not logged in!!');
-      return;
-    }
+    const user = getUserFromClient(client);
 
     this.ongoingMatches.moveBar(user.id, playerAction);
   }
