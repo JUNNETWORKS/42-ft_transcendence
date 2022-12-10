@@ -19,6 +19,7 @@ import { OngoingMatches } from './game/ongoing-matches';
 import { PostMatchStrategy } from './game/PostMatchStrategy';
 import { WaitingQueue } from './game/waiting-queue';
 import { WaitingQueues } from './game/waiting-queues';
+import { PongService } from './pong.service';
 
 // TODO: フロントのWebSocketのnamespaceを削除してここのものも削除する
 // フロント側のWebSocketのコードを利用するために一時的に /chat にしている｡
@@ -32,15 +33,13 @@ export class PongGateway {
 
   constructor(
     private readonly authService: AuthService,
+    private readonly pongService: PongService,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {}
 
   afterInit(server: Server) {
     this.wsServer = server;
-    this.ongoingMatches = new OngoingMatches(
-      this.wsServer,
-      this.postMatchStrategy
-    );
+    this.ongoingMatches = new OngoingMatches();
     this.waitingQueues = new WaitingQueues();
   }
 
@@ -49,12 +48,16 @@ export class PongGateway {
     const rankQueue = new WaitingQueue(
       'RANK',
       this.ongoingMatches,
-      this.wsServer
+      this.wsServer,
+      this.pongService,
+      this.postMatchStrategy
     );
     const casualQueue = new WaitingQueue(
       'CASUAL',
       this.ongoingMatches,
-      this.wsServer
+      this.wsServer,
+      this.pongService,
+      this.postMatchStrategy
     );
     this.waitingQueues.appendQueue(rankQueue);
     this.waitingQueues.appendQueue(casualQueue);

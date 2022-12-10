@@ -138,17 +138,23 @@ model UserRankPoint {
   rankPoint Int  @default(1500)
 }
 
-// 試合結果
-//
-// 勝者敗者はスコアから算出可能なのでDBには保存しない｡
-model MatchResult {
+enum MatchStatus {
+  PREPARING
+  IN_PROGRESS
+  DONE
+  ERROR
+}
+
+model Match {
   id                String              @id // UUIDv4; 外部から与える
   matchType         MatchType
+  matchStatus       MatchStatus
   userID1           Int // User.id
-  userScore1        Int
+  userScore1        Int                 @default(0) // 点が入るとリアルタイムに更新する。初期スコアは0
   userID2           Int // User.id
-  userScore2        Int
-  endAt             DateTime // 試合終了日時
+  userScore2        Int                 @default(0)
+  startAt           DateTime? // プライベートマッチは開始しない可能性があるからNullableにする
+  endAt             DateTime? // 試合終了日時
   matchUserRelation MatchUserRelation[]
   config            MatchConfig?
 }
@@ -161,20 +167,20 @@ enum MatchType {
 
 // マッチ設定
 model MatchConfig {
-  id       Int         @id @default(autoincrement())
-  result   MatchResult @relation(fields: [matchID], references: [id])
-  matchID  String      @unique
+  id       Int    @id @default(autoincrement())
+  result   Match  @relation(fields: [matchID], references: [id])
+  matchID  String @unique
   maxScore Int // 何点取ったら勝利か
   speed    Float // 球の速度
 }
 
 // マッチとユーザーの関連テーブル
 model MatchUserRelation {
-  id          Int         @id @default(autoincrement())
-  user        User        @relation(fields: [userID], references: [id])
-  userID      Int
-  matchResult MatchResult @relation(fields: [matchID], references: [id])
-  matchID     String
+  id      Int    @id @default(autoincrement())
+  user    User   @relation(fields: [userID], references: [id])
+  userID  Int
+  match   Match  @relation(fields: [matchID], references: [id])
+  matchID String
 
   @@unique([userID, matchID])
 }
