@@ -36,13 +36,6 @@ export const VisibleRoomList = () => {
 
   const command = makeCommand(mySocket!, focusedRoomId);
   const store = {
-    countMessages: (roomId: number) => {
-      const ms = messagesInRoom[roomId];
-      if (!ms) {
-        return undefined;
-      }
-      return ms.length;
-    },
     roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {

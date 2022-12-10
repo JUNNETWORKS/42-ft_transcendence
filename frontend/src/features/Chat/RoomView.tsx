@@ -13,7 +13,7 @@ import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { useRoomDataReadOnly } from '@/stores/store';
-import { dataAtom, structureAtom } from '@/stores/structure';
+import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
@@ -207,11 +207,10 @@ type Prop = {
   room: TD.ChatRoom;
 };
 
-export const ChatRoomView = ({ room }: Prop) => {
+const ChatRoomView = ({ room }: Prop) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
-  const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [personalData] = useAtom(authAtom.personalData);
@@ -232,24 +231,10 @@ export const ChatRoomView = ({ room }: Prop) => {
     return null;
   }
   const store = {
-    countMessages: (roomId: number) => {
-      const ms = messagesInRoom[roomId];
-      if (!ms) {
-        return undefined;
-      }
-      return ms.length;
-    },
     roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
       if (!ms || ms.length === 0) {
         return [];
-      }
-      return ms;
-    },
-    roomMembers: (roomId: number) => {
-      const ms = membersInRoom[roomId];
-      if (!ms) {
-        return null;
       }
       return ms;
     },

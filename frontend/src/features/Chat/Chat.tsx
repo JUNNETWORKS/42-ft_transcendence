@@ -1,5 +1,5 @@
 import { useAtom } from 'jotai';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
@@ -7,8 +7,7 @@ import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
-import { authAtom } from '@/stores/auth';
-import { dataAtom, structureAtom } from '@/stores/structure';
+import { dataAtom } from '@/stores/structure';
 
 import { makeCommand } from './command';
 import { useFocusedRoomId } from './hooks/useFocusedRoomId';
@@ -20,14 +19,11 @@ import { ChatRoomCreateCard } from './RoomSetting';
  */
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
-
   const navigate = useNavigate();
-  const [personalData] = useAtom(authAtom.personalData);
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
-  const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const focusedRoomId = useFocusedRoomId();
-  const userId = personalData ? personalData.id : -1;
+  const [isOpen, setIsOpen] = useState(false);
+  const outlet = useOutlet();
   /**
    * チャットコマンド
    */
@@ -43,82 +39,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
 
-  /**
-   * 算出プロパティ的なの
-   */
-  const computed = {
-    messages: useMemo(() => {
-      const ms = messagesInRoom[focusedRoomId];
-      if (!ms || ms.length === 0) {
-        return [];
-      }
-      return ms;
-    }, [messagesInRoom, focusedRoomId]),
-
-    focusedRoom: useMemo(
-      () => joiningRooms.find((r) => r.chatRoom.id === focusedRoomId),
-      [joiningRooms, focusedRoomId]
-    ),
-
-    you: useMemo(() => {
-      if (!userId) {
-        return null;
-      }
-      if (!focusedRoomId) {
-        return null;
-      }
-      const us = membersInRoom[focusedRoomId];
-      if (!us) {
-        return null;
-      }
-      return us[userId];
-    }, [userId, focusedRoomId, membersInRoom]),
-  };
-
-  /**
-   * 保持しているデータに対する参照
-   */
-  const store = {
-    countMessages: (roomId: number) => {
-      const ms = messagesInRoom[roomId];
-      if (!ms) {
-        return undefined;
-      }
-      return ms.length;
-    },
-    roomMessages: (roomId: number) => {
-      const ms = messagesInRoom[roomId];
-      if (!ms || ms.length === 0) {
-        return [];
-      }
-      return ms;
-    },
-    roomMembers: (roomId: number) => {
-      const ms = membersInRoom[roomId];
-      if (!ms) {
-        return null;
-      }
-      return ms;
-    },
-  };
-
-  const action = {
-    /**
-     * 実態はステート更新関数.
-     * レンダリング後に副作用フックでコマンドが走る.
-     */
-    get_room_members: (roomId: number) => {
-      if (roomId > 0) {
-        const mems = store.roomMembers(roomId);
-        if (!mems) {
-          command.get_room_members(roomId);
-        }
-      }
-    },
-  };
-
-  const [isOpen, setIsOpen] = useState(false);
-
   const closeModal = () => {
     setIsOpen(false);
   };
@@ -126,8 +46,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const openModal = () => {
     setIsOpen(true);
   };
-
-  const outlet = useOutlet();
 
   return (
     <>

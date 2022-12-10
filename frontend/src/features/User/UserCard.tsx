@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
