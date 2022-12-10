@@ -42,6 +42,10 @@ export function omit<T extends object, U extends keyof T>(
   return d;
 }
 
+export function compact<T>(arr: T[]) {
+  return arr.filter((a) => !!a) as Exclude<T, null | undefined>[];
+}
+
 export function datifyObject<T extends object, U extends keyof T>(
   obj: T,
   ...props: Array<Many<U>>
@@ -86,13 +90,19 @@ export function datify(data: any) {
  * @param value
  * @returns
  */
-export function sortBy<T, U>(array: T[], value: (a: T) => U) {
+export function sortBy<T, U>(
+  array: T[],
+  value: (a: T) => U,
+  inDescending = false
+) {
   const decorated = array.map((e) => ({ e, v: value(e) }));
+  const lt = inDescending ? +1 : -1;
+  const gt = -lt;
   decorated.sort((a, b) => {
     if (a.v < b.v) {
-      return -1;
+      return lt;
     } else if (a.v > b.v) {
-      return +1;
+      return gt;
     }
     return 0;
   });

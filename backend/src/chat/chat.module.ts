@@ -14,8 +14,8 @@ import { ChatService } from './chat.service';
     forwardRef(() => ChatroomsModule),
     forwardRef(() => UsersModule),
     forwardRef(() => AuthModule),
-    WsServerModule,
+    forwardRef(() => WsServerModule),
   ],
-  exports: [ChatGateway],
+  exports: [ChatGateway, ChatService],
 })
 export class ChatModule {}

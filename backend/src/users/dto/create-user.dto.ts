@@ -3,6 +3,7 @@ import {
   IsEmail,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MaxLength,
   MinLength,
@@ -30,7 +31,13 @@ export class CreateUserDto {
   intraId!: number;
 
   @IsString()
+  @IsOptional()
   @MinLength(12)
   @MaxLength(60)
   password!: string;
+
+  @IsString()
+  @IsOptional()
+  @ApiProperty()
+  avatar?: string;
 }

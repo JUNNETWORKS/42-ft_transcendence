@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 
 export const styleTextFieldCommon: CSSProperties = {
-  backgroundColor: 'black',
+  outline: 'none',
   color: 'white',
   padding: '4px',
 };

@@ -7,14 +7,6 @@ export function makeCommand(
   focusedRoomId: number
 ) {
   return {
-    open: (args: TD.OpenArgument) => {
-      const data = {
-        ...args,
-      };
-      console.log(data);
-      mySocket.emit('ft_open', data);
-    },
-
     join: (roomId: number, roomPassword: string, callback: any) => {
       const data = {
         roomId,
@@ -98,6 +90,14 @@ export function makeCommand(
         userId: member.userId,
       };
       mySocket.emit('ft_mute', data);
+    },
+
+    pong_private_match_create: (roomId: number) => {
+      console.log('[pong.private_match.create]', roomId);
+      const data = {
+        roomId,
+      };
+      mySocket.emit('pong.private_match.create', data);
     },
   };
 }
