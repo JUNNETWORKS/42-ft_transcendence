@@ -10,7 +10,7 @@ import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
-import { chatSocketAtom } from '@/stores/auth';
+import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
@@ -193,23 +193,60 @@ const MembersList = (props: {
   );
 };
 
-export const ChatRoomView = (props: {
-  room: TD.ChatRoom;
-  memberOperations: TD.MemberOperations;
-  you: TD.ChatUserRelation | null;
-  say: (content: string) => void;
-  roomMessages: (roomId: number) => TD.ChatRoomMessage[];
-  roomMembers: (roomId: number) => TD.UserRelationMap | null;
-}) => {
-  const isOwner = props.room.ownerId === props.you?.userId;
+export const ChatRoomView = (props: { room: TD.ChatRoom }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [members] = dataAtom.useMembersInRoom(props.room.id);
   const [, setFocusedRoomId] = useAtom(structureAtom.focusedRoomIdAtom);
+  const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
+  const [personalData] = useAtom(authAtom.personalData);
   const [mySocket] = useAtom(chatSocketAtom);
+  const computed = {
+    you: useMemo(() => {
+      if (!personalData) {
+        return null;
+      }
+      const us = membersInRoom[props.room.id];
+      if (!us) {
+        return null;
+      }
+      return us[personalData.id];
+    }, [membersInRoom, personalData, props.room.id]),
+  };
   if (!mySocket) {
     return null;
   }
+  const store = {
+    countMessages: (roomId: number) => {
+      const ms = messagesInRoom[roomId];
+      if (!ms) {
+        return undefined;
+      }
+      return ms.length;
+    },
+    roomMessages: (roomId: number) => {
+      const ms = messagesInRoom[roomId];
+      if (!ms || ms.length === 0) {
+        return [];
+      }
+      return ms;
+    },
+    roomMembers: (roomId: number) => {
+      const ms = membersInRoom[roomId];
+      if (!ms) {
+        return null;
+      }
+      return ms;
+    },
+  };
+  const isOwner = props.room.ownerId === computed.you?.userId;
   const command = makeCommand(mySocket, props.room.id);
+  const memberOperations: TD.MemberOperations = {
+    onNomminateClick: command.nomminate,
+    onBanClick: command.ban,
+    onKickClick: command.kick,
+    onMuteClick: command.mute,
+  };
   const closeModal = () => setIsOpen(false);
   const openModal = () => setIsOpen(true);
   const TypeIcon = RoomTypeIcon[props.room.roomType];
@@ -260,26 +297,26 @@ export const ChatRoomView = (props: {
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">
             <MessagesList
-              you={props.you}
+              you={computed.you}
               room={props.room}
               members={members}
-              messages={props.roomMessages(props.room.id)}
-              memberOperations={props.memberOperations}
+              messages={store.roomMessages(props.room.id)}
+              memberOperations={memberOperations}
             />
           </div>
           <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
             <div className="flex flex-row border-2 border-solid border-white p-2">
-              <SayCard sender={props.say} />
+              <SayCard sender={command.say} />
             </div>
           </div>
         </div>
         <div className="shrink-0 grow-0 basis-[16em]">
           <MembersList
-            you={props.you}
+            you={computed.you}
             room={props.room}
             members={members}
-            memberOperations={props.memberOperations}
+            memberOperations={memberOperations}
           />
         </div>
       </div>

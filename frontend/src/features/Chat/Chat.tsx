@@ -8,7 +8,6 @@ import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
-import * as TD from '@/typedef';
 
 import { makeCommand } from './command';
 import { ChatRoomListView } from './RoomList';
@@ -34,12 +33,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
    * チャットコマンド
    */
   const command = makeCommand(mySocket, focusedRoomId);
-  const memberOperations: TD.MemberOperations = {
-    onNomminateClick: command.nomminate,
-    onBanClick: command.ban,
-    onKickClick: command.kick,
-    onMuteClick: command.mute,
-  };
 
   /**
    * わざわざ分けなくてもいいかな
@@ -137,16 +130,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
 
   const contentInRightPain = (() => {
     if (computed.focusedRoom) {
-      return (
-        <ChatRoomView
-          room={computed.focusedRoom.chatRoom}
-          memberOperations={memberOperations}
-          you={computed.you}
-          say={command.say}
-          roomMessages={store.roomMessages}
-          roomMembers={store.roomMembers}
-        />
-      );
+      return <ChatRoomView room={computed.focusedRoom.chatRoom} />;
     } else {
       return <VisibleRoomList />;
     }
