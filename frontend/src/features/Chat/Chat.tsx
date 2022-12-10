@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useMemo, useState } from 'react';
+import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
@@ -10,10 +11,9 @@ import { authAtom } from '@/stores/auth';
 import { dataAtom, structureAtom } from '@/stores/structure';
 
 import { makeCommand } from './command';
+import { useFocusedRoomId } from './hooks/useFocusedRoomId';
 import { ChatRoomListView } from './RoomList';
 import { ChatRoomCreateCard } from './RoomSetting';
-import { ChatRoomView } from './RoomView';
-import { VisibleRoomList } from './VisibleRoomList';
 
 /**
  * @returns チャットインターフェースコンポーネント
@@ -21,13 +21,12 @@ import { VisibleRoomList } from './VisibleRoomList';
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
 
+  const navigate = useNavigate();
   const [personalData] = useAtom(authAtom.personalData);
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
-  const [focusedRoomId, setFocusedRoomId] = useAtom(
-    structureAtom.focusedRoomIdAtom
-  );
+  const focusedRoomId = useFocusedRoomId();
   const userId = personalData ? personalData.id : -1;
   /**
    * チャットコマンド
@@ -128,13 +127,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
     setIsOpen(true);
   };
 
-  const contentInRightPain = (() => {
-    if (computed.focusedRoom) {
-      return <ChatRoomView room={computed.focusedRoom.chatRoom} />;
-    } else {
-      return <VisibleRoomList />;
-    }
-  })();
+  const outlet = useOutlet();
 
   return (
     <>
@@ -165,8 +158,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
                 onLeave={command.leave}
                 onFocus={(roomId: number) => {
                   if (predicate.isJoiningTo(roomId)) {
-                    setFocusedRoomId(roomId);
-                    action.get_room_members(roomId);
+                    navigate(`/chat/${roomId}`);
                   }
                 }}
               />
@@ -174,7 +166,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
           </div>
         </div>
 
-        <div className="flex shrink grow flex-col">{contentInRightPain}</div>
+        <div className="flex shrink grow flex-col">{outlet}</div>
       </div>
     </>
   );

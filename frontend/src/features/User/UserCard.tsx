@@ -119,9 +119,8 @@ const Presentator = (props: {
   return <ActualCard user={personalData}>{props.children}</ActualCard>;
 };
 
-export const UserCard = (props: { id?: number; children?: ReactNode }) => {
-  const { id } = useParams();
-  const userId = parseInt(id || props.id?.toString() || '');
+export const UserCard = (props: { id: number; children?: ReactNode }) => {
+  const userId = props.id;
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 text-white">

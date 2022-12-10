@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useEffect, useId, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { FTH3 } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
@@ -16,13 +17,13 @@ import { last } from '@/utils';
 
 import { makeCommand } from './command';
 import { VisibleRoomItem } from './components/VisibleRoomItem';
+import { useFocusedRoomId } from './hooks/useFocusedRoomId';
 
 export const VisibleRoomList = () => {
+  const navigate = useNavigate();
   const [rooms] = useAtom(dataAtom.visibleRoomsAtom);
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
-  const [focusedRoomId, setFocusedRoomId] = useAtom(
-    structureAtom.focusedRoomIdAtom
-  );
+  const focusedRoomId = useFocusedRoomId();
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [mySocket] = useAtom(chatSocketAtom);
@@ -81,7 +82,7 @@ export const VisibleRoomList = () => {
 
   const onFocus = (roomId: number) => {
     if (predicate.isJoiningTo(roomId)) {
-      setFocusedRoomId(roomId);
+      navigate(`/chat/${roomId}`);
       action.get_room_members(roomId);
     }
   };
