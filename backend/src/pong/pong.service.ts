@@ -49,9 +49,7 @@ export class PongService {
       },
       data: {
         matchStatus: MatchStatus.DONE,
-        userID1: match.playerIDs[0],
         userScore1: match.playerScores[0],
-        userID2: match.playerIDs[1],
         userScore2: match.playerScores[1],
         endAt: new Date(),
       },
