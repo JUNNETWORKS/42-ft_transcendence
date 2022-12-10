@@ -35,7 +35,7 @@ export class PostMatchStrategy {
 
   // onDone
 
-  onDoneRankMatch(match: OnlineMatch): void {
+  private onDoneRankMatch(match: OnlineMatch): void {
     this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
     if (match.winnerID && match.loserID) {
@@ -43,27 +43,27 @@ export class PostMatchStrategy {
     }
   }
 
-  onDoneCasualMatch(match: OnlineMatch): void {
+  private onDoneCasualMatch(match: OnlineMatch): void {
     this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
   }
 
-  onDonePrivateMatch(match: OnlineMatch): void {
+  private onDonePrivateMatch(match: OnlineMatch): void {
     this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
   }
 
   // onError
 
-  onErrorRankMatch(match: OnlineMatch): void {
+  private onErrorRankMatch(match: OnlineMatch): void {
     this.pongService.updateMatchStatus(match.matchID, 'ERROR');
   }
 
-  onErrorCasualMatch(match: OnlineMatch): void {
+  private onErrorCasualMatch(match: OnlineMatch): void {
     this.pongService.updateMatchStatus(match.matchID, 'ERROR');
   }
 
-  onErrorPrivateMatch(match: OnlineMatch): void {
+  private onErrorPrivateMatch(match: OnlineMatch): void {
     this.pongService.updateMatchStatus(match.matchID, 'ERROR');
   }
 }
