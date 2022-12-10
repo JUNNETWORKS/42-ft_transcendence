@@ -1,8 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { MatchStatus } from '@prisma/client';
-import { use } from 'passport';
 
-import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -162,9 +160,9 @@ export class PongService {
         id: matchId,
       },
     });
-    if (!match) return { status: 'match is not found' };
+    if (!match) throw new HttpException('match is not found', 404);
     if (match.matchStatus !== 'IN_PROGRESS')
-      return { status: 'match is not in-progress' };
+      throw new HttpException('match is not in-progress', 400);
     await this.wsServer.usersJoin(userId, { matchId });
     return { status: 'success' };
   }

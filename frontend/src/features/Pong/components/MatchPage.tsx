@@ -24,7 +24,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
     fetcher('GET', location.pathname).then((response) => {
       if (!response.ok) {
         // set error
-        console.log('error');
+        console.log(response.status);
       } else {
         console.log('success join');
       }
