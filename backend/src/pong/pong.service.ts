@@ -1,12 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { MatchStatus } from '@prisma/client';
+import { use } from 'passport';
+
+import { generateFullRoomName } from 'src/utils/socket/SocketRoom';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { OnlineMatch } from './game/online-match';
 
 @Injectable()
 export class PongService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private wsServer: WsServerGateway
+  ) {}
 
   async createMatch(match: OnlineMatch) {
     await this.prisma.match.create({
@@ -146,5 +153,18 @@ export class PongService {
         });
       }
     });
+  }
+
+  async spectateByMatchID(userId: number, matchId: string) {
+    console.log(userId, matchId);
+    const match = await this.prisma.match.findUnique({
+      where: {
+        id: matchId,
+      },
+    });
+    if (!match) return { status: 'match is not found' };
+    if (match.matchStatus !== 'IN_PROGRESS')
+      return { status: 'match is not in-progress' };
+    await this.wsServer.usersJoin(userId, { matchId });
   }
 }
