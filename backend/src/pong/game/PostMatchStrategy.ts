@@ -36,6 +36,7 @@ export class PostMatchStrategy {
   // onDone
 
   onDoneRankMatch(match: OnlineMatch): void {
+    this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
     if (match.winnerID && match.loserID) {
       this.pongService.updateRankPoint(match.winnerID, match.loserID);
@@ -43,10 +44,12 @@ export class PostMatchStrategy {
   }
 
   onDoneCasualMatch(match: OnlineMatch): void {
+    this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
   }
 
   onDonePrivateMatch(match: OnlineMatch): void {
+    this.pongService.updateMatchScore(match);
     this.pongService.updateMatchStatus(match.matchID, 'DONE');
   }
 
