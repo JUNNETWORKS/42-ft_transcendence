@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { io } from 'socket.io-client';
 
 import { ChatMemberCard } from '@/components/ChatMemberCard';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
@@ -205,16 +206,16 @@ const MembersList = (props: {
 
 type Prop = {
   room: TD.ChatRoom;
+  mySocket: ReturnType<typeof io>;
 };
 
-const ChatRoomView = ({ room }: Prop) => {
+const ChatRoomView = ({ room, mySocket }: Prop) => {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [personalData] = useAtom(authAtom.personalData);
-  const [mySocket] = useAtom(chatSocketAtom);
   const computed = {
     you: useMemo(() => {
       if (!personalData) {
@@ -227,9 +228,6 @@ const ChatRoomView = ({ room }: Prop) => {
       return us[personalData.id];
     }, [membersInRoom, personalData, room.id]),
   };
-  if (!mySocket) {
-    return null;
-  }
   const store = {
     roomMessages: (roomId: number) => {
       const ms = messagesInRoom[roomId];
@@ -327,8 +325,9 @@ const ChatRoomView = ({ room }: Prop) => {
 export const RoomView = () => {
   const { id } = useParams();
   const room = useRoomDataReadOnly(parseInt(id || ''));
-  if (!room) {
+  const [mySocket] = useAtom(chatSocketAtom);
+  if (!room || !mySocket) {
     return null;
   }
-  return <ChatRoomView room={room} />;
+  return <ChatRoomView room={room} mySocket={mySocket} />;
 };

@@ -6,6 +6,7 @@ import { RoomView } from '@/features/Chat/RoomView';
 import { VisibleRoomList } from '@/features/Chat/VisibleRoomList';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { DmPage } from '@/features/DM/DmPage';
+import { DmRoomView } from '@/features/DM/DmRoomView';
 import { Index } from '@/features/Index/Index';
 import { PongMatchPage } from '@/features/Pong/components/MatchPage';
 import { PongTopPage } from '@/features/Pong/components/TopPage';
@@ -48,6 +49,12 @@ export const AppRoutes = () => {
     {
       path: '/dm',
       element: guardElement || <DmPage mySocket={mySocket!} />,
+      children: [
+        {
+          path: ':id',
+          element: <DmRoomView />,
+        },
+      ],
     },
     {
       path: '/user/:id',

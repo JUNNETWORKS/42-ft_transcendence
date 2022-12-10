@@ -129,7 +129,7 @@ export const SocketHolder = () => {
       'ft_say',
       (data: TD.SayResult) => {
         const message = TD.Mapper.chatRoomMessage(data);
-        console.log('catch say');
+        console.log('catch say', data);
         const roomId = data.chatRoomId;
         stateMutater.addMessagesToRoom(roomId, [message]);
       },
@@ -219,7 +219,7 @@ export const SocketHolder = () => {
     listeners.push([
       'ft_get_room_messages',
       (data: TD.GetRoomMessagesResult) => {
-        console.log('catch get_room_messages');
+        console.log('catch get_room_messages', data);
         const { id, messages } = data;
         console.log(id, !!messages);
         userUpdator.addMany(messages.map((m) => m.user));

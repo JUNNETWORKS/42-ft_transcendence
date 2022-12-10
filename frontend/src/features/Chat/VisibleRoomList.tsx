@@ -7,23 +7,19 @@ import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { chatSocketAtom } from '@/stores/auth';
-import {
-  dataAtom,
-  structureAtom,
-  useUpdateVisibleRooms,
-} from '@/stores/structure';
+import { dataAtom, useUpdateVisibleRooms } from '@/stores/structure';
 import * as TD from '@/typedef';
 import { last } from '@/utils';
 
 import { makeCommand } from './command';
 import { VisibleRoomItem } from './components/VisibleRoomItem';
-import { useFocusedRoomId } from './hooks/useFocusedRoomId';
+import { useFocusedChatRoomId } from './hooks/useFocusedRoomId';
 
 export const VisibleRoomList = () => {
   const navigate = useNavigate();
   const [rooms] = useAtom(dataAtom.visibleRoomsAtom);
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
-  const focusedRoomId = useFocusedRoomId();
+  const focusedRoomId = useFocusedChatRoomId();
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [mySocket] = useAtom(chatSocketAtom);

@@ -10,7 +10,7 @@ import { Icons } from '@/icons';
 import { dataAtom } from '@/stores/structure';
 
 import { makeCommand } from './command';
-import { useFocusedRoomId } from './hooks/useFocusedRoomId';
+import { useFocusedChatRoomId } from './hooks/useFocusedRoomId';
 import { ChatRoomListView } from './RoomList';
 import { ChatRoomCreateCard } from './RoomSetting';
 
@@ -21,7 +21,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
   const navigate = useNavigate();
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
-  const focusedRoomId = useFocusedRoomId();
+  const focusedRoomId = useFocusedChatRoomId();
   const [isOpen, setIsOpen] = useState(false);
   const outlet = useOutlet();
   /**

@@ -9,7 +9,6 @@ const DmRoomListItem = (props: {
   room: TD.DmRoom;
   isJoined: boolean;
   isFocused: boolean;
-  nMessages: number | undefined;
   onFocus: (roomId: number) => void;
 }) => {
   const [personalData] = useAtom(authAtom.personalData);
@@ -18,26 +17,24 @@ const DmRoomListItem = (props: {
 
   const opponent = props.room.roomMember.find(
     (member) => member.userId !== personalData.id
-  )!.user;
+  )?.user;
+  if (!opponent) {
+    return null;
+  }
   const isBlocking = !!blockingUsers.find((u) => u.id === opponent.id);
   const roomName = opponent.displayName;
   return (
-    <div className="border-2 border-solid border-white p-[2px]">
-      <div
-        className="basis-[1px] p-[4px]"
-        style={{
-          cursor: props.isJoined ? 'pointer' : 'unset',
-          fontWeight: props.isJoined ? 'bold' : 'normal',
-          textDecorationLine: isBlocking ? 'line-through' : 'none',
-          ...(props.isFocused ? { borderLeft: '12px solid teal' } : {}),
-        }}
-        onClick={() => props.onFocus(props.room.id)}
-      >
+    <div
+      className="flex min-w-0 shrink grow cursor-pointer flex-row p-[4px] hover:bg-gray-700"
+      style={{
+        fontWeight: props.isFocused ? 'bold' : 'normal',
+        textDecorationLine: isBlocking ? 'line-through' : 'none',
+        ...(props.isFocused ? { borderRight: '12px solid teal' } : {}),
+      }}
+      onClick={() => props.onFocus(props.room.id)}
+    >
+      <div className="shrink grow overflow-hidden text-ellipsis">
         {roomName}
-        {(() => {
-          const n = props.nMessages;
-          return Utils.isfinite(n) && n > 0 ? `(${n})` : '';
-        })()}
       </div>
     </div>
   );
@@ -47,24 +44,31 @@ export const DmRoomListView = (props: {
   rooms: TD.DmRoom[];
   isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
-  countMessages: (roomId: number) => number | undefined;
   onFocus: (roomId: number) => void;
 }) => {
   return (
-    <>
+    <div className="overflow-y-auto overflow-x-hidden">
       {props.rooms.map((room: TD.DmRoom) => {
+        const isFocused = props.isFocusingTo(room.id);
         return (
           /* クリックしたルームにフォーカスを当てる */
-          <DmRoomListItem
+          <div
+            className={`my-1 flex min-w-0 flex-row border-2 border-solid ${
+              isFocused ? 'border-gray-400' : 'border-transparent'
+            } p-[2px] hover:border-white`}
             key={room.id}
-            room={room}
-            isJoined={props.isJoiningTo(room.id)}
-            isFocused={props.isFocusingTo(room.id)}
-            nMessages={props.countMessages(room.id)}
-            onFocus={props.onFocus}
-          />
+            title={room.roomName}
+          >
+            <DmRoomListItem
+              key={room.id}
+              room={room}
+              isJoined={props.isJoiningTo(room.id)}
+              isFocused={props.isFocusingTo(room.id)}
+              onFocus={props.onFocus}
+            />
+          </div>
         );
       })}
-    </>
+    </div>
   );
 };
