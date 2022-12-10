@@ -12,6 +12,9 @@ export class PongService {
     const results = await this.prisma.matchUserRelation.findMany({
       where: {
         userID: userID,
+        match: {
+          matchStatus: 'DONE',
+        },
       },
       orderBy: {
         match: {
@@ -31,7 +34,34 @@ export class PongService {
         },
       },
     });
-    return results.map((result) => result.match);
+
+    const idSet = new Set<number>();
+    results.forEach((item) => {
+      idSet.add(item.match.userID1);
+      idSet.add(item.match.userID2);
+    });
+
+    const userResults = await this.prisma.user.findMany({
+      where: {
+        id: { in: [...idSet] },
+      },
+    });
+
+    const targetUser = userResults.find((item) => item.id === userID);
+
+    const matchWithOpponent = results.map(({ match }) => {
+      const opponentUserId =
+        match.userID1 === userID ? match.userID1 : match.userID2;
+      const opponentUser = userResults.find(
+        (item) => item.id === opponentUserId
+      );
+      return { opponent: opponentUser, match: match };
+    });
+
+    return {
+      user: targetUser,
+      history: matchWithOpponent,
+    };
   }
 
   async createMatch(match: OnlineMatch) {
