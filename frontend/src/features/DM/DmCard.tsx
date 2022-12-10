@@ -5,7 +5,6 @@ import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { chatSocketAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
-import { onEnter } from '@/utils/react';
 
 type DmModalProps = {
   user: TD.User;
@@ -50,23 +49,25 @@ export const DmCard = ({ user }: DmModalProps) => {
   const isSendable = content !== '';
 
   return (
-    <div className="flex flex-row">
-      <div className="shrink-0 grow-0">
-        <FTButton onClick={submit} disabled={!isSendable}>
-          Send
-        </FTButton>
+    <>
+      <div className="flex flex-row">
+        <FTTextField
+          className="shrink grow"
+          value={content}
+          placeholder="発言内容"
+          onChange={(e) => setContent(e.target.value)}
+          onEnter={() => {
+            if (isSendable) {
+              submit();
+            }
+          }}
+        />
+        <div className="shrink-0 grow-0 pl-2">
+          <FTButton onClick={submit} disabled={!isSendable}>
+            Send
+          </FTButton>
+        </div>
       </div>
-      <FTTextField
-        className="shrink grow"
-        value={content}
-        placeholder="発言内容"
-        onChange={(e) => setContent(e.target.value)}
-        onEnter={() => {
-          if (isSendable) {
-            submit();
-          }
-        }}
-      />
-    </div>
+    </>
   );
 };

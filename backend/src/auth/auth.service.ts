@@ -1,10 +1,16 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import {
+  forwardRef,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { authenticator } from 'otplib';
 import { toDataURL } from 'qrcode';
 import { Socket } from 'socket.io';
 
-import { verifyOtpDto } from './dto/verify-opt.dto';
+import { verifyOtpDto } from './dto/verify-otp.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { UserMinimum } from '../users/entities/user.entity';
@@ -28,7 +34,7 @@ export class AuthService {
     private prisma: PrismaService
   ) {}
 
-  async validateUser(email: string, password: string): Promise<any> {
+  async validateUser(email: string, password: string) {
     console.log(email, password);
     const user = await this.usersService.findByEmail(email);
     console.log(user);
@@ -36,11 +42,12 @@ export class AuthService {
       const hashed = UsersService.hash_password(password);
       if (user.password === hashed) {
         console.log('succeeded');
-        return user;
+        return [true, user] as const;
       }
       console.log('FAIL');
+      return [false, user] as const;
     }
-    return null;
+    return [false, null] as const;
   }
 
   /**
@@ -55,7 +62,7 @@ export class AuthService {
     const user = await this.usersService.findByIntraId(intraId);
     if (user) {
       // ユーザがいた -> そのまま返す
-      return user;
+      return { user, created: false };
     }
     // ユーザがいない -> ユーザを登録
     // MEMO: ユニーク制約が破られた時には PrismaClientKnownRequestError が飛んでくる
@@ -67,7 +74,7 @@ export class AuthService {
       ...data,
       password: UsersService.hash_password(randomUUID()),
     });
-    return createdUser;
+    return { user: createdUser, created: true };
   }
 
   async login(user: any, completedTwoFa = false): Promise<LoginResult> {
@@ -81,33 +88,34 @@ export class AuthService {
       });
       const result = {
         required2fa: true,
-        access_token: this.jwtService.sign(
-          { secretId: secretId?.id, next: 'totp', iat },
-          {
-            issuer: process.env.JWT_ISSUER,
-            audience: process.env.JWT_AUDIENCE,
-          }
-        ),
+        access_token: this.issueAccessToken(user, {
+          secretId: secretId?.id,
+          next: 'totp',
+          iat,
+        }),
       };
       return result;
     }
     const result = {
       access_token: this.issueAccessToken(user),
-      user: Utils.pick(
-        u!,
-        'id',
-        'displayName',
-        'email',
-        'isEnabled2FA',
-        'isEnabledAvatar'
-      ),
+      user: {
+        ...Utils.pick(
+          u!,
+          'id',
+          'displayName',
+          'email',
+          'isEnabled2FA',
+          'isEnabledAvatar'
+        ),
+        created: !!user.created,
+      },
     };
     return result;
   }
 
   async trapAuth(client: Socket) {
     if (client.handshake.auth) {
-      const { token, sub } = client.handshake.auth;
+      const { token } = client.handshake.auth;
       // token による認証
       if (token) {
         const verified = this.jwtService.verify(token, {
@@ -126,15 +134,6 @@ export class AuthService {
           }
         }
       }
-      // subによる認証スキップ
-      // TODO: 提出時には絶対に除去すること!!!!
-      if (sub) {
-        const userId = parseInt(sub);
-        const user = await this.usersService.findOne(userId);
-        if (user) {
-          return user;
-        }
-      }
     }
     return null;
   }
@@ -150,18 +149,25 @@ export class AuthService {
         id: secretId,
       },
     });
-    if (!secret) return;
+    if (!secret) {
+      return false;
+    }
     const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
     return isValid;
   }
 
-  issueAccessToken(user: any) {
-    const payload = {
+  issueAccessToken(user: User, payload: any = null) {
+    console.log(user);
+    if (user.lockUntil && new Date() < user.lockUntil) {
+      console.log(`USER ${user.id} IS NOW LOCKED!!`);
+      throw new UnauthorizedException();
+    }
+    const actualPayload = payload || {
       email: user.email,
       sub: user.id,
       iat: Math.floor(Date.now() / 1000),
     };
-    return this.jwtService.sign(payload, {
+    return this.jwtService.sign(actualPayload, {
       issuer: process.env.JWT_ISSUER,
       audience: process.env.JWT_AUDIENCE,
     });

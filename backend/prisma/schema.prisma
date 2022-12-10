@@ -16,10 +16,12 @@ model User {
   displayName                 String              @unique
   intraId                     Int                 @unique
   invalidateTokenIssuedBefore DateTime?
+  lockUntil                   DateTime?
   password                    String
   isEnabledAvatar             Boolean             @default(false)
   isEnabled2FA                Boolean             @default(false)
-  chatMessage                 ChatMessage[]
+  chatMessage                 ChatMessage[]       @relation("primary")
+  chatMessageAsSecondary      ChatMessage[]       @relation("secondary")
   joinedRoom                  ChatUserRelation[]
   ownedRoom                   ChatRoom[]
   chatroomAttribute           ChatUserAttribute[]
@@ -90,6 +92,7 @@ model ChatUserRelation {
   chatRoom   ChatRoom   @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   chatRoomId Int
   memberType MemberType @default(MEMBER)
+  createdAt  DateTime   @default(now())
 
   @@id([userId, chatRoomId])
 }
@@ -112,13 +115,17 @@ enum MemberType {
 }
 
 model ChatMessage {
-  id         Int      @id @default(autoincrement())
-  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
-  chatRoomId Int
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId     Int?
-  createdAt  DateTime @default(now())
-  content    String
+  id              Int      @id @default(autoincrement())
+  chatRoom        ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  chatRoomId      Int
+  user            User?    @relation(name: "primary", fields: [userId], references: [id], onDelete: SetNull)
+  userId          Int?
+  secondaryUser   User?    @relation(name: "secondary", fields: [secondaryUserId], references: [id], onDelete: SetNull)
+  secondaryUserId Int?
+  createdAt       DateTime @default(now())
+  content         String
+  messageType     String?
+  subpayload      Json?
 }
 
 // ユーザーのランクポイント
@@ -131,17 +138,23 @@ model UserRankPoint {
   rankPoint Int  @default(1500)
 }
 
-// 試合結果
-//
-// 勝者敗者はスコアから算出可能なのでDBには保存しない｡
-model MatchResult {
+enum MatchStatus {
+  PREPARING
+  IN_PROGRESS
+  DONE
+  ERROR
+}
+
+model Match {
   id                String              @id // UUIDv4; 外部から与える
   matchType         MatchType
+  matchStatus       MatchStatus
   userID1           Int // User.id
-  userScore1        Int
+  userScore1        Int                 @default(0) // 点が入るとリアルタイムに更新する。初期スコアは0
   userID2           Int // User.id
-  userScore2        Int
-  endAt             DateTime // 試合終了日時
+  userScore2        Int                 @default(0)
+  startAt           DateTime? // プライベートマッチは開始しない可能性があるからNullableにする
+  endAt             DateTime? // 試合終了日時
   matchUserRelation MatchUserRelation[]
   config            MatchConfig?
 }
@@ -154,19 +167,20 @@ enum MatchType {
 
 // マッチ設定
 model MatchConfig {
-  id       Int         @id @default(autoincrement())
-  result   MatchResult @relation(fields: [matchID], references: [id])
-  matchID  String      @unique
+  id       Int    @id @default(autoincrement())
+  result   Match  @relation(fields: [matchID], references: [id])
+  matchID  String @unique
   maxScore Int // 何点取ったら勝利か
   speed    Float // 球の速度
 }
 
 // マッチとユーザーの関連テーブル
 model MatchUserRelation {
-  id          Int         @id @default(autoincrement())
-  user        User        @relation(fields: [userID], references: [id])
-  userID      Int
-  matchResult MatchResult @relation(fields: [matchID], references: [id])
-  matchID     String
+  id      Int    @id @default(autoincrement())
+  user    User   @relation(fields: [userID], references: [id])
+  userID  Int
+  match   Match  @relation(fields: [matchID], references: [id])
+  matchID String
+
   @@unique([userID, matchID])
 }

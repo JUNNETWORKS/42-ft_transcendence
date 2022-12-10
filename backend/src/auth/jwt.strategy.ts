@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     // validate にはデコード済みのJWTのペイロードが渡ってくる.
     // 主張 = ペイロードの中身
     // 検証 = 署名が正しいことの確認
-    const { email, sub: id, exp, iat } = payload;
+    const { sub: id, exp, iat } = payload;
     const user = await this.usersService.findOne(id);
     if (!user) {
       // JWTのsubに対応するユーザがいないと401
@@ -52,6 +52,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       console.log('required 2fa');
       throw new UnauthorizedException('required 2fa');
     }
-    return { email, id };
+    return user;
   }
 }
