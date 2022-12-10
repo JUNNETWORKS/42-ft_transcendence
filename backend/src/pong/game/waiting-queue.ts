@@ -8,6 +8,7 @@ import {
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
 
+import { PongService } from '../pong.service';
 import { OngoingMatches } from './ongoing-matches';
 import { OnlineMatch } from './online-match';
 import { PostMatchStrategy } from './PostMatchStrategy';
@@ -26,6 +27,7 @@ export class WaitingQueue {
     matchType: MatchType,
     ongoingMatches: OngoingMatches,
     wsServer: Server,
+    private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
   ) {
     this.matchType = matchType;
@@ -96,7 +98,8 @@ export class WaitingQueue {
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
-    const matchID = match;
+    await this.pongService.createMatch(match);
+    const matchID = match.matchID;
     usersLeave(
       this.wsServer,
       userID1,
@@ -124,5 +127,6 @@ export class WaitingQueue {
       }
     );
     match.start();
+    await this.pongService.updateMatchStatus(matchID, 'IN_PROGRESS');
   }
 }

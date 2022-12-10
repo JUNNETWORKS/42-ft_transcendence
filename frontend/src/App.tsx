@@ -1,4 +1,3 @@
-
 import { AuthChecker } from '@/features/DevAuth/AuthChecker';
 import { SocketHolder } from '@/features/Socket/SocketHolder';
 import { AppProvider } from '@/providers/AppProvider';

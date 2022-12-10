@@ -5,18 +5,11 @@ import { toast } from 'react-toastify';
 import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
-import { Icons } from '@/icons';
+import { Icons, RoomTypeIcon } from '@/icons';
 import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
 
 import { roomErrors } from './room.validator';
-
-export const RoomTypeIcon = {
-  PUBLIC: Icons.Chat.Public,
-  PRIVATE: Icons.Chat.Private,
-  LOCKED: Icons.Chat.Locked,
-  DM: Icons.Chat.DM,
-};
 
 type RoomTypeListProps = {
   selected: TD.RoomType;
