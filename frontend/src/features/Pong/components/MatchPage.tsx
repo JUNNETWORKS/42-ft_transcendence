@@ -20,7 +20,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
     usePongGame(isFinished);
 
   useEffect(() => {
-    // join webSocketRoom as spectator
+    // join webSocketRoom by matchId
     fetcher('GET', location.pathname).then((response) => {
       if (!response.ok) {
         // set error
