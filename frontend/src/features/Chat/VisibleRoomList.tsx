@@ -6,26 +6,85 @@ import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { chatSocketAtom } from '@/stores/auth';
-import { useUpdateVisibleRooms } from '@/stores/structure';
+import {
+  dataAtom,
+  structureAtom,
+  useUpdateVisibleRooms,
+} from '@/stores/structure';
 import * as TD from '@/typedef';
 import { last } from '@/utils';
 
+import { makeCommand } from './command';
 import { VisibleRoomItem } from './components/VisibleRoomItem';
 
-export const VisibleRoomList = (props: {
-  rooms: TD.ChatRoom[];
-  isJoiningTo: (roomId: number) => boolean;
-  isFocusingTo: (roomId: number) => boolean;
-  onJoin: (roomId: number, roomPassword: string, callback: any) => void;
-  onFocus: (roomId: number) => void;
-}) => {
+export const VisibleRoomList = () => {
+  const [rooms] = useAtom(dataAtom.visibleRoomsAtom);
+  const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
+  const [focusedRoomId, setFocusedRoomId] = useAtom(
+    structureAtom.focusedRoomIdAtom
+  );
+  const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
+  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const [mySocket] = useAtom(chatSocketAtom);
   const [requestKey, setRequestKey] = useState('');
   const listId = useId();
   const scrollData = useVerticalScrollAttr(listId);
   const fetcher = useAPICallerWithCredential();
   const roomUpdator = useUpdateVisibleRooms();
-  const oldestItem = last(props.rooms);
+  const oldestItem = last(rooms);
+
+  const command = makeCommand(mySocket!, focusedRoomId);
+  const store = {
+    countMessages: (roomId: number) => {
+      const ms = messagesInRoom[roomId];
+      if (!ms) {
+        return undefined;
+      }
+      return ms.length;
+    },
+    roomMessages: (roomId: number) => {
+      const ms = messagesInRoom[roomId];
+      if (!ms || ms.length === 0) {
+        return [];
+      }
+      return ms;
+    },
+    roomMembers: (roomId: number) => {
+      const ms = membersInRoom[roomId];
+      if (!ms) {
+        return null;
+      }
+      return ms;
+    },
+  };
+
+  const action = {
+    /**
+     * 実態はステート更新関数.
+     * レンダリング後に副作用フックでコマンドが走る.
+     */
+    get_room_members: (roomId: number) => {
+      if (roomId > 0) {
+        const mems = store.roomMembers(roomId);
+        if (!mems) {
+          command.get_room_members(roomId);
+        }
+      }
+    },
+  };
+  const predicate = {
+    isJoiningTo: (roomId: number) =>
+      !!joiningRooms.find((r) => r.chatRoom.id === roomId),
+    isFocusingTo: (roomId: number) => focusedRoomId === roomId,
+    isFocusingToSomeRoom: () => focusedRoomId > 0,
+  };
+
+  const onFocus = (roomId: number) => {
+    if (predicate.isJoiningTo(roomId)) {
+      setFocusedRoomId(roomId);
+      action.get_room_members(roomId);
+    }
+  };
   useEffect(() => {
     if (Math.abs(scrollData.bottom) >= 1 || scrollData.clientHeight === 0) {
       return;
@@ -66,15 +125,15 @@ export const VisibleRoomList = (props: {
         id={listId}
         className="flex shrink grow flex-row flex-wrap content-start items-start justify-start overflow-y-auto overflow-x-hidden p-1"
       >
-        {props.rooms.map((room: TD.ChatRoom) => {
+        {rooms.map((room: TD.ChatRoom) => {
           return (
             <VisibleRoomItem
               key={room.id}
               room={room}
-              isJoined={props.isJoiningTo(room.id)}
-              isFocused={props.isFocusingTo(room.id)}
-              onJoin={props.onJoin}
-              onFocus={props.onFocus}
+              isJoined={predicate.isJoiningTo(room.id)}
+              isFocused={predicate.isFocusingTo(room.id)}
+              onJoin={command.join}
+              onFocus={onFocus}
             />
           );
         })}

@@ -23,7 +23,6 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
 
   const [personalData] = useAtom(authAtom.personalData);
-  const [visibleRooms] = useAtom(dataAtom.visibleRoomsAtom);
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
@@ -149,20 +148,7 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
         />
       );
     } else {
-      return (
-        <VisibleRoomList
-          rooms={visibleRooms}
-          isJoiningTo={predicate.isJoiningTo}
-          isFocusingTo={predicate.isFocusingTo}
-          onJoin={command.join}
-          onFocus={(roomId: number) => {
-            if (predicate.isJoiningTo(roomId)) {
-              setFocusedRoomId(roomId);
-              action.get_room_members(roomId);
-            }
-          }}
-        />
-      );
+      return <VisibleRoomList />;
     }
   })();
 
