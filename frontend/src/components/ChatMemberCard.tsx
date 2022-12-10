@@ -15,9 +15,9 @@ export const AdminOperationBar = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   member?: TD.ChatUserRelation;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
 }) => {
-  if (!props.member) {
+  if (!props.member || !props.memberOperations) {
     return null;
   }
   const member = props.member;
@@ -80,7 +80,7 @@ export const ChatMemberCard = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   member: TD.ChatUserRelation;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
 }) => {
   const user = useUserDataReadOnly(props.member.userId);
   const isYou = props.you?.userId === props.member.user.id;

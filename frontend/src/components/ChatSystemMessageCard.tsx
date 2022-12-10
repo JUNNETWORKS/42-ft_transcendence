@@ -108,7 +108,7 @@ export const ChatSystemMessageCard = (props: {
   userId: number;
   member?: TD.ChatUserRelation;
   members: TD.UserRelationMap;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
   id: string;
 }) => {
   const messageType = props.message.messageType;

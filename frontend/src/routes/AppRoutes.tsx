@@ -2,7 +2,7 @@ import { useAtom } from 'jotai';
 import { useRoutes } from 'react-router-dom';
 
 import { Chat } from '@/features/Chat/Chat';
-import { RoomView } from '@/features/Chat/RoomView';
+import { ChatRoomView } from '@/features/Chat/ChatRoomView';
 import { VisibleRoomList } from '@/features/Chat/VisibleRoomList';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { DmPage } from '@/features/DM/DmPage';
@@ -42,7 +42,7 @@ export const AppRoutes = () => {
         },
         {
           path: ':id',
-          element: <RoomView />,
+          element: <ChatRoomView />,
         },
       ],
     },

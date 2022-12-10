@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useEffect, useId, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import { ChatMemberCard } from '@/components/ChatMemberCard';
@@ -12,15 +12,14 @@ import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
-import { authAtom, chatSocketAtom } from '@/stores/auth';
-import { useRoomDataReadOnly } from '@/stores/store';
+import { chatSocketAtom, UserPersonalData } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
 
-import { makeCommand } from './command';
-import { InvitePrivateButton } from './components/InvitePrivateButton';
-import { ChatRoomUpdateCard } from './RoomSetting';
+import { makeCommand } from '../command';
+import { ChatRoomUpdateCard } from '../RoomSetting';
+import { InvitePrivateButton } from './InvitePrivateButton';
 
 function messageCardId(message: TD.ChatRoomMessage) {
   return `message-${message.id}`;
@@ -31,7 +30,7 @@ const MessagesList = (props: {
   room: TD.ChatRoom;
   messages: TD.ChatRoomMessage[];
   members: TD.UserRelationMap;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
 }) => {
   const listId = useId();
   const scrollData = useVerticalScrollAttr(listId);
@@ -166,7 +165,7 @@ const MembersList = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   members: TD.UserRelationMap;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
 }) => {
   const isPrivate = props.room.roomType === 'PRIVATE';
   const isOwner = props.room.ownerId === props.you?.userId;
@@ -205,22 +204,29 @@ const MembersList = (props: {
 };
 
 type Prop = {
+  domain: 'chat' | 'dm';
   room: TD.ChatRoom;
+  roomName: string;
   mySocket: ReturnType<typeof io>;
+  personalData: UserPersonalData;
 };
 
-const ChatRoomView = ({ room, mySocket }: Prop) => {
+export const RoomView = ({
+  domain,
+  room,
+  roomName,
+  mySocket,
+  personalData,
+}: Prop) => {
   const [isOpen, setIsOpen] = useState(false);
+  const closeModal = () => setIsOpen(false);
+  const openModal = () => setIsOpen(true);
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
   const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
-  const [personalData] = useAtom(authAtom.personalData);
   const computed = {
     you: useMemo(() => {
-      if (!personalData) {
-        return null;
-      }
       const us = membersInRoom[room.id];
       if (!us) {
         return null;
@@ -237,60 +243,66 @@ const ChatRoomView = ({ room, mySocket }: Prop) => {
       return ms;
     },
   };
-  const isOwner = room.ownerId === computed.you?.userId;
   const command = makeCommand(mySocket, room.id);
-  const memberOperations: TD.MemberOperations = {
-    onNomminateClick: command.nomminate,
-    onBanClick: command.ban,
-    onKickClick: command.kick,
-    onMuteClick: command.mute,
-  };
-  const closeModal = () => setIsOpen(false);
-  const openModal = () => setIsOpen(true);
+
+  const isOwner = room.ownerId === computed.you?.userId;
+  const memberOperations: TD.MemberOperations | undefined =
+    domain === 'chat'
+      ? {
+          onNomminateClick: command.nomminate,
+          onBanClick: command.ban,
+          onKickClick: command.kick,
+          onMuteClick: command.mute,
+        }
+      : undefined;
   const TypeIcon = RoomTypeIcon[room.roomType];
+  const barButtons = domain === 'chat' && (
+    <>
+      {isOwner && (
+        <FTButton onClick={openModal} className="shrink-0 grow-0">
+          <Icons.Setting className="block" />
+        </FTButton>
+      )}
+      <FTButton
+        onClick={() => command.leave(room.id)}
+        className="shrink-0 grow-0"
+      >
+        Leave
+      </FTButton>
+      <FTButton onClick={() => command.pong_private_match_create(room.id)}>
+        プライベートマッチ
+      </FTButton>
+    </>
+  );
   return (
     <>
-      <Modal closeModal={closeModal} isOpen={isOpen}>
-        <ChatRoomUpdateCard
-          key={room.id}
-          room={room}
-          onSucceeded={closeModal}
-          onCancel={closeModal}
-        />
-      </Modal>
+      {domain === 'chat' && (
+        <Modal closeModal={closeModal} isOpen={isOpen}>
+          <ChatRoomUpdateCard
+            key={room.id}
+            room={room}
+            onSucceeded={closeModal}
+            onCancel={closeModal}
+          />
+        </Modal>
+      )}
 
       <div className="flex h-full flex-row border-2 border-solid border-white p-2">
         <div className="flex h-full shrink grow flex-col overflow-hidden">
           {/* タイトルバー */}
           <FTH3 className="flex flex-row items-center">
             <FTButton
-              onClick={() => navigate('/chat')}
+              onClick={() => navigate(`/${domain}`)}
               className="shrink-0 grow-0"
             >
               <Icons.Cancel className="block" />
             </FTButton>
 
             <InlineIcon i={<TypeIcon />} />
-            <div className="shrink-0 grow-0">{room.roomName}</div>
+            <div className="shrink-0 grow-0">{roomName}</div>
 
             <div className="shrink grow"></div>
-
-            {isOwner && (
-              <FTButton onClick={openModal} className="shrink-0 grow-0">
-                <Icons.Setting className="block" />
-              </FTButton>
-            )}
-            <FTButton
-              onClick={() => command.leave(room.id)}
-              className="shrink-0 grow-0"
-            >
-              Leave
-            </FTButton>
-            <FTButton
-              onClick={() => command.pong_private_match_create(room.id)}
-            >
-              プライベートマッチ
-            </FTButton>
+            {barButtons}
           </FTH3>
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">
@@ -309,25 +321,17 @@ const ChatRoomView = ({ room, mySocket }: Prop) => {
             </div>
           </div>
         </div>
-        <div className="shrink-0 grow-0 basis-[16em]">
-          <MembersList
-            you={computed.you}
-            room={room}
-            members={members}
-            memberOperations={memberOperations}
-          />
-        </div>
+        {domain === 'chat' && (
+          <div className="shrink-0 grow-0 basis-[16em]">
+            <MembersList
+              you={computed.you}
+              room={room}
+              members={members}
+              memberOperations={memberOperations}
+            />
+          </div>
+        )}
       </div>
     </>
   );
-};
-
-export const RoomView = () => {
-  const { id } = useParams();
-  const room = useRoomDataReadOnly(parseInt(id || ''));
-  const [mySocket] = useAtom(chatSocketAtom);
-  if (!room || !mySocket) {
-    return null;
-  }
-  return <ChatRoomView room={room} mySocket={mySocket} />;
 };

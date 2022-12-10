@@ -20,7 +20,7 @@ export const ChatMessageCard = (props: {
   message: TD.ChatRoomMessage;
   userId: number;
   member?: TD.ChatUserRelation;
-  memberOperations: TD.MemberOperations;
+  memberOperations?: TD.MemberOperations;
   id: string;
 }) => {
   const user = useUserDataReadOnly(props.userId);
