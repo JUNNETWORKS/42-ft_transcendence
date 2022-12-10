@@ -18,6 +18,7 @@ export class PongService {
         userScore1: match.playerScores[0],
         userID2: match.playerIDs[1],
         userScore2: match.playerScores[1],
+        startAt: new Date(),
 
         // TODO: Configを実装したらベタ書きを辞める
         // TODO: Configを非Nullableにする
@@ -41,16 +42,30 @@ export class PongService {
     });
   }
 
-  async updateMatchScore(match: OnlineMatch) {
+  async updateMatchAsDone(match: OnlineMatch) {
     await this.prisma.match.update({
       where: {
         id: match.matchID,
       },
       data: {
+        matchStatus: MatchStatus.DONE,
         userID1: match.playerIDs[0],
         userScore1: match.playerScores[0],
         userID2: match.playerIDs[1],
         userScore2: match.playerScores[1],
+        endAt: new Date(),
+      },
+    });
+  }
+
+  async updateMatchAsError(match: OnlineMatch) {
+    await this.prisma.match.update({
+      where: {
+        id: match.matchID,
+      },
+      data: {
+        matchStatus: MatchStatus.ERROR,
+        endAt: new Date(),
       },
     });
   }
