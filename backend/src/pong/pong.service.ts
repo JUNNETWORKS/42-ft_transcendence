@@ -166,5 +166,6 @@ export class PongService {
     if (match.matchStatus !== 'IN_PROGRESS')
       return { status: 'match is not in-progress' };
     await this.wsServer.usersJoin(userId, { matchId });
+    return { status: 'success' };
   }
 }
