@@ -14,12 +14,12 @@ export class PongService {
         userID: userID,
       },
       orderBy: {
-        matchResult: {
+        match: {
           endAt: 'desc',
         },
       },
       include: {
-        matchResult: {
+        match: {
           include: {
             config: {
               select: {
@@ -31,7 +31,7 @@ export class PongService {
         },
       },
     });
-    return results.map((result) => result.matchResult);
+    return results.map((result) => result.match);
   }
 
   async createMatch(match: OnlineMatch) {
