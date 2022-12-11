@@ -1,50 +1,17 @@
-import { useState } from 'react';
-
-import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { RoomTypeIcon } from '@/icons';
 import * as TD from '@/typedef';
 
-import { validateRoomPasswordError } from './components/RoomPassword.validator';
-import { RoomPasswordInput } from './components/RoomPasswordInput';
-
 const ChatRoomListItem = (props: {
   room: TD.ChatRoom;
-  isJoined: boolean;
   isFocused: boolean;
-  onJoin: (roomId: number, roomPassword: string, callback: any) => void;
-  onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
+  contentExtractor: (room: any) => JSX.Element | null;
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [roomPassword, setRoomPassword] = useState('');
-  const [joinError, setJoinError] = useState('');
   const TypeIcon = RoomTypeIcon[props.room.roomType];
-
-  const onJoin = () => {
-    props.onJoin(props.room.id, roomPassword, (response: any) => {
-      if (response.status !== 'success') {
-        setJoinError(validateRoomPasswordError(response.status));
-      } else {
-        setIsOpen(false);
-        setRoomPassword('');
-        setJoinError('');
-      }
-    });
-  };
-  const closeModal = () => setIsOpen(false);
 
   return (
     <>
-      <Modal isOpen={isOpen} closeModal={closeModal}>
-        <RoomPasswordInput
-          roomPassword={roomPassword}
-          setRoomPassword={setRoomPassword}
-          joinError={joinError}
-          onJoin={onJoin}
-          onClose={closeModal}
-        />
-      </Modal>
       <div
         className="flex min-w-0 shrink grow cursor-pointer flex-row p-[4px] hover:bg-gray-700"
         style={{
@@ -57,7 +24,7 @@ const ChatRoomListItem = (props: {
           <InlineIcon i={<TypeIcon />} />
         </div>
         <div className="shrink grow overflow-hidden text-ellipsis">
-          {props.room.roomName}
+          {props.contentExtractor(props.room)}
         </div>
       </div>
     </>
@@ -66,16 +33,13 @@ const ChatRoomListItem = (props: {
 
 export const ChatRoomListView = (props: {
   rooms: TD.ChatRoom[];
-  isJoiningTo: (roomId: number) => boolean;
   isFocusingTo: (roomId: number) => boolean;
-  onJoin: (roomId: number, roomPassword: string, callback: any) => void;
-  onLeave: (roomId: number) => void;
   onFocus: (roomId: number) => void;
+  contentExtractor: (room: any) => JSX.Element | null;
 }) => {
   return (
     <div className="overflow-y-auto overflow-x-hidden">
       {props.rooms.map((room: TD.ChatRoom) => {
-        const isJoined = props.isJoiningTo(room.id);
         const isFocused = props.isFocusingTo(room.id);
         return (
           /* クリックしたルームにフォーカスを当てる */
@@ -84,15 +48,12 @@ export const ChatRoomListView = (props: {
               isFocused ? 'border-gray-400' : 'border-transparent'
             } p-[2px] hover:border-white`}
             key={room.id}
-            title={room.roomName}
           >
             <ChatRoomListItem
               room={room}
-              isJoined={isJoined}
               isFocused={isFocused}
-              onJoin={props.onJoin}
-              onLeave={props.onLeave}
               onFocus={props.onFocus}
+              contentExtractor={props.contentExtractor}
             />
           </div>
         );

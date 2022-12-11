@@ -8,8 +8,8 @@ import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { dataAtom } from '@/stores/structure';
+import { ChatRoom } from '@/typedef';
 
-import { makeCommand } from './command';
 import { useFocusedChatRoomId } from './hooks/useFocusedRoomId';
 import { ChatRoomListView } from './RoomList';
 import { ChatRoomCreateCard } from './RoomSetting';
@@ -18,23 +18,16 @@ import { ChatRoomCreateCard } from './RoomSetting';
  * @returns チャットインターフェースコンポーネント
  */
 export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
-  const { mySocket } = props;
   const navigate = useNavigate();
   const [joiningRooms] = useAtom(dataAtom.joiningRoomsAtom);
   const focusedRoomId = useFocusedChatRoomId();
   const [isOpen, setIsOpen] = useState(false);
   const outlet = useOutlet();
-  /**
-   * チャットコマンド
-   */
-  const command = makeCommand(mySocket, focusedRoomId);
 
   /**
    * わざわざ分けなくてもいいかな
    */
   const predicate = {
-    isJoiningTo: (roomId: number) =>
-      !!joiningRooms.find((r) => r.chatRoom.id === roomId),
     isFocusingTo: (roomId: number) => focusedRoomId === roomId,
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
@@ -70,15 +63,11 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
             <div className="flex shrink grow flex-col overflow-hidden p-2">
               <ChatRoomListView
                 rooms={joiningRooms.map((r) => r.chatRoom)}
-                isJoiningTo={predicate.isJoiningTo}
                 isFocusingTo={predicate.isFocusingTo}
-                onJoin={command.join}
-                onLeave={command.leave}
                 onFocus={(roomId: number) => {
-                  if (predicate.isJoiningTo(roomId)) {
-                    navigate(`/chat/${roomId}`);
-                  }
+                  navigate(`/chat/${roomId}`);
                 }}
+                contentExtractor={(room: ChatRoom) => <>{room.roomName}</>}
               />
             </div>
           </div>

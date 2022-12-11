@@ -3,10 +3,12 @@ import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import { FTH3 } from '@/components/FTBasicComponents';
+import { authAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
+import { DmRoom } from '@/typedef';
 
 import { useFocusedDmRoomId } from '../Chat/hooks/useFocusedRoomId';
-import { DmRoomListView } from './DmRoomList';
+import { ChatRoomListView } from '../Chat/RoomList';
 
 /**
  * @returns DMインターフェースコンポーネント
@@ -14,14 +16,18 @@ import { DmRoomListView } from './DmRoomList';
 export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const navigate = useNavigate();
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
+  const [personalData] = useAtom(authAtom.personalData);
+  const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const focusedRoomId = useFocusedDmRoomId();
   const outlet = useOutlet();
+  if (!personalData) {
+    return null;
+  }
 
   /**
    * わざわざ分けなくてもいいかな
    */
   const predicate = {
-    isJoiningTo: (roomId: number) => !!dmRooms.find((r) => r.id === roomId),
     isFocusingTo: (roomId: number) => focusedRoomId === roomId,
     isFocusingToSomeRoom: () => focusedRoomId > 0,
   };
@@ -33,14 +39,32 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
         <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
           <FTH3 className="shrink-0 grow-0">DM</FTH3>
           <div className="flex shrink grow flex-col overflow-hidden p-2">
-            <DmRoomListView
+            <ChatRoomListView
               rooms={dmRooms}
-              isJoiningTo={predicate.isJoiningTo}
               isFocusingTo={predicate.isFocusingTo}
               onFocus={(roomId: number) => {
-                if (predicate.isJoiningTo(roomId)) {
-                  navigate(`/dm/${roomId}`);
+                navigate(`/dm/${roomId}`);
+              }}
+              contentExtractor={(room: DmRoom) => {
+                const opponent = room.roomMember.find(
+                  (member) => member.userId !== personalData.id
+                )?.user;
+                if (!opponent) {
+                  return null;
                 }
+                const isBlocking = !!blockingUsers.find(
+                  (u) => u.id === opponent.id
+                );
+                const roomName = opponent.displayName;
+                return (
+                  <span
+                    style={{
+                      textDecorationLine: isBlocking ? 'line-through' : 'none',
+                    }}
+                  >
+                    {roomName}
+                  </span>
+                );
               }}
             />
           </div>
