@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { AuthModule } from 'src/auth/auth.module';
 
@@ -9,8 +9,9 @@ import { PongGateway } from './pong.gateway';
 import { PongService } from './pong.service';
 
 @Module({
-  providers: [PongService, PongGateway, PostMatchStrategy],
   controllers: [PongController],
-  imports: [PrismaModule, AuthModule],
+  providers: [PongService, PongGateway, PostMatchStrategy],
+  imports: [PrismaModule, forwardRef(() => AuthModule)],
+  exports: [PongService],
 })
 export class PongModule {}

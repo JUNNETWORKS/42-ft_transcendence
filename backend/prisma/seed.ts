@@ -216,6 +216,180 @@ async function main() {
     },
   });
 
+  await prisma.match.create({
+    data: {
+      id: 'hogeta',
+      matchType: 'CASUAL',
+      matchStatus: 'DONE',
+      userID1: 3,
+      userScore1: 15,
+      userID2: 2,
+      userScore2: 4,
+      startAt: new Date(),
+      endAt: new Date(),
+      config: {
+        create: {
+          maxScore: 15,
+          speed: 10,
+        },
+      },
+      matchUserRelation: {
+        create: [
+          {
+            userID: 3,
+          },
+          {
+            userID: 2,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.match.create({
+    data: {
+      id: 'fugata',
+      matchType: 'CASUAL',
+      matchStatus: 'DONE',
+      userID1: 3,
+      userScore1: 4,
+      userID2: 2,
+      userScore2: 15,
+      startAt: new Date(),
+      endAt: new Date(),
+      config: {
+        create: {
+          maxScore: 15,
+          speed: 10,
+        },
+      },
+      matchUserRelation: {
+        create: [
+          {
+            userID: 3,
+          },
+          {
+            userID: 2,
+          },
+        ],
+      },
+    },
+  });
+  await prisma.match.create({
+    data: {
+      id: 'piyota',
+      matchType: 'CASUAL',
+      matchStatus: 'DONE',
+      userID1: 3,
+      userScore1: 15,
+      userID2: 2,
+      userScore2: 8,
+      startAt: new Date(),
+      endAt: new Date(),
+      config: {
+        create: {
+          maxScore: 15,
+          speed: 10,
+        },
+      },
+      matchUserRelation: {
+        create: [
+          {
+            userID: 3,
+          },
+          {
+            userID: 2,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.match.create({
+    data: {
+      id: 'hogehogeta',
+      matchType: 'RANK',
+      matchStatus: 'DONE',
+      userID1: 4,
+      userScore1: 15,
+      userID2: 3,
+      userScore2: 4,
+      startAt: new Date(),
+      endAt: new Date(),
+      config: {
+        create: {
+          maxScore: 15,
+          speed: 10,
+        },
+      },
+      matchUserRelation: {
+        create: [
+          {
+            userID: 4,
+          },
+          {
+            userID: 3,
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.match.create({
+    data: {
+      id: 'fugafugata',
+      matchType: 'PRIVATE',
+      matchStatus: 'DONE',
+      userID1: 3,
+      userScore1: 12,
+      userID2: 2,
+      userScore2: 15,
+      startAt: new Date(),
+      endAt: new Date(),
+      config: {
+        create: {
+          maxScore: 15,
+          speed: 10,
+        },
+      },
+      matchUserRelation: {
+        create: [
+          {
+            userID: 3,
+          },
+          {
+            userID: 2,
+          },
+        ],
+      },
+    },
+  });
+  // data: {
+  //   id: 'hogeta',
+  //   matchType: 'CASUAL',
+  //   userID1: 3,
+  //   userScore1: 15,
+  //   userID2: 2,
+  //   userScore2: 4,
+  //   endAt: new Date(),
+  //   config: {
+  //     create: {
+  //       maxScore: 15,
+  //       speed: 10,
+  //     },
+  //   },
+  //   matchUserRelation: {
+  //     create: [
+  //       {
+  //         userID: 3,
+  //       },
+  //       {
+  //         userID: 2,
+  //       },
+  //     ],
+  //   },
+  // },
+
   // chatMessageたくさん入れる
   // const data = [];
   // for (let i = 0; i < 1000000; i++) {
