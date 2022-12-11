@@ -7,6 +7,7 @@ import { authAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import { DmRoom } from '@/typedef';
 
+import { Switcher } from '../Chat/components/Switcher';
 import { useFocusedDmRoomId } from '../Chat/hooks/useFocusedRoomId';
 import { ChatRoomListView } from '../Chat/RoomList';
 
@@ -33,11 +34,13 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
   };
 
   return (
-    <div className="flex w-full flex-row border-2 border-solid border-white p-2">
+    <div
+      id="dm"
+      className="flex w-full flex-row border-2 border-solid border-white p-2"
+    >
       <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
-        {/* 見えているチャットルーム */}
         <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
-          <FTH3 className="shrink-0 grow-0">DM</FTH3>
+          <Switcher />
           <div className="flex shrink grow flex-col overflow-hidden p-2">
             <ChatRoomListView
               rooms={dmRooms}

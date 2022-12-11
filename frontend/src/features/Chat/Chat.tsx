@@ -3,13 +3,14 @@ import { useState } from 'react';
 import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+import { FTButton } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { dataAtom } from '@/stores/structure';
 import { ChatRoom } from '@/typedef';
 
+import { Switcher } from './components/Switcher';
 import { useFocusedChatRoomId } from './hooks/useFocusedRoomId';
 import { ChatRoomListView } from './RoomList';
 import { ChatRoomCreateCard } from './RoomSetting';
@@ -49,31 +50,32 @@ export const Chat = (props: { mySocket: ReturnType<typeof io> }) => {
           onCancel={closeModal}
         />
       </Modal>
-      <div className="flex w-full flex-row border-2 border-solid border-white p-2">
-        <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
-          {/* 見えているチャットルーム */}
-          <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
-            <FTH3 className="shrink-0 grow-0">You Joined</FTH3>
-            <div className="shrink-0 grow-0 p-2">
-              <FTButton className="w-full" onClick={openModal}>
-                <InlineIcon i={<Icons.Add />} />
-                新規作成
-              </FTButton>
-            </div>
-            <div className="flex shrink grow flex-col overflow-hidden p-2">
-              <ChatRoomListView
-                rooms={joiningRooms.map((r) => r.chatRoom)}
-                isFocusingTo={predicate.isFocusingTo}
-                onFocus={(roomId: number) => {
-                  navigate(`/chat/${roomId}`);
-                }}
-                contentExtractor={(room: ChatRoom) => <>{room.roomName}</>}
-              />
+      <div className="flex w-full shrink grow flex-row">
+        <div className="flex w-full flex-row border-2 border-solid border-white p-2">
+          <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
+            <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
+              <Switcher />
+              <div className="shrink-0 grow-0 p-2">
+                <FTButton className="w-full" onClick={openModal}>
+                  <InlineIcon i={<Icons.Add />} />
+                  新規作成
+                </FTButton>
+              </div>
+              <div className="flex shrink grow flex-col overflow-hidden p-2">
+                <ChatRoomListView
+                  rooms={joiningRooms.map((r) => r.chatRoom)}
+                  isFocusingTo={predicate.isFocusingTo}
+                  onFocus={(roomId: number) => {
+                    navigate(`/chat/${roomId}`);
+                  }}
+                  contentExtractor={(room: ChatRoom) => <>{room.roomName}</>}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="flex shrink grow flex-col">{outlet}</div>
+          <div className="flex shrink grow flex-col">{outlet}</div>
+        </div>
       </div>
     </>
   );
