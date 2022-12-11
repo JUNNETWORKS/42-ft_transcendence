@@ -10,7 +10,7 @@ import { verifyCredential } from './auth';
  * 認証状態の状態遷移
  */
 export const AuthChecker = () => {
-  const [storedCredential] = useAtom(storedCredentialAtom);
+  const [storedCredential, setStoredCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
   const [, setPersonalData] = useAtom(authAtom.personalData);
   const { addOne } = useUpdateUser();
@@ -33,6 +33,7 @@ export const AuthChecker = () => {
           },
           () => {
             // 変換できなかった場合の処理
+            setStoredCredential(null);
             setPersonalData(null);
             setAuthState('NotAuthenticated');
           }
