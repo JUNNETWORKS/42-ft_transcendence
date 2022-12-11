@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
+import { FTButton } from '@/components/FTBasicComponents';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 
 import { usePongGame } from '../hooks/usePongGame';
@@ -13,7 +14,9 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
 ) => {
   const { mySocket } = props;
   const [isFinished, setIsFinished] = useState<boolean>(false);
+  const [error, setError] = useState('');
   const location = useLocation();
+  const navigate = useNavigate();
   const fetcher = useAPICallerWithCredential();
 
   const { renderGame, drawGameOneFrame, drawGameResult } =
@@ -23,8 +26,18 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
     // join webSocketRoom by matchId
     fetcher('GET', location.pathname).then((response) => {
       if (!response.ok) {
-        // set error
         console.log(response.status);
+        switch (response.status) {
+          case 404:
+            setError('存在しないマッチです。');
+            break;
+          case 400:
+            setError('観戦できないマッチです。');
+            break;
+          default:
+            setError('エラーが発生しました。');
+            break;
+        }
       } else {
         console.log('success join');
       }
@@ -69,7 +82,16 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      {renderGame()}
+      {error !== '' ? (
+        <div className="flex-col">
+          <div className="text-red-400">{error}</div>
+          <div className="m-1 text-center">
+            <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
+          </div>
+        </div>
+      ) : (
+        renderGame()
+      )}
     </div>
   );
 };
