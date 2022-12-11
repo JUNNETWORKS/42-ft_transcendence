@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   generateFullRoomName,
   sendResultRoom,
-  usersJoin,
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
 
@@ -44,7 +43,7 @@ export class OnlineMatch {
   }
 
   start() {
-    this.gameStateSyncTimer = setInterval(() => {
+    this.gameStateSyncTimer = setInterval(async () => {
       this.match.update();
 
       if (this.wsServer) {
@@ -61,11 +60,17 @@ export class OnlineMatch {
             winner: this.match.players[Match.sideIndex[this.match.winner]],
             loser: this.match.players[Match.sideIndex[loserSide]],
           };
-          sendResultRoom(this.wsServer, 'pong.match.finish', this.roomName, {
-            game: this.match.getState(),
-            result,
-          });
+          await sendResultRoom(
+            this.wsServer,
+            'pong.match.finish',
+            this.roomName,
+            {
+              game: this.match.getState(),
+              result,
+            }
+          );
           this.close();
+          this.wsServer.in(this.roomName).socketsLeave(this.roomName);
           this.removeFromOngoingMatches(this.ID);
           this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
