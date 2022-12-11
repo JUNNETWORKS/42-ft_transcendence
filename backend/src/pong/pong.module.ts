@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 
 import { AuthModule } from 'src/auth/auth.module';
 import { WsServerModule } from 'src/ws-server/ws-server.module';
@@ -12,6 +12,7 @@ import { PongService } from './pong.service';
 @Module({
   providers: [PongService, PongGateway, PostMatchStrategy],
   controllers: [PongController],
-  imports: [PrismaModule, AuthModule, WsServerModule],
+  imports: [PrismaModule, forwardRef(() => AuthModule), WsServerModule],
+  exports: [PongService],
 })
 export class PongModule {}
