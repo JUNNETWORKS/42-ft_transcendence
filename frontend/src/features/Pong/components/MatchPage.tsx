@@ -24,6 +24,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
 
   useEffect(() => {
     // join webSocketRoom by matchId
+    if (error !== '') return;
     fetcher('GET', location.pathname).then((response) => {
       if (!response.ok) {
         console.log(response.status);
@@ -32,7 +33,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
             setError('存在しないマッチです。');
             break;
           case 400:
-            setError('観戦できないマッチです。');
+            setError('進行中でないマッチです。');
             break;
           default:
             setError('エラーが発生しました。');
@@ -78,11 +79,18 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [drawGameOneFrame, drawGameResult, mySocket]);
+  }, [
+    drawGameOneFrame,
+    drawGameResult,
+    mySocket,
+    error,
+    fetcher,
+    location.pathname,
+  ]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      {error !== '' ? (
+      {!isFinished && error !== '' ? (
         <div className="flex-col">
           <div className="text-red-400">{error}</div>
           <div className="m-1 text-center">
