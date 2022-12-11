@@ -3,7 +3,29 @@ import dayjs from 'dayjs';
 import { UserAvatar } from '@/components/UserAvater';
 import { User } from '@/typedef';
 
-import { MatchResult } from '../types/MatchResult';
+import { MatchResult, MatchType } from '../types/MatchResult';
+
+const MatchTypeLabel = ({ matchType }: { matchType: MatchType }) => {
+  return (
+    <div className="border-[1px] border-solid border-white">{matchType}</div>
+  );
+};
+
+const OutcomeLabel = ({
+  matchResult,
+  user,
+}: {
+  matchResult: MatchResult;
+  user: User;
+}) => {
+  const isWinner =
+    matchResult.userScore1 > matchResult.userScore2 &&
+    matchResult.userID1 === user.id;
+  const r = isWinner
+    ? { className: 'text-red-400', text: 'WIN' }
+    : { className: 'text-blue-400', text: 'LOSE' };
+  return <div className={r.className}>{r.text}</div>;
+};
 
 type Props = {
   matchResult: MatchResult;
@@ -12,21 +34,20 @@ type Props = {
 };
 
 export const HistoryCard = ({ matchResult, opponent, user }: Props) => {
-  const isWinner =
-    matchResult.userScore1 > matchResult.userScore2 &&
-    matchResult.userID1 === user.id;
   return (
     <li className="flex items-center">
       <UserAvatar user={opponent} />
       <div className="overflow-hidden">
         <div className="mx-2 truncate text-lg">VS: {opponent.displayName}</div>
         <div className="flex">
-          <div className="mx-2 w-16 text-center	">{`${matchResult.userScore1} - ${matchResult.userScore2}`}</div>
-          <div className="mx-2 w-16 text-center">
-            {isWinner ? 'WIN' : 'LOSE'}
+          <div className="mx-2 shrink-0 grow-0 basis-16 text-center">{`${matchResult.userScore1} - ${matchResult.userScore2}`}</div>
+          <div className="shrink-0 grow-0 basis-16 text-center">
+            <OutcomeLabel matchResult={matchResult} user={user} />
           </div>
-          <div className="mx-2 w-16 text-center">{matchResult.matchType}</div>
-          <div className="mx-2 w-32 text-center">
+          <div className="shrink-0 grow-0 basis-20 text-center">
+            <MatchTypeLabel matchType={matchResult.matchType} />
+          </div>
+          <div className="mx-2 shrink grow text-center">
             {dayjs(matchResult.endAt).format('YYYY-MM-DD')}
           </div>
         </div>
