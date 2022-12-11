@@ -41,8 +41,6 @@ export class OnlineMatch {
     this.roomName = generateFullRoomName({ matchId: this.ID });
     this.matchType = matchType;
     this.match = new Match(userID1, userID2);
-    this.joinAsSpectator(userID1);
-    this.joinAsSpectator(userID2);
   }
 
   start() {
@@ -73,12 +71,6 @@ export class OnlineMatch {
         }
       }
     }, 16.66); // 60fps
-  }
-
-  // マッチのWSルームに観戦者として参加｡
-  // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
-  joinAsSpectator(userID: number) {
-    usersJoin(this.wsServer, userID, this.roomName);
   }
 
   // ユーザーが退出した際の処理

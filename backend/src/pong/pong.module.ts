@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 
 import { AuthModule } from 'src/auth/auth.module';
+import { WsServerModule } from 'src/ws-server/ws-server.module';
 
 import { PrismaModule } from '../prisma/prisma.module';
 import { PostMatchStrategy } from './game/PostMatchStrategy';
@@ -9,9 +10,9 @@ import { PongGateway } from './pong.gateway';
 import { PongService } from './pong.service';
 
 @Module({
-  controllers: [PongController],
   providers: [PongService, PongGateway, PostMatchStrategy],
-  imports: [PrismaModule, forwardRef(() => AuthModule)],
+  controllers: [PongController],
+  imports: [PrismaModule, forwardRef(() => AuthModule), WsServerModule],
   exports: [PongService],
 })
 export class PongModule {}

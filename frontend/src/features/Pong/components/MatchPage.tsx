@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
+
+import { FTButton } from '@/components/FTBasicComponents';
+import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 
 import { usePongGame } from '../hooks/usePongGame';
 import { GameState } from '../types';
@@ -10,11 +14,36 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
 ) => {
   const { mySocket } = props;
   const [isFinished, setIsFinished] = useState<boolean>(false);
+  const [error, setError] = useState('');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const fetcher = useAPICallerWithCredential();
 
   const { renderGame, drawGameOneFrame, drawGameResult } =
     usePongGame(isFinished);
 
   useEffect(() => {
+    // join webSocketRoom by matchId
+    if (error !== '') return;
+    fetcher('GET', location.pathname).then((response) => {
+      if (!response.ok) {
+        console.log(response.status);
+        switch (response.status) {
+          case 404:
+            setError('存在しないマッチです。');
+            break;
+          case 400:
+            setError('進行中でないマッチです。');
+            break;
+          default:
+            setError('エラーが発生しました。');
+            break;
+        }
+      } else {
+        console.log('success join');
+      }
+    });
+
     // Register websocket event handlers
     mySocket.on('pong.match.state', (gameState: GameState) => {
       drawGameOneFrame(gameState);
@@ -50,11 +79,27 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [drawGameOneFrame, drawGameResult, mySocket]);
+  }, [
+    drawGameOneFrame,
+    drawGameResult,
+    mySocket,
+    error,
+    fetcher,
+    location.pathname,
+  ]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      {renderGame()}
+      {!isFinished && error !== '' ? (
+        <div className="flex-col">
+          <div className="text-red-400">{error}</div>
+          <div className="m-1 text-center">
+            <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
+          </div>
+        </div>
+      ) : (
+        renderGame()
+      )}
     </div>
   );
 };
