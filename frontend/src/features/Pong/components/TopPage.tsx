@@ -24,6 +24,13 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
+  const createPrivateMatch = () => {
+    if (isWaiting) {
+      return;
+    }
+    mySocket.emit('pong.private_match.create');
+  };
+
   return (
     <>
       <Modal isOpen={isWaiting} closeModal={cancelWaiting}>
@@ -51,6 +58,22 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
             onClick={() => {
               setIsWaiting(true);
               startMatchMaking('RANK');
+            }}
+          />
+          <CommandCard
+            text="プライベートマッチを作成(デバッグ用)"
+            onClick={() => {
+              // TODO: このCommandCardはプライベートマッチのデバッグ用なので後で消す
+              setIsWaiting(true);
+              createPrivateMatch();
+            }}
+          />
+          <CommandCard
+            text="プライベートマッチに参加(デバッグ用)"
+            onClick={() => {
+              // TODO: このCommandCardはプライベートマッチのデバッグ用なので後で消す
+              setIsWaiting(true);
+              joinPrivateMatch();
             }}
           />
           <CommandCard
