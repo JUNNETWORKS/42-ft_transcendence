@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 
 import * as TD from '@/typedef';
+import { isfinite } from '@/utils';
 
 export function makeCommand(
   mySocket: ReturnType<typeof io>,
@@ -27,7 +28,7 @@ export function makeCommand(
     },
 
     say: (content: string) => {
-      if (!focusedRoomId) {
+      if (!isfinite(focusedRoomId)) {
         return;
       }
       const data = {

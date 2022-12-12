@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { ReactNode, Suspense } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { FTButton, FTH1, FTH4 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
@@ -119,9 +119,8 @@ const Presentator = (props: {
   return <ActualCard user={personalData}>{props.children}</ActualCard>;
 };
 
-export const UserCard = (props: { id?: number; children?: ReactNode }) => {
-  const { id } = useParams();
-  const userId = parseInt(id || props.id?.toString() || '');
+export const UserCard = (props: { id: number; children?: ReactNode }) => {
+  const userId = props.id;
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 text-white">
