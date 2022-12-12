@@ -1,8 +1,7 @@
-import { Popover } from '@headlessui/react';
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 
-import { UserCard } from '@/features/User/UserCard';
+import { useUserCard } from '@/stores/control';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
@@ -24,6 +23,7 @@ export const ChatMessageCard = (props: {
   id: string;
 }) => {
   const user = useUserDataReadOnly(props.userId);
+  const openCard = useUserCard();
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
@@ -31,21 +31,16 @@ export const ChatMessageCard = (props: {
     return null;
   }
   const avatarButton = (
-    <Popover.Button>
-      <UserAvatar
-        className="h-12 w-12 border-4 border-solid border-gray-600"
-        user={user}
-      />
-    </Popover.Button>
+    <UserAvatar
+      className="h-12 w-12 border-4 border-solid border-gray-600"
+      user={user}
+      onClick={() => openCard(user, popoverContent || null)}
+    />
   );
-  const popoverContent = (
-    <UserCard id={props.message.userId}>
-      <AdminOperationBar {...props} />
-    </UserCard>
-  );
+  const popoverContent = <AdminOperationBar {...props} />;
   return (
     <div
-      className="flex flex-row items-start px-2 py-1"
+      className="flex flex-row items-start px-2 py-1 hover:bg-gray-800"
       key={props.message.id}
       id={props.id}
     >

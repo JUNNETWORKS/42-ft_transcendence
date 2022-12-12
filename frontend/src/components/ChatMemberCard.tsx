@@ -1,14 +1,11 @@
-import { Popover } from '@headlessui/react';
-import { useState } from 'react';
-import { usePopper } from 'react-popper';
-
 import { FTButton, FTH4 } from '@/components/FTBasicComponents';
-import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
+import { useUserCard } from '@/stores/control';
 import { useUserDataReadOnly } from '@/stores/store';
 import * as TD from '@/typedef';
 
+import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
 export const AdminOperationBar = (props: {
@@ -95,45 +92,41 @@ export const ChatMemberCard = (props: {
     }
     return null;
   };
-  const [referenceElement, setReferenceElement] =
-    useState<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
-    null
+  const popoverContent = <AdminOperationBar {...props} />;
+  const oc = useUserCard();
+  const openCard = () => oc(user, popoverContent || null);
+  const avatarButton = (
+    <UserAvatar className="m-1 h-8 w-8" user={user} onClick={openCard} />
   );
-  const { styles, attributes } = usePopper(referenceElement, popperElement, {
-    placement: 'left-start',
-  });
   return (
-    <Popover className="relative">
-      <Popover.Button
-        className="flex w-full flex-row items-center hover:bg-teal-700"
-        ref={setReferenceElement}
+    <div className="flex w-full cursor-pointer flex-row items-center hover:bg-teal-700">
+      <div className="shrink-0 grow-0">
+        <PopoverUserCard button={avatarButton}>
+          {popoverContent}
+        </PopoverUserCard>
+      </div>
+      <PopoverUserCard
+        className="flex shrink grow flex-row items-center"
+        button={
+          <>
+            <div className="shrink-0 grow-0 cursor-pointer" onClick={openCard}>
+              <UserTypeCap />
+            </div>
+            <div
+              className={`shrink grow cursor-pointer ${
+                isYou ? 'font-bold' : ''
+              } max-w-[12em] overflow-hidden text-ellipsis whitespace-nowrap text-left`}
+              key={props.member.userId}
+              style={{ wordBreak: 'keep-all' }}
+              onClick={openCard}
+            >
+              {user.displayName}
+            </div>
+          </>
+        }
       >
-        <div className="shrink-0 grow-0">
-          <UserAvatar className="m-1 h-8 w-8" user={user} />
-        </div>
-        <UserTypeCap />
-        <div
-          className={`shrink grow cursor-pointer ${
-            isYou ? 'font-bold' : ''
-          } max-w-[10em] overflow-hidden text-ellipsis whitespace-nowrap text-left`}
-          key={props.member.userId}
-          style={{ wordBreak: 'keep-all' }}
-        >
-          {user.displayName}
-        </div>
-      </Popover.Button>
-
-      <Popover.Panel
-        className="absolute z-10 border-8 border-gray-500 bg-black/90"
-        ref={setPopperElement}
-        style={styles.popper}
-        {...attributes.popper}
-      >
-        <UserCard id={user.id}>
-          <AdminOperationBar {...props} />
-        </UserCard>
-      </Popover.Panel>
-    </Popover>
+        {popoverContent}
+      </PopoverUserCard>
+    </div>
   );
 };

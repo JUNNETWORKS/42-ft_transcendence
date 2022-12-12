@@ -1,6 +1,8 @@
 import dayjs from 'dayjs';
 
+import { PopoverUserCard } from '@/components/PopoverUserCard';
 import { UserAvatar } from '@/components/UserAvater';
+import { useUserCard } from '@/stores/control';
 import { User } from '@/typedef';
 
 import { MatchResult, MatchType } from '../types/MatchResult';
@@ -34,12 +36,21 @@ type Props = {
 };
 
 export const HistoryCard = ({ matchResult, opponent, user }: Props) => {
+  const openCard = useUserCard();
+  const avatarButton = (
+    <UserAvatar user={opponent} onClick={() => openCard(opponent)} />
+  );
   return (
-    <li className="flex items-center">
-      <UserAvatar user={opponent} />
-      <div className="overflow-hidden">
-        <div className="mx-2 truncate text-lg">VS: {opponent.displayName}</div>
-        <div className="flex">
+    <li className="flex w-full flex-row items-center">
+      <div className="shrink-0 grow-0">
+        <PopoverUserCard button={avatarButton} />
+      </div>
+      <div className="flex shrink grow flex-col overflow-hidden">
+        <div className="mx-2 flex min-w-0 shrink-0 grow-0 flex-row text-lg">
+          <p>VS:</p>
+          <PopoverUserCard user={opponent} />
+        </div>
+        <div className="flex shrink-0 grow-0">
           <div className="mx-2 shrink-0 grow-0 basis-16 text-center">{`${matchResult.userScore1} - ${matchResult.userScore2}`}</div>
           <div className="shrink-0 grow-0 basis-16 text-center">
             <OutcomeLabel matchResult={matchResult} user={user} />

@@ -1,7 +1,6 @@
 import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 
-import { UserCard } from '@/features/User/UserCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { Icons } from '@/icons';
 import { useUserDataReadOnly } from '@/stores/store';
@@ -125,7 +124,7 @@ export const ChatSystemMessageCard = (props: {
   }
   return (
     <div
-      className="flex flex-row items-start px-2 py-1 text-sm text-gray-400"
+      className="flex flex-row items-start px-2 py-1 text-sm text-gray-400 hover:bg-gray-800"
       key={props.message.id}
       id={props.id}
     >
@@ -136,20 +135,16 @@ export const ChatSystemMessageCard = (props: {
               message={props.message}
               PrimaryChild={() => (
                 <PopoverUserCard user={user}>
-                  <UserCard id={user.id}>
-                    <AdminOperationBar {...props} />
-                  </UserCard>
+                  <AdminOperationBar {...props} />
                 </PopoverUserCard>
               )}
               SecondaryChild={() =>
                 targetUser && (
                   <PopoverUserCard user={targetUser}>
-                    <UserCard id={targetUser.id}>
-                      <AdminOperationBar
-                        {...props}
-                        member={props.members[targetUser.id]}
-                      />
-                    </UserCard>
+                    <AdminOperationBar
+                      {...props}
+                      member={props.members[targetUser.id]}
+                    />
                   </PopoverUserCard>
                 )
               }

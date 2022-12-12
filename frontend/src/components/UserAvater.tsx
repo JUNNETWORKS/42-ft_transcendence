@@ -7,9 +7,10 @@ type Props = {
     avatarTime: number;
   };
   className?: string;
+  onClick?: () => void;
 };
 
-export const UserAvatar = ({ user, className }: Props) => {
+export const UserAvatar = ({ user, className, onClick }: Props) => {
   return (
     <img
       src={
@@ -18,7 +19,10 @@ export const UserAvatar = ({ user, className }: Props) => {
           : '/Kizaru.png'
       }
       alt="CurrentUserProfileImage"
-      className={`${className || 'm-3 h-14 w-14'} object-cover`}
+      className={`${className || 'm-3 h-14 w-14'} object-cover ${
+        onClick ? ' cursor-pointer' : ''
+      }`}
+      onClick={onClick}
     />
   );
 };
