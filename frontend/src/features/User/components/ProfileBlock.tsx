@@ -26,18 +26,12 @@ export const ProfileBlock = ({ user, isYou }: Prop) => {
         />
       </div>
       <div className="shrink grow overflow-hidden">
-        <>
-          <FTH4 className="">status</FTH4>
-          <div className="p-1">
-            <OnlineStatusLabel user={user} />
-          </div>
-        </>
-        {isYou ? (
-          <>
-            <FTH4 className="">email</FTH4>
-            <div className="overflow-hidden truncate p-1">{user.email}</div>
-          </>
-        ) : null}
+        <FTH4 className="">id</FTH4>
+        <div className="overflow-hidden truncate p-1">{user.id}</div>
+        <FTH4 className="">status</FTH4>
+        <div className="p-1">
+          <OnlineStatusLabel user={user} />
+        </div>
       </div>
     </div>
   );

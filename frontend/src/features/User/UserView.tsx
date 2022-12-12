@@ -9,6 +9,7 @@ import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { Icons } from '@/icons';
+import { authAtom } from '@/stores/auth';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
@@ -71,9 +72,9 @@ const Presentator = (props: {
 }) => {
   const userId = props.userId;
   const { addOne } = useUpdateUser();
-  const personalData = useUserDataReadOnly(userId);
+  const user = useUserDataReadOnly(userId);
   const callAPI = useAPICallerWithCredential();
-  if (!personalData) {
+  if (!user) {
     throw (async () => {
       try {
         const result = await callAPI('GET', `/users/${userId}`);
@@ -87,7 +88,7 @@ const Presentator = (props: {
       }
     })();
   }
-  return <ActualView user={personalData} />;
+  return <ActualView user={user} />;
 };
 
 export const UserView = () => {

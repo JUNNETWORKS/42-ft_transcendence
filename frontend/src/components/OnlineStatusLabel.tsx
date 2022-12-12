@@ -18,5 +18,5 @@ export const OnlineStatusLabel = ({ user }: Prop) => {
     }, 1000);
     return () => clearInterval(timer);
   }, [user]);
-  return <p className={`${color} text-center`}>{text}</p>;
+  return <p className={`${color} text-center font-bold`}>{text}</p>;
 };
