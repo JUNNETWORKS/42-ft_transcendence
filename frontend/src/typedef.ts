@@ -6,6 +6,7 @@ export type User = {
   id: number;
   displayName: string;
   pulseTime?: Date;
+  ongoingMatchId?: string;
   isEnabledAvatar: boolean;
 
   avatar?: boolean;
@@ -98,6 +99,7 @@ export type ConnectionResult = {
 export type HeartbeatResult = {
   userId: number;
   pulseTime?: Date;
+  ongoingMatchId?: string;
 };
 
 export type OfflineResult = {

@@ -30,6 +30,9 @@ export class UserEntity implements User {
   pulseTime!: Date | null;
 
   @ApiProperty()
+  ongoingMatchId!: string | null;
+
+  @ApiProperty()
   lockUntil!: Date | null;
 }
 

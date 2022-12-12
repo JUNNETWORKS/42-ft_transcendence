@@ -17,6 +17,7 @@ model User {
   intraId                     Int                 @unique
   invalidateTokenIssuedBefore DateTime?
   pulseTime                   DateTime?
+  ongoingMatchId              String?
   lockUntil                   DateTime?
   password                    String
   isEnabledAvatar             Boolean             @default(false)

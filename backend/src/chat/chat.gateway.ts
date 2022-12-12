@@ -50,13 +50,6 @@ const constants = {
 })
 @UseGuards(WsAuthGuard)
 export class ChatGateway implements OnGatewayConnection {
-  private heartbeatDict: {
-    [userId: number]: {
-      n: number;
-      time: number;
-    };
-  } = {};
-
   constructor(
     private readonly chatService: ChatService,
     private readonly chatRoomService: ChatroomsService,
@@ -96,7 +89,7 @@ export class ChatGateway implements OnGatewayConnection {
     // (connectionでは入室それ自体の通知は不要)
 
     // [オンライン状態の変化を全体に通知]
-    this.incrementHeartbeat(userId);
+    this.wsServer.incrementHeartbeat(user);
     // [初期表示に必要な情報をユーザ本人に通知]
     this.wsServer.sendResults(
       'ft_connection',
@@ -141,18 +134,10 @@ export class ChatGateway implements OnGatewayConnection {
           )
         ),
         friends: friends.map((r) => {
-          const h = this.heartbeatDict[r.id];
-          return {
-            ...Utils.pick(r, 'id', 'displayName'),
-            time: h ? h.time : null,
-          };
+          return Utils.pick(r, 'id', 'displayName');
         }),
         blockingUsers: blockingUsers.map((r) => {
-          const h = this.heartbeatDict[r.id];
-          return {
-            ...Utils.pick(r, 'id', 'displayName'),
-            time: h ? h.time : null,
-          };
+          return Utils.pick(r, 'id', 'displayName');
         }),
       },
       {
@@ -168,7 +153,7 @@ export class ChatGateway implements OnGatewayConnection {
     }
     const userId = user.id;
     // [オンライン状態の変化を全体に通知]
-    this.decrementHeartbeat(userId);
+    this.wsServer.decrementHeartbeat(userId);
   }
 
   /**
@@ -1030,63 +1015,12 @@ export class ChatGateway implements OnGatewayConnection {
     );
   }
 
-  private incrementHeartbeat(userId: number) {
-    const r = this.heartbeatDict[userId] || {
-      n: 0,
-      time: null,
-    };
-    r.n += 1;
-    r.time = Date.now();
-    this.heartbeatDict[userId] = r;
-    this.sendHeartbeat(userId);
-  }
-
   private pulse(user: User) {
-    const r = this.heartbeatDict[user.id];
-    if (!r) {
-      return;
-    }
-    r.time = Date.now();
-    this.heartbeatDict[user.id] = r;
-    try {
-      this.sendHeartbeat(user.id);
-    } catch (e) {
-      console.error(e);
-    }
+    this.wsServer.pulse(user);
     try {
       this.usersService.pulse(user.id);
     } catch (e) {
       console.error(e);
     }
-  }
-
-  private decrementHeartbeat(userId: number) {
-    const r = this.heartbeatDict[userId];
-    if (!r) {
-      return;
-    }
-    r.n -= 1;
-    if (r.n) {
-      this.heartbeatDict[userId] = r;
-    } else {
-      delete this.heartbeatDict[userId];
-      this.sendOffine(userId);
-    }
-  }
-
-  private sendHeartbeat(userId: number) {
-    const r = this.heartbeatDict[userId];
-    if (!r) {
-      return;
-    }
-    this.wsServer.sendResults(
-      'ft_heartbeat',
-      { userId, pulseTime: r.time },
-      { global: 'global' }
-    );
-  }
-
-  private sendOffine(userId: number) {
-    this.wsServer.sendResults('ft_offline', { userId }, { global: 'global' });
   }
 }

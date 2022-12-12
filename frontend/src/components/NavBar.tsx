@@ -14,7 +14,10 @@ const UserCard = ({ user }: UserCardProp) => {
   return (
     <>
       <div className="flex w-72 flex-row items-center bg-secondary">
-        <Link to="/auth" className="flex shrink grow flex-row items-center">
+        <Link
+          to="/auth"
+          className="flex min-w-0 shrink grow flex-row items-center"
+        >
           <div className="shrink-0 grow-0">
             <UserAvatar user={user} />
           </div>

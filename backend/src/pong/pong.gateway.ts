@@ -9,6 +9,7 @@ import { Socket, Server } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { WsAuthGuard } from 'src/auth/ws-auth.guard';
+import { UsersService } from 'src/users/users.service';
 import { getUserFromClient } from 'src/utils/socket/ws-auth';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
@@ -34,6 +35,7 @@ export class PongGateway {
   constructor(
     private readonly authService: AuthService,
     private readonly pongService: PongService,
+    private readonly usersService: UsersService,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {}
 

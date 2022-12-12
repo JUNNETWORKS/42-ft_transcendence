@@ -1,16 +1,8 @@
-import dayjs from 'dayjs';
-
 import { FTH4 } from '@/components/FTBasicComponents';
+import { OnlineStatusLabel } from '@/components/OnlineStatusLabel';
 import { UserAvatar } from '@/components/UserAvater';
 import { UserPersonalData } from '@/stores/auth';
 import { User } from '@/typedef';
-
-const statusText = (user: User) => {
-  if (user.pulseTime) {
-    return dayjs(user.pulseTime).format('MM/DD HH:mm:ss');
-  }
-  return 'offline';
-};
 
 type Prop =
   | {
@@ -34,20 +26,18 @@ export const ProfileBlock = ({ user, isYou }: Prop) => {
         />
       </div>
       <div className="shrink grow overflow-hidden">
-        <FTH4 className="">id</FTH4>
-        <p className="p-1">{user.id}</p>
-
+        <>
+          <FTH4 className="">status</FTH4>
+          <div className="p-1">
+            <OnlineStatusLabel user={user} />
+          </div>
+        </>
         {isYou ? (
           <>
             <FTH4 className="">email</FTH4>
             <div className="overflow-hidden truncate p-1">{user.email}</div>
           </>
-        ) : (
-          <>
-            <FTH4 className="">status</FTH4>
-            <p className="p-1">{statusText(user)}</p>
-          </>
-        )}
+        ) : null}
       </div>
     </div>
   );
