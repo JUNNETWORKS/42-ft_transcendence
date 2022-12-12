@@ -22,9 +22,8 @@ export class OnlineMatch {
   private readonly ID: string;
   private readonly roomName: string;
   private readonly match: Match;
-  private readonly postMatchStrategy: PostMatchStrategy;
-  private readonly gameStateSyncTimer: NodeJS.Timer;
   private readonly wsServer: Server;
+  private gameStateSyncTimer: NodeJS.Timer;
 
   public readonly matchType: MatchType;
 
@@ -33,8 +32,8 @@ export class OnlineMatch {
     userID1: number,
     userID2: number,
     matchType: MatchType,
-    removeFromOngoingMatches: (matchID: string) => void,
-    postMatchStrategy: PostMatchStrategy
+    private readonly removeFromOngoingMatches: (matchID: string) => void,
+    private readonly postMatchStrategy: PostMatchStrategy
   ) {
     this.wsServer = wsServer;
     this.postMatchStrategy = postMatchStrategy;
@@ -42,8 +41,9 @@ export class OnlineMatch {
     this.roomName = generateFullRoomName({ matchId: this.ID });
     this.matchType = matchType;
     this.match = new Match(userID1, userID2);
-    this.joinAsSpectator(userID1);
-    this.joinAsSpectator(userID2);
+  }
+
+  start() {
     this.gameStateSyncTimer = setInterval(() => {
       this.match.update();
 
@@ -66,17 +66,11 @@ export class OnlineMatch {
             result,
           });
           this.close();
-          removeFromOngoingMatches(this.ID);
-          this.postMatchStrategy.getOnFinish(this.matchType)(this);
+          this.removeFromOngoingMatches(this.ID);
+          this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
       }
     }, 16.66); // 60fps
-  }
-
-  // マッチのWSルームに観戦者として参加｡
-  // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
-  joinAsSpectator(userID: number) {
-    usersJoin(this.wsServer, userID, this.roomName);
   }
 
   // ユーザーが退出した際の処理

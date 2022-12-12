@@ -16,6 +16,7 @@ import * as TD from '@/typedef';
 import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
+import { MatchHistory } from './components/MatchHistory';
 
 type ActualViewProps = {
   user: TD.User;
@@ -62,6 +63,10 @@ const ActualView = ({ user }: ActualViewProps) => {
         <div>
           <FollowButton userId={user.id} isFriend={isFriend} />
           <BlockButton userId={user.id} isBlocking={isBlocking} />
+        </div>
+        <FTH4>MatchHistory</FTH4>
+        <div className="px-2 py-4">
+          <MatchHistory id={user.id} />
         </div>
       </div>
     </>

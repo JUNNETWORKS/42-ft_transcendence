@@ -6,8 +6,8 @@ import { toast } from 'react-toastify';
 import { Modal } from '@/components/Modal';
 import { useQuery } from '@/hooks';
 import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
+import { formAtom } from '@/stores/control';
 
-import { UserCreatedForm } from '../User/UserCreatedForm';
 import {
   verifyOAuth2AuthorizationCode,
   FtAuthenticationFlowState,
@@ -41,7 +41,7 @@ export const DevAuth = () => {
   const loginLocal = useLoginLocal();
   const logout = useLogout();
   const [token2FA, setToken2FA] = useState<string | null>(null);
-  const [isOpenCreatedForm, setIsOpenCreatedForm] = useState(false);
+  const [, setIsOpenCreatedForm] = useAtom(formAtom.isOpenCreateForm);
 
   const anonymizeAuthFlow = () => {
     logout();
@@ -126,17 +126,6 @@ export const DevAuth = () => {
             onSucceeded={finalizeAuthFlow}
           />
         )}
-      </Modal>
-
-      <Modal
-        closeModal={() => setIsOpenCreatedForm(false)}
-        isOpen={isOpenCreatedForm}
-        traPart={{
-          enter: 'delay-200 transition duration-[500ms] ease-out',
-          leave: 'transition duration-[500ms] ease-out',
-        }}
-      >
-        <UserCreatedForm onClose={() => setIsOpenCreatedForm(false)} />
       </Modal>
 
       <div className="flex flex-1 flex-col items-center justify-center gap-32 ">

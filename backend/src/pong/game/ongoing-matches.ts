@@ -1,30 +1,15 @@
-import { MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
-
 import { OnlineMatch } from './online-match';
-import { PostMatchStrategy } from './PostMatchStrategy';
 import { PlayerInput } from './types/game-state';
 
 // 全ての進行中のマッチ管理するクラス
 export class OngoingMatches {
-  private readonly wsServer: Server;
   private matches: Map<string, OnlineMatch>;
 
-  constructor(wsServer: Server, private postMatchStrategy: PostMatchStrategy) {
-    this.wsServer = wsServer;
+  constructor() {
     this.matches = new Map<string, OnlineMatch>();
   }
 
-  createMatch(userID1: number, userID2: number, matchType: MatchType) {
-    const match = new OnlineMatch(
-      this.wsServer,
-      userID1,
-      userID2,
-      matchType,
-      (matchID: string) => this.removeMatch(matchID),
-      this.postMatchStrategy
-    );
-    // プレイヤーにマッチが開始されたことを通知する
+  appendMatch(match: OnlineMatch) {
     this.matches.set(match.matchID, match);
     return match.matchID;
   }

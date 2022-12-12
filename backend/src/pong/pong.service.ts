@@ -1,22 +1,85 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
+import { MatchStatus } from '@prisma/client';
+
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { OnlineMatch } from './game/online-match';
 
 @Injectable()
 export class PongService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly wsServer: WsServerGateway
+  ) {}
 
-  async createMatchResult(match: OnlineMatch) {
-    await this.prisma.matchResult.create({
+  async fetchUserMatchResults(userID: number) {
+    const results = await this.prisma.matchUserRelation.findMany({
+      where: {
+        userID: userID,
+        match: {
+          matchStatus: 'DONE',
+        },
+      },
+      orderBy: {
+        match: {
+          endAt: 'desc',
+        },
+      },
+      include: {
+        match: {
+          include: {
+            config: {
+              select: {
+                maxScore: true,
+                speed: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const idSet = new Set<number>();
+    results.forEach((item) => {
+      idSet.add(item.match.userID1);
+      idSet.add(item.match.userID2);
+    });
+
+    const userResults = await this.prisma.user.findMany({
+      where: {
+        id: { in: [...idSet] },
+      },
+    });
+
+    const targetUser = userResults.find((item) => item.id === userID);
+
+    const matchWithOpponent = results.map(({ match }) => {
+      const opponentUserId =
+        match.userID1 === userID ? match.userID1 : match.userID2;
+      const opponentUser = userResults.find(
+        (item) => item.id === opponentUserId
+      );
+      return { opponent: opponentUser, match: match };
+    });
+
+    return {
+      user: targetUser,
+      history: matchWithOpponent,
+    };
+  }
+
+  async createMatch(match: OnlineMatch) {
+    await this.prisma.match.create({
       data: {
         id: match.matchID,
         matchType: match.matchType,
+        matchStatus: MatchStatus.PREPARING,
         userID1: match.playerIDs[0],
         userScore1: match.playerScores[0],
         userID2: match.playerIDs[1],
         userScore2: match.playerScores[1],
-        endAt: new Date(),
+        startAt: new Date(),
 
         // TODO: Configを実装したらベタ書きを辞める
         // TODO: Configを非Nullableにする
@@ -36,6 +99,43 @@ export class PongService {
             },
           ],
         },
+      },
+    });
+  }
+
+  async updateMatchAsDone(match: OnlineMatch) {
+    await this.prisma.match.update({
+      where: {
+        id: match.matchID,
+      },
+      data: {
+        matchStatus: MatchStatus.DONE,
+        userScore1: match.playerScores[0],
+        userScore2: match.playerScores[1],
+        endAt: new Date(),
+      },
+    });
+  }
+
+  async updateMatchAsError(match: OnlineMatch) {
+    await this.prisma.match.update({
+      where: {
+        id: match.matchID,
+      },
+      data: {
+        matchStatus: MatchStatus.ERROR,
+        endAt: new Date(),
+      },
+    });
+  }
+
+  async updateMatchStatus(matchID: string, status: MatchStatus) {
+    await this.prisma.match.update({
+      where: {
+        id: matchID,
+      },
+      data: {
+        matchStatus: status,
       },
     });
   }
@@ -107,5 +207,19 @@ export class PongService {
         });
       }
     });
+  }
+
+  async spectateByMatchID(userId: number, matchId: string) {
+    console.log(userId, matchId);
+    const match = await this.prisma.match.findUnique({
+      where: {
+        id: matchId,
+      },
+    });
+    if (!match) throw new HttpException('match is not found', 404);
+    if (match.matchStatus !== 'IN_PROGRESS')
+      throw new HttpException('match is not in-progress', 400);
+    await this.wsServer.usersJoin(userId, { matchId });
+    return { status: 'success' };
   }
 }
