@@ -9,12 +9,17 @@ import { Socket, Server } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { WsAuthGuard } from 'src/auth/ws-auth.guard';
+import {
+  generateFullRoomName,
+  sendResultRoom,
+} from 'src/utils/socket/SocketRoom';
 import { getUserFromClient } from 'src/utils/socket/ws-auth';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
 import { PongPrivateMatchCreateDTO } from './dto/pong-private-match-create.dto';
+import { PongPrivateMatchJoinDTO } from './dto/pong-private-match-join.dto';
 
 import { OngoingMatches } from './game/ongoing-matches';
 import { PendingPrivateMatches } from './game/pending-private-matches';
@@ -47,6 +52,7 @@ export class PongGateway {
     this.pendingPrivateMatches = new PendingPrivateMatches(
       this.wsServer,
       this.ongoingMatches,
+      this.pongService,
       this.postMatchStrategy
     );
   }
@@ -86,6 +92,44 @@ export class PongGateway {
     }
   }
 
+  // プライベートマッチを作成し､参加者を募集する
+  @SubscribeMessage('pong.private_match.create')
+  async receivePrivateMatchCreate(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PongPrivateMatchCreateDTO
+  ) {
+    const user = getUserFromClient(client);
+
+    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
+      // - 待機キュー
+      // - 募集中のPrivateMatch
+      // - OngoingMatches
+      return;
+    }
+
+    this.pendingPrivateMatches.createPrivateMatch(user.id);
+  }
+
+  // 募集中のプライベートに参加する
+  @SubscribeMessage('pong.private_match.join')
+  async receivePrivateMatchJoin(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PongPrivateMatchJoinDTO
+  ) {
+    const user = getUserFromClient(client);
+
+    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
+      // - 待機キュー
+      // - 募集中のPrivateMatch
+      // - OngoingMatches
+      return;
+    }
+
+    this.pendingPrivateMatches.joinPrivateMatch(data.matchId, user.id);
+  }
+
   @SubscribeMessage('pong.match_making.entry')
   async receiveMatchMakingEntry(
     @ConnectedSocket() client: Socket,
@@ -94,7 +138,10 @@ export class PongGateway {
     const user = getUserFromClient(client);
 
     if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
-      // TODO: 既に待機キューに参加している場合はエラーを返す
+      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
+      // - 待機キュー
+      // - 募集中のPrivateMatch
+      // - OngoingMatches
       return;
     }
     // 待機キューにユーザーを追加する
