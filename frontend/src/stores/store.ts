@@ -123,6 +123,16 @@ export const useUserDataReadOnly = (id: number) => {
   return usersStore[id];
 };
 
+export const useRoomDataReadOnly = (id: number) => {
+  const [store] = useAtom(storeAtoms.rooms);
+  return store[id];
+};
+
+export const useDmRoomDataReadOnly = (id: number) => {
+  const [store] = useAtom(storeAtoms.dmRooms);
+  return store[id];
+};
+
 export const useUpdateRoom = () => {
   const [roomsStore, setRoomsStore] = useAtom(storeAtoms.rooms);
   const addOne = (data: TD.ChatRoom) => {

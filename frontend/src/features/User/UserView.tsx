@@ -17,6 +17,7 @@ import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
 import { MatchHistory } from './components/MatchHistory';
+import { ProfileBlock } from './components/ProfileBlock';
 
 type ActualViewProps = {
   user: TD.User;
@@ -45,16 +46,7 @@ const ActualView = ({ user }: ActualViewProps) => {
         {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
       </FTH1>
       <div className="flex flex-col gap-2">
-        <FTH4>id</FTH4>
-        <div className="p-2">{user.id}</div>
-        <FTH4>name</FTH4>
-        <div className="p-2">{user.displayName}</div>
-        <FTH4>heartbeat time</FTH4>
-        <div className="p-2">
-          {user.pulseTime
-            ? dayjs(user.pulseTime).format('MM/DD HH:mm:ss')
-            : 'offline'}
-        </div>
+        <ProfileBlock user={user} isYou={false} />
         <FTH4>DM</FTH4>
         <div className="px-2 py-4">
           <DmCard user={user} />

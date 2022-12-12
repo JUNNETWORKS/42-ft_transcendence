@@ -58,7 +58,7 @@ export class PongService {
 
     const matchWithOpponent = results.map(({ match }) => {
       const opponentUserId =
-        match.userID1 === userID ? match.userID1 : match.userID2;
+        match.userID1 === userID ? match.userID2 : match.userID1;
       const opponentUser = userResults.find(
         (item) => item.id === opponentUserId
       );
