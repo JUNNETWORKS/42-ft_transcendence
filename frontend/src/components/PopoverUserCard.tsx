@@ -1,45 +1,48 @@
-import { Popover } from '@headlessui/react';
-import { ReactNode, useState } from 'react';
-import { usePopper } from 'react-popper';
+import { ReactNode } from 'react';
 
+import { useUserCard } from '@/stores/control';
 import { User } from '@/typedef';
 
 type Prop = {
+  className?: string;
   user?: User;
   button?: ReactNode;
-  children: ReactNode;
+  children?: JSX.Element;
 };
 
-export const PopoverUserCard = ({ user, button, children }: Prop) => {
-  const [referenceElement, setReferenceElement] =
-    useState<HTMLButtonElement | null>(null);
-  const [popperElement, setPopperElement] = useState<HTMLDivElement | null>(
-    null
-  );
-  const { styles, attributes } = usePopper(referenceElement, popperElement, {
-    placement: 'auto',
-  });
+export const PopoverUserCard = ({
+  className,
+  user,
+  button,
+  children,
+}: Prop) => {
+  const openCard = useUserCard();
   if (!user && !button) {
     return null;
   }
-  return (
-    <Popover className="relative inline-block">
-      {button || (
-        <Popover.Button
-          className="max-w-[20em] overflow-hidden text-ellipsis px-1 font-bold hover:underline"
-          ref={setReferenceElement}
+  const inner = () => {
+    if (button) {
+      return button;
+    }
+    if (user) {
+      return (
+        <div
+          className="max-w-[20em] overflow-hidden text-ellipsis px-1 align-middle font-bold hover:underline"
+          onClick={() => openCard(user, children || undefined)}
         >
-          {user?.displayName}
-        </Popover.Button>
-      )}
-      <Popover.Panel
-        className="absolute z-10 border-8 border-gray-500 bg-black/90"
-        ref={setPopperElement}
-        style={styles.popper}
-        {...attributes.popper}
-      >
-        {children}
-      </Popover.Panel>
-    </Popover>
+          {user.displayName}
+        </div>
+      );
+    }
+    return null;
+  };
+  return (
+    <div
+      className={`relative inline-block cursor-pointer align-middle ${
+        className || ''
+      }`}
+    >
+      {inner()}
+    </div>
   );
 };

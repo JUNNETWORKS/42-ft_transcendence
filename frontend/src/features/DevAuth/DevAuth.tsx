@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { Modal } from '@/components/Modal';
 import { useQuery } from '@/hooks';
 import { authAtom, useLoginLocal, useLogout } from '@/stores/auth';
-import { formAtom } from '@/stores/control';
+import { modalAtom } from '@/stores/control';
 
 import {
   verifyOAuth2AuthorizationCode,
@@ -41,7 +41,7 @@ export const DevAuth = () => {
   const loginLocal = useLoginLocal();
   const logout = useLogout();
   const [token2FA, setToken2FA] = useState<string | null>(null);
-  const [, setIsOpenCreatedForm] = useAtom(formAtom.isOpenCreateForm);
+  const [, setIsOpenCreatedForm] = useAtom(modalAtom.isOpenCreateForm);
 
   const anonymizeAuthFlow = () => {
     logout();
