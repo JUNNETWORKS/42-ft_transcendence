@@ -141,6 +141,14 @@ export class OnlineMatch {
     return [this.match.players[0].id, this.match.players[1].id];
   }
 
+  set playerID1(userId: number) {
+    this.match.players[0].id = userId;
+  }
+
+  set playerID2(userId: number) {
+    this.match.players[1].id = userId;
+  }
+
   get playerScores() {
     return [this.match.players[0].score, this.match.players[1].score];
   }
