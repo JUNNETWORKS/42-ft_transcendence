@@ -2,7 +2,9 @@ import { useAtom } from 'jotai';
 import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
-import { FTH3 } from '@/components/FTBasicComponents';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import { DmRoom } from '@/typedef';
@@ -41,6 +43,12 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
       <div className="flex shrink-0 grow-0 basis-[16em] flex-col overflow-hidden">
         <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
           <Switcher />
+          <div className="shrink-0 grow-0 p-2">
+            <FTButton className="w-full">
+              <InlineIcon i={<Icons.Add />} />
+              新規作成
+            </FTButton>
+          </div>
           <div className="flex shrink grow flex-col overflow-hidden p-2">
             <ChatRoomListView
               rooms={dmRooms}
