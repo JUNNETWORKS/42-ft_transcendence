@@ -7,7 +7,7 @@ import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 
 type DmModalProps = {
-  user: TD.User;
+  user?: TD.displayUser;
 };
 
 export const DmCard = ({ user }: DmModalProps) => {
@@ -22,17 +22,20 @@ export const DmCard = ({ user }: DmModalProps) => {
     if (!dmRooms) return undefined;
     return dmRooms.find((room) => {
       const dmRoom = room;
-      if (dmRoom.roomMember.find((member) => member.userId === user.id)) {
+      if (dmRoom.roomMember.find((member) => member.userId === user?.id)) {
         return room;
       }
     });
   };
 
   const submit = () => {
+    if (!user) {
+      return;
+    }
     const dmRoom = dmRoomWithUser();
     if (dmRoom) {
       const data = {
-        roomId: dmRoom?.id,
+        roomId: dmRoom.id,
         content,
       };
       console.log(data);
@@ -46,7 +49,7 @@ export const DmCard = ({ user }: DmModalProps) => {
       mySocket?.emit('ft_tell', data);
     }
   };
-  const isSendable = content !== '';
+  const isSendable = !!user && content !== '';
 
   return (
     <>

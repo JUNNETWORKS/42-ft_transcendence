@@ -2,13 +2,14 @@ import { useAtom } from 'jotai';
 import { Suspense, useState } from 'react';
 
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import { authAtom, chatSocketAtom } from '@/stores/auth';
-import { displayUser, ChatRoom } from '@/typedef';
-
 import {
   InvitePrivateUserList,
   InvitePrivateUserListLoading,
-} from './InvitePrivateUserList';
+} from '@/features/Chat/components/InvitePrivateUserList';
+import { authAtom, chatSocketAtom } from '@/stores/auth';
+import { displayUser, DmRoom } from '@/typedef';
+
+import { DmCard } from '../DmCard';
 
 const validateError = (response: { status: string }) => {
   switch (response.status) {
@@ -28,10 +29,7 @@ const validateError = (response: { status: string }) => {
   }
 };
 
-export const InvitePrivateCard = (props: {
-  room: ChatRoom;
-  closeModal: () => void;
-}) => {
+export const CreateDMCard = (props: { closeModal: () => void }) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 5;
@@ -39,30 +37,16 @@ export const InvitePrivateCard = (props: {
   const [users, setUsers] = useState<displayUser[]>([]);
   const [error, setError] = useState('');
   const [isFetched, setIsFetched] = useState(false);
-
-  // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
+  const [selectedUser, setSelectedUser] = useState<displayUser | null>(null);
 
   if (!personalData || !mySocket) return null;
-
-  const submit = (targetUser: displayUser) => {
-    const data = {
-      roomId: props.room.id,
-      users: [targetUser.id],
-    };
-    console.log(data);
-    setError('');
-    mySocket.emit('ft_invite', data, (response: { status: string }) => {
-      if (response.status !== 'success') setError(validateError(response));
-      else props.closeModal();
-    });
-  };
 
   const prevIsDisabled = cursor <= 0;
   const nextIsDisabled = users.length < take;
 
   return (
     <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
-      <FTH3>invite to private room</FTH3>
+      <FTH3>Sending DM to...</FTH3>
       <div className="flex flex-row p-2">
         <div className="flex w-full min-w-0 flex-col">
           <Suspense fallback={<InvitePrivateUserListLoading take={take} />}>
@@ -77,7 +61,7 @@ export const InvitePrivateCard = (props: {
               setIsFetched={setIsFetched}
               users={users}
               setUsers={setUsers}
-              onSelect={submit}
+              onSelect={setSelectedUser}
             />
           </Suspense>
         </div>
@@ -103,6 +87,9 @@ export const InvitePrivateCard = (props: {
         >
           {'->'}
         </FTButton>
+      </div>
+      <div className="px-2 py-4">
+        <DmCard user={selectedUser || undefined} />
       </div>
     </div>
   );
