@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useRoutes } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-import { FTButton, FTH1 } from '@/components/FTBasicComponents';
+import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
@@ -14,6 +14,7 @@ import { BlockingView } from './BlockingView';
 import { AuthBlock } from './components/AuthBlock';
 import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
+import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { FriendsView } from './FriendsView';
 
@@ -72,58 +73,88 @@ const MyPageContent = () => {
         </div>
       </Modal>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-32 ">
-        <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
-          <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
-            <p
-              className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
-              style={{ wordBreak: 'keep-all' }}
-            >
-              {user.displayName}
-            </p>
-            <div className="shrink-0 grow-0 self-end">
-              <FTButton
-                className="text-2xl"
-                onClick={() => {
-                  setIsOpen(true);
-                  setModalType('edit');
-                }}
-              >
-                <InlineIcon i={<Icons.User.Edit />} />
-              </FTButton>
+      <div className="flex flex-1 items-center justify-center">
+        <div className="flex gap-8">
+          <div className="flex flex-1 flex-col items-end  gap-32 ">
+            <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
+              <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
+                <p
+                  className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
+                  style={{ wordBreak: 'keep-all' }}
+                >
+                  {user.displayName}
+                </p>
+                <div className="shrink-0 grow-0 self-end">
+                  <FTButton
+                    className="text-2xl"
+                    onClick={() => {
+                      setIsOpen(true);
+                      setModalType('edit');
+                    }}
+                  >
+                    <InlineIcon i={<Icons.User.Edit />} />
+                  </FTButton>
+                </div>
+              </FTH1>
+
+              <div className="flex flex-col">
+                <ProfileBlock user={user} isYou={true} />
+
+                <div className="flex flex-row items-center justify-center gap-4 p-3">
+                  <Link
+                    to="/dm"
+                    className="min-w-[4em] border-2 p-2 text-center"
+                  >
+                    DM
+                  </Link>
+                  <Link
+                    to="/me/friends"
+                    className="min-w-[4em] border-2 p-2 text-center"
+                  >
+                    Friends
+                  </Link>
+                  <Link
+                    to="/me/blocking"
+                    className="min-w-[4em] border-2 p-2 text-center"
+                  >
+                    BlockingUsers
+                  </Link>
+                </div>
+
+                <AuthBlock
+                  user={user}
+                  onClickPassword={() => {
+                    setIsOpen(true);
+                    setModalType('password');
+                  }}
+                />
+
+                <LogoutBlock />
+              </div>
             </div>
-          </FTH1>
+          </div>
+          <div className="flex flex-1 flex-col items-start  gap-32 ">
+            <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
+              <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
+                Stats & History
+              </FTH1>
 
-          <div className="flex flex-col">
-            <ProfileBlock user={user} isYou={true} />
+              <div className="flex flex-col">
+                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+                  Stats
+                </FTH3>
+                <div className="mx-2">累計戦績: 100勝 - 100敗北</div>
+                <div className="mx-2">勝率: 50%</div>
+                <div className="mx-2">現在のRANK: 後で実装する</div>
+              </div>
 
-            <div className="flex flex-row items-center justify-center gap-4 p-3">
-              <Link to="/dm" className="min-w-[4em] border-2 p-2 text-center">
-                DM
-              </Link>
-              <Link
-                to="/me/friends"
-                className="min-w-[4em] border-2 p-2 text-center"
-              >
-                Friends
-              </Link>
-              <Link
-                to="/me/blocking"
-                className="min-w-[4em] border-2 p-2 text-center"
-              >
-                BlockingUsers
-              </Link>
+              <div className="flex flex-col">
+                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+                  History
+                </FTH3>
+                <MatchHistory id={user.id} />
+              </div>
             </div>
-
-            <AuthBlock
-              user={user}
-              onClickPassword={() => {
-                setIsOpen(true);
-                setModalType('password');
-              }}
-            />
-
-            <LogoutBlock />
           </div>
         </div>
       </div>
