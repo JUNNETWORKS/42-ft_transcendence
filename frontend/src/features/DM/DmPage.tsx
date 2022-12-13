@@ -50,7 +50,7 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
   return (
     <>
       <Modal closeModal={closeModal} isOpen={isOpen}>
-        <CreateDMCard closeModal={closeModal} />
+        <CreateDMCard closeModal={closeModal} dmRooms={dmRooms} />
       </Modal>
       <div
         id="dm"
@@ -60,7 +60,10 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
           <div className="flex w-full shrink grow flex-col overflow-hidden border-2 border-solid border-white">
             <Switcher />
             <div className="shrink-0 grow-0 p-2">
-              <FTButton className="w-full" onClick={openModal}>
+              <FTButton
+                className="flex w-full flex-row justify-center"
+                onClick={openModal}
+              >
                 <InlineIcon i={<Icons.Add />} />
                 新規作成
               </FTButton>

@@ -1,14 +1,12 @@
 import { useAtom } from 'jotai';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+import { FTH3 } from '@/components/FTBasicComponents';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
+import { dataAtom } from '@/stores/structure';
 import { displayUser, ChatRoom } from '@/typedef';
 
-import {
-  InvitePrivateUserList,
-  InvitePrivateUserListLoading,
-} from './InvitePrivateUserList';
+import { UserSelectList } from './UserSelectList';
 
 const validateError = (response: { status: string }) => {
   switch (response.status) {
@@ -35,11 +33,10 @@ export const InvitePrivateCard = (props: {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 5;
-  const [cursor, setCursor] = useState(0);
-  const [users, setUsers] = useState<displayUser[]>([]);
+  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
+  const members = membersInRoom[props.room.id];
+  const isDisabled = (user: displayUser) => !!members && !!members[user.id];
   const [error, setError] = useState('');
-  const [isFetched, setIsFetched] = useState(false);
-
   // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
   if (!personalData || !mySocket) return null;
@@ -57,53 +54,18 @@ export const InvitePrivateCard = (props: {
     });
   };
 
-  const prevIsDisabled = cursor <= 0;
-  const nextIsDisabled = users.length < take;
-
   return (
     <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
       <FTH3>invite to private room</FTH3>
-      <div className="flex flex-row p-2">
-        <div className="flex w-full min-w-0 flex-col">
-          <Suspense fallback={<InvitePrivateUserListLoading take={take} />}>
-            <InvitePrivateUserList
-              makeUrl={(take, cursor) =>
-                `http://localhost:3000/users?take=${take}&cursor=${cursor}`
-              }
-              take={take}
-              cursor={cursor}
-              setCursor={setCursor}
-              isFetched={isFetched}
-              setIsFetched={setIsFetched}
-              users={users}
-              setUsers={setUsers}
-              onSelect={submit}
-            />
-          </Suspense>
-        </div>
-      </div>
+      <UserSelectList
+        makeUrl={(take, cursor) =>
+          `http://localhost:3000/users?take=${take}&cursor=${cursor}`
+        }
+        take={take}
+        isDisabled={isDisabled}
+        onSelect={submit}
+      />
       <div className="text-red-400">{error !== '' ? error : '　'}</div>
-      <div className="flex flex-row justify-around p-2">
-        <FTButton
-          onClick={() => {
-            setIsFetched(false);
-            const newCursor = cursor - take >= 0 ? cursor - take : 0;
-            setCursor(newCursor);
-          }}
-          disabled={prevIsDisabled}
-        >
-          {'<-'}
-        </FTButton>
-        <FTButton
-          onClick={() => {
-            setIsFetched(false);
-            setCursor(cursor + take);
-          }}
-          disabled={nextIsDisabled}
-        >
-          {'->'}
-        </FTButton>
-      </div>
     </div>
   );
 };

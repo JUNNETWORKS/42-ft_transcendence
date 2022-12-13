@@ -1,95 +1,55 @@
 import { useAtom } from 'jotai';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
-import {
-  InvitePrivateUserList,
-  InvitePrivateUserListLoading,
-} from '@/features/Chat/components/InvitePrivateUserList';
+import { FTH3, FTH4 } from '@/components/FTBasicComponents';
+import { UserAvatar } from '@/components/UserAvater';
+import { UserSelectList } from '@/features/Chat/components/UserSelectList';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { displayUser, DmRoom } from '@/typedef';
 
 import { DmCard } from '../DmCard';
 
-const validateError = (response: { status: string }) => {
-  switch (response.status) {
-    case 'not found':
-      return 'ルームが見つかりませんでした。';
-    case 'caller is not owner':
-      return 'オーナー権限がありません。';
-    case 'caller is not joined':
-      return 'ルームに入室していません。';
-    case 'user does not exist':
-      return '招待するユーザーが存在しません。';
-    case 'user is joined already':
-      return '招待したユーザーはすでに入室しています。';
-    case 'banned':
-    default:
-      return 'ユーザーの招待に失敗しました。';
-  }
+type Prop = {
+  closeModal: () => void;
+  dmRooms: DmRoom[];
 };
 
-export const CreateDMCard = (props: { closeModal: () => void }) => {
+export const CreateDMCard = ({ closeModal, dmRooms }: Prop) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 5;
-  const [cursor, setCursor] = useState(0);
-  const [users, setUsers] = useState<displayUser[]>([]);
-  const [error, setError] = useState('');
-  const [isFetched, setIsFetched] = useState(false);
   const [selectedUser, setSelectedUser] = useState<displayUser | null>(null);
-
+  const isDisabled = (user: displayUser) =>
+    !!dmRooms.find((r) => {
+      return !!r.roomMember.find((m) => m.userId === user.id);
+    });
   if (!personalData || !mySocket) return null;
 
-  const prevIsDisabled = cursor <= 0;
-  const nextIsDisabled = users.length < take;
-
+  const toContent = selectedUser ? (
+    <>
+      <UserAvatar className={`m-1 h-6 w-6`} user={selectedUser} />
+      <p className={`shrink grow overflow-hidden text-ellipsis`}>
+        {selectedUser.displayName}
+      </p>
+    </>
+  ) : (
+    <p className="w-full text-center">{'<none>'}</p>
+  );
   return (
     <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
-      <FTH3>Sending DM to...</FTH3>
-      <div className="flex flex-row p-2">
-        <div className="flex w-full min-w-0 flex-col">
-          <Suspense fallback={<InvitePrivateUserListLoading take={take} />}>
-            <InvitePrivateUserList
-              makeUrl={(take, cursor) =>
-                `http://localhost:3000/users?take=${take}&cursor=${cursor}`
-              }
-              take={take}
-              cursor={cursor}
-              setCursor={setCursor}
-              isFetched={isFetched}
-              setIsFetched={setIsFetched}
-              users={users}
-              setUsers={setUsers}
-              onSelect={setSelectedUser}
-            />
-          </Suspense>
-        </div>
-      </div>
-      <div className="text-red-400">{error !== '' ? error : '　'}</div>
-      <div className="flex flex-row justify-around p-2">
-        <FTButton
-          onClick={() => {
-            setIsFetched(false);
-            const newCursor = cursor - take >= 0 ? cursor - take : 0;
-            setCursor(newCursor);
-          }}
-          disabled={prevIsDisabled}
-        >
-          {'<-'}
-        </FTButton>
-        <FTButton
-          onClick={() => {
-            setIsFetched(false);
-            setCursor(cursor + take);
-          }}
-          disabled={nextIsDisabled}
-        >
-          {'->'}
-        </FTButton>
-      </div>
-      <div className="px-2 py-4">
-        <DmCard user={selectedUser || undefined} />
+      <FTH3>Sending DM</FTH3>
+      <UserSelectList
+        makeUrl={(take, cursor) =>
+          `http://localhost:3000/users?take=${take}&cursor=${cursor}`
+        }
+        take={take}
+        isDisabled={isDisabled}
+        onSelect={setSelectedUser}
+      />
+      <FTH4 className="text-sm">To</FTH4>
+      <div className="flex h-8 flex-row items-center">{toContent}</div>
+      <div className="p-2">
+        <DmCard user={selectedUser || undefined} bordered={true} />
       </div>
     </div>
   );

@@ -57,6 +57,7 @@ export class UsersService {
         select: {
           id: true,
           displayName: true,
+          isEnabledAvatar: true,
         },
       });
     } else {
