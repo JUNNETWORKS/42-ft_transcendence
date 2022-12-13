@@ -13,7 +13,10 @@ export type User = {
 };
 
 // TODO: inviteUI用の型、移動を検討
-export type displayUser = Pick<User, 'id' | 'displayName'>;
+export type displayUser = Pick<
+  User,
+  'id' | 'displayName' | 'avatarTime' | 'isEnabledAvatar'
+>;
 
 export const RoomTypesSelectable = ['PUBLIC', 'PRIVATE', 'LOCKED'] as const;
 export const RoomTypes = [...RoomTypesSelectable, 'DM'] as const;
