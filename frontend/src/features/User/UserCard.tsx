@@ -20,9 +20,10 @@ import { ProfileBlock } from './components/ProfileBlock';
 
 type ActualCardProp = {
   user: TD.User;
+  onClose?: () => void;
   children?: ReactNode;
 };
-const ActualCard = ({ user, children }: ActualCardProp) => {
+const ActualCard = ({ user, onClose, children }: ActualCardProp) => {
   const [personalData] = useAtom(authAtom.personalData);
   const userId = user.id;
   const [friends] = useAtom(structureAtom.friends);
@@ -71,6 +72,9 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
             <FTButton
               onClick={() => {
                 navigation(isYou ? '/me' : `/user/${user.id}`);
+                if (onClose) {
+                  onClose();
+                }
               }}
             >
               User Page
@@ -95,6 +99,7 @@ const ActualCard = ({ user, children }: ActualCardProp) => {
 
 const Presentator = (props: {
   userId: number;
+  onClose?: () => void;
   children?: ReactNode;
   onError: (e: unknown) => void;
 }) => {
@@ -116,11 +121,21 @@ const Presentator = (props: {
       }
     })();
   }
-  return <ActualCard user={personalData}>{props.children}</ActualCard>;
+  return (
+    <ActualCard user={personalData} onClose={props.onClose}>
+      {props.children}
+    </ActualCard>
+  );
 };
 
-export const UserCard = (props: { id: number; children?: ReactNode }) => {
-  const userId = props.id;
+type Prop = {
+  id: number;
+  onClose?: () => void;
+  children?: ReactNode;
+};
+
+export const UserCard = ({ id, onClose, children }: Prop) => {
+  const userId = id;
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32 bg-black text-white">
@@ -134,8 +149,8 @@ export const UserCard = (props: { id: number; children?: ReactNode }) => {
           )}
         >
           <Suspense fallback={<p>Loading...</p>}>
-            <Presentator userId={userId} onError={setError}>
-              {props.children}
+            <Presentator userId={userId} onClose={onClose} onError={setError}>
+              {children}
             </Presentator>
           </Suspense>
         </ErrorBoundary>
