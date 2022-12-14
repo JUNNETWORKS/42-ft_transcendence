@@ -400,6 +400,44 @@ async function main() {
   //   });
   // }
   // await prisma.chatMessage.createMany({ data });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      chatRoomId: 1,
+      messageType: 'PR_OPEN',
+      content: 'PR_OPEN',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      chatRoomId: 1,
+      messageType: 'PR_CANCEL',
+      content: 'PR_CANCEL',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      secondaryUserId: 2,
+      chatRoomId: 1,
+      messageType: 'PR_START',
+      content: 'PR_START',
+    },
+  });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      secondaryUserId: 2,
+      chatRoomId: 1,
+      messageType: 'PR_RESULT',
+      content: 'PR_RESULT',
+    },
+  });
 }
 
 main()
