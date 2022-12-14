@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { FTH3 } from '@/components/FTBasicComponents';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { UserAvatar } from '@/components/UserAvater';
+import { useBlocking } from '@/hooks/useBlockings';
 import { useFriends } from '@/hooks/useFriends';
 import { useUserDataReadOnly } from '@/stores/store';
 import { User } from '@/typedef';
@@ -43,11 +44,14 @@ type ListProp = {
   onSelect: (user: User) => void;
 };
 
-const FriendList = ({ selectedUserId, onSelect }: ListProp) => {
-  const [friends] = useFriends();
+const UserList = ({
+  selectedUserId,
+  onSelect,
+  users,
+}: ListProp & { users: User[] }) => {
   return (
     <div className="flex h-full w-full flex-col overflow-x-hidden overflow-y-scroll">
-      {friends.map((user) => {
+      {users.map((user) => {
         return (
           <ListItem
             key={user.id}
@@ -61,20 +65,22 @@ const FriendList = ({ selectedUserId, onSelect }: ListProp) => {
   );
 };
 
-type Prop = {
-  some?: number;
+type CardProp = {
+  users: User[];
+  title: string;
   onClose: () => void;
 };
 
-export const UserListCard = ({ some }: Prop) => {
+const UserListCard = ({ users, title }: CardProp) => {
   const [user, setUser] = useState<User | null>(null);
   const selectedUserId = user?.id;
   return (
     <div className="flex flex-col border-4 border-solid border-white">
-      <FTH3 className="text-xl">Your Friends</FTH3>
+      <FTH3 className="text-xl">{title}</FTH3>
       <div className="flex h-[20em] flex-row bg-black text-white">
         <div className="shrink-0 grow-0 basis-[14em] overflow-hidden">
-          <FriendList
+          <UserList
+            users={users}
             selectedUserId={selectedUserId}
             onSelect={(user) => setUser(user)}
           />
@@ -87,4 +93,16 @@ export const UserListCard = ({ some }: Prop) => {
       </div>
     </div>
   );
+};
+
+type Prop = { onClose: () => void };
+
+export const FriendList = (props: Prop) => {
+  const [friends] = useFriends();
+  return <UserListCard {...props} users={friends} title="Your Friends" />;
+};
+
+export const BlockingList = (props: Prop) => {
+  const [blockings] = useBlocking();
+  return <UserListCard {...props} users={blockings} title="You Blocking" />;
 };

@@ -1,4 +1,3 @@
-import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Link, useNavigate, useRoutes } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -7,10 +6,9 @@ import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { useFriends } from '@/hooks/useFriends';
 import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
-import { authAtom, useLogout } from '@/stores/auth';
+import { useLogout } from '@/stores/auth';
 
 import { BlockingView } from './BlockingView';
 import { AuthBlock } from './components/AuthBlock';
@@ -19,7 +17,7 @@ import { EditProfileCard } from './components/EditProfileCard';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { FriendsView } from './FriendsView';
-import { UserListCard } from './UserListCard';
+import { FriendList, BlockingList } from './UserListCard';
 
 const LogoutBlock = () => {
   const [, confirmModal] = useConfirmModal();
@@ -51,7 +49,7 @@ const LogoutBlock = () => {
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [modalType, setModalType] = useState<
-    'edit' | 'password' | 'friends' | null
+    'edit' | 'password' | 'friends' | 'blockings' | null
   >(null);
   const [user] = usePersonalData();
 
@@ -75,10 +73,15 @@ const MyPageContent = () => {
       case 'friends':
         return (
           <div className="flex w-[600px] flex-col justify-around">
-            <UserListCard onClose={() => setIsOpen(false)} />
+            <FriendList onClose={() => setIsOpen(false)} />
           </div>
         );
-
+      case 'blockings':
+        return (
+          <div className="flex w-[600px] flex-col justify-around">
+            <BlockingList onClose={() => setIsOpen(false)} />
+          </div>
+        );
       default:
         return null;
     }
@@ -131,12 +134,14 @@ const MyPageContent = () => {
                   >
                     Friends
                   </FTButton>
-                  <Link
-                    to="/me/blocking"
-                    className="min-w-[4em] border-2 p-2 text-center"
+                  <FTButton
+                    onClick={() => {
+                      setIsOpen(true);
+                      setModalType('blockings');
+                    }}
                   >
-                    BlockingUsers
-                  </Link>
+                    Blockings
+                  </FTButton>
                 </div>
 
                 <AuthBlock
