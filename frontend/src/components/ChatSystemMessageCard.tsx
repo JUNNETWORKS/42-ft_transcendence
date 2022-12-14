@@ -60,10 +60,18 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
         </>
       );
     case 'PR_OPEN':
-      return <>{nameButton}さんがプライベートマッチの募集を開始しました -</>;
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.private.open />} />
+          {nameButton}さんがプライベートマッチの募集を開始しました -
+        </>
+      );
     case 'PR_CANCEL':
       return (
-        <>{nameButton}さんがプライベートマッチの募集をキャンセルしました -</>
+        <>
+          <InlineIcon i={<Icons.Chat.System.private.cancel />} />
+          {nameButton}さんがプライベートマッチの募集をキャンセルしました -
+        </>
       );
 
     case 'NOMMINATED':
@@ -101,6 +109,7 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
     case 'PR_START':
       return (
         <>
+          <InlineIcon i={<Icons.Chat.System.private.start />} />
           {nameButton}さんが{targetButton}さんと対戦を開始しました！ -
         </>
       );
@@ -108,6 +117,7 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
     case 'PR_RESULT':
       return (
         <>
+          <InlineIcon i={<Icons.Chat.System.private.result />} />
           {nameButton}さんが{targetButton}さんに勝利しました！ -
         </>
       );
