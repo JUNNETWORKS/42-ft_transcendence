@@ -69,6 +69,57 @@ export class PongService {
     };
   }
 
+  async fetchUserStats(userID: number) {
+    const results = await this.prisma.matchUserRelation.findMany({
+      where: {
+        userID: userID,
+        match: {
+          matchStatus: 'DONE',
+        },
+      },
+      orderBy: {
+        match: {
+          endAt: 'desc',
+        },
+      },
+      include: {
+        match: true,
+      },
+    });
+
+    const matchCount = results.length;
+    const winMatchCount = results.filter(
+      ({ match: { userID1, userID2, userScore1, userScore2 } }) => {
+        if (userScore1 > userScore2 && userID1 === userID) return true;
+        if (userScore2 > userScore1 && userID2 === userID) return true;
+        return false;
+      }
+    ).length;
+    const loseMatchCount = matchCount - winMatchCount;
+
+    const winRate = Math.floor(
+      ((winMatchCount / matchCount) * 100 * Math.pow(10, 2)) / Math.pow(10, 2)
+    );
+
+    const userRankPoint = await this.prisma.userRankPoint
+      .findUnique({
+        where: { id: userID },
+      })
+      .then((res) => (res ? res.rankPoint : 0));
+
+    //自分のランクポイントを超えるユーザーの数をカウントして順位とする
+    const rankPlace = await this.prisma.userRankPoint.count({
+      where: { rankPoint: { gt: userRankPoint } },
+    });
+
+    return {
+      winMatchCount,
+      loseMatchCount,
+      winRate,
+      rankPlace: rankPlace + 1, //1位だと0個なので調整
+    };
+  }
+
   async createMatch(match: OnlineMatch) {
     await this.prisma.match.create({
       data: {
