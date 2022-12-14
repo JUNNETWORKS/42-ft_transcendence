@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate, useRoutes } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
@@ -10,13 +10,11 @@ import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { useLogout } from '@/stores/auth';
 
-import { BlockingView } from './BlockingView';
 import { AuthBlock } from './components/AuthBlock';
 import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
-import { FriendsView } from './FriendsView';
 import { FriendList, BlockingList } from './UserListCard';
 
 const LogoutBlock = () => {
@@ -186,11 +184,5 @@ const MyPageContent = () => {
 };
 
 export const MyPageView = () => {
-  const myPageRoutes = [
-    { path: '/', element: <MyPageContent /> },
-    { path: '/friends/*', element: <FriendsView /> },
-    { path: '/blocking/*', element: <BlockingView /> },
-  ];
-  const routeElements = useRoutes([...myPageRoutes]);
-  return <>{routeElements}</>;
+  return <MyPageContent />;
 };
