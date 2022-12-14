@@ -12,6 +12,7 @@ import { authAtom } from '@/stores/auth';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
+import { pick } from '@/utils';
 
 import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
@@ -134,26 +135,44 @@ type Prop = {
   children?: ReactNode;
 };
 
-export const UserCard = ({ id, onClose, children }: Prop) => {
+const InnerCard = ({ id, onClose, children }: Prop) => {
   const userId = id;
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-32 bg-black text-white">
-      <div className="w-[20rem] basis-1 border-4 border-white">
-        <ErrorBoundary
-          FallbackComponent={(error) => (
-            <p>
-              failed.
-              <FTButton onClick={() => setError(null)}>Retry</FTButton>
-            </p>
-          )}
-        >
-          <Suspense fallback={<p>Loading...</p>}>
-            <Presentator userId={userId} onClose={onClose} onError={setError}>
-              {children}
-            </Presentator>
-          </Suspense>
-        </ErrorBoundary>
+    <ErrorBoundary
+      FallbackComponent={(error) => (
+        <p>
+          failed.
+          <FTButton onClick={() => setError(null)}>Retry</FTButton>
+        </p>
+      )}
+    >
+      <Suspense fallback={<p>Loading...</p>}>
+        <Presentator userId={userId} onClose={onClose} onError={setError}>
+          {children}
+        </Presentator>
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
+
+type Appearance = {
+  fixedWidth?: boolean;
+  bordered?: boolean;
+};
+
+export const UserCard = (props: Prop & Appearance) => {
+  const fixedWidth = !(
+    typeof props.fixedWidth === 'boolean' && !props.fixedWidth
+  );
+  const bordered = !(typeof props.bordered === 'boolean' && !props.bordered);
+  const className = `${fixedWidth ? 'w-[20rem]' : ''} ${
+    bordered ? 'border-4 border-white' : ''
+  }`;
+  return (
+    <div className="flex flex-col gap-32 bg-black text-white">
+      <div className={className}>
+        <InnerCard {...props} />
       </div>
     </div>
   );

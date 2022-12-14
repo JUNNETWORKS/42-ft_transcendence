@@ -7,6 +7,8 @@ import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useFriends } from '@/hooks/useFriends';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { authAtom, useLogout } from '@/stores/auth';
 
@@ -17,6 +19,7 @@ import { EditProfileCard } from './components/EditProfileCard';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { FriendsView } from './FriendsView';
+import { UserListCard } from './UserListCard';
 
 const LogoutBlock = () => {
   const [, confirmModal] = useConfirmModal();
@@ -47,18 +50,33 @@ const LogoutBlock = () => {
 
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalType, setModalType] = useState<'edit' | 'password' | null>(null);
-  const [user] = useAtom(authAtom.personalData);
+  const [modalType, setModalType] = useState<
+    'edit' | 'password' | 'friends' | null
+  >(null);
+  const [user] = usePersonalData();
+
   if (!user) {
     return null;
   }
   const modalContent = (() => {
     switch (modalType) {
       case 'edit':
-        return <EditProfileCard user={user} onClose={() => setIsOpen(false)} />;
+        return (
+          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+            <EditProfileCard user={user} onClose={() => setIsOpen(false)} />
+          </div>
+        );
       case 'password':
         return (
-          <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
+          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+            <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
+          </div>
+        );
+      case 'friends':
+        return (
+          <div className="flex w-[600px] flex-col justify-around">
+            <UserListCard onClose={() => setIsOpen(false)} />
+          </div>
         );
 
       default:
@@ -68,9 +86,7 @@ const MyPageContent = () => {
   return (
     <>
       <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-          {modalContent}
-        </div>
+        {modalContent}
       </Modal>
 
       <div className="flex flex-1 items-center justify-center">
@@ -107,12 +123,14 @@ const MyPageContent = () => {
                   >
                     DM
                   </Link>
-                  <Link
-                    to="/me/friends"
-                    className="min-w-[4em] border-2 p-2 text-center"
+                  <FTButton
+                    onClick={() => {
+                      setIsOpen(true);
+                      setModalType('friends');
+                    }}
                   >
                     Friends
-                  </Link>
+                  </FTButton>
                   <Link
                     to="/me/blocking"
                     className="min-w-[4em] border-2 p-2 text-center"
