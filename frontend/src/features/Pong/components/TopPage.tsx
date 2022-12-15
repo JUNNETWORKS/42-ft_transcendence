@@ -14,6 +14,8 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
 
   const cancelWaiting = () => {
     mySocket.emit('pong.match_making.leave');
+    // TODO: プライベートマッチデバッグ用。後で消す。
+    mySocket.emit('pong.private_match.leave');
     setIsWaiting(false);
   };
 
@@ -24,11 +26,28 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     mySocket.emit('pong.match_making.entry', { matchType: matchType });
   };
 
+  // TODO: プライベートマッチデバッグ用。後で消す。
+  const [inputtedPrivateMatchId, setInputtedPrivateMatchId] = useState('');
+
+  // TODO: プライベートマッチデバッグ用。後で消す。
+  mySocket.on('pong.private_match.created', (data: { matchId: string }) => {
+    console.log(`created match: ${data.matchId}`);
+  });
+
+  // TODO: プライベートマッチデバッグ用。後で消す。
   const createPrivateMatch = () => {
     if (isWaiting) {
       return;
     }
     mySocket.emit('pong.private_match.create');
+  };
+
+  // TODO: プライベートマッチデバッグ用。後で消す。
+  const joinPrivateMatch = (matchId: string) => {
+    console.log('pong.private_match.join ', matchId);
+    mySocket.emit('pong.private_match.join', {
+      matchId: matchId,
+    });
   };
 
   return (
@@ -68,12 +87,23 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
               createPrivateMatch();
             }}
           />
+          <input
+            type={'text'}
+            value={inputtedPrivateMatchId}
+            onChange={(event) => {
+              console.log(
+                `privateMatch input form event value: ${event.target.value}`
+              );
+              setInputtedPrivateMatchId(event.target.value);
+            }}
+            className="text-black"
+          />
           <CommandCard
             text="プライベートマッチに参加(デバッグ用)"
             onClick={() => {
               // TODO: このCommandCardはプライベートマッチのデバッグ用なので後で消す
               setIsWaiting(true);
-              joinPrivateMatch();
+              joinPrivateMatch(inputtedPrivateMatchId);
             }}
           />
           <CommandCard

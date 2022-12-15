@@ -22,7 +22,7 @@ export const AppRoutes = () => {
       element: guardElement || <PongTopPage mySocket={mySocket!} />,
     },
     {
-      path: '/pong/matches/:matchID',
+      path: '/pong/matches/:matchId',
       element: guardElement || <PongMatchPage mySocket={mySocket!} />,
     },
     { path: '/auth', element: authElement },

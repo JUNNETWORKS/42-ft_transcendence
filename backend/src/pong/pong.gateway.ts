@@ -86,7 +86,7 @@ export class PongGateway {
     }
 
     this.ongoingMatches.leave(user.id);
-    const queue = this.waitingQueues.getQueueByPlayerID(user.id);
+    const queue = this.waitingQueues.getQueueByPlayerId(user.id);
     if (queue) {
       queue.remove(user.id);
     }
@@ -100,7 +100,7 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
       // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
       // - 待機キュー
       // - 募集中のPrivateMatch
@@ -119,7 +119,7 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
       // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
       // - 待機キュー
       // - 募集中のPrivateMatch
@@ -130,6 +130,14 @@ export class PongGateway {
     this.pendingPrivateMatches.joinPrivateMatch(data.matchId, user.id);
   }
 
+  // 募集中のプライベートマッチを抜けて、その募集中マッチを削除する。
+  @SubscribeMessage('pong.private_match.leave')
+  async receivePrivateMatchLeave(@ConnectedSocket() client: Socket) {
+    const user = getUserFromClient(client);
+
+    this.pendingPrivateMatches.leavePrivateMatch(user.id);
+  }
+
   @SubscribeMessage('pong.match_making.entry')
   async receiveMatchMakingEntry(
     @ConnectedSocket() client: Socket,
@@ -137,7 +145,7 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerID(user.id) !== undefined) {
+    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
       // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
       // - 待機キュー
       // - 募集中のPrivateMatch
@@ -157,7 +165,7 @@ export class PongGateway {
     const user = getUserFromClient(client);
 
     // 待機キューからユーザーを削除する
-    const queue = this.waitingQueues.getQueueByPlayerID(user.id);
+    const queue = this.waitingQueues.getQueueByPlayerId(user.id);
     queue?.remove(user.id);
   }
 

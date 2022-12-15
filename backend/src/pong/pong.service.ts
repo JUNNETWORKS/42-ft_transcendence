@@ -11,8 +11,8 @@ type CreateMatchDTO = {
   id: string;
   matchType: MatchType;
   matchStatus: MatchStatus;
-  userID1?: number;
-  userID2?: number;
+  userId1?: number;
+  userId2?: number;
   userScore1: number;
   userScore2: number;
 };
@@ -27,9 +27,9 @@ export class PongService {
         id: match.id,
         matchType: match.matchType,
         matchStatus: MatchStatus.PREPARING,
-        userID1: match.userID1 ? match.userID1 : 0,
+        userId1: match.userId1 ? match.userId1 : 0,
         userScore1: match.userScore1,
-        userID2: match.userID2 ? match.userID2 : 0,
+        userId2: match.userId2 ? match.userId2 : 0,
         userScore2: match.userScore1,
         startAt: new Date(),
 
@@ -43,14 +43,14 @@ export class PongService {
         },
         matchUserRelation: {
           create: compact([
-            match.userID1
+            match.userId1
               ? {
-                  userID: match.userID1,
+                  userId: match.userId1,
                 }
               : undefined,
-            match.userID2
+            match.userId2
               ? {
-                  userID: match.userID2,
+                  userId: match.userId2,
                 }
               : undefined,
           ]),
@@ -60,39 +60,39 @@ export class PongService {
   }
 
   async updateMatchPlayers(
-    matchID: string,
+    matchId: string,
     data: {
-      userID1?: number;
-      userID2?: number;
+      userId1?: number;
+      userId2?: number;
     }
   ) {
     await this.prisma.$transaction([
       this.prisma.matchUserRelation.deleteMany({
         where: {
-          matchID: matchID,
+          matchId: matchId,
         },
       }),
-      this.prisma.match.update({
+      this.prisma.match.updateMany({
         where: {
-          id: matchID,
+          id: matchId,
         },
         data: {
-          userID1: data.userID1 ? data.userID1 : 0,
-          userID2: data.userID2 ? data.userID2 : 0,
+          userId1: data.userId1 ? data.userId1 : 0,
+          userId2: data.userId2 ? data.userId2 : 0,
         },
       }),
       this.prisma.matchUserRelation.createMany({
         data: compact([
-          data.userID1
+          data.userId1
             ? {
-                matchID: matchID,
-                userID: data.userID1,
+                matchId: matchId,
+                userId: data.userId1,
               }
             : undefined,
-          data.userID1
+          data.userId2
             ? {
-                matchID: matchID,
-                userID: data.userID1,
+                matchId: matchId,
+                userId: data.userId2,
               }
             : undefined,
         ]),
@@ -103,7 +103,7 @@ export class PongService {
   async updateMatchAsDone(match: OnlineMatch) {
     await this.prisma.match.update({
       where: {
-        id: match.matchID,
+        id: match.matchId,
       },
       data: {
         matchStatus: MatchStatus.DONE,
@@ -117,7 +117,7 @@ export class PongService {
   async updateMatchAsError(match: OnlineMatch) {
     await this.prisma.match.update({
       where: {
-        id: match.matchID,
+        id: match.matchId,
       },
       data: {
         matchStatus: MatchStatus.ERROR,
@@ -126,10 +126,10 @@ export class PongService {
     });
   }
 
-  async updateMatchStatus(matchID: string, status: MatchStatus) {
+  async updateMatchStatus(matchId: string, status: MatchStatus) {
     await this.prisma.match.update({
       where: {
-        id: matchID,
+        id: matchId,
       },
       data: {
         matchStatus: status,
@@ -161,12 +161,12 @@ export class PongService {
     return results;
   }
 
-  updateRankPoint(winnerID: number, loserID: number) {
+  updateRankPoint(winnerId: number, loserId: number) {
     const point = 10;
     this.prisma.$transaction(async (tx) => {
       await tx.userRankPoint.update({
         where: {
-          userId: winnerID,
+          userId: winnerId,
         },
         data: {
           rankPoint: {
@@ -176,7 +176,7 @@ export class PongService {
       });
       const currentLoserRankPoint = await tx.userRankPoint.findFirst({
         where: {
-          userId: loserID,
+          userId: loserId,
         },
       });
       if (
@@ -185,7 +185,7 @@ export class PongService {
       ) {
         await tx.userRankPoint.update({
           where: {
-            userId: loserID,
+            userId: loserId,
           },
           data: {
             rankPoint: 0,
@@ -194,7 +194,7 @@ export class PongService {
       } else {
         await tx.userRankPoint.update({
           where: {
-            userId: loserID,
+            userId: loserId,
           },
           data: {
             rankPoint: {
@@ -206,22 +206,21 @@ export class PongService {
     });
   }
 
-  async deleteMatchByMatchID(matchID: string) {
-    // TODO: transaction を設定してACIDを保つ
+  async deleteMatchByMatchId(matchId: string) {
     await this.prisma.$transaction([
       this.prisma.matchUserRelation.deleteMany({
         where: {
-          matchID: matchID,
+          matchId: matchId,
         },
       }),
       this.prisma.matchConfig.deleteMany({
         where: {
-          matchID: matchID,
+          matchId: matchId,
         },
       }),
-      this.prisma.match.delete({
+      this.prisma.match.deleteMany({
         where: {
-          id: matchID,
+          id: matchId,
         },
       }),
     ]);

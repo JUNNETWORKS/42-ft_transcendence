@@ -10,34 +10,34 @@ export class OngoingMatches {
   }
 
   appendMatch(match: OnlineMatch) {
-    this.matches.set(match.matchID, match);
-    return match.matchID;
+    this.matches.set(match.matchId, match);
+    return match.matchId;
   }
 
-  removeMatch(matchID: string): void {
-    this.matches.delete(matchID);
+  removeMatch(matchId: string): void {
+    this.matches.delete(matchId);
   }
 
-  moveBar(playerID: number, playerAction: PlayerInput) {
-    const match = this.findMatchByPlayer(playerID);
+  moveBar(playerId: number, playerAction: PlayerInput) {
+    const match = this.findMatchByPlayer(playerId);
     if (match) {
-      match.moveBar(playerID, playerAction);
+      match.moveBar(playerId, playerAction);
     }
   }
 
   // プレイヤーが退出
-  leave(playerID: number) {
-    for (const matchID in this.matches) {
-      const match = this.matches.get(matchID);
-      if (match?.playerIDs.includes(playerID)) {
-        match.leave(playerID);
+  leave(playerId: number) {
+    for (const matchId in this.matches) {
+      const match = this.matches.get(matchId);
+      if (match?.playerIds.includes(playerId)) {
+        match.leave(playerId);
       }
     }
   }
 
-  findMatchByPlayer(playerID: number) {
-    for (const [matchID, match] of this.matches) {
-      if (match.playerIDs.includes(playerID)) {
+  findMatchByPlayer(playerId: number) {
+    for (const [matchId, match] of this.matches) {
+      if (match.playerIds.includes(playerId)) {
         return match;
       }
     }

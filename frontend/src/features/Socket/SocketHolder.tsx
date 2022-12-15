@@ -327,10 +327,10 @@ export const SocketHolder = () => {
     listeners.push([
       'pong.match_making.done',
       (data) => {
-        const matchID = data.matchID;
-        console.log(`マッチメイキング完了! matchID: ${matchID}`);
+        const matchId = data.matchId;
+        console.log(`マッチメイキング完了! matchId: ${matchId}`);
         // 対戦ページに遷移する
-        navigate(`/pong/matches/${matchID}`);
+        navigate(`/pong/matches/${matchId}`);
       },
     ]);
 

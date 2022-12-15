@@ -37,31 +37,31 @@ export class WaitingQueue {
   }
 
   // ユーザーを待機キューに追加する
-  append(userID: number) {
-    this.users.add(userID);
+  append(userId: number) {
+    this.users.add(userId);
     usersJoin(
       this.wsServer,
-      userID,
+      userId,
       generateFullRoomName({ matchMakingId: this.matchType })
     );
     this.createMatches();
   }
 
   // ユーザーを待機キューから削除する
-  remove(userID: number) {
-    if (this.users.has(userID)) {
-      this.users.delete(userID);
+  remove(userId: number) {
+    if (this.users.has(userId)) {
+      this.users.delete(userId);
       usersLeave(
         this.wsServer,
-        userID,
+        userId,
         generateFullRoomName({ matchMakingId: this.matchType })
       );
     }
   }
 
   // ユーザーが待機キューに含まれているか
-  isUserExists(userID: number): boolean {
-    return this.users.has(userID);
+  isUserExists(userId: number): boolean {
+    return this.users.has(userId);
   }
 
   // Match作成を試みる
@@ -81,60 +81,60 @@ export class WaitingQueue {
       }
     }
     if (userPair.length) {
-      for (const userID of userPair) {
-        this.users.add(userID);
+      for (const userId of userPair) {
+        this.users.add(userId);
       }
     }
     await Promise.all(promises);
   }
 
-  private async createMatch(userID1: number, userID2: number) {
+  private async createMatch(userId1: number, userId2: number) {
     const match = OnlineMatch.create(
       this.wsServer,
-      userID1,
-      userID2,
+      userId1,
+      userId2,
       this.matchType,
-      (matchID: string) => this.ongoingMatches.removeMatch(matchID),
+      (matchId: string) => this.ongoingMatches.removeMatch(matchId),
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
     await this.pongService.createMatch({
-      id: match.matchID,
+      id: match.matchId,
       matchType: match.matchType,
       matchStatus: MatchStatus.PREPARING,
-      userID1: match.playerID1,
-      userID2: match.playerID2,
+      userId1: match.playerId1,
+      userId2: match.playerId2,
       userScore1: match.playerScore1,
       userScore2: match.playerScore2,
     });
-    const matchID = match.matchID;
+    const matchId = match.matchId;
     usersLeave(
       this.wsServer,
-      userID1,
+      userId1,
       generateFullRoomName({ matchMakingId: this.matchType })
     );
     usersLeave(
       this.wsServer,
-      userID2,
+      userId2,
       generateFullRoomName({ matchMakingId: this.matchType })
     );
     sendResultRoom(
       this.wsServer,
       'pong.match_making.done',
-      generateFullRoomName({ userId: userID1 }),
+      generateFullRoomName({ userId: userId1 }),
       {
-        matchID: matchID,
+        matchId: matchId,
       }
     );
     sendResultRoom(
       this.wsServer,
       'pong.match_making.done',
-      generateFullRoomName({ userId: userID2 }),
+      generateFullRoomName({ userId: userId2 }),
       {
-        matchID: matchID,
+        matchId: matchId,
       }
     );
     match.start();
-    await this.pongService.updateMatchStatus(matchID, MatchStatus.IN_PROGRESS);
+    await this.pongService.updateMatchStatus(matchId, MatchStatus.IN_PROGRESS);
   }
 }

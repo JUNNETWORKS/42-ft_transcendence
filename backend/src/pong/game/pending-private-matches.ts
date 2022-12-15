@@ -1,4 +1,4 @@
-import { MatchStatus } from '@prisma/client';
+import { MatchStatus, MatchType } from '@prisma/client';
 import { Server } from 'socket.io';
 
 import {
@@ -13,8 +13,8 @@ import { PostMatchStrategy } from './PostMatchStrategy';
 
 // 募集中のプライベートマッチの集合
 export class PendingPrivateMatches {
-  // pendingMatches[MatchID] = OnlineMatch;
-  private pendingMatches: Map<string, OnlineMatch>;
+  // pendingMatches[募集者UserId] = MatchId;
+  private pendingMatches: Map<number, string>;
 
   static readonly UNDEFINED_USER = -1;
 
@@ -23,56 +23,69 @@ export class PendingPrivateMatches {
     private ongoingMatches: OngoingMatches,
     private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
-  ) {}
+  ) {
+    this.pendingMatches = new Map<number, string>();
+  }
 
   createPrivateMatch(userId: number) {
-    const match = new OnlineMatch(
-      this.wsServer,
-      userId,
-      PendingPrivateMatches.UNDEFINED_USER,
-      'PRIVATE',
-      (matchID) => this.ongoingMatches.removeMatch(matchID),
-      this.postMatchStrategy
+    const matchId = OnlineMatch.generateId();
+    this.pongService.createMatch({
+      id: matchId,
+      matchType: MatchType.PRIVATE,
+      matchStatus: MatchStatus.PREPARING,
+      userId1: userId,
+      userId2: undefined,
+      userScore1: 0,
+      userScore2: 0,
+    });
+    this.pendingMatches.set(userId, matchId);
+    console.log(`createPrivateMatch: matchId(${matchId})`);
+    console.log(
+      `this.pendingMatches: ${JSON.stringify(
+        Object.fromEntries(this.pendingMatches)
+      )}`
     );
-    this.pongService.createMatch(match);
-    this.pendingMatches.set(match.matchID, match);
     sendResultRoom(
       this.wsServer,
       'pong.private_match.created',
       generateFullRoomName({ userId: userId }),
       {
-        matchID: match.matchID,
+        matchId: matchId,
       }
     );
   }
 
   // 募集中のマッチに2人目のプレイヤーとして参加する
   // この関数が呼ばれ､2人のプレイヤーが揃ったらMatchが開始する
-  joinPrivateMatch(matchId: string, userId: number) {
-    const match = this.getMatchByMatchId(matchId);
-    if (match) {
-      match.playerID2 = userId;
-      this.pongService.updateMatchStatus(
-        match.matchID,
-        MatchStatus.IN_PROGRESS
+  async joinPrivateMatch(matchId: string, userId: number) {
+    const matchOwnerId = this.getUserIdByMatchId(matchId);
+    console.log(`joinPrivateMatch: MatchId(${matchId}) by User(${userId})`);
+    if (!matchOwnerId) {
+      console.log(`joinPrivateMatch: match is not found.`);
+      console.log(
+        `this.pendingMatches: ${JSON.stringify(
+          Object.fromEntries(this.pendingMatches)
+        )}`
       );
-      sendResultRoom(
-        this.wsServer,
-        'pong.match_making.done',
-        generateFullRoomName({ userId: match.playerID1 }),
-        {
-          matchID: matchId,
-        }
-      );
-      sendResultRoom(
-        this.wsServer,
-        'pong.match_making.done',
-        generateFullRoomName({ userId: match.playerID2 }),
-        {
-          matchID: matchId,
-        }
-      );
+      return;
     }
+    this.removeMatchByMatchId(matchId);
+    await this.pongService.updateMatchPlayers(matchId, {
+      userId1: matchOwnerId,
+      userId2: userId,
+    });
+    const match = OnlineMatch.createWithId(
+      this.wsServer,
+      matchId,
+      matchOwnerId,
+      userId,
+      MatchType.PRIVATE,
+      (matchId: string) => this.ongoingMatches.removeMatch(matchId),
+      this.postMatchStrategy
+    );
+    this.ongoingMatches.appendMatch(match);
+    match.start();
+    this.pongService.updateMatchStatus(match.matchId, MatchStatus.IN_PROGRESS);
   }
 
   // 募集者が接続を切ったり､キャンセルボタンを押したりしたときの処理｡
@@ -80,31 +93,35 @@ export class PendingPrivateMatches {
   //
   // pendingMatchesからユーザーが募集者となっているMatchを削除する｡
   // DBからも対象のレコード削除｡
-  leavePrivateMatch(userId: number) {}
-
-  getMatchByMatchId(matchId: string) {
-    return this.pendingMatches.get(matchId);
+  leavePrivateMatch(userId: number) {
+    const matchId = this.pendingMatches.get(userId);
+    if (matchId) {
+      this.pongService.deleteMatchByMatchId(matchId);
+    }
+    this.removeMatchByUserId(userId);
   }
 
-  removeMatchByMatchId(matchId: string) {
-    this.pendingMatches.delete(matchId);
+  getMatchIdByUserId(userId: number) {
+    return this.pendingMatches.get(userId);
   }
 
-  getMatchByUserId(userId: number) {
-    for (const [_, match] of this.pendingMatches) {
-      if (match.playerIDs[0] === userId) {
-        return match;
+  removeMatchByUserId(userId: number) {
+    this.pendingMatches.delete(userId);
+  }
+
+  getUserIdByMatchId(matchId: string) {
+    for (const [userId, pendingMatchId] of this.pendingMatches) {
+      if (pendingMatchId === matchId) {
+        return userId;
       }
     }
     return undefined;
   }
 
-  removeMatchByUserId(userId: number) {
-    for (const [_, match] of this.pendingMatches) {
-      if (match.playerIDs[0] === userId) {
-        this.pendingMatches.delete(match.matchID);
-        break;
-      }
+  removeMatchByMatchId(matchId: string) {
+    const userId = this.getUserIdByMatchId(matchId);
+    if (userId) {
+      this.removeMatchByUserId(userId);
     }
   }
 }
