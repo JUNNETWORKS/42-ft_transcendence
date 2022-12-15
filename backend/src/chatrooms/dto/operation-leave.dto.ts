@@ -8,10 +8,4 @@ export class OperationLeaveDto {
   @IsInt()
   @ApiProperty()
   roomId!: number;
-
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsInt()
-  @ApiProperty()
-  callerId!: number;
 }

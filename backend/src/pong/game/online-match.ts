@@ -90,7 +90,7 @@ export class OnlineMatch {
   }
 
   start() {
-    this.gameStateSyncTimer = setInterval(() => {
+    this.gameStateSyncTimer = setInterval(async () => {
       this.match.update();
 
       if (this.wsServer) {
@@ -107,12 +107,18 @@ export class OnlineMatch {
             winner: this.match.players[Match.sideIndex[this.match.winner]],
             loser: this.match.players[Match.sideIndex[loserSide]],
           };
-          sendResultRoom(this.wsServer, 'pong.match.finish', this.roomName, {
-            game: this.match.getState(),
-            result,
-          });
+          await sendResultRoom(
+            this.wsServer,
+            'pong.match.finish',
+            this.roomName,
+            {
+              game: this.match.getState(),
+              result,
+            }
+          );
           this.close();
           this.removeFromOngoingMatches(this.Id);
+          this.wsServer.in(this.roomName).socketsLeave(this.roomName);
           this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
       }

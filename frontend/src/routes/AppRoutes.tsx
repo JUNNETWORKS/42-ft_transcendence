@@ -2,8 +2,11 @@ import { useAtom } from 'jotai';
 import { useRoutes } from 'react-router-dom';
 
 import { Chat } from '@/features/Chat/Chat';
+import { ChatRoomView } from '@/features/Chat/ChatRoomView';
+import { VisibleRoomList } from '@/features/Chat/VisibleRoomList';
 import { DevAuth } from '@/features/DevAuth/DevAuth';
 import { DmPage } from '@/features/DM/DmPage';
+import { DmRoomView } from '@/features/DM/DmRoomView';
 import { Index } from '@/features/Index/Index';
 import { PongMatchPage } from '@/features/Pong/components/MatchPage';
 import { PongTopPage } from '@/features/Pong/components/TopPage';
@@ -15,7 +18,7 @@ export const AppRoutes = () => {
   const [mySocket] = useAtom(chatSocketAtom);
   const authElement = <DevAuth />;
   const guardElement = !mySocket ? authElement : null;
-  const commonRoutes = [
+  const routeElements = useRoutes([
     { path: '/', element: guardElement || <Index /> },
     {
       path: '/pong',
@@ -25,14 +28,47 @@ export const AppRoutes = () => {
       path: '/pong/matches/:matchId',
       element: guardElement || <PongMatchPage mySocket={mySocket!} />,
     },
-    { path: '/auth', element: authElement },
-    { path: '/chat', element: guardElement || <Chat mySocket={mySocket!} /> },
-    { path: '/dm', element: guardElement || <DmPage mySocket={mySocket!} /> },
-    { path: '/user/:id', element: guardElement || <UserView /> },
-    { path: '/me/*', element: guardElement || <MyPageView /> },
-    { path: '/*', element: guardElement || <Index /> },
-  ];
-  const routeElements = useRoutes([...commonRoutes]);
+    {
+      path: '/auth',
+      element: authElement,
+    },
+    {
+      path: '/chat',
+      element: guardElement || <Chat mySocket={mySocket!} />,
+      children: [
+        {
+          path: '',
+          element: <VisibleRoomList />,
+        },
+        {
+          path: ':id',
+          element: <ChatRoomView />,
+        },
+      ],
+    },
+    {
+      path: '/dm',
+      element: guardElement || <DmPage mySocket={mySocket!} />,
+      children: [
+        {
+          path: ':id',
+          element: <DmRoomView />,
+        },
+      ],
+    },
+    {
+      path: '/user/:id',
+      element: guardElement || <UserView />,
+    },
+    {
+      path: '/me/*',
+      element: guardElement || <MyPageView />,
+    },
+    {
+      path: '/*',
+      element: guardElement || <Index />,
+    },
+  ]);
 
   return <>{routeElements}</>;
 };

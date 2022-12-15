@@ -12,6 +12,7 @@ import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { PongService } from 'src/pong/pong.service';
 import { pick } from 'src/utils';
 
 import { UserFindManyDto } from './dto/user-find-many.dto';
@@ -22,7 +23,10 @@ import { UsersService } from './users.service';
 @Controller('users')
 @ApiTags('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly pongService: PongService
+  ) {}
 
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
@@ -69,5 +73,15 @@ export class UsersController {
       return null;
     }
     return pick(u, 'id', 'displayName');
+  }
+
+  @Get(':id/pong/results')
+  getUserPongResults(@Param('id', ParseIntPipe) id: number) {
+    return this.pongService.fetchUserMatchResults(id);
+  }
+
+  @Get(':id/pong/stats')
+  getUserPongStats(@Param('id', ParseIntPipe) id: number) {
+    return this.pongService.fetchUserStats(id);
   }
 }

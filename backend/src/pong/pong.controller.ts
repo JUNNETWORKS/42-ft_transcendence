@@ -1,4 +1,4 @@
-import { Controller, Get, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
@@ -14,5 +14,14 @@ export class PongController {
   @Get('ranking')
   async getUserRanking() {
     return this.pongService.fetchUserRanking();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('matches/:matchId')
+  async spectateByMatchId(
+    @Request() req: any,
+    @Param('matchId') matchId: string
+  ) {
+    return this.pongService.spectateByMatchId(req.user.id, matchId);
   }
 }

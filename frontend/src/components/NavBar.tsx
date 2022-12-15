@@ -46,6 +46,8 @@ export const NavBar = () => {
         return 'PONG';
       case 'chat':
         return 'SOCIAL';
+      case 'dm':
+        return 'SOCIAL';
       case 'auth':
         return 'AUTH';
       case 'me':

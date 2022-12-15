@@ -2,16 +2,12 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNotEmpty, IsInt } from 'class-validator';
 
-export class OperationGetRoomMembersDto {
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsInt()
-  @ApiProperty()
-  roomId!: number;
+import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
 
+export class CreateSayDto extends OperationSayDto {
   @IsNotEmpty()
   @Type(() => Number)
   @IsInt()
   @ApiProperty()
-  take!: number;
+  userId!: number;
 }

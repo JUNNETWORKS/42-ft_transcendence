@@ -4,7 +4,7 @@ import { ChatRoom, ChatUserRelation } from '@prisma/client';
 
 import * as Utils from 'src/utils';
 
-import { OperationSayDto } from 'src/chatrooms/dto/operation-say.dto';
+import { CreateSayDto } from './dto/create-say.dto';
 import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dto';
 
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
@@ -17,10 +17,10 @@ export class ChatService {
     private readonly userService: UsersService
   ) {}
 
-  async postMessageBySay(data: OperationSayDto) {
+  async postMessageBySay(data: CreateSayDto) {
     return this.chatRoomService.postMessage({
       chatRoomId: data.roomId,
-      userId: data.callerId,
+      userId: data.userId,
       content: data.content,
     });
   }

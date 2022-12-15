@@ -13,10 +13,4 @@ export class OperationJoinDto {
   @IsString()
   @ApiProperty()
   roomPassword?: string;
-
-  @IsNotEmpty()
-  @Type(() => Number)
-  @IsInt()
-  @ApiProperty()
-  callerId!: number;
 }

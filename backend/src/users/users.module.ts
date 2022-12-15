@@ -4,6 +4,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatModule } from 'src/chat/chat.module';
 import { ChatroomsModule } from 'src/chatrooms/chatrooms.module';
+import { PongModule } from 'src/pong/pong.module';
 import { WsServerModule } from 'src/ws-server/ws-server.module';
 
 import { PrismaModule } from '../prisma/prisma.module';
@@ -17,6 +18,7 @@ import { UsersService } from './users.service';
   imports: [
     PrismaModule,
     ChatroomsModule,
+    forwardRef(() => PongModule),
     JwtModule,
     forwardRef(() => AuthModule),
     forwardRef(() => ChatModule),
