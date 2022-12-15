@@ -1,10 +1,11 @@
 import { useState } from 'react';
 
-import { FTH3 } from '@/components/FTBasicComponents';
+import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { UserAvatar } from '@/components/UserAvater';
 import { useBlocking } from '@/hooks/useBlockings';
 import { useFriends } from '@/hooks/useFriends';
+import { Icons } from '@/icons';
 import { useUserDataReadOnly } from '@/stores/store';
 import { User } from '@/typedef';
 
@@ -71,13 +72,22 @@ type CardProp = {
   onClose: () => void;
 };
 
-const UserListCard = ({ users, title }: CardProp) => {
+const UserListCard = ({ users, title, onClose }: CardProp) => {
   const [user, setUser] = useState<User | null>(null);
   const selectedUserId = user?.id;
-  return (
-    <div className="flex flex-col border-4 border-solid border-white">
-      <FTH3 className="text-xl">{title}</FTH3>
-      <div className="flex h-[20em] flex-row bg-black text-white">
+  const content = (() => {
+    if (users.length === 0) {
+      return (
+        <div className="flex w-full flex-col items-center gap-4 self-center justify-self-center">
+          <div>
+            <Icons.Unfortunately className="block text-5xl" />
+          </div>
+          <p className="text-xl">No User</p>
+        </div>
+      );
+    }
+    return (
+      <>
         <div className="shrink-0 grow-0 basis-[14em] overflow-hidden">
           <UserList
             users={users}
@@ -90,6 +100,19 @@ const UserListCard = ({ users, title }: CardProp) => {
             <UserCard id={user.id} fixedWidth={false} bordered={false} />
           )}
         </div>
+      </>
+    );
+  })();
+  return (
+    <div className="flex flex-col border-4 border-solid border-white">
+      <FTH3 className="flex flex-row items-center text-xl">
+        <FTButton className="shrink-0 grow-0 p-0" onClick={onClose}>
+          <Icons.Cancel className="block" />
+        </FTButton>
+        <div className="shrink-0 grow-0">{title}</div>
+      </FTH3>
+      <div className="flex h-[20em] flex-row bg-black text-white">
+        {content}
       </div>
     </div>
   );

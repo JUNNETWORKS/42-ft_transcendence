@@ -48,6 +48,7 @@ export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
   Cancel: Md.MdClose,
+  Unfortunately: Fa.FaRegMeh,
   Add: Md.MdAdd,
   Ok: Bs.BsCheck,
   Bang: Bs.BsExclamationLg,
