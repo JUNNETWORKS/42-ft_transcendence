@@ -1,4 +1,4 @@
-import { MatchType } from '@prisma/client';
+import { MatchStatus, MatchType } from '@prisma/client';
 import { Server } from 'socket.io';
 
 import {
@@ -89,7 +89,7 @@ export class WaitingQueue {
   }
 
   private async createMatch(userID1: number, userID2: number) {
-    const match = new OnlineMatch(
+    const match = OnlineMatch.create(
       this.wsServer,
       userID1,
       userID2,
@@ -98,7 +98,15 @@ export class WaitingQueue {
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
-    await this.pongService.createMatch(match);
+    await this.pongService.createMatch({
+      id: match.matchID,
+      matchType: match.matchType,
+      matchStatus: MatchStatus.PREPARING,
+      userID1: match.playerID1,
+      userID2: match.playerID2,
+      userScore1: match.playerScore1,
+      userScore2: match.playerScore2,
+    });
     const matchID = match.matchID;
     usersLeave(
       this.wsServer,
@@ -127,6 +135,6 @@ export class WaitingQueue {
       }
     );
     match.start();
-    await this.pongService.updateMatchStatus(matchID, 'IN_PROGRESS');
+    await this.pongService.updateMatchStatus(matchID, MatchStatus.IN_PROGRESS);
   }
 }
