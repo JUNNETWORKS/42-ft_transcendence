@@ -27,8 +27,9 @@ export class OnlineMatch {
 
   public readonly matchType: MatchType;
 
-  constructor(
+  private constructor(
     wsServer: Server,
+    matchID: string,
     userID1: number,
     userID2: number,
     matchType: MatchType,
@@ -37,12 +38,55 @@ export class OnlineMatch {
   ) {
     this.wsServer = wsServer;
     this.postMatchStrategy = postMatchStrategy;
-    this.ID = uuidv4();
+    this.ID = matchID;
     this.roomName = generateFullRoomName({ matchId: this.ID });
     this.matchType = matchType;
     this.match = new Match(userID1, userID2);
     this.joinAsSpectator(userID1);
     this.joinAsSpectator(userID2);
+  }
+
+  static generateID() {
+    return uuidv4();
+  }
+
+  static create(
+    wsServer: Server,
+    userID1: number,
+    userID2: number,
+    matchType: MatchType,
+    removeFromOngoingMatches: (matchID: string) => void,
+    postMatchStrategy: PostMatchStrategy
+  ) {
+    return new OnlineMatch(
+      wsServer,
+      uuidv4(),
+      userID1,
+      userID2,
+      matchType,
+      removeFromOngoingMatches,
+      postMatchStrategy
+    );
+  }
+
+  static createWithID(
+    wsServer: Server,
+    matchID: string,
+    userID1: number,
+    userID2: number,
+    matchType: MatchType,
+    removeFromOngoingMatches: (matchID: string) => void,
+    postMatchStrategy: PostMatchStrategy
+  ) {
+    return new OnlineMatch(
+      wsServer,
+      matchID,
+      userID1,
+      userID2,
+      matchType,
+      removeFromOngoingMatches,
+      postMatchStrategy
+    );
   }
 
   start() {
@@ -151,6 +195,14 @@ export class OnlineMatch {
 
   get playerScores() {
     return [this.match.players[0].score, this.match.players[1].score];
+  }
+
+  get playerScore1() {
+    return this.match.players[0].score;
+  }
+
+  get playerScore2() {
+    return this.match.players[1].score;
   }
 
   get winnerID() {
