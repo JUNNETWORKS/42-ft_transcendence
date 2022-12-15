@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { FillerBlock } from '@/components/FillerBlock';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { UserAvatar } from '@/components/UserAvater';
@@ -22,7 +23,7 @@ const ListItem = ({ user: u, selectedUserId, onSelect }: ListItemProp) => {
   const isSelected = user.id === selectedUserId;
   return (
     <div
-      className={`flex cursor-pointer flex-row items-center hover:bg-gray-500 ${
+      className={`flex cursor-pointer flex-row items-center hover:bg-gray-700 ${
         isSelected ? 'bg-teal-900' : ''
       }`}
       onClick={() => onSelect(user)}
@@ -75,36 +76,39 @@ type CardProp = {
 const UserListCard = ({ users, title, onClose }: CardProp) => {
   const [user, setUser] = useState<User | null>(null);
   const selectedUserId = user?.id;
+  const contentUnselected = (
+    <div className="flex h-full shrink grow flex-col justify-center">
+      <FillerBlock icon={Icons.NormalFace} message="click to select" />
+    </div>
+  );
   const content = (() => {
     if (users.length === 0) {
       return (
         <div className="flex w-full flex-col items-center gap-4 self-center justify-self-center">
-          <div>
-            <Icons.Unfortunately className="block text-5xl" />
-          </div>
-          <p className="text-xl">No User</p>
+          <FillerBlock icon={Icons.UnhappyFace} message="No User" />
         </div>
       );
     }
     return (
       <>
-        <div className="shrink-0 grow-0 basis-[14em] overflow-hidden">
+        <div className="shrink-0 grow-0 basis-[14em] overflow-hidden bg-gray-900">
           <UserList
             users={users}
             selectedUserId={selectedUserId}
             onSelect={(user) => setUser(user)}
           />
         </div>
-        <div className="relative shrink grow overflow-x-hidden overflow-y-scroll border-l-4 border-white">
-          {user && (
+        {(user && (
+          <div className="relative shrink grow overflow-x-hidden overflow-y-scroll border-l-8 border-white">
             <UserCard id={user.id} fixedWidth={false} bordered={false} />
-          )}
-        </div>
+          </div>
+        )) ||
+          contentUnselected}
       </>
     );
   })();
   return (
-    <div className="flex flex-col border-4 border-solid border-white">
+    <div className="flex flex-col border-8 border-solid border-white">
       <FTH3 className="flex flex-row items-center text-xl">
         <FTButton className="shrink-0 grow-0 p-0" onClick={onClose}>
           <Icons.Cancel className="block" />

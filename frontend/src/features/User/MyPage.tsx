@@ -4,8 +4,11 @@ import { toast } from 'react-toastify';
 
 import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
+import { NumberButton } from '@/components/NumberButton';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useBlocking } from '@/hooks/useBlockings';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useFriends } from '@/hooks/useFriends';
 import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { useLogout } from '@/stores/auth';
@@ -50,6 +53,8 @@ const MyPageContent = () => {
     'edit' | 'password' | 'friends' | 'blockings' | null
   >(null);
   const [user] = usePersonalData();
+  const [friends] = useFriends();
+  const [blockings] = useBlocking();
 
   if (!user) {
     return null;
@@ -92,7 +97,7 @@ const MyPageContent = () => {
 
       <div className="flex flex-1 items-center justify-center">
         <div className="flex gap-8">
-          <div className="flex flex-1 flex-col items-end  gap-32 ">
+          <div className="flex flex-1 flex-col items-end">
             <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
               <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
                 <p
@@ -118,28 +123,26 @@ const MyPageContent = () => {
                 <ProfileBlock user={user} isYou={true} />
 
                 <div className="flex flex-row items-center justify-center gap-4 p-3">
-                  <Link
-                    to="/dm"
-                    className="min-w-[4em] border-2 p-2 text-center"
-                  >
-                    DM
-                  </Link>
-                  <FTButton
-                    onClick={() => {
-                      setIsOpen(true);
-                      setModalType('friends');
-                    }}
-                  >
-                    Friends
-                  </FTButton>
-                  <FTButton
-                    onClick={() => {
-                      setIsOpen(true);
-                      setModalType('blockings');
-                    }}
-                  >
-                    Blockings
-                  </FTButton>
+                  <div className="shrink-0 grow-0">
+                    <NumberButton
+                      title="Friends"
+                      num={friends.length}
+                      onClick={() => {
+                        setIsOpen(true);
+                        setModalType('friends');
+                      }}
+                    />
+                  </div>
+                  <div className="shrink-0 grow-0">
+                    <NumberButton
+                      title="Blockings"
+                      num={blockings.length}
+                      onClick={() => {
+                        setIsOpen(true);
+                        setModalType('blockings');
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <AuthBlock
