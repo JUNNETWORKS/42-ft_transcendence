@@ -84,6 +84,22 @@ export class PendingPrivateMatches {
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
+    sendResultRoom(
+      this.wsServer,
+      'pong.private_match.done',
+      generateFullRoomName({ userId: matchOwnerId }),
+      {
+        matchId: matchId,
+      }
+    );
+    sendResultRoom(
+      this.wsServer,
+      'pong.private_match.done',
+      generateFullRoomName({ userId: userId }),
+      {
+        matchId: matchId,
+      }
+    );
     match.start();
     this.pongService.updateMatchStatus(match.matchId, MatchStatus.IN_PROGRESS);
   }

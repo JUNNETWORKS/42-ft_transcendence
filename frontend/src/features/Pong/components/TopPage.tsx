@@ -31,6 +31,8 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
 
   // TODO: プライベートマッチデバッグ用。後で消す。
   mySocket.on('pong.private_match.created', (data: { matchId: string }) => {
+    // デバッグようにクリップボードにコピーする
+    navigator.clipboard.writeText(data.matchId);
     console.log(`created match: ${data.matchId}`);
   });
 

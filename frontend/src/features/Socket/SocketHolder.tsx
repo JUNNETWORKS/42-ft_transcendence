@@ -335,6 +335,16 @@ export const SocketHolder = () => {
     ]);
 
     listeners.push([
+      'pong.private_match.done',
+      (data) => {
+        const matchId = data.matchId;
+        console.log(`プライベートマッチ成立! matchId: ${matchId}`);
+        // 対戦ページに遷移する
+        navigate(`/pong/matches/${matchId}`);
+      },
+    ]);
+
+    listeners.push([
       'pong.private_match.created',
       (data) => {
         console.log('[receipt]', data);
