@@ -13,7 +13,11 @@ export const UserCardHolder = () => {
   // モーダルの初回表示時に出現アニメーションが効かない
   return (
     <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-      {user && <UserCard id={user.id}>{children}</UserCard>}
+      {user && (
+        <UserCard id={user.id} onClose={() => setIsOpen(false)}>
+          {children}
+        </UserCard>
+      )}
     </Modal>
   );
 };
