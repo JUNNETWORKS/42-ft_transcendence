@@ -69,7 +69,7 @@ export class PendingPrivateMatches {
       );
       return;
     }
-    this.removeMatchByMatchId(matchId);
+    this.drawOutMatchByMatchId(matchId);
     await this.pongService.updateMatchPlayers(matchId, {
       userId1: matchOwnerId,
       userId2: userId,
@@ -114,14 +114,14 @@ export class PendingPrivateMatches {
     if (matchId) {
       this.pongService.deleteMatchByMatchId(matchId);
     }
-    this.removeMatchByUserId(userId);
+    this.drawOutMatchByUserId(userId);
   }
 
   getMatchIdByUserId(userId: number) {
     return this.pendingMatches.get(userId);
   }
 
-  removeMatchByUserId(userId: number) {
+  drawOutMatchByUserId(userId: number) {
     this.pendingMatches.delete(userId);
   }
 
@@ -134,10 +134,10 @@ export class PendingPrivateMatches {
     return undefined;
   }
 
-  removeMatchByMatchId(matchId: string) {
+  drawOutMatchByMatchId(matchId: string) {
     const userId = this.getUserIdByMatchId(matchId);
     if (userId) {
-      this.removeMatchByUserId(userId);
+      this.drawOutMatchByUserId(userId);
     }
   }
 }
