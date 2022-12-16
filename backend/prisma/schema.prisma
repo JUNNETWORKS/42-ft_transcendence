@@ -149,9 +149,9 @@ model Match {
   id                String              @id // UUIDv4; 外部から与える
   matchType         MatchType
   matchStatus       MatchStatus
-  userID1           Int // User.id
+  userId1           Int // User.id
   userScore1        Int                 @default(0) // 点が入るとリアルタイムに更新する。初期スコアは0
-  userID2           Int // User.id
+  userId2           Int // User.id
   userScore2        Int                 @default(0)
   startAt           DateTime? // プライベートマッチは開始しない可能性があるからNullableにする
   endAt             DateTime? // 試合終了日時
@@ -168,19 +168,26 @@ enum MatchType {
 // マッチ設定
 model MatchConfig {
   id       Int    @id @default(autoincrement())
-  result   Match  @relation(fields: [matchID], references: [id])
-  matchID  String @unique
+  result   Match  @relation(fields: [matchId], references: [id])
+  matchId  String @unique
   maxScore Int // 何点取ったら勝利か
   speed    Float // 球の速度
 }
 
+enum UserSlotNumber {
+  SLOT1
+  SLOT2
+}
+
 // マッチとユーザーの関連テーブル
 model MatchUserRelation {
-  id      Int    @id @default(autoincrement())
-  user    User   @relation(fields: [userID], references: [id])
-  userID  Int
-  match   Match  @relation(fields: [matchID], references: [id])
-  matchID String
+  id       Int            @id @default(autoincrement())
+  user     User           @relation(fields: [userId], references: [id])
+  userId   Int
+  match    Match          @relation(fields: [matchId], references: [id])
+  matchId  String
+  userSlot UserSlotNumber // 1 or 2
 
-  @@unique([userID, matchID])
+  @@unique([userId, matchId])
+  @@unique([matchId, userSlot])
 }
