@@ -53,6 +53,7 @@ export const Icons = {
   Add: Md.MdAdd,
   Ok: Bs.BsCheck,
   Bang: Bs.BsExclamationLg,
+  Persons: Fa.FaUsers,
 
   User,
   Chat,

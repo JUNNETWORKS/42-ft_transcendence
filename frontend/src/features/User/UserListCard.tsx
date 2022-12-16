@@ -78,7 +78,7 @@ const UserListCard = ({ users, title, onClose }: CardProp) => {
   const selectedUserId = user?.id;
   const contentUnselected = (
     <div className="flex h-full shrink grow flex-col justify-center">
-      <FillerBlock icon={Icons.NormalFace} message="click to select" />
+      <FillerBlock icon={Icons.Persons} message="Click to Select" />
     </div>
   );
   const content = (() => {
@@ -108,7 +108,7 @@ const UserListCard = ({ users, title, onClose }: CardProp) => {
     );
   })();
   return (
-    <div className="flex flex-col border-8 border-solid border-white">
+    <div className="flex flex-col border-8 border-solid border-white bg-white">
       <FTH3 className="flex flex-row items-center text-xl">
         <FTButton className="shrink-0 grow-0 p-0" onClick={onClose}>
           <Icons.Cancel className="block" />
