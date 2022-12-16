@@ -174,13 +174,20 @@ model MatchConfig {
   speed    Float // 球の速度
 }
 
+enum UserSlotNumber {
+  SLOT1
+  SLOT2
+}
+
 // マッチとユーザーの関連テーブル
 model MatchUserRelation {
-  id      Int    @id @default(autoincrement())
-  user    User   @relation(fields: [userId], references: [id])
-  userId  Int
-  match   Match  @relation(fields: [matchId], references: [id])
-  matchId String
+  id       Int            @id @default(autoincrement())
+  user     User           @relation(fields: [userId], references: [id])
+  userId   Int
+  match    Match          @relation(fields: [matchId], references: [id])
+  matchId  String
+  userSlot UserSlotNumber // 1 or 2
 
   @@unique([userId, matchId])
+  @@unique([matchId, userSlot])
 }

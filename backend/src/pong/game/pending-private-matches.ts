@@ -70,10 +70,7 @@ export class PendingPrivateMatches {
       return;
     }
     this.drawOutMatchByMatchId(matchId);
-    await this.pongService.updateMatchPlayers(matchId, {
-      userId1: matchOwnerId,
-      userId2: userId,
-    });
+    await this.pongService.setApplicantPlayer(matchId, userId);
     const match = OnlineMatch.createWithId(
       this.wsServer,
       matchId,

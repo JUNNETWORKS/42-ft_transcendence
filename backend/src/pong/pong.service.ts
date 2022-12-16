@@ -1,5 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { MatchStatus, MatchType } from '@prisma/client';
+import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
 
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
@@ -156,11 +156,13 @@ export class PongService {
             match.userId1
               ? {
                   userId: match.userId1,
+                  userSlot: UserSlotNumber.SLOT1,
                 }
               : undefined,
             match.userId2
               ? {
                   userId: match.userId2,
+                  userSlot: UserSlotNumber.SLOT2,
                 }
               : undefined,
           ]),
@@ -169,43 +171,23 @@ export class PongService {
     });
   }
 
-  async updateMatchPlayers(
-    matchId: string,
-    data: {
-      userId1?: number;
-      userId2?: number;
-    }
-  ) {
+  // プライベートマッチの参加者側(userId2)をセットする
+  async setApplicantPlayer(matchId: string, userId2: number) {
     await this.prisma.$transaction([
-      this.prisma.matchUserRelation.deleteMany({
-        where: {
-          matchId: matchId,
-        },
-      }),
-      this.prisma.match.updateMany({
+      this.prisma.match.update({
         where: {
           id: matchId,
         },
         data: {
-          userId1: data.userId1 ? data.userId1 : 0,
-          userId2: data.userId2 ? data.userId2 : 0,
+          userId2: userId2,
         },
       }),
-      this.prisma.matchUserRelation.createMany({
-        data: compact([
-          data.userId1
-            ? {
-                matchId: matchId,
-                userId: data.userId1,
-              }
-            : undefined,
-          data.userId2
-            ? {
-                matchId: matchId,
-                userId: data.userId2,
-              }
-            : undefined,
-        ]),
+      this.prisma.matchUserRelation.create({
+        data: {
+          matchId: matchId,
+          userId: userId2,
+          userSlot: UserSlotNumber.SLOT2,
+        },
       }),
     ]);
   }

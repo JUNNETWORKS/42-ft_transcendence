@@ -1,4 +1,4 @@
-import { PrismaClient, RoomType, User } from '@prisma/client';
+import { PrismaClient, RoomType, User, UserSlotNumber } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
@@ -237,9 +237,11 @@ async function main() {
         create: [
           {
             userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
             userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -267,9 +269,11 @@ async function main() {
         create: [
           {
             userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
             userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -296,9 +300,11 @@ async function main() {
         create: [
           {
             userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
             userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -326,9 +332,11 @@ async function main() {
         create: [
           {
             userId: 4,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
             userId: 3,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -356,9 +364,11 @@ async function main() {
         create: [
           {
             userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
             userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
