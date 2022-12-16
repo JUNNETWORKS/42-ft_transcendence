@@ -1,7 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { Oval } from 'react-loader-spinner';
-import { toast } from 'react-toastify';
 
 import {
   FTH1,
@@ -16,6 +15,7 @@ import { OtpInput } from '@/features/DevAuth/components/OtpInput';
 import { useAPI } from '@/hooks';
 import { authAtom } from '@/stores/auth';
 
+import { popAuthError, popAuthInfo } from '../Toaster/toast';
 import { urlLoginFt } from './auth';
 import { passwordErrors, selfErrors } from './auth.validator';
 import { useOtp } from './hooks/useOtp';
@@ -153,14 +153,20 @@ const PasswordAuthForm = (props: {
 }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const errors = passwordErrors(email, password);
+  const validationErrors = passwordErrors(email, password);
+  const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
   const [state, submit] = useAPI('POST', '/auth/login', {
     payload: () => ({ email, password }),
     onFetched(json) {
       const { access_token: token, user, required2fa } = json as any;
+      setNetErrors({});
       props.onSucceeded(token, user, required2fa);
     },
     onFailed(error) {
+      if (error instanceof APIError) {
+        popAuthError(error.messageForUser);
+        setNetErrors({ api: error.messageForUser });
+      }
       props.onFailed();
     },
   });
@@ -175,7 +181,7 @@ const PasswordAuthForm = (props: {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <div>{errors.email || '　'}</div>
+        <div>{validationErrors.email || netErrors.email || '　'}</div>
       </div>
       <div>
         <FTTextField
@@ -186,11 +192,11 @@ const PasswordAuthForm = (props: {
           type="password"
           onChange={(e) => setPassword(e.target.value)}
         />
-        <div>{errors.password || '　'}</div>
+        <div>{validationErrors.password || netErrors.password || '　'}</div>
       </div>
       <div>
         <FTButton
-          disabled={errors.some || state === 'Fetching'}
+          disabled={validationErrors.some || state === 'Fetching'}
           onClick={submit}
         >
           Login
@@ -266,7 +272,7 @@ export const DevAuthenticatedCard = (props: { onLogout?: () => void }) => {
           <FTButton
             onClick={() => {
               if (props.onLogout) props.onLogout();
-              toast('ログアウトしました');
+              popAuthInfo('ログアウトしました');
             }}
           >
             Logout
