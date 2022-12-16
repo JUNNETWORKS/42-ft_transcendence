@@ -97,9 +97,12 @@ export class PongService {
     ).length;
     const loseMatchCount = matchCount - winMatchCount;
 
-    const winRate = Math.floor(
-      ((winMatchCount / matchCount) * 100 * Math.pow(10, 2)) / Math.pow(10, 2)
-    );
+    const winRate = matchCount
+      ? Math.floor(
+          ((winMatchCount / matchCount) * 100 * Math.pow(10, 2)) /
+            Math.pow(10, 2)
+        )
+      : null;
 
     const userRankPoint = await this.prisma.userRankPoint
       .findUnique({
