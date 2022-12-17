@@ -9,6 +9,7 @@ import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 import { Icons } from '@/icons';
+import { authAtom } from '@/stores/auth';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { dataAtom, structureAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
@@ -17,6 +18,7 @@ import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
 import { MatchHistory } from './components/MatchHistory';
+import { ProfileBlock } from './components/ProfileBlock';
 
 type ActualViewProps = {
   user: TD.User;
@@ -45,6 +47,7 @@ const ActualView = ({ user }: ActualViewProps) => {
         {isBlocking && <Icons.User.Block className="h-6 w-6 shrink-0 grow-0" />}
       </FTH1>
       <div className="flex flex-col gap-2">
+        <ProfileBlock user={user} isYou={false} />
         <FTH4>DM</FTH4>
         <div className="px-2 py-4">
           <DmCard user={user} />
@@ -69,9 +72,9 @@ const Presentator = (props: {
 }) => {
   const userId = props.userId;
   const { addOne } = useUpdateUser();
-  const personalData = useUserDataReadOnly(userId);
+  const user = useUserDataReadOnly(userId);
   const callAPI = useAPICallerWithCredential();
-  if (!personalData) {
+  if (!user) {
     throw (async () => {
       try {
         const result = await callAPI('GET', `/users/${userId}`);
@@ -85,7 +88,7 @@ const Presentator = (props: {
       }
     })();
   }
-  return <ActualView user={personalData} />;
+  return <ActualView user={user} />;
 };
 
 export const UserView = () => {

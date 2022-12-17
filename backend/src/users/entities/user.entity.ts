@@ -27,6 +27,12 @@ export class UserEntity implements User {
   invalidateTokenIssuedBefore!: Date | null;
 
   @ApiProperty()
+  pulseTime!: Date | null;
+
+  @ApiProperty()
+  ongoingMatchId!: string | null;
+
+  @ApiProperty()
   lockUntil!: Date | null;
 }
 

@@ -70,7 +70,12 @@ export const SocketHolder = () => {
       'ft_heartbeat',
       (data: TD.HeartbeatResult) => {
         console.log('catch heartbeat', data);
-        userUpdator.updateOne(data.userId, { time: data.time });
+        userUpdator.updateOne(data.userId, {
+          ...Utils.datifyObject(
+            Utils.pick(data, 'pulseTime', 'ongoingMatchId'),
+            'pulseTime'
+          ),
+        });
       },
     ]);
 

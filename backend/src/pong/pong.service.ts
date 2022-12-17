@@ -1,6 +1,7 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
 
+import { UsersService } from 'src/users/users.service';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -21,7 +22,8 @@ type CreateMatchDTO = {
 export class PongService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly wsServer: WsServerGateway
+    private readonly wsServer: WsServerGateway,
+    private readonly usersService: UsersService
   ) {}
 
   async fetchUserMatchResults(userId: number) {
@@ -132,7 +134,7 @@ export class PongService {
   }
 
   async createMatch(match: CreateMatchDTO) {
-    await this.prisma.match.create({
+    const result = await this.prisma.match.create({
       data: {
         id: match.id,
         matchType: match.matchType,
@@ -169,6 +171,10 @@ export class PongService {
         },
       },
     });
+    this.markGaming(
+      [result.userId1, result.userId2].filter((id) => !!id),
+      result.id
+    );
   }
 
   // プライベートマッチの参加者側(userId2)をセットする
@@ -193,7 +199,7 @@ export class PongService {
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
-    await this.prisma.match.update({
+    const result = await this.prisma.match.update({
       where: {
         id: match.matchId,
       },
@@ -204,10 +210,11 @@ export class PongService {
         endAt: new Date(),
       },
     });
+    this.unmarkGaming([result.userId1, result.userId2]);
   }
 
   async updateMatchAsError(match: OnlineMatch) {
-    await this.prisma.match.update({
+    const result = await this.prisma.match.update({
       where: {
         id: match.matchId,
       },
@@ -216,6 +223,7 @@ export class PongService {
         endAt: new Date(),
       },
     });
+    this.unmarkGaming([result.userId1, result.userId2]);
   }
 
   async updateMatchStatus(matchId: string, status: MatchStatus) {
@@ -330,5 +338,25 @@ export class PongService {
       throw new HttpException('match is not in-progress', 400);
     await this.wsServer.usersJoin(userId, { matchId });
     return { status: 'success' };
+  }
+
+  async markGaming(usersIds: number[], matchId: string) {
+    usersIds.map((userId) => {
+      return this.usersService
+        .update(userId, {
+          ongoingMatchId: matchId,
+        })
+        .then((u) => this.wsServer.pulse(u.user));
+    });
+  }
+
+  async unmarkGaming(usersIds: number[]) {
+    usersIds.map((userId) => {
+      return this.usersService
+        .update(userId, {
+          ongoingMatchId: null,
+        })
+        .then((u) => this.wsServer.pulse(u.user));
+    });
   }
 }
