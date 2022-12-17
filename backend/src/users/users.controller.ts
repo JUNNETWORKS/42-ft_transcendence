@@ -79,4 +79,9 @@ export class UsersController {
   getUserPongResults(@Param('id', ParseIntPipe) id: number) {
     return this.pongService.fetchUserMatchResults(id);
   }
+
+  @Get(':id/pong/stats')
+  getUserPongStats(@Param('id', ParseIntPipe) id: number) {
+    return this.pongService.fetchUserStats(id);
+  }
 }

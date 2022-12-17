@@ -159,3 +159,7 @@ export function hash(secret: string, target: string, iteration = 1) {
   }
   return s;
 }
+
+export function compact<T>(arr: T[]) {
+  return arr.filter((a) => !!a) as Exclude<T, null | undefined>[];
+}
