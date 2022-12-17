@@ -51,7 +51,9 @@ export function datifyObject<T extends object, U extends keyof T>(
   ...props: Array<Many<U>>
 ): T {
   props.forEach((key) => {
-    (obj as any)[key] = datify((obj as any)[key]);
+    if ((obj as any)[key]) {
+      (obj as any)[key] = datify((obj as any)[key]);
+    }
   });
   return obj;
 }
@@ -59,6 +61,9 @@ export function datifyObject<T extends object, U extends keyof T>(
 export function datify(data: any) {
   if (isNull(data)) {
     return undefined;
+  }
+  if (typeof data === 'string') {
+    return new Date(data);
   }
   if (data instanceof Date) {
     return data;

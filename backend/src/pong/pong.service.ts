@@ -1,22 +1,35 @@
 import { HttpException, Injectable } from '@nestjs/common';
-import { MatchStatus } from '@prisma/client';
+import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
 
+import { UsersService } from 'src/users/users.service';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
+import { compact } from '../utils';
 import { OnlineMatch } from './game/online-match';
+
+type CreateMatchDTO = {
+  id: string;
+  matchType: MatchType;
+  matchStatus: MatchStatus;
+  userId1?: number;
+  userId2?: number;
+  userScore1: number;
+  userScore2: number;
+};
 
 @Injectable()
 export class PongService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly wsServer: WsServerGateway
+    private readonly wsServer: WsServerGateway,
+    private readonly usersService: UsersService
   ) {}
 
-  async fetchUserMatchResults(userID: number) {
+  async fetchUserMatchResults(userId: number) {
     const results = await this.prisma.matchUserRelation.findMany({
       where: {
-        userID: userID,
+        userId: userId,
         match: {
           matchStatus: 'DONE',
         },
@@ -42,8 +55,8 @@ export class PongService {
 
     const idSet = new Set<number>();
     results.forEach((item) => {
-      idSet.add(item.match.userID1);
-      idSet.add(item.match.userID2);
+      idSet.add(item.match.userId1);
+      idSet.add(item.match.userId2);
     });
 
     const userResults = await this.prisma.user.findMany({
@@ -52,11 +65,11 @@ export class PongService {
       },
     });
 
-    const targetUser = userResults.find((item) => item.id === userID);
+    const targetUser = userResults.find((item) => item.id === userId);
 
     const matchWithOpponent = results.map(({ match }) => {
       const opponentUserId =
-        match.userID1 === userID ? match.userID2 : match.userID1;
+        match.userId1 === userId ? match.userId2 : match.userId1;
       const opponentUser = userResults.find(
         (item) => item.id === opponentUserId
       );
@@ -69,10 +82,10 @@ export class PongService {
     };
   }
 
-  async fetchUserStats(userID: number) {
+  async fetchUserStats(userId: number) {
     const results = await this.prisma.matchUserRelation.findMany({
       where: {
-        userID: userID,
+        userId: userId,
         match: {
           matchStatus: 'DONE',
         },
@@ -89,9 +102,9 @@ export class PongService {
 
     const matchCount = results.length;
     const winMatchCount = results.filter(
-      ({ match: { userID1, userID2, userScore1, userScore2 } }) => {
-        if (userScore1 > userScore2 && userID1 === userID) return true;
-        if (userScore2 > userScore1 && userID2 === userID) return true;
+      ({ match: { userId1, userId2, userScore1, userScore2 } }) => {
+        if (userScore1 > userScore2 && userId1 === userId) return true;
+        if (userScore2 > userScore1 && userId2 === userId) return true;
         return false;
       }
     ).length;
@@ -103,7 +116,7 @@ export class PongService {
 
     const userRankPoint = await this.prisma.userRankPoint
       .findUnique({
-        where: { id: userID },
+        where: { id: userId },
       })
       .then((res) => (res ? res.rankPoint : 0));
 
@@ -120,16 +133,16 @@ export class PongService {
     };
   }
 
-  async createMatch(match: OnlineMatch) {
-    await this.prisma.match.create({
+  async createMatch(match: CreateMatchDTO) {
+    const result = await this.prisma.match.create({
       data: {
-        id: match.matchID,
+        id: match.id,
         matchType: match.matchType,
         matchStatus: MatchStatus.PREPARING,
-        userID1: match.playerIDs[0],
-        userScore1: match.playerScores[0],
-        userID2: match.playerIDs[1],
-        userScore2: match.playerScores[1],
+        userId1: match.userId1 ? match.userId1 : 0,
+        userScore1: match.userScore1,
+        userId2: match.userId2 ? match.userId2 : 0,
+        userScore2: match.userScore1,
         startAt: new Date(),
 
         // TODO: Configを実装したらベタ書きを辞める
@@ -141,23 +154,54 @@ export class PongService {
           },
         },
         matchUserRelation: {
-          create: [
-            {
-              userID: match.playerIDs[0],
-            },
-            {
-              userID: match.playerIDs[1],
-            },
-          ],
+          create: compact([
+            match.userId1
+              ? {
+                  userId: match.userId1,
+                  userSlot: UserSlotNumber.SLOT1,
+                }
+              : undefined,
+            match.userId2
+              ? {
+                  userId: match.userId2,
+                  userSlot: UserSlotNumber.SLOT2,
+                }
+              : undefined,
+          ]),
         },
       },
     });
+    this.markGaming(
+      [result.userId1, result.userId2].filter((id) => !!id),
+      result.id
+    );
+  }
+
+  // プライベートマッチの参加者側(userId2)をセットする
+  async setApplicantPlayer(matchId: string, userId2: number) {
+    await this.prisma.$transaction([
+      this.prisma.match.update({
+        where: {
+          id: matchId,
+        },
+        data: {
+          userId2: userId2,
+        },
+      }),
+      this.prisma.matchUserRelation.create({
+        data: {
+          matchId: matchId,
+          userId: userId2,
+          userSlot: UserSlotNumber.SLOT2,
+        },
+      }),
+    ]);
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
-    await this.prisma.match.update({
+    const result = await this.prisma.match.update({
       where: {
-        id: match.matchID,
+        id: match.matchId,
       },
       data: {
         matchStatus: MatchStatus.DONE,
@@ -166,24 +210,26 @@ export class PongService {
         endAt: new Date(),
       },
     });
+    this.unmarkGaming([result.userId1, result.userId2]);
   }
 
   async updateMatchAsError(match: OnlineMatch) {
-    await this.prisma.match.update({
+    const result = await this.prisma.match.update({
       where: {
-        id: match.matchID,
+        id: match.matchId,
       },
       data: {
         matchStatus: MatchStatus.ERROR,
         endAt: new Date(),
       },
     });
+    this.unmarkGaming([result.userId1, result.userId2]);
   }
 
-  async updateMatchStatus(matchID: string, status: MatchStatus) {
+  async updateMatchStatus(matchId: string, status: MatchStatus) {
     await this.prisma.match.update({
       where: {
-        id: matchID,
+        id: matchId,
       },
       data: {
         matchStatus: status,
@@ -215,12 +261,12 @@ export class PongService {
     return results;
   }
 
-  updateRankPoint(winnerID: number, loserID: number) {
+  updateRankPoint(winnerId: number, loserId: number) {
     const point = 10;
     this.prisma.$transaction(async (tx) => {
       await tx.userRankPoint.update({
         where: {
-          userId: winnerID,
+          userId: winnerId,
         },
         data: {
           rankPoint: {
@@ -230,7 +276,7 @@ export class PongService {
       });
       const currentLoserRankPoint = await tx.userRankPoint.findFirst({
         where: {
-          userId: loserID,
+          userId: loserId,
         },
       });
       if (
@@ -239,7 +285,7 @@ export class PongService {
       ) {
         await tx.userRankPoint.update({
           where: {
-            userId: loserID,
+            userId: loserId,
           },
           data: {
             rankPoint: 0,
@@ -248,7 +294,7 @@ export class PongService {
       } else {
         await tx.userRankPoint.update({
           where: {
-            userId: loserID,
+            userId: loserId,
           },
           data: {
             rankPoint: {
@@ -260,7 +306,27 @@ export class PongService {
     });
   }
 
-  async spectateByMatchID(userId: number, matchId: string) {
+  async deleteMatchByMatchId(matchId: string) {
+    await this.prisma.$transaction([
+      this.prisma.matchUserRelation.deleteMany({
+        where: {
+          matchId: matchId,
+        },
+      }),
+      this.prisma.matchConfig.deleteMany({
+        where: {
+          matchId: matchId,
+        },
+      }),
+      this.prisma.match.deleteMany({
+        where: {
+          id: matchId,
+        },
+      }),
+    ]);
+  }
+
+  async spectateByMatchId(userId: number, matchId: string) {
     console.log(userId, matchId);
     const match = await this.prisma.match.findUnique({
       where: {
@@ -272,5 +338,25 @@ export class PongService {
       throw new HttpException('match is not in-progress', 400);
     await this.wsServer.usersJoin(userId, { matchId });
     return { status: 'success' };
+  }
+
+  async markGaming(usersIds: number[], matchId: string) {
+    usersIds.map((userId) => {
+      return this.usersService
+        .update(userId, {
+          ongoingMatchId: matchId,
+        })
+        .then((u) => this.wsServer.pulse(u.user));
+    });
+  }
+
+  async unmarkGaming(usersIds: number[]) {
+    usersIds.map((userId) => {
+      return this.usersService
+        .update(userId, {
+          ongoingMatchId: null,
+        })
+        .then((u) => this.wsServer.pulse(u.user));
+    });
   }
 }
