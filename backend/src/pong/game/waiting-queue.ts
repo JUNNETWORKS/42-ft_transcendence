@@ -69,22 +69,22 @@ export class WaitingQueue {
     if (this.users.size < 2) {
       return;
     }
-    let userPair = new Array<number>();
-    const promises = new Array<Promise<void>>();
-    const users = [...this.users];
-    this.users.clear();
-    for (const user of users) {
-      userPair.push(user);
-      if (userPair.length === 2) {
-        promises.push(this.createMatch(userPair[0], userPair[1]));
-        userPair = [];
-      }
-    }
-    if (userPair.length) {
-      for (const userId of userPair) {
-        this.users.add(userId);
-      }
-    }
+
+    //待ちユーザーを2要素ずつの配列にする。2要素以下は追加は含めない-> [1, 2, 3, 4, 5] => [[1, 2], [3, 4]]
+    const waitingUserPairs = [...this.users].reduce(
+      (acc: number[][], _, index, array) =>
+        (index + 1) % 2
+          ? acc
+          : [...acc, [...array.slice(index - 1, index + 1)]],
+      []
+    );
+
+    //ペアになったユーザーを削除
+    waitingUserPairs.flat().forEach((item) => this.users.delete(item));
+
+    const promises = waitingUserPairs.map((item) => {
+      return this.createMatch(item[0], item[1]);
+    });
     await Promise.all(promises);
   }
 
