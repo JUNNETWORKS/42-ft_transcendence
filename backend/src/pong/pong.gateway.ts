@@ -30,26 +30,17 @@ import { PongService } from './pong.service';
 @WebSocketGateway({ cors: true, namespace: '/chat' })
 @UseGuards(WsAuthGuard)
 export class PongGateway {
-  private ongoingMatches = new OngoingMatches();
   private waitingQueues = new WaitingQueues();
-  private pendingPrivateMatches: PendingPrivateMatches;
   private readonly logger = new Logger('Match WS');
 
   constructor(
     private readonly authService: AuthService,
     private readonly pongService: PongService,
     private readonly wsServer: WsServerGateway,
-    private readonly postMatchStrategy: PostMatchStrategy
+    private readonly postMatchStrategy: PostMatchStrategy,
+    private readonly ongoingMatches: OngoingMatches,
+    private readonly pendingPrivateMatches: PendingPrivateMatches
   ) {}
-
-  afterInit() {
-    this.pendingPrivateMatches = new PendingPrivateMatches(
-      this.wsServer,
-      this.ongoingMatches,
-      this.pongService,
-      this.postMatchStrategy
-    );
-  }
 
   onApplicationBootstrap() {
     // 常設のWaitingQueueを作成

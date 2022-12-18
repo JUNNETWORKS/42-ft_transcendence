@@ -1,3 +1,4 @@
+import { Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType } from '@prisma/client';
 
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
@@ -8,6 +9,7 @@ import { OnlineMatch } from './online-match';
 import { PostMatchStrategy } from './PostMatchStrategy';
 
 // 募集中のプライベートマッチの集合
+@Injectable()
 export class PendingPrivateMatches {
   // pendingMatches[募集者UserId] = MatchId;
   private pendingMatches: Map<number, string>;

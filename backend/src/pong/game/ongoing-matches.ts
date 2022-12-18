@@ -1,7 +1,10 @@
+import { Injectable } from '@nestjs/common';
+
 import { OnlineMatch } from './online-match';
 import { PlayerInput } from './types/game-state';
 
 // 全ての進行中のマッチ管理するクラス
+@Injectable()
 export class OngoingMatches {
   private matches: Map<string, OnlineMatch>;
 
