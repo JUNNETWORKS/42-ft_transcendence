@@ -67,6 +67,8 @@ export class PendingPrivateMatches {
     }
     this.drawOutMatchByMatchId(matchId);
     await this.pongService.setApplicantPlayer(matchId, userId);
+
+    const config = await this.pongService.fetchMatchConfig(matchId);
     const match = OnlineMatch.create({
       wsServer: this.wsServer,
       matchId: matchId,
@@ -75,6 +77,7 @@ export class PendingPrivateMatches {
       matchType: MatchType.PRIVATE,
       removeFn: (matchId: string) => this.ongoingMatches.removeMatch(matchId),
       postMatchStrategy: this.postMatchStrategy,
+      config,
     });
     this.ongoingMatches.appendMatch(match);
     sendResultRoom(

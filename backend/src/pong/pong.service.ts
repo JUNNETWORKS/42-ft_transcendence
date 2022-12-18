@@ -364,4 +364,12 @@ export class PongService {
         .then((u) => this.wsServer.pulse(u.user));
     });
   }
+
+  async fetchMatchConfig(matchId: string) {
+    const res = await this.prisma.matchConfig.findUnique({
+      where: { matchId: matchId },
+    });
+
+    return res ?? undefined;
+  }
 }
