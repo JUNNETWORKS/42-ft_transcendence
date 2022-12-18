@@ -165,6 +165,9 @@ const MyPageContent = () => {
               </FTH1>
 
               <div className="flex flex-col">
+                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+                  Stats
+                </FTH3>
                 <UserStats id={user.id} />
               </div>
 
