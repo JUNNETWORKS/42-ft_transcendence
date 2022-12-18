@@ -50,7 +50,7 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
           className="block p-2 underline"
           target="_blank"
           rel="noopener noreferrer"
-          href={urlGA.play}
+          href={urlGA.appstore}
         >
           <InlineIcon i={<Icons.IOS />} />
           iOS

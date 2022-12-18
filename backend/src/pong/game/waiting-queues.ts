@@ -33,9 +33,9 @@ export class WaitingQueues {
   }
 
   // プレイヤーが含まれている待機キューを1つ返す
-  getQueueByPlayerID(userID: number): WaitingQueue | undefined {
+  getQueueByPlayerId(userId: number): WaitingQueue | undefined {
     for (const queue of this.queues.values()) {
-      if (queue.isUserExists(userID)) {
+      if (queue.isUserExists(userId)) {
         return queue;
       }
     }

@@ -1,3 +1,3 @@
 export type MatchMatchMakingDoneDTO = {
-  matchID: string; // マッチのID
+  matchId: string; // マッチのID
 };

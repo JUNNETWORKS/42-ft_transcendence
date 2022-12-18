@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   generateFullRoomName,
   sendResultRoom,
+  usersJoin,
   usersLeave,
 } from 'src/utils/socket/SocketRoom';
 
@@ -15,10 +16,10 @@ import { MatchResult, PlayerInput } from './types/game-state';
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
 // - マッチのWSルームを作成
-// - setInterval() で作成されるTimerIDの保持
+// - setInterval() で作成されるTimerIdの保持
 export class OnlineMatch {
-  // マッチID
-  private readonly ID: string;
+  // マッチId
+  private readonly Id: string;
   private readonly roomName: string;
   private readonly match: Match;
   private readonly wsServer: Server;
@@ -26,20 +27,66 @@ export class OnlineMatch {
 
   public readonly matchType: MatchType;
 
-  constructor(
+  private constructor(
     wsServer: Server,
-    userID1: number,
-    userID2: number,
+    matchId: string,
+    userId1: number,
+    userId2: number,
     matchType: MatchType,
-    private readonly removeFromOngoingMatches: (matchID: string) => void,
+    private readonly removeFromOngoingMatches: (matchId: string) => void,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {
     this.wsServer = wsServer;
     this.postMatchStrategy = postMatchStrategy;
-    this.ID = uuidv4();
-    this.roomName = generateFullRoomName({ matchId: this.ID });
+    this.Id = matchId;
+    this.roomName = generateFullRoomName({ matchId: this.Id });
     this.matchType = matchType;
-    this.match = new Match(userID1, userID2);
+    this.match = new Match(userId1, userId2);
+    this.joinAsSpectator(userId1);
+    this.joinAsSpectator(userId2);
+  }
+
+  static generateId() {
+    return uuidv4();
+  }
+
+  static create(
+    wsServer: Server,
+    userId1: number,
+    userId2: number,
+    matchType: MatchType,
+    removeFromOngoingMatches: (matchId: string) => void,
+    postMatchStrategy: PostMatchStrategy
+  ) {
+    return new OnlineMatch(
+      wsServer,
+      uuidv4(),
+      userId1,
+      userId2,
+      matchType,
+      removeFromOngoingMatches,
+      postMatchStrategy
+    );
+  }
+
+  static createWithId(
+    wsServer: Server,
+    matchId: string,
+    userId1: number,
+    userId2: number,
+    matchType: MatchType,
+    removeFromOngoingMatches: (matchId: string) => void,
+    postMatchStrategy: PostMatchStrategy
+  ) {
+    return new OnlineMatch(
+      wsServer,
+      matchId,
+      userId1,
+      userId2,
+      matchType,
+      removeFromOngoingMatches,
+      postMatchStrategy
+    );
   }
 
   start() {
@@ -70,25 +117,31 @@ export class OnlineMatch {
             }
           );
           this.close();
+          this.removeFromOngoingMatches(this.Id);
           this.wsServer.in(this.roomName).socketsLeave(this.roomName);
-          this.removeFromOngoingMatches(this.ID);
           this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
       }
     }, 16.66); // 60fps
   }
 
+  // マッチのWSルームに観戦者として参加｡
+  // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
+  joinAsSpectator(userId: number) {
+    usersJoin(this.wsServer, userId, this.roomName);
+  }
+
   // ユーザーが退出した際の処理
-  leave(userID: number) {
-    if (userID in this.match.players) {
+  leave(userId: number) {
+    if (userId in this.match.players) {
       // TODO: ユーザーがプレイヤーだった場合ゲームを終了させる
     }
-    usersLeave(this.wsServer, userID, this.roomName);
+    usersLeave(this.wsServer, userId, this.roomName);
   }
 
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
-  moveBar(playerID: number, playerAction: PlayerInput) {
-    this.match.moveBar(playerID, playerAction);
+  moveBar(playerId: number, playerAction: PlayerInput) {
+    this.match.moveBar(playerId, playerAction);
   }
 
   // ゲームを終了
@@ -130,26 +183,50 @@ export class OnlineMatch {
     }
   }
 
-  get matchID() {
-    return this.ID;
+  get matchId() {
+    return this.Id;
   }
 
-  get playerIDs() {
+  get playerIds() {
     return [this.match.players[0].id, this.match.players[1].id];
+  }
+
+  get playerId1() {
+    return this.match.players[0].id;
+  }
+
+  set playerId1(userId: number) {
+    this.match.players[0].id = userId;
+  }
+
+  get playerId2() {
+    return this.match.players[1].id;
+  }
+
+  set playerId2(userId: number) {
+    this.match.players[1].id = userId;
   }
 
   get playerScores() {
     return [this.match.players[0].score, this.match.players[1].score];
   }
 
-  get winnerID() {
+  get playerScore1() {
+    return this.match.players[0].score;
+  }
+
+  get playerScore2() {
+    return this.match.players[1].score;
+  }
+
+  get winnerId() {
     if (this.match.winner === 'none') {
       return undefined;
     }
     return this.match.players[Match.sideIndex[this.match.winner]].id;
   }
 
-  get loserID() {
+  get loserId() {
     if (this.match.winner === 'none') {
       return undefined;
     }

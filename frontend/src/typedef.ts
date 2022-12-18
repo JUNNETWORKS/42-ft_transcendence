@@ -5,7 +5,8 @@ import * as Utils from '@/utils';
 export type User = {
   id: number;
   displayName: string;
-  time?: Date;
+  pulseTime?: Date;
+  ongoingMatchId?: string;
   isEnabledAvatar: boolean;
 
   avatar?: boolean;
@@ -101,7 +102,8 @@ export type ConnectionResult = {
 
 export type HeartbeatResult = {
   userId: number;
-  time: Date;
+  pulseTime?: Date;
+  ongoingMatchId?: string;
 };
 
 export type OfflineResult = {
