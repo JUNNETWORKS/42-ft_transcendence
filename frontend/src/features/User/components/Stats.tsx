@@ -6,6 +6,7 @@ import { FTH3 } from '@/components/FTBasicComponents';
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
+import { isfinite } from '@/utils';
 
 import { Stats } from '../types/MatchResult';
 
@@ -39,7 +40,9 @@ const RenderStats = ({
   return (
     <>
       <div className="mx-2">{`GameRecord: ${stats.winMatchCount} win - ${stats.loseMatchCount} lose`}</div>
-      <div className="mx-2">{`WinRate: ${stats.winRate}%`}</div>
+      <div className="mx-2">{`WinRate: ${
+        isfinite(stats.winRate) ? stats.winRate : '--'
+      }%`}</div>
       <div className="mx-2">{`RankPlace: ${ordinal(stats.rankPlace)}`}</div>
     </>
   );
