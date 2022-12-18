@@ -176,6 +176,8 @@ export class PongService {
       [result.userId1, result.userId2].filter((id) => !!id),
       result.id
     );
+
+    return result;
   }
 
   // プライベートマッチの参加者側(userId2)をセットする

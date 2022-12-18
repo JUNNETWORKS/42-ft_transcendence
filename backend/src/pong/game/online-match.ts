@@ -1,6 +1,5 @@
 import { MatchType } from '@prisma/client';
 import { Server } from 'socket.io';
-import { v4 as uuidv4 } from 'uuid';
 
 import {
   generateFullRoomName,
@@ -20,7 +19,7 @@ type FactoryProps = {
   matchType: MatchType;
   removeFn: (matchId: string) => void;
   postMatchStrategy: PostMatchStrategy;
-  matchId?: string;
+  matchId: string;
 };
 
 // このクラスは以下に対して責任を持つ
@@ -56,10 +55,6 @@ export class OnlineMatch {
     this.joinAsSpectator(userId2);
   }
 
-  static generateId() {
-    return uuidv4();
-  }
-
   static create({
     wsServer,
     userId1,
@@ -67,7 +62,7 @@ export class OnlineMatch {
     matchType,
     removeFn,
     postMatchStrategy,
-    matchId = uuidv4(),
+    matchId,
   }: FactoryProps) {
     return new OnlineMatch(
       wsServer,
