@@ -27,7 +27,7 @@ export class Match {
   static readonly barRightX = Match.fieldWidth * 0.9;
   static readonly barDy = 10;
   //rule
-  static readonly maxScore = 15;
+  static readonly defaultConfig = { maxScore: 15, speed: 100 };
   static readonly kickoffMaxAngle = 60; // in degree
 
   static readonly sideIndex = {
@@ -38,8 +38,16 @@ export class Match {
   ball: Ball;
   players: [Player, Player];
   winner: PongWinner;
+  maxScore: number;
+  speed: number;
 
-  constructor(playerId1: number, playerId2: number) {
+  constructor(
+    playerId1: number,
+    playerId2: number,
+    config: { maxScore: number; speed: number } = Match.defaultConfig
+  ) {
+    this.maxScore = config.maxScore;
+    this.speed = config.speed;
     this.winner = 'none';
     this.ball = this.regenerateBall();
     this.players = [
@@ -125,7 +133,7 @@ export class Match {
   updateScore = (side: PlayerSide) => {
     const index = Match.sideIndex[side];
     this.players[index].score++;
-    if (this.players[index].score >= Match.maxScore) {
+    if (this.players[index].score >= this.maxScore) {
       this.winner = side;
     }
   };
