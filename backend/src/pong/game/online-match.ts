@@ -13,6 +13,16 @@ import { Match } from './match';
 import { PostMatchStrategy } from './PostMatchStrategy';
 import { MatchResult, PlayerInput } from './types/game-state';
 
+type FactoryProps = {
+  wsServer: Server;
+  userId1: number;
+  userId2: number;
+  matchType: MatchType;
+  removeFn: (matchId: string) => void;
+  postMatchStrategy: PostMatchStrategy;
+  matchId?: string;
+};
+
 // このクラスは以下に対して責任を持つ
 // - マッチの保持
 // - マッチのWSルームを作成
@@ -50,41 +60,22 @@ export class OnlineMatch {
     return uuidv4();
   }
 
-  static create(
-    wsServer: Server,
-    userId1: number,
-    userId2: number,
-    matchType: MatchType,
-    removeFromOngoingMatches: (matchId: string) => void,
-    postMatchStrategy: PostMatchStrategy
-  ) {
-    return new OnlineMatch(
-      wsServer,
-      uuidv4(),
-      userId1,
-      userId2,
-      matchType,
-      removeFromOngoingMatches,
-      postMatchStrategy
-    );
-  }
-
-  static createWithId(
-    wsServer: Server,
-    matchId: string,
-    userId1: number,
-    userId2: number,
-    matchType: MatchType,
-    removeFromOngoingMatches: (matchId: string) => void,
-    postMatchStrategy: PostMatchStrategy
-  ) {
+  static create({
+    wsServer,
+    userId1,
+    userId2,
+    matchType,
+    removeFn,
+    postMatchStrategy,
+    matchId = uuidv4(),
+  }: FactoryProps) {
     return new OnlineMatch(
       wsServer,
       matchId,
       userId1,
       userId2,
       matchType,
-      removeFromOngoingMatches,
+      removeFn,
       postMatchStrategy
     );
   }
