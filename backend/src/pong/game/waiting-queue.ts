@@ -99,13 +99,10 @@ export class WaitingQueue {
     });
     this.ongoingMatches.appendMatch(match);
     await this.pongService.createMatch({
-      id: match.matchId,
       matchType: match.matchType,
       matchStatus: MatchStatus.PREPARING,
       userId1: match.playerId1,
       userId2: match.playerId2,
-      userScore1: match.playerScore1,
-      userScore2: match.playerScore2,
     });
     const matchId = match.matchId;
     usersLeave(

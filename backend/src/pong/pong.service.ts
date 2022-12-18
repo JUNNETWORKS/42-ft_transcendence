@@ -1,5 +1,6 @@
 import { HttpException, Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
+import { v4 as uuidv4 } from 'uuid';
 
 import { UsersService } from 'src/users/users.service';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
@@ -9,13 +10,10 @@ import { compact } from '../utils';
 import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
-  id: string;
   matchType: MatchType;
   matchStatus: MatchStatus;
-  userId1?: number;
+  userId1: number;
   userId2?: number;
-  userScore1: number;
-  userScore2: number;
 };
 
 @Injectable()
@@ -139,13 +137,13 @@ export class PongService {
   async createMatch(match: CreateMatchDTO) {
     const result = await this.prisma.match.create({
       data: {
-        id: match.id,
+        id: uuidv4(),
         matchType: match.matchType,
         matchStatus: MatchStatus.PREPARING,
-        userId1: match.userId1 ? match.userId1 : 0,
-        userScore1: match.userScore1,
-        userId2: match.userId2 ? match.userId2 : 0,
-        userScore2: match.userScore1,
+        userId1: match.userId1,
+        userScore1: 0,
+        userId2: match.userId2 ?? 0,
+        userScore2: 0,
         startAt: new Date(),
 
         // TODO: Configを実装したらベタ書きを辞める

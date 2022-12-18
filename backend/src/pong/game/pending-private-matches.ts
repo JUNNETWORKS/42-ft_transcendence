@@ -30,13 +30,10 @@ export class PendingPrivateMatches {
   createPrivateMatch(userId: number) {
     const matchId = OnlineMatch.generateId();
     this.pongService.createMatch({
-      id: matchId,
       matchType: MatchType.PRIVATE,
       matchStatus: MatchStatus.PREPARING,
       userId1: userId,
       userId2: undefined,
-      userScore1: 0,
-      userScore2: 0,
     });
     this.pendingMatches.set(userId, matchId);
     console.log(`createPrivateMatch: matchId(${matchId})`);
