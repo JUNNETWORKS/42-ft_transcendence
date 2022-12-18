@@ -18,6 +18,7 @@ import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
+import { UserStats } from './components/Stats';
 import { FriendList, BlockingList } from './UserListCard';
 
 const LogoutBlock = () => {
@@ -164,12 +165,7 @@ const MyPageContent = () => {
               </FTH1>
 
               <div className="flex flex-col">
-                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-                  Stats
-                </FTH3>
-                <div className="mx-2">累計戦績: 100勝 - 100敗北</div>
-                <div className="mx-2">勝率: 50%</div>
-                <div className="mx-2">現在のRANK: 後で実装する</div>
+                <UserStats id={user.id} />
               </div>
 
               <div className="flex flex-col">

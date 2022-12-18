@@ -19,6 +19,13 @@ import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dt
   namespace: 'chat',
 })
 export class WsServerGateway {
+  private heartbeatDict: {
+    [userId: number]: {
+      n: number;
+      time: number;
+    };
+  } = {};
+
   @WebSocketServer()
   server: Server;
 
@@ -164,5 +171,65 @@ export class WsServerGateway {
         roomId,
       }
     );
+  }
+
+  incrementHeartbeat(user: User) {
+    const r = this.heartbeatDict[user.id] || {
+      n: 0,
+      time: null,
+    };
+    r.n += 1;
+    r.time = Date.now();
+    this.heartbeatDict[user.id] = r;
+    this.sendHeartbeat(user);
+  }
+
+  pulse(user: User) {
+    const r = this.heartbeatDict[user.id];
+    if (!r) {
+      return;
+    }
+    r.time = Date.now();
+    this.heartbeatDict[user.id] = r;
+    try {
+      this.sendHeartbeat(user);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  decrementHeartbeat(userId: number) {
+    const r = this.heartbeatDict[userId];
+    if (!r) {
+      return;
+    }
+    r.n -= 1;
+    if (r.n) {
+      this.heartbeatDict[userId] = r;
+    } else {
+      delete this.heartbeatDict[userId];
+      this.sendOffine(userId);
+    }
+  }
+
+  private sendHeartbeat(user: User) {
+    const r = this.heartbeatDict[user.id];
+    if (!r) {
+      return;
+    }
+    const { ongoingMatchId } = user;
+    this.sendResults(
+      'ft_heartbeat',
+      {
+        userId: user.id,
+        pulseTime: r.time,
+        ongoingMatchId: ongoingMatchId || null,
+      },
+      { global: 'global' }
+    );
+  }
+
+  private sendOffine(userId: number) {
+    this.sendResults('ft_offline', { userId }, { global: 'global' });
   }
 }

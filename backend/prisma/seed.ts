@@ -1,4 +1,4 @@
-import { PrismaClient, RoomType, User } from '@prisma/client';
+import { PrismaClient, RoomType, User, UserSlotNumber } from '@prisma/client';
 
 import { UsersService } from '../src/users/users.service';
 const prisma = new PrismaClient();
@@ -221,9 +221,9 @@ async function main() {
       id: 'hogeta',
       matchType: 'CASUAL',
       matchStatus: 'DONE',
-      userID1: 3,
+      userId1: 3,
       userScore1: 15,
-      userID2: 2,
+      userId2: 2,
       userScore2: 4,
       startAt: new Date(),
       endAt: new Date(),
@@ -236,10 +236,12 @@ async function main() {
       matchUserRelation: {
         create: [
           {
-            userID: 3,
+            userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
-            userID: 2,
+            userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -251,9 +253,9 @@ async function main() {
       id: 'fugata',
       matchType: 'CASUAL',
       matchStatus: 'DONE',
-      userID1: 3,
+      userId1: 3,
       userScore1: 4,
-      userID2: 2,
+      userId2: 2,
       userScore2: 15,
       startAt: new Date(),
       endAt: new Date(),
@@ -266,10 +268,12 @@ async function main() {
       matchUserRelation: {
         create: [
           {
-            userID: 3,
+            userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
-            userID: 2,
+            userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -280,9 +284,9 @@ async function main() {
       id: 'piyota',
       matchType: 'CASUAL',
       matchStatus: 'DONE',
-      userID1: 3,
+      userId1: 3,
       userScore1: 15,
-      userID2: 2,
+      userId2: 2,
       userScore2: 8,
       startAt: new Date(),
       endAt: new Date(),
@@ -295,10 +299,12 @@ async function main() {
       matchUserRelation: {
         create: [
           {
-            userID: 3,
+            userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
-            userID: 2,
+            userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -310,9 +316,9 @@ async function main() {
       id: 'hogehogeta',
       matchType: 'RANK',
       matchStatus: 'DONE',
-      userID1: 4,
+      userId1: 4,
       userScore1: 15,
-      userID2: 3,
+      userId2: 3,
       userScore2: 4,
       startAt: new Date(),
       endAt: new Date(),
@@ -325,10 +331,12 @@ async function main() {
       matchUserRelation: {
         create: [
           {
-            userID: 4,
+            userId: 4,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
-            userID: 3,
+            userId: 3,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -340,9 +348,9 @@ async function main() {
       id: 'fugafugata',
       matchType: 'PRIVATE',
       matchStatus: 'DONE',
-      userID1: 3,
+      userId1: 3,
       userScore1: 12,
-      userID2: 2,
+      userId2: 2,
       userScore2: 15,
       startAt: new Date(),
       endAt: new Date(),
@@ -355,10 +363,12 @@ async function main() {
       matchUserRelation: {
         create: [
           {
-            userID: 3,
+            userId: 3,
+            userSlot: UserSlotNumber.SLOT1,
           },
           {
-            userID: 2,
+            userId: 2,
+            userSlot: UserSlotNumber.SLOT2,
           },
         ],
       },
@@ -367,9 +377,9 @@ async function main() {
   // data: {
   //   id: 'hogeta',
   //   matchType: 'CASUAL',
-  //   userID1: 3,
+  //   userId1: 3,
   //   userScore1: 15,
-  //   userID2: 2,
+  //   userId2: 2,
   //   userScore2: 4,
   //   endAt: new Date(),
   //   config: {
@@ -381,10 +391,10 @@ async function main() {
   //   matchUserRelation: {
   //     create: [
   //       {
-  //         userID: 3,
+  //         userId: 3,
   //       },
   //       {
-  //         userID: 2,
+  //         userId: 2,
   //       },
   //     ],
   //   },

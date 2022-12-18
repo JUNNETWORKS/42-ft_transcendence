@@ -17,3 +17,10 @@ export type MatchConfig = {
   maxScore: number;
   speed: number;
 };
+
+export type Stats = {
+  winMatchCount: number;
+  loseMatchCount: number;
+  winRate: number;
+  rankPlace: number;
+};

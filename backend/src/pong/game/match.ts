@@ -39,12 +39,12 @@ export class Match {
   players: [Player, Player];
   winner: PongWinner;
 
-  constructor(playerID1: number, playerID2: number) {
+  constructor(playerId1: number, playerId2: number) {
     this.winner = 'none';
     this.ball = this.regenerateBall();
     this.players = [
       {
-        id: playerID1,
+        id: playerId1,
         side: 'left',
         score: 0,
         bar: {
@@ -63,7 +63,7 @@ export class Match {
         },
       },
       {
-        id: playerID2,
+        id: playerId2,
         side: 'right',
         score: 0,
         bar: {
@@ -249,9 +249,9 @@ export class Match {
     this.ball.position.y += Match.ballDy * this.ball.velocity.y;
   };
 
-  // playerID のバーをdir方向に動かす
-  moveBar = (playerID: number, input: PlayerInput): void => {
-    const idx = this.getPlayerIdx(playerID);
+  // playerId のバーをdir方向に動かす
+  moveBar = (playerId: number, input: PlayerInput): void => {
+    const idx = this.getPlayerIdx(playerId);
     if (idx < 0) {
       return;
     }
@@ -344,9 +344,9 @@ export class Match {
     };
   };
 
-  private getPlayerIdx = (playerID: number): number => {
+  private getPlayerIdx = (playerId: number): number => {
     for (let i = 0; i < this.players.length; i++) {
-      if (this.players[i].id == playerID) {
+      if (this.players[i].id == playerId) {
         return i;
       }
     }
