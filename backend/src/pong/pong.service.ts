@@ -14,6 +14,8 @@ type CreateMatchDTO = {
   matchStatus: MatchStatus;
   userId1: number;
   userId2?: number;
+  speed?: number;
+  maxScore?: number;
 };
 
 @Injectable()
@@ -150,8 +152,8 @@ export class PongService {
         // TODO: Configを非Nullableにする
         config: {
           create: {
-            maxScore: 15,
-            speed: 10,
+            maxScore: match.maxScore ?? 15,
+            speed: match.speed ?? 100,
           },
         },
         matchUserRelation: {
