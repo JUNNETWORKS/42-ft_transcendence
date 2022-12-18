@@ -1,12 +1,6 @@
 import { MatchStatus, MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
 
-import {
-  generateFullRoomName,
-  sendResultRoom,
-  usersJoin,
-  usersLeave,
-} from 'src/utils/socket/SocketRoom';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongService } from '../pong.service';
 import { OngoingMatches } from './ongoing-matches';
@@ -19,14 +13,14 @@ export class WaitingQueue {
   // 待機キュー本体
   private users: Set<number>;
   // WSサーバー
-  private wsServer: Server;
+  private wsServer: WsServerGateway;
   // マッチを作成したらここに追加する
   private ongoingMatches: OngoingMatches;
 
   constructor(
     matchType: MatchType,
     ongoingMatches: OngoingMatches,
-    wsServer: Server,
+    wsServer: WsServerGateway,
     private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
   ) {
@@ -39,11 +33,7 @@ export class WaitingQueue {
   // ユーザーを待機キューに追加する
   append(userId: number) {
     this.users.add(userId);
-    usersJoin(
-      this.wsServer,
-      userId,
-      generateFullRoomName({ matchMakingId: this.matchType })
-    );
+    this.wsServer.usersJoin(userId, { matchMakingId: this.matchType });
     this.createMatches();
   }
 
@@ -51,11 +41,7 @@ export class WaitingQueue {
   remove(userId: number) {
     if (this.users.has(userId)) {
       this.users.delete(userId);
-      usersLeave(
-        this.wsServer,
-        userId,
-        generateFullRoomName({ matchMakingId: this.matchType })
-      );
+      this.wsServer.usersLeave(userId, { matchMakingId: this.matchType });
     }
   }
 
@@ -108,31 +94,18 @@ export class WaitingQueue {
       userScore2: match.playerScore2,
     });
     const matchId = match.matchId;
-    usersLeave(
-      this.wsServer,
-      userId1,
-      generateFullRoomName({ matchMakingId: this.matchType })
-    );
-    usersLeave(
-      this.wsServer,
-      userId2,
-      generateFullRoomName({ matchMakingId: this.matchType })
-    );
-    sendResultRoom(
-      this.wsServer,
+    // TODO: ここらへんawaitしなくて大丈夫？
+    this.wsServer.usersLeave(userId1, { matchMakingId: this.matchType });
+    this.wsServer.usersLeave(userId2, { matchMakingId: this.matchType });
+    this.wsServer.sendResults(
       'pong.match_making.done',
-      generateFullRoomName({ userId: userId1 }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId1 }
     );
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.match_making.done',
-      generateFullRoomName({ userId: userId2 }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId2 }
     );
     match.start();
     await this.pongService.updateMatchStatus(matchId, MatchStatus.IN_PROGRESS);

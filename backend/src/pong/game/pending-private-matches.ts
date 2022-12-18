@@ -1,10 +1,6 @@
 import { MatchStatus, MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
 
-import {
-  generateFullRoomName,
-  sendResultRoom,
-} from 'src/utils/socket/SocketRoom';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongService } from '../pong.service';
 import { OngoingMatches } from './ongoing-matches';
@@ -19,7 +15,7 @@ export class PendingPrivateMatches {
   static readonly UNDEFINED_USER = -1;
 
   constructor(
-    private wsServer: Server,
+    private wsServer: WsServerGateway,
     private ongoingMatches: OngoingMatches,
     private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
@@ -45,13 +41,10 @@ export class PendingPrivateMatches {
         Object.fromEntries(this.pendingMatches)
       )}`
     );
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.created',
-      generateFullRoomName({ userId: userId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId }
     );
   }
 
@@ -81,21 +74,15 @@ export class PendingPrivateMatches {
       this.postMatchStrategy
     );
     this.ongoingMatches.appendMatch(match);
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.done',
-      generateFullRoomName({ userId: matchOwnerId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: matchOwnerId }
     );
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.done',
-      generateFullRoomName({ userId: userId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId }
     );
     match.start();
     this.pongService.updateMatchStatus(match.matchId, MatchStatus.IN_PROGRESS);

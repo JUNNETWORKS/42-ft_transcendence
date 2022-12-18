@@ -5,12 +5,12 @@ import {
   SubscribeMessage,
   WebSocketGateway,
 } from '@nestjs/websockets';
-import { Socket, Server } from 'socket.io';
+import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { WsAuthGuard } from 'src/auth/ws-auth.guard';
-import { UsersService } from 'src/users/users.service';
 import { getUserFromClient } from 'src/utils/socket/ws-auth';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
@@ -30,23 +30,19 @@ import { PongService } from './pong.service';
 @WebSocketGateway({ cors: true, namespace: '/chat' })
 @UseGuards(WsAuthGuard)
 export class PongGateway {
-  private wsServer!: Server;
-  private ongoingMatches: OngoingMatches;
+  private ongoingMatches = new OngoingMatches();
+  private waitingQueues = new WaitingQueues();
   private pendingPrivateMatches: PendingPrivateMatches;
-  private waitingQueues: WaitingQueues;
   private readonly logger = new Logger('Match WS');
 
   constructor(
     private readonly authService: AuthService,
     private readonly pongService: PongService,
-    private readonly usersService: UsersService,
+    private readonly wsServer: WsServerGateway,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {}
 
-  afterInit(server: Server) {
-    this.wsServer = server;
-    this.ongoingMatches = new OngoingMatches();
-    this.waitingQueues = new WaitingQueues();
+  afterInit() {
     this.pendingPrivateMatches = new PendingPrivateMatches(
       this.wsServer,
       this.ongoingMatches,
