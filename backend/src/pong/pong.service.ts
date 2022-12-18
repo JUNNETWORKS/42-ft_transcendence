@@ -7,6 +7,7 @@ import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { compact } from '../utils';
+import { Match } from './game/match';
 import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
@@ -152,8 +153,8 @@ export class PongService {
         // TODO: Configを非Nullableにする
         config: {
           create: {
-            maxScore: match.maxScore ?? 15,
-            speed: match.speed ?? 100,
+            maxScore: match.maxScore ?? Match.defaultConfig.maxScore,
+            speed: match.speed ?? Match.defaultConfig.speed,
           },
         },
         matchUserRelation: {
