@@ -114,26 +114,30 @@ export class AuthService {
   }
 
   async trapAuth(client: Socket) {
-    if (client.handshake.auth) {
-      const { token } = client.handshake.auth;
-      // token による認証
-      if (token) {
-        const verified = this.jwtService.verify(token, {
-          secret: jwtConstants.secret,
-        });
-        // console.log(verified);
-        const decoded = this.jwtService.decode(token);
-        if (decoded && typeof decoded === 'object') {
-          const sub = decoded['sub'];
-          if (sub) {
-            const userId = parseInt(sub);
-            const user = await this.usersService.findOne(userId);
-            if (user) {
-              return user;
+    try {
+      if (client.handshake.auth) {
+        const { token } = client.handshake.auth;
+        // token による認証
+        if (token) {
+          const verified = this.jwtService.verify(token, {
+            secret: jwtConstants.secret,
+          });
+          // console.log(verified);
+          const decoded = this.jwtService.decode(token);
+          if (decoded && typeof decoded === 'object') {
+            const sub = decoded['sub'];
+            if (sub) {
+              const userId = parseInt(sub);
+              const user = await this.usersService.findOne(userId);
+              if (user) {
+                return user;
+              }
             }
           }
         }
       }
+    } catch (e) {
+      console.error(e);
     }
     return null;
   }

@@ -1,3 +1,4 @@
+import { APIError } from '@/errors/APIError';
 import { AppCredential } from '@/stores/auth';
 
 /**
@@ -61,6 +62,7 @@ export const verifyCredential = async (
           return;
         }
       }
+      throw new APIError(result.statusText, result);
     } catch (e) {
       console.error(e);
       onFailed(e);
