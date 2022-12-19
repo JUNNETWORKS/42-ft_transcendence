@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 
+import { popAuthError } from '../Toaster/toast';
 import { verifyCredential } from './auth';
 
 /**
@@ -33,10 +34,19 @@ export const AuthChecker = () => {
           },
           (e?: any) => {
             // 変換できなかった場合の処理
-            if (!e || !(e instanceof TypeError)) {
-              // ネットワークエラー**以外**の時だけクレデンシャルを削除する
-              setStoredCredential(null);
-              setPersonalData(null);
+            if (e) {
+              if (e instanceof TypeError) {
+                popAuthError(
+                  'ネットワークエラーのため認証状態が確認できませんでした'
+                );
+              } else {
+                // ネットワークエラー**以外**の時だけクレデンシャルを削除する
+                popAuthError(
+                  '認証情報が確認できなかったため、再度認証してください'
+                );
+                setStoredCredential(null);
+                setPersonalData(null);
+              }
             }
             setAuthState('NotAuthenticated');
           }
