@@ -58,6 +58,24 @@ export const FTTextField = (
   );
 };
 
+export const FTNumberField = (
+  props: React.DetailedHTMLProps<
+    React.InputHTMLAttributes<HTMLInputElement>,
+    HTMLInputElement
+  > & {
+    /**
+     * 日本語変換中でない時にenterキーが押された時のイベント
+     */
+    onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+    /**
+     * 日本語変換中でない時にキーが押された時のイベント
+     */
+    onActualKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  }
+) => {
+  return <FTTextField {...props} type="number" />;
+};
+
 export const FTButton = (
   props: React.DetailedHTMLProps<
     React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -71,6 +89,29 @@ export const FTButton = (
       className={
         (props.className || '') +
         ' border-[2px] border-solid border-white py-[2px] px-[6px]' +
+        (props.disabled ? ' ' : ' hover:bg-white hover:text-black') +
+        ' disabled:opacity-50'
+      }
+      style={{
+        ...(props.style || {}),
+      }}
+    />
+  );
+};
+
+export const FTBarButton = (
+  props: React.DetailedHTMLProps<
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
+    HTMLButtonElement
+  >
+) => {
+  props.disabled;
+  return (
+    <button
+      {...{ ...props }}
+      className={
+        (props.className || '') +
+        ' ml-2 border-[2px] border-solid rounded border-black py-[2px] px-[6px] text-sm' +
         (props.disabled ? ' ' : ' hover:bg-white hover:text-black') +
         ' disabled:opacity-50'
       }
@@ -164,6 +205,26 @@ export const FTH4 = (
       {...{ ...props }}
       style={{
         ...styleH4,
+        ...(props.style || {}),
+      }}
+    />
+  );
+};
+
+export const FTBlockedHeader = (
+  props: React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLHeadingElement>,
+    HTMLHeadingElement
+  >
+) => {
+  const className = `flex flex-row items-center ${props.className || ''}`;
+  const sprops = omit(props, 'className', 'style');
+  return (
+    <h3
+      {...{ ...sprops }}
+      className={className}
+      style={{
+        ...styleH3,
         ...(props.style || {}),
       }}
     />
