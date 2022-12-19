@@ -27,16 +27,12 @@ export class PendingPrivateMatches {
     this.pendingMatches = new Map<number, string>();
   }
 
-  createPrivateMatch(userId: number) {
-    const matchId = OnlineMatch.generateId();
-    this.pongService.createMatch({
-      id: matchId,
+  async createPrivateMatch(userId: number) {
+    const { id: matchId } = await this.pongService.createMatch({
       matchType: MatchType.PRIVATE,
       matchStatus: MatchStatus.PREPARING,
       userId1: userId,
       userId2: undefined,
-      userScore1: 0,
-      userScore2: 0,
     });
     this.pendingMatches.set(userId, matchId);
     console.log(`createPrivateMatch: matchId(${matchId})`);
@@ -71,15 +67,15 @@ export class PendingPrivateMatches {
     }
     this.drawOutMatchByMatchId(matchId);
     await this.pongService.setApplicantPlayer(matchId, userId);
-    const match = OnlineMatch.createWithId(
-      this.wsServer,
-      matchId,
-      matchOwnerId,
-      userId,
-      MatchType.PRIVATE,
-      (matchId: string) => this.ongoingMatches.removeMatch(matchId),
-      this.postMatchStrategy
-    );
+    const match = OnlineMatch.create({
+      wsServer: this.wsServer,
+      matchId: matchId,
+      userId1: matchOwnerId,
+      userId2: userId,
+      matchType: MatchType.PRIVATE,
+      removeFn: (matchId: string) => this.ongoingMatches.removeMatch(matchId),
+      postMatchStrategy: this.postMatchStrategy,
+    });
     this.ongoingMatches.appendMatch(match);
     sendResultRoom(
       this.wsServer,

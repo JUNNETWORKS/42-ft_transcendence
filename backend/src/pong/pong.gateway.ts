@@ -106,7 +106,7 @@ export class PongGateway {
       return;
     }
 
-    this.pendingPrivateMatches.createPrivateMatch(user.id);
+    await this.pendingPrivateMatches.createPrivateMatch(user.id);
   }
 
   // 募集中のプライベートに参加する
