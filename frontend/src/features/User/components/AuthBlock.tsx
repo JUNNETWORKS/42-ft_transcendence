@@ -183,32 +183,34 @@ export const AuthBlock = ({ user, onClickPassword }: Prop) => {
     <Enable2FAButton onSucceeded={setQrcode} />
   );
   return (
-    <div className="my-4 flex flex-col">
+    <div className="flex flex-col">
       <Modal closeModal={closeModal} isOpen={!!qrcode}>
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
       <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
         Authentication & Security
       </FTH3>
-      <div className="flex flex-row items-center justify-center gap-2 p-3">
-        <div className="basis-[12em] text-center">パスワード</div>
-        <div className="basis-[8em] text-center">
-          <FTButton onClick={onClickPassword}>変更する</FTButton>
+      <div className="flex flex-col items-stretch justify-center gap-4 p-4">
+        <div className="flex flex-row items-center justify-center gap-2">
+          <div className="basis-[12em] text-center">パスワード</div>
+          <div className="basis-[8em] text-center">
+            <FTButton onClick={onClickPassword}>変更する</FTButton>
+          </div>
         </div>
-      </div>
 
-      <div className="flex flex-row items-center justify-center gap-2 p-3">
-        <div className="basis-[12em] text-center">
-          二要素認証を
-          {user.isEnabled2FA ? (
-            <p className="inline-block w-[5em] font-bold text-green-400">
-              利用する
-            </p>
-          ) : (
-            <p className="inline-block w-[5em] text-gray-300">利用しない</p>
-          )}
+        <div className="flex flex-row items-center justify-center gap-2">
+          <div className="basis-[12em] text-center">
+            二要素認証を
+            {user.isEnabled2FA ? (
+              <p className="inline-block w-[5em] font-bold text-green-400">
+                利用する
+              </p>
+            ) : (
+              <p className="inline-block w-[5em] text-gray-300">利用しない</p>
+            )}
+          </div>
+          <div className="basis-[8em] text-center">{button}</div>
         </div>
-        <div className="basis-[8em] text-center">{button}</div>
       </div>
     </div>
   );

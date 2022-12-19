@@ -1,23 +1,25 @@
-import { useAtom } from 'jotai';
 import { useState } from 'react';
-import { Link, useNavigate, useRoutes } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 import { FTButton, FTH1, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
+import { NumberButton } from '@/components/NumberButton';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { useBlocking } from '@/hooks/useBlockings';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { useFriends } from '@/hooks/useFriends';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
-import { authAtom, useLogout } from '@/stores/auth';
+import { useLogout } from '@/stores/auth';
 
-import { BlockingView } from './BlockingView';
 import { AuthBlock } from './components/AuthBlock';
 import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { UserStats } from './components/Stats';
-import { FriendsView } from './FriendsView';
+import { FriendList, BlockingList } from './UserListCard';
 
 const LogoutBlock = () => {
   const [, confirmModal] = useConfirmModal();
@@ -48,20 +50,42 @@ const LogoutBlock = () => {
 
 const MyPageContent = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [modalType, setModalType] = useState<'edit' | 'password' | null>(null);
-  const [user] = useAtom(authAtom.personalData);
+  const [modalType, setModalType] = useState<
+    'edit' | 'password' | 'friends' | 'blockings' | null
+  >(null);
+  const [user] = usePersonalData();
+  const [friends] = useFriends();
+  const [blockings] = useBlocking();
+
   if (!user) {
     return null;
   }
   const modalContent = (() => {
     switch (modalType) {
       case 'edit':
-        return <EditProfileCard user={user} onClose={() => setIsOpen(false)} />;
+        return (
+          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+            <EditProfileCard user={user} onClose={() => setIsOpen(false)} />
+          </div>
+        );
       case 'password':
         return (
-          <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
+          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+            <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
+          </div>
         );
-
+      case 'friends':
+        return (
+          <div className="flex w-[600px] flex-col justify-around">
+            <FriendList onClose={() => setIsOpen(false)} />
+          </div>
+        );
+      case 'blockings':
+        return (
+          <div className="flex w-[600px] flex-col justify-around">
+            <BlockingList onClose={() => setIsOpen(false)} />
+          </div>
+        );
       default:
         return null;
     }
@@ -69,14 +93,12 @@ const MyPageContent = () => {
   return (
     <>
       <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
-        <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
-          {modalContent}
-        </div>
+        {modalContent}
       </Modal>
 
       <div className="flex flex-1 items-center justify-center">
         <div className="flex gap-8">
-          <div className="flex flex-1 flex-col items-end  gap-32 ">
+          <div className="flex flex-1 flex-col items-end">
             <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
               <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
                 <p
@@ -102,24 +124,26 @@ const MyPageContent = () => {
                 <ProfileBlock user={user} isYou={true} />
 
                 <div className="flex flex-row items-center justify-center gap-4 p-3">
-                  <Link
-                    to="/dm"
-                    className="min-w-[4em] border-2 p-2 text-center"
-                  >
-                    DM
-                  </Link>
-                  <Link
-                    to="/me/friends"
-                    className="min-w-[4em] border-2 p-2 text-center"
-                  >
-                    Friends
-                  </Link>
-                  <Link
-                    to="/me/blocking"
-                    className="min-w-[4em] border-2 p-2 text-center"
-                  >
-                    BlockingUsers
-                  </Link>
+                  <div className="shrink-0 grow-0">
+                    <NumberButton
+                      title="Friends"
+                      num={friends.length}
+                      onClick={() => {
+                        setIsOpen(true);
+                        setModalType('friends');
+                      }}
+                    />
+                  </div>
+                  <div className="shrink-0 grow-0">
+                    <NumberButton
+                      title="Blockings"
+                      num={blockings.length}
+                      onClick={() => {
+                        setIsOpen(true);
+                        setModalType('blockings');
+                      }}
+                    />
+                  </div>
                 </div>
 
                 <AuthBlock
@@ -159,11 +183,5 @@ const MyPageContent = () => {
 };
 
 export const MyPageView = () => {
-  const myPageRoutes = [
-    { path: '/', element: <MyPageContent /> },
-    { path: '/friends/*', element: <FriendsView /> },
-    { path: '/blocking/*', element: <BlockingView /> },
-  ];
-  const routeElements = useRoutes([...myPageRoutes]);
-  return <>{routeElements}</>;
+  return <MyPageContent />;
 };
