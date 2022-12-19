@@ -42,7 +42,7 @@ export const urlLoginFt = `${backendHost}/auth/login_ft`;
 export const verifyCredential = async (
   credential: AppCredential | null,
   onSucceeded: (user: any) => void,
-  onFailed: () => void
+  onFailed: (e?: any) => void
 ) => {
   if (credential && credential.token) {
     try {
@@ -63,6 +63,8 @@ export const verifyCredential = async (
       }
     } catch (e) {
       console.error(e);
+      onFailed(e);
+      return;
     }
   }
   onFailed();

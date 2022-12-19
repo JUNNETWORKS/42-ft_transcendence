@@ -31,10 +31,13 @@ export const AuthChecker = () => {
             addOne(user);
             setAuthState('Authenticated');
           },
-          () => {
+          (e?: any) => {
             // 変換できなかった場合の処理
-            setStoredCredential(null);
-            setPersonalData(null);
+            if (!e || !(e instanceof TypeError)) {
+              // ネットワークエラー**以外**の時だけクレデンシャルを削除する
+              setStoredCredential(null);
+              setPersonalData(null);
+            }
             setAuthState('NotAuthenticated');
           }
         );

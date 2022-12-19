@@ -13,7 +13,7 @@ export class APIError extends Error {
   get messageForUser() {
     switch (this.status) {
       case 401:
-        return '認証に失敗しました。';
+        return '認証に失敗しました';
       default:
         return 'エラーが発生しました';
     }

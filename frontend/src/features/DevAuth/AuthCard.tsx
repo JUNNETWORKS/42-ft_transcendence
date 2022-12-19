@@ -163,7 +163,12 @@ const PasswordAuthForm = (props: {
       props.onSucceeded(token, user, required2fa);
     },
     onFailed(error) {
-      if (error instanceof APIError) {
+      if (error instanceof TypeError) {
+        // ネットワークエラー
+        popAuthError('ネットワークエラーです');
+        setNetErrors({ api: 'ネットワークエラー' });
+      } else if (error instanceof APIError) {
+        // サーバエラー
         popAuthError(error.messageForUser);
         setNetErrors({ api: error.messageForUser });
       }
