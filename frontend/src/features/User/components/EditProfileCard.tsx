@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
+import { popAuthError } from '@/features/Toaster/toast';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { usePersonalData } from '@/hooks/usePersonalData';
@@ -62,7 +63,9 @@ export const EditProfileCard = ({ user, onClose }: Prop) => {
       onClose();
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
           if (typeof json === 'object') {
