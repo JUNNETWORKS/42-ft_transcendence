@@ -9,6 +9,7 @@ import { Icons, RoomTypeIcon } from '@/icons';
 import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
 
+import { popAuthError } from '../Toaster/toast';
 import { roomErrors } from './room.validator';
 
 type RoomTypeListProps = {
@@ -185,6 +186,11 @@ export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
         onSucceeded();
       }
       toast('チャットルームを作成しました');
+    },
+    onFailed(e) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      }
     },
   });
 
