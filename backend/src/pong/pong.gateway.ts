@@ -105,14 +105,11 @@ export class PongGateway {
       // - OngoingMatches
       return;
     }
-    //TODO: dataからこの部分を作る
-    const maxScore = 15;
-    const speed = 100;
 
     await this.pendingPrivateMatches.createPrivateMatch(
       user.id,
-      maxScore,
-      speed
+      data.maxScore,
+      data.speed
     );
   }
 

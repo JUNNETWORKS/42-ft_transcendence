@@ -41,7 +41,7 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     if (isWaiting) {
       return;
     }
-    mySocket.emit('pong.private_match.create');
+    mySocket.emit('pong.private_match.create', { maxScore: 15, speed: 100 });
   };
 
   // TODO: プライベートマッチデバッグ用。後で消す。
