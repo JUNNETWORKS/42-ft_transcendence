@@ -51,7 +51,7 @@ export class PendingPrivateMatches {
 
   // 募集中のマッチに2人目のプレイヤーとして参加する
   // この関数が呼ばれ､2人のプレイヤーが揃ったらMatchが開始する
-  async joinPrivateMatch(matchId: string, userId: number) {
+  async joinPrivateMatch(matchId: string, roomId: number, userId: number) {
     const matchOwnerId = this.getUserIdByMatchId(matchId);
     console.log(`joinPrivateMatch: MatchId(${matchId}) by User(${userId})`);
     if (!matchOwnerId) {
@@ -64,7 +64,8 @@ export class PendingPrivateMatches {
       return;
     }
     this.drawOutMatchByMatchId(matchId);
-    await this.pongService.setApplicantPlayer(matchId, userId);
+    await this.pongService.setApplicantPlayer(matchId, roomId, userId);
+    // TODO: メンバーとしてマッチに紐づくマッチIDを保持する
     const match = OnlineMatch.create({
       wsServer: this.wsServer,
       matchId: matchId,
