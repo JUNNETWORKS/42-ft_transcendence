@@ -75,25 +75,23 @@ export class WaitingQueue {
   }
 
   private async createMatch(userId1: number, userId2: number) {
-    const match = OnlineMatch.create(
-      this.wsServer,
+    const { id: matchId } = await this.pongService.createMatch({
+      matchType: this.matchType,
+      matchStatus: MatchStatus.PREPARING,
       userId1,
       userId2,
-      this.matchType,
-      (matchId: string) => this.ongoingMatches.removeMatch(matchId),
-      this.postMatchStrategy
-    );
-    this.ongoingMatches.appendMatch(match);
-    await this.pongService.createMatch({
-      id: match.matchId,
-      matchType: match.matchType,
-      matchStatus: MatchStatus.PREPARING,
-      userId1: match.playerId1,
-      userId2: match.playerId2,
-      userScore1: match.playerScore1,
-      userScore2: match.playerScore2,
     });
-    const matchId = match.matchId;
+    const match = OnlineMatch.create({
+      wsServer: this.wsServer,
+      userId1,
+      userId2,
+      matchType: this.matchType,
+      removeFn: (matchId: string) => this.ongoingMatches.removeMatch(matchId),
+      postMatchStrategy: this.postMatchStrategy,
+      matchId,
+    });
+
+    this.ongoingMatches.appendMatch(match);
     // TODO: ここらへんawaitしなくて大丈夫？
     this.wsServer.usersLeave(userId1, { matchMakingId: this.matchType });
     this.wsServer.usersLeave(userId2, { matchMakingId: this.matchType });

@@ -7,10 +7,11 @@ import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 
 type DmModalProps = {
-  user: TD.User;
+  user?: TD.displayUser;
+  bordered?: boolean;
 };
 
-export const DmCard = ({ user }: DmModalProps) => {
+export const DmCard = ({ user, bordered }: DmModalProps) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [dmRooms] = useAtom(dataAtom.dmRoomsAtom);
   const [content, setContent] = useState('');
@@ -22,17 +23,20 @@ export const DmCard = ({ user }: DmModalProps) => {
     if (!dmRooms) return undefined;
     return dmRooms.find((room) => {
       const dmRoom = room;
-      if (dmRoom.roomMember.find((member) => member.userId === user.id)) {
+      if (dmRoom.roomMember.find((member) => member.userId === user?.id)) {
         return room;
       }
     });
   };
 
   const submit = () => {
+    if (!user) {
+      return;
+    }
     const dmRoom = dmRoomWithUser();
     if (dmRoom) {
       const data = {
-        roomId: dmRoom?.id,
+        roomId: dmRoom.id,
         content,
       };
       console.log(data);
@@ -45,14 +49,18 @@ export const DmCard = ({ user }: DmModalProps) => {
       console.log(data);
       mySocket?.emit('ft_tell', data);
     }
+    setContent('');
   };
-  const isSendable = content !== '';
+  const isSendable = !!user && content !== '';
 
+  const fieldClassName = `shrink grow ${
+    bordered ? ' border-2 border-solid border-white' : ''
+  }`;
   return (
     <>
-      <div className="flex flex-row">
+      <div className="flex flex-row items-center">
         <FTTextField
-          className="shrink grow"
+          className={fieldClassName}
           value={content}
           placeholder="発言内容"
           onChange={(e) => setContent(e.target.value)}

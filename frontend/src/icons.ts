@@ -55,9 +55,12 @@ export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
   Cancel: Md.MdClose,
+  NormalFace: Fa.FaRegMeh,
+  UnhappyFace: Fa.FaRegFrown,
   Add: Md.MdAdd,
   Ok: Bs.BsCheck,
   Bang: Bs.BsExclamationLg,
+  Persons: Fa.FaUsers,
 
   User,
   Chat,

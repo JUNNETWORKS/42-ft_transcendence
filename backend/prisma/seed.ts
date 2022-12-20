@@ -448,6 +448,18 @@ async function main() {
       content: 'PR_RESULT',
     },
   });
+  for (let i = 0; i < createMany.length; ++i) {
+    for (let j = i + 1; j < createMany.length; ++j) {
+      const userId = createMany[i].id;
+      const targetUserId = createMany[j].id;
+      await prisma.friendRelation.create({
+        data: {
+          userId,
+          targetUserId,
+        },
+      });
+    }
+  }
 }
 
 main()
