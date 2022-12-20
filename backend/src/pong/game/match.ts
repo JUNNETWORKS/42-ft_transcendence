@@ -97,7 +97,10 @@ export class Match {
     const rad =
       (Math.random() * 2 - 1) * Match.kickoffMaxAngle * (Math.PI / 180);
     const position = { x: Match.fieldWidth / 2, y: Match.fieldHeight / 2 };
-    const velocity = { x: Math.cos(rad), y: Math.sin(rad) };
+    const velocity = {
+      x: (this.speed / 100) * Math.cos(rad),
+      y: (this.speed / 100) * Math.sin(rad),
+    };
     return {
       position,
       velocity,
