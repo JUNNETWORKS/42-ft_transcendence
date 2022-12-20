@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
+import { popAuthError, popAuthImportantInfo } from '@/features/Toaster/toast';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons } from '@/icons';
@@ -28,10 +29,13 @@ export const EditPasswordCard = ({ onClose }: Prop) => {
       const data = json as { access_token: string };
       setNetErrors({});
       loginLocal(data.access_token, personalData);
+      popAuthImportantInfo('パスワードを変更しました');
       onClose();
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
           if (typeof json === 'object') {
