@@ -39,7 +39,9 @@ export const TotpAuthForm = (props: {
       props.onSucceeded(token, user, required2fa);
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         switch (e.response.status) {
           case 401:
             setNetErrors({
