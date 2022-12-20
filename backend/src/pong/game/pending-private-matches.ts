@@ -25,13 +25,16 @@ export class PendingPrivateMatches {
     this.pendingMatches = new Map<number, string>();
   }
 
-  async createPrivateMatch(userId: number) {
-    const { id: matchId } = await this.pongService.createMatch({
-      matchType: MatchType.PRIVATE,
-      matchStatus: MatchStatus.PREPARING,
-      userId1: userId,
-      userId2: undefined,
-    });
+  async createPrivateMatch(userId: number, roomId: number) {
+    const { id: matchId } = await this.pongService.createMatch(
+      {
+        matchType: MatchType.PRIVATE,
+        matchStatus: MatchStatus.PREPARING,
+        userId1: userId,
+        userId2: undefined,
+      },
+      roomId
+    );
     this.pendingMatches.set(userId, matchId);
     console.log(`createPrivateMatch: matchId(${matchId})`);
     console.log(

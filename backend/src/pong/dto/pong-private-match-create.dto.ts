@@ -1,3 +1,3 @@
 export type PongPrivateMatchCreateDTO = {
-  roomId: string;
+  roomId: number;
 };

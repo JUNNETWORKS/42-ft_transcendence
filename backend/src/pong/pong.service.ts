@@ -134,7 +134,7 @@ export class PongService {
     };
   }
 
-  async createMatch(match: CreateMatchDTO) {
+  async createMatch(match: CreateMatchDTO, roomId?: number) {
     const result = await this.prisma.match.create({
       data: {
         id: uuidv4(),
@@ -176,7 +176,10 @@ export class PongService {
       [result.userId1, result.userId2].filter((id) => !!id),
       result.id
     );
-
+    if (match.matchType === 'PRIVATE' && roomId) {
+      const user = await this.usersService.findOne(match.userId1);
+      if (user) this.wsServer.systemSay(roomId, user, 'PR_OPEN');
+    }
     return result;
   }
 
