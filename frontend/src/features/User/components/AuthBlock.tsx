@@ -8,6 +8,7 @@ import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { authAtom, useLoginLocal, UserPersonalData } from '@/stores/auth';
 
@@ -75,10 +76,10 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
  * 二要素認証を無効化するためのコンポーネント
  */
 const Disable2FAButton = () => {
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [personalData, , patchPersonalData] = usePersonalData();
   const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
     onFinished: () => {
-      setPersonalData({ ...personalData!, isEnabled2FA: false });
+      patchPersonalData({ isEnabled2FA: false });
       toast.info('二要素認証が無効化されました', { autoClose: 5000 });
     },
     onFailed(e) {

@@ -1,4 +1,3 @@
-import { useAtom } from 'jotai';
 import { useState } from 'react';
 import { useId } from 'react';
 
@@ -11,8 +10,9 @@ import {
 import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
-import { authAtom, UserPersonalData } from '@/stores/auth';
+import { UserPersonalData } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 import * as TD from '@/typedef';
 
@@ -25,10 +25,10 @@ type Prop = {
 
 type InnerProp = Prop & {
   userData: UserPersonalData;
-  setUserData: (userData: UserPersonalData) => void;
+  patchUserData: (partialUserData: Partial<UserPersonalData>) => void;
 };
 
-const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
+const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
   const [displayName, setDisplayName] = useState(userData.displayName);
   const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
@@ -56,7 +56,7 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
     onFetched: (json) => {
       const { user: u } = json as { user: TD.User };
       updateOne(u.id, u);
-      setUserData({ ...userData, ...u, avatarTime: Date.now() });
+      patchUserData({ ...u, avatarTime: Date.now() });
       setNetErrors({});
       onClose();
     },
@@ -204,7 +204,7 @@ const ModifyCard = ({ userData, setUserData, onClose }: InnerProp) => {
 };
 
 export const UserCreatedForm = ({ onClose }: Prop) => {
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [personalData, , patchUserData] = usePersonalData();
   if (!personalData) {
     return null;
   }
@@ -213,7 +213,7 @@ export const UserCreatedForm = ({ onClose }: Prop) => {
       <div className="flex w-[480px] flex-col justify-around border-4 border-white bg-black">
         <ModifyCard
           userData={personalData}
-          setUserData={(u) => setPersonalData(u)}
+          patchUserData={(u) => patchUserData(u)}
           onClose={onClose}
         />
       </div>

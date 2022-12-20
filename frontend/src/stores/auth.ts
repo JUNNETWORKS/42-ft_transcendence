@@ -6,6 +6,7 @@ import {
   AuthenticationFlowState,
   urlChatSocket,
 } from '@/features/DevAuth/auth';
+import { usePersonalData } from '@/hooks/usePersonalData';
 
 import { structureAtom } from './structure';
 
@@ -31,11 +32,34 @@ export const authAtom = {
   personalData: atom(
     (get) => get(actualPersonalDataAtom),
     (get, set, newValue: UserPersonalData | null) => {
+      // console.trace();
       if (newValue) {
-        set(actualPersonalDataAtom, { ...newValue, avatarTime: Date.now() });
+        const d = { ...newValue, avatarTime: Date.now() };
+        // console.log("SET", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", JSON.stringify(d, null, 2));
+        set(actualPersonalDataAtom, d);
       } else {
+        // console.log("SET", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", null);
         set(actualPersonalDataAtom, null);
       }
+    }
+  ),
+
+  writeOnlyPersonalData: atom(
+    null,
+    (get, set, newValue: Partial<UserPersonalData>) => {
+      const d: any = { ...get(actualPersonalDataAtom) };
+      (Object.keys(newValue) as (keyof UserPersonalData)[]).forEach((k) => {
+        const v = newValue[k];
+        if (typeof v === 'undefined') {
+          // console.log("rejected:", k, v);
+          return;
+        }
+        // console.log("accepted:", k, v);
+        d[k] = v;
+      });
+      // console.log("PATCH", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", JSON.stringify(newValue, null, 2), "=>", JSON.stringify(d, null, 2));
+      // console.trace();
+      set(actualPersonalDataAtom, d);
     }
   ),
 };
@@ -145,7 +169,7 @@ export const useLogout = () => {
 export const useLoginLocal = () => {
   const [, setAuthState] = useAtom(authAtom.authFlowState);
   const [, setStoredCredential] = useAtom(storedCredentialAtom);
-  const [, setPersonalData] = useAtom(authAtom.personalData);
+  const [, setPersonalData] = usePersonalData();
   return (access_token: string, user: any) => {
     setStoredCredential({ token: access_token });
     setPersonalData(user);

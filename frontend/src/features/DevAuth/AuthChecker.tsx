@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 
@@ -13,7 +14,7 @@ import { verifyCredential } from './auth';
 export const AuthChecker = () => {
   const [storedCredential, setStoredCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
-  const [, setPersonalData] = useAtom(authAtom.personalData);
+  const [, setPersonalData] = usePersonalData();
   const { addOne } = useUpdateUser();
 
   useEffect(() => {
