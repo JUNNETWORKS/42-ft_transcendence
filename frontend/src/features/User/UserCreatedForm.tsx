@@ -16,6 +16,7 @@ import { UserPersonalData } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 import * as TD from '@/typedef';
 
+import { popAuthError } from '../Toaster/toast';
 import { AvatarFile, AvatarInput } from './components/AvatarInput';
 import { userErrors } from './user.validator';
 
@@ -61,7 +62,9 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
       onClose();
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
           if (typeof json === 'object') {
