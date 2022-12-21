@@ -112,11 +112,7 @@ export class PongGateway {
       return;
     }
 
-    this.pendingPrivateMatches.joinPrivateMatch(
-      data.matchId,
-      data.roomId,
-      user.id
-    );
+    this.pendingPrivateMatches.joinPrivateMatch(data.matchId, user.id);
   }
 
   // 募集中のプライベートマッチを抜けて、その募集中マッチを削除する。

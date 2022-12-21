@@ -11,6 +11,7 @@ import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
   matchType: MatchType;
+  relatedRoomId?: number;
   matchStatus: MatchStatus;
   userId1: number;
   userId2?: number;
@@ -139,6 +140,7 @@ export class PongService {
       data: {
         id: uuidv4(),
         matchType: match.matchType,
+        relatedRoomId: match.relatedRoomId,
         matchStatus: MatchStatus.PREPARING,
         userId1: match.userId1,
         userScore1: 0,
@@ -184,7 +186,7 @@ export class PongService {
   }
 
   // プライベートマッチの参加者側(userId2)をセットする
-  async setApplicantPlayer(matchId: string, roomId: number, userId2: number) {
+  async setApplicantPlayer(matchId: string, userId2: number) {
     const [match] = await this.prisma.$transaction([
       this.prisma.match.update({
         where: {
@@ -204,8 +206,13 @@ export class PongService {
     ]);
     const user1 = await this.usersService.findOne(match.userId1);
     const user2 = await this.usersService.findOne(match.userId2);
-    if (user1 && user2)
-      await this.wsServer.systemSayWithTarget(roomId, user1, 'PR_START', user2);
+    if (user1 && user2 && match.relatedRoomId)
+      await this.wsServer.systemSayWithTarget(
+        match.relatedRoomId,
+        user1,
+        'PR_START',
+        user2
+      );
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
