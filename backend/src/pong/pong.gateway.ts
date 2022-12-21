@@ -93,7 +93,12 @@ export class PongGateway {
       return;
     }
 
-    await this.pendingPrivateMatches.createPrivateMatch(user.id, data.roomId);
+    await this.pendingPrivateMatches.createPrivateMatch(
+      user.id,
+      data.roomId,
+      data.maxScore,
+      data.speed
+    );
   }
 
   // 募集中のプライベートに参加する

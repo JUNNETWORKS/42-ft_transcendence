@@ -7,6 +7,7 @@ import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { compact } from '../utils';
+import { Match } from './game/match';
 import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
@@ -15,6 +16,8 @@ type CreateMatchDTO = {
   matchStatus: MatchStatus;
   userId1: number;
   userId2?: number;
+  speed?: number;
+  maxScore?: number;
 };
 
 @Injectable()
@@ -135,7 +138,8 @@ export class PongService {
     };
   }
 
-  async createMatch(match: CreateMatchDTO, roomId?: number) {
+  async createMatch(match: CreateMatchDTO) {
+    const { relatedRoomId } = match;
     const result = await this.prisma.match.create({
       data: {
         id: uuidv4(),
@@ -152,8 +156,8 @@ export class PongService {
         // TODO: Configを非Nullableにする
         config: {
           create: {
-            maxScore: 15,
-            speed: 10,
+            maxScore: match.maxScore ?? Match.defaultConfig.maxScore,
+            speed: match.speed ?? Match.defaultConfig.speed,
           },
         },
         matchUserRelation: {
@@ -178,9 +182,9 @@ export class PongService {
       [result.userId1, result.userId2].filter((id) => !!id),
       result.id
     );
-    if (match.matchType === 'PRIVATE' && roomId) {
+    if (match.matchType === 'PRIVATE' && relatedRoomId) {
       const user = await this.usersService.findOne(match.userId1);
-      if (user) this.wsServer.systemSay(roomId, user, 'PR_OPEN');
+      if (user) this.wsServer.systemSay(relatedRoomId, user, 'PR_OPEN');
     }
     return result;
   }
@@ -404,5 +408,13 @@ export class PongService {
         })
         .then((u) => this.wsServer.pulse(u.user));
     });
+  }
+
+  async fetchMatchConfig(matchId: string) {
+    const res = await this.prisma.matchConfig.findUnique({
+      where: { matchId: matchId },
+    });
+
+    return res ?? undefined;
   }
 }
