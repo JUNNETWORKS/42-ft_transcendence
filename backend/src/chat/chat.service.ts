@@ -33,6 +33,7 @@ export class ChatService {
       secondaryUserId: data.secondaryId,
       messageType: data.messageType,
       subpayload: data.subpayload,
+      matchId: data.matchId,
     });
   }
 

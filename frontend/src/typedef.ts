@@ -67,6 +67,7 @@ const MessageTypes = [
   'PR_START',
   'PR_RESULT',
   'PR_ERROR',
+  'PR_STATUS',
 ] as const;
 export type MessageType = typeof MessageTypes[number];
 
@@ -81,6 +82,7 @@ export type ChatRoomMessage = {
   content: string;
   messageType?: MessageType;
   subpayload?: any;
+  matchId?: string;
 };
 
 export type UserRelationMap = {
@@ -195,7 +197,8 @@ export const Mapper = {
       'createdAt',
       'content',
       'messageType',
-      'subpayload'
+      'subpayload',
+      'matchId'
     );
     if (r.user) {
       r.user = Mapper.user(r.user);

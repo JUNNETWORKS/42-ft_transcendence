@@ -3,6 +3,7 @@ import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
+import { ChatMatchingMessageCard } from '@/components/ChatMatchingMessageCard';
 import { ChatMemberCard } from '@/components/ChatMemberCard';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { ChatSystemMessageCard } from '@/components/ChatSystemMessageCard';
@@ -131,27 +132,23 @@ const MessagesList = (props: {
     get_room_members(props.room.id);
   }, [mySocket, props.room.id]);
 
+  const componentForMessage = (data: TD.ChatRoomMessage) => {
+    if (data.messageType === 'PR_STATUS') {
+      return ChatMatchingMessageCard;
+    }
+    if (data.messageType) {
+      return ChatSystemMessageCard;
+    }
+    return ChatMessageCard;
+  };
+  console.log('props.messages', props.messages);
   return (
     <div id={listId} className="h-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
         const member = props.members[data.userId];
-        if (data.messageType) {
-          return (
-            <ChatSystemMessageCard
-              key={data.id}
-              id={messageCardId(data)}
-              message={data}
-              you={props.you}
-              room={props.room}
-              userId={data.userId}
-              member={member}
-              members={props.members}
-              memberOperations={props.memberOperations}
-            />
-          );
-        }
+        const Component = componentForMessage(data);
         return (
-          <ChatMessageCard
+          <Component
             key={data.id}
             id={messageCardId(data)}
             message={data}
@@ -159,6 +156,7 @@ const MessagesList = (props: {
             room={props.room}
             userId={data.userId}
             member={member}
+            members={props.members}
             memberOperations={props.memberOperations}
           />
         );

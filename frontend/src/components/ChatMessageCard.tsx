@@ -10,18 +10,23 @@ import { AdminOperationBar } from './ChatMemberCard';
 import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
-/**
- * メッセージを表示するコンポーネント
- */
-export const ChatMessageCard = (props: {
+export type ChatMessageProp = {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   message: TD.ChatRoomMessage;
   userId: number;
   member?: TD.ChatUserRelation;
+  members: TD.UserRelationMap;
   memberOperations?: TD.MemberOperations;
   id: string;
-}) => {
+};
+
+export type ChatMessageCardComponent = (props: ChatMessageProp) => JSX.Element;
+
+/**
+ * メッセージを表示するコンポーネント
+ */
+export const ChatMessageCard = (props: ChatMessageProp) => {
   const user = useUserDataReadOnly(props.userId);
   const openCard = useUserCard();
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);

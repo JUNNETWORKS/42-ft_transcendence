@@ -9,6 +9,7 @@ import * as TD from '@/typedef';
 import { compact } from '@/utils';
 
 import { AdminOperationBar } from './ChatMemberCard';
+import { ChatMessageProp } from './ChatMessageCard';
 import { PopoverUserCard } from './PopoverUserCard';
 
 type ContentProp = {
@@ -137,16 +138,7 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
 /**
  * システムメッセージを表示するコンポーネント
  */
-export const ChatSystemMessageCard = (props: {
-  you: TD.ChatUserRelation | null;
-  room: TD.ChatRoom;
-  message: TD.ChatRoomMessage;
-  userId: number;
-  member?: TD.ChatUserRelation;
-  members: TD.UserRelationMap;
-  memberOperations?: TD.MemberOperations;
-  id: string;
-}) => {
+export const ChatSystemMessageCard = (props: ChatMessageProp) => {
   const messageType = props.message.messageType;
   const user = useUserDataReadOnly(props.userId);
   const targetUser = useUserDataReadOnly(props.message.secondaryUserId || -1);
