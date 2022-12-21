@@ -122,6 +122,13 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
         </>
       );
 
+    case 'PR_ERROR':
+      return (
+        <>
+          {nameButton}さんと{targetButton}さんの対戦がエラーにより終了しました -
+        </>
+      );
+
     default:
       return <span>not implemented</span>;
   }

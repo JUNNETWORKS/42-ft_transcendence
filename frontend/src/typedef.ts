@@ -66,6 +66,7 @@ const MessageTypes = [
   'KICKED',
   'PR_START',
   'PR_RESULT',
+  'PR_ERROR',
 ] as const;
 export type MessageType = typeof MessageTypes[number];
 

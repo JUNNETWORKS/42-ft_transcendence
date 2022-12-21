@@ -15,6 +15,7 @@ export const MessageTypesWithTarget = [
   'KICKED',
   'PR_START',
   'PR_RESULT',
+  'PR_ERROR',
 ] as const;
 export const MessageTypes = [
   ...MessageTypesSingle,
