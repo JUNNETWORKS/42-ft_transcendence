@@ -97,6 +97,8 @@ export function makeCommand(
       console.log('[pong.private_match.create]', roomId);
       const data = {
         roomId,
+        speed: 100,
+        maxScore: 15,
       };
       mySocket.emit('pong.private_match.create', data);
     },

@@ -33,6 +33,12 @@ const Chat = {
     Updated: Vsc.VscDebugRestart,
     Joined: Fa.FaArrowRight,
     Left: Fa.FaArrowLeft,
+    private: {
+      open: Ri.RiPingPongLine,
+      cancel: Fa.FaBan,
+      start: Ri.RiSwordLine,
+      result: Ri.RiMedalLine,
+    },
   },
 
   Operation: ChatOperation,
