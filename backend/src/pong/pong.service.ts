@@ -254,6 +254,17 @@ export class PongService {
       },
     });
     this.unmarkGaming([result.userId1, result.userId2]);
+    if (result.matchType === 'PRIVATE' && result.relatedRoomId) {
+      const user1 = await this.usersService.findOne(result.userId1);
+      const user2 = await this.usersService.findOne(result.userId2);
+      if (user1 && user2)
+        await this.wsServer.systemSayWithTarget(
+          result.relatedRoomId,
+          user1,
+          'PR_ERROR',
+          user2
+        );
+    }
   }
 
   async updateMatchStatus(matchId: string, status: MatchStatus) {
