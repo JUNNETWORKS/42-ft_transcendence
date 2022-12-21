@@ -228,6 +228,19 @@ export class PongService {
       },
     });
     this.unmarkGaming([result.userId1, result.userId2]);
+    if (match.matchType === 'PRIVATE') {
+      const user1 = await this.usersService.findOne(result.userId1);
+      const user2 = await this.usersService.findOne(result.userId2);
+      const winner = match.winnerId === result.userId1 ? user1 : user2;
+      const loser = match.loserId === result.userId1 ? user1 : user2;
+      if (winner && loser && result.relatedRoomId)
+        await this.wsServer.systemSayWithTarget(
+          result.relatedRoomId,
+          winner,
+          'PR_RESULT',
+          loser
+        );
+    }
   }
 
   async updateMatchAsError(match: OnlineMatch) {
