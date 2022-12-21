@@ -448,6 +448,17 @@ async function main() {
       content: 'PR_RESULT',
     },
   });
+
+  await prisma.chatMessage.create({
+    data: {
+      userId: 1,
+      secondaryUserId: 2,
+      chatRoomId: 1,
+      messageType: 'PR_ERROR',
+      content: 'PR_ERROR',
+    },
+  });
+
   for (let i = 0; i < createMany.length; ++i) {
     for (let j = i + 1; j < createMany.length; ++j) {
       const userId = createMany[i].id;
