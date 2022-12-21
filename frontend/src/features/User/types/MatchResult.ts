@@ -13,9 +13,18 @@ export type MatchResult = {
   config: MatchConfig;
 };
 
+export const GameSpeedFactors = ['x050', 'x100', 'x125', 'x150'] as const;
+export type GameSpeedFactor = typeof GameSpeedFactors[number];
+export const GameSpeedFactor = {
+  x050: 0.5,
+  x100: 1.0,
+  x125: 1.25,
+  x150: 1.5,
+};
+
 export type MatchConfig = {
   maxScore: number;
-  speed: number;
+  speed: GameSpeedFactor;
 };
 
 export type Stats = {

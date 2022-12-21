@@ -9,13 +9,17 @@ import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { WsAuthGuard } from 'src/auth/ws-auth.guard';
+import { isfinite } from 'src/utils';
 import { getUserFromClient } from 'src/utils/socket/ws-auth';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
-import { PongPrivateMatchCreateDTO } from './dto/pong-private-match-create.dto';
+import {
+  gameSpeedFactorToGameSpeed,
+  PongPrivateMatchCreateDTO,
+} from './dto/pong-private-match-create.dto';
 import { PongPrivateMatchJoinDTO } from './dto/pong-private-match-join.dto';
 
 import { OngoingMatches } from './game/ongoing-matches';
@@ -90,15 +94,24 @@ export class PongGateway {
       // - 待機キュー
       // - 募集中のPrivateMatch
       // - OngoingMatches
-      return;
+      return { status: 'rejected', reason: 'user error' };
     }
 
-    await this.pendingPrivateMatches.createPrivateMatch(
+    const speed = gameSpeedFactorToGameSpeed(data.speed);
+    if (!isfinite(data.maxScore) || data.maxScore <= 0) {
+      return {
+        status: 'rejected',
+        reason: 'speed is invalid',
+        errors: { maxScore: 'invalid?' },
+      };
+    }
+    const matchId = await this.pendingPrivateMatches.createPrivateMatch(
       user.id,
       data.roomId,
       data.maxScore,
-      data.speed
+      speed!
     );
+    return { status: 'accepted', matchId };
   }
 
   // 募集中のプライベートに参加する

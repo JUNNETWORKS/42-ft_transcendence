@@ -3,6 +3,8 @@ import { io } from 'socket.io-client';
 import * as TD from '@/typedef';
 import { isfinite } from '@/utils';
 
+import { MatchConfig } from '../User/types/MatchResult';
+
 export function makeCommand(
   mySocket: ReturnType<typeof io>,
   focusedRoomId: number
@@ -93,14 +95,22 @@ export function makeCommand(
       mySocket.emit('ft_mute', data);
     },
 
-    pong_private_match_create: (roomId: number) => {
+    pong_private_match_create: (roomId: number, config: MatchConfig) => {
       console.log('[pong.private_match.create]', roomId);
       const data = {
         roomId,
-        speed: 100,
-        maxScore: 15,
+        ...config,
       };
-      mySocket.emit('pong.private_match.create', data);
+      return new Promise<any>((res, rej) => {
+        mySocket.emit('pong.private_match.create', data, (result: any) => {
+          console.log('result', result);
+          if (result && result.status === 'accepted') {
+            res(result);
+            return;
+          }
+          rej(result);
+        });
+      });
     },
   };
 }

@@ -41,17 +41,12 @@ export class PendingPrivateMatches {
       speed,
     });
     this.pendingMatches.set(userId, matchId);
-    console.log(`createPrivateMatch: matchId(${matchId})`);
-    console.log(
-      `this.pendingMatches: ${JSON.stringify(
-        Object.fromEntries(this.pendingMatches)
-      )}`
-    );
     this.wsServer.sendResults(
       'pong.private_match.created',
       { matchId: matchId },
       { userId: userId }
     );
+    return matchId;
   }
 
   // 募集中のマッチに2人目のプレイヤーとして参加する
