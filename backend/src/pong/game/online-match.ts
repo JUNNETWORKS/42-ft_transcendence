@@ -20,6 +20,7 @@ type FactoryProps = {
   removeFn: (matchId: string) => void;
   postMatchStrategy: PostMatchStrategy;
   matchId: string;
+  config?: { maxScore: number; speed: number };
 };
 
 // このクラスは以下に対して責任を持つ
@@ -42,6 +43,7 @@ export class OnlineMatch {
     userId1: number,
     userId2: number,
     matchType: MatchType,
+    match: Match,
     private readonly removeFromOngoingMatches: (matchId: string) => void,
     private readonly postMatchStrategy: PostMatchStrategy
   ) {
@@ -50,7 +52,7 @@ export class OnlineMatch {
     this.Id = matchId;
     this.roomName = generateFullRoomName({ matchId: this.Id });
     this.matchType = matchType;
-    this.match = new Match(userId1, userId2);
+    this.match = match;
     this.joinAsSpectator(userId1);
     this.joinAsSpectator(userId2);
   }
@@ -63,6 +65,7 @@ export class OnlineMatch {
     removeFn,
     postMatchStrategy,
     matchId,
+    config,
   }: FactoryProps) {
     return new OnlineMatch(
       wsServer,
@@ -70,6 +73,7 @@ export class OnlineMatch {
       userId1,
       userId2,
       matchType,
+      new Match(userId1, userId2, config),
       removeFn,
       postMatchStrategy
     );

@@ -7,6 +7,7 @@ import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PrismaService } from '../prisma/prisma.service';
 import { compact } from '../utils';
+import { Match } from './game/match';
 import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
@@ -14,6 +15,8 @@ type CreateMatchDTO = {
   matchStatus: MatchStatus;
   userId1: number;
   userId2?: number;
+  speed?: number;
+  maxScore?: number;
 };
 
 @Injectable()
@@ -150,8 +153,8 @@ export class PongService {
         // TODO: Configを非Nullableにする
         config: {
           create: {
-            maxScore: 15,
-            speed: 10,
+            maxScore: match.maxScore ?? Match.defaultConfig.maxScore,
+            speed: match.speed ?? Match.defaultConfig.speed,
           },
         },
         matchUserRelation: {
@@ -361,5 +364,13 @@ export class PongService {
         })
         .then((u) => this.wsServer.pulse(u.user));
     });
+  }
+
+  async fetchMatchConfig(matchId: string) {
+    const res = await this.prisma.matchConfig.findUnique({
+      where: { matchId: matchId },
+    });
+
+    return res ?? undefined;
   }
 }
