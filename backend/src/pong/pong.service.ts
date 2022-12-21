@@ -184,7 +184,15 @@ export class PongService {
     );
     if (match.matchType === 'PRIVATE' && relatedRoomId) {
       const user = await this.usersService.findOne(match.userId1);
-      if (user) this.wsServer.systemSay(relatedRoomId, user, 'PR_OPEN');
+      if (user) {
+        this.wsServer.systemSay(relatedRoomId, user, 'PR_OPEN');
+        this.wsServer.systemSayMatching(
+          relatedRoomId,
+          user,
+          'PR_STATUS',
+          result.id
+        );
+      }
     }
     return result;
   }

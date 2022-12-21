@@ -4,6 +4,7 @@ import { Server, Socket } from 'socket.io';
 
 import { ChatService } from 'src/chat/chat.service';
 import {
+  MessageTypeMatching,
   MessageTypeSingle,
   MessageTypeWithPayload,
   MessageTypeWithTarget,
@@ -168,6 +169,23 @@ export class WsServerGateway {
       callerId: user.id,
       messageType,
       secondaryId: target.id,
+    });
+  }
+
+  async systemSayMatching(
+    roomId: number,
+    user: User,
+    messageType: MessageTypeMatching,
+    matchId: string
+  ) {
+    this.systemSayCore(roomId, user, {
+      roomId,
+      callerId: user.id,
+      messageType,
+      matchId,
+      subpayload: {
+        status: 'PR_OPEN',
+      },
     });
   }
 
