@@ -12,6 +12,7 @@ import { OnlineMatch } from './game/online-match';
 
 type CreateMatchDTO = {
   matchType: MatchType;
+  relatedRoomId?: number;
   matchStatus: MatchStatus;
   userId1: number;
   userId2?: number;
@@ -138,10 +139,12 @@ export class PongService {
   }
 
   async createMatch(match: CreateMatchDTO) {
+    const { relatedRoomId } = match;
     const result = await this.prisma.match.create({
       data: {
         id: uuidv4(),
         matchType: match.matchType,
+        relatedRoomId: match.relatedRoomId,
         matchStatus: MatchStatus.PREPARING,
         userId1: match.userId1,
         userScore1: 0,
@@ -179,13 +182,16 @@ export class PongService {
       [result.userId1, result.userId2].filter((id) => !!id),
       result.id
     );
-
+    if (match.matchType === 'PRIVATE' && relatedRoomId) {
+      const user = await this.usersService.findOne(match.userId1);
+      if (user) this.wsServer.systemSay(relatedRoomId, user, 'PR_OPEN');
+    }
     return result;
   }
 
   // プライベートマッチの参加者側(userId2)をセットする
   async setApplicantPlayer(matchId: string, userId2: number) {
-    await this.prisma.$transaction([
+    const [match] = await this.prisma.$transaction([
       this.prisma.match.update({
         where: {
           id: matchId,
@@ -202,6 +208,15 @@ export class PongService {
         },
       }),
     ]);
+    const user1 = await this.usersService.findOne(match.userId1);
+    const user2 = await this.usersService.findOne(match.userId2);
+    if (user1 && user2 && match.relatedRoomId)
+      await this.wsServer.systemSayWithTarget(
+        match.relatedRoomId,
+        user1,
+        'PR_START',
+        user2
+      );
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
@@ -217,6 +232,19 @@ export class PongService {
       },
     });
     this.unmarkGaming([result.userId1, result.userId2]);
+    if (match.matchType === 'PRIVATE') {
+      const user1 = await this.usersService.findOne(result.userId1);
+      const user2 = await this.usersService.findOne(result.userId2);
+      const winner = match.winnerId === result.userId1 ? user1 : user2;
+      const loser = match.loserId === result.userId1 ? user1 : user2;
+      if (winner && loser && result.relatedRoomId)
+        await this.wsServer.systemSayWithTarget(
+          result.relatedRoomId,
+          winner,
+          'PR_RESULT',
+          loser
+        );
+    }
   }
 
   async updateMatchAsError(match: OnlineMatch) {
@@ -230,6 +258,17 @@ export class PongService {
       },
     });
     this.unmarkGaming([result.userId1, result.userId2]);
+    if (result.matchType === 'PRIVATE' && result.relatedRoomId) {
+      const user1 = await this.usersService.findOne(result.userId1);
+      const user2 = await this.usersService.findOne(result.userId2);
+      if (user1 && user2)
+        await this.wsServer.systemSayWithTarget(
+          result.relatedRoomId,
+          user1,
+          'PR_ERROR',
+          user2
+        );
+    }
   }
 
   async updateMatchStatus(matchId: string, status: MatchStatus) {
@@ -313,7 +352,7 @@ export class PongService {
   }
 
   async deleteMatchByMatchId(matchId: string) {
-    await this.prisma.$transaction([
+    const [, , match] = await this.prisma.$transaction([
       this.prisma.matchUserRelation.deleteMany({
         where: {
           matchId: matchId,
@@ -324,12 +363,17 @@ export class PongService {
           matchId: matchId,
         },
       }),
-      this.prisma.match.deleteMany({
+      this.prisma.match.delete({
         where: {
           id: matchId,
         },
       }),
     ]);
+    if (match && match.matchType === 'PRIVATE' && match.relatedRoomId) {
+      const user = await this.usersService.findOne(match.userId1);
+      if (user)
+        await this.wsServer.systemSay(match.relatedRoomId, user, 'PR_CANCEL');
+    }
   }
 
   async spectateByMatchId(userId: number, matchId: string) {

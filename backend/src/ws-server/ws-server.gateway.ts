@@ -73,6 +73,15 @@ export class WsServerGateway {
   }
 
   /**
+   * 対象のルームに接続しているソケットを全てleaveさせる
+   * @param roomArg ルーム識別子
+   */
+  leaveAllSocket(roomArg: RoomArg) {
+    const roomName = generateFullRoomName(roomArg);
+    this.server.in(roomName).socketsLeave(roomName);
+  }
+
+  /**
    * サーバからクライアントに向かってデータを流す
    * @param op イベント名
    * @param payload データ本体
@@ -97,6 +106,8 @@ export class WsServerGateway {
     target: {
       userId?: number;
       roomId?: number;
+      matchId?: string;
+      matchMakingId?: string;
       global?: string;
       client?: Socket;
     }
@@ -106,6 +117,14 @@ export class WsServerGateway {
     }
     if (typeof target.roomId === 'number') {
       await this.sendResultRoom(op, payload, { roomId: target.roomId });
+    }
+    if (target.matchId) {
+      await this.sendResultRoom(op, payload, { matchId: target.matchId });
+    }
+    if (target.matchMakingId) {
+      await this.sendResultRoom(op, payload, {
+        matchMakingId: target.matchMakingId,
+      });
     }
     if (target.global) {
       await this.sendResultRoom(op, payload, { global: target.global });

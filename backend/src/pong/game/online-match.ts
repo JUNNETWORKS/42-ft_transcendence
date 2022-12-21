@@ -1,19 +1,13 @@
 import { MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
 
-import {
-  generateFullRoomName,
-  sendResultRoom,
-  usersJoin,
-  usersLeave,
-} from 'src/utils/socket/SocketRoom';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { Match } from './match';
 import { PostMatchStrategy } from './PostMatchStrategy';
 import { MatchResult, PlayerInput } from './types/game-state';
 
 type FactoryProps = {
-  wsServer: Server;
+  wsServer: WsServerGateway;
   userId1: number;
   userId2: number;
   matchType: MatchType;
@@ -30,15 +24,14 @@ type FactoryProps = {
 export class OnlineMatch {
   // マッチId
   private readonly Id: string;
-  private readonly roomName: string;
   private readonly match: Match;
-  private readonly wsServer: Server;
+  private readonly wsServer: WsServerGateway;
   private gameStateSyncTimer: NodeJS.Timer;
 
   public readonly matchType: MatchType;
 
   private constructor(
-    wsServer: Server,
+    wsServer: WsServerGateway,
     matchId: string,
     userId1: number,
     userId2: number,
@@ -50,7 +43,6 @@ export class OnlineMatch {
     this.wsServer = wsServer;
     this.postMatchStrategy = postMatchStrategy;
     this.Id = matchId;
-    this.roomName = generateFullRoomName({ matchId: this.Id });
     this.matchType = matchType;
     this.match = match;
     this.joinAsSpectator(userId1);
@@ -84,12 +76,9 @@ export class OnlineMatch {
       this.match.update();
 
       if (this.wsServer) {
-        sendResultRoom(
-          this.wsServer,
-          'pong.match.state',
-          this.roomName,
-          this.match.getState()
-        );
+        this.wsServer.sendResults('pong.match.state', this.match.getState(), {
+          matchId: this.Id,
+        });
 
         if (this.match.winner !== 'none') {
           const loserSide = this.match.winner === 'right' ? 'left' : 'right';
@@ -97,18 +86,17 @@ export class OnlineMatch {
             winner: this.match.players[Match.sideIndex[this.match.winner]],
             loser: this.match.players[Match.sideIndex[loserSide]],
           };
-          await sendResultRoom(
-            this.wsServer,
+          await this.wsServer.sendResults(
             'pong.match.finish',
-            this.roomName,
             {
               game: this.match.getState(),
               result,
-            }
+            },
+            { matchId: this.Id }
           );
           this.close();
           this.removeFromOngoingMatches(this.Id);
-          this.wsServer.in(this.roomName).socketsLeave(this.roomName);
+          this.wsServer.leaveAllSocket({ matchId: this.Id });
           this.postMatchStrategy.getOnDone(this.matchType)(this);
         }
       }
@@ -118,7 +106,7 @@ export class OnlineMatch {
   // マッチのWSルームに観戦者として参加｡
   // プレイヤーもゲーム状態を受け取るためにこの関数を呼ぶ｡
   joinAsSpectator(userId: number) {
-    usersJoin(this.wsServer, userId, this.roomName);
+    this.wsServer.usersJoin(userId, { matchId: this.Id });
   }
 
   // ユーザーが退出した際の処理
@@ -126,7 +114,7 @@ export class OnlineMatch {
     if (userId in this.match.players) {
       // TODO: ユーザーがプレイヤーだった場合ゲームを終了させる
     }
-    usersLeave(this.wsServer, userId, this.roomName);
+    this.wsServer.usersLeave(userId, { matchId: this.Id });
   }
 
   // バーを動かす｡プレイヤーとして認識されていない場合は何もしない｡
@@ -149,12 +137,9 @@ export class OnlineMatch {
     this.match.update();
 
     if (this.wsServer) {
-      sendResultRoom(
-        this.wsServer,
-        'pong.match.state',
-        this.roomName,
-        this.match.getState()
-      );
+      this.wsServer.sendResults('pong.match.state', this.match.getState(), {
+        matchId: this.Id,
+      });
 
       if (this.match.winner !== 'none') {
         const loserSide = this.match.winner === 'right' ? 'left' : 'right';
@@ -162,12 +147,9 @@ export class OnlineMatch {
           winner: this.match.players[Match.sideIndex[this.match.winner]],
           loser: this.match.players[Match.sideIndex[loserSide]],
         };
-        sendResultRoom(
-          this.wsServer,
-          'pong.match.finish',
-          this.roomName,
-          result
-        );
+        this.wsServer.sendResults('pong.match.finish', result, {
+          matchId: this.Id,
+        });
         this.close();
       }
     }
