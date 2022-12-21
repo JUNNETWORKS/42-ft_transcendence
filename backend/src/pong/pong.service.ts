@@ -337,7 +337,7 @@ export class PongService {
   }
 
   async deleteMatchByMatchId(matchId: string) {
-    await this.prisma.$transaction([
+    const [, , match] = await this.prisma.$transaction([
       this.prisma.matchUserRelation.deleteMany({
         where: {
           matchId: matchId,
@@ -348,12 +348,17 @@ export class PongService {
           matchId: matchId,
         },
       }),
-      this.prisma.match.deleteMany({
+      this.prisma.match.delete({
         where: {
           id: matchId,
         },
       }),
     ]);
+    if (match && match.matchType === 'PRIVATE' && match.relatedRoomId) {
+      const user = await this.usersService.findOne(match.userId1);
+      if (user)
+        await this.wsServer.systemSay(match.relatedRoomId, user, 'PR_CANCEL');
+    }
   }
 
   async spectateByMatchId(userId: number, matchId: string) {
