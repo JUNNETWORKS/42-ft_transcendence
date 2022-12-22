@@ -1,12 +1,15 @@
 import { useAtom } from 'jotai';
 
 import { makeCommand } from '@/features/Chat/command';
+import { InlineIcon } from '@/hocs/InlineIcon';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { Icons } from '@/icons';
 import { chatSocketAtom } from '@/stores/auth';
 import { useUserCard } from '@/stores/control';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
+import { isfinite } from '@/utils';
 
 import { AdminOperationBar } from './ChatMemberCard';
 import { ChatMessageProp } from './ChatMessageCard';
@@ -42,9 +45,18 @@ const ApplyCard = ({ matchId }: ApplyProp) => {
 type PlayerProp = {
   user?: TD.User;
   popoverContent: JSX.Element;
+  userScore?: number;
+  side: 'left' | 'right';
+  verdict: 'won' | 'lose' | null;
 };
 
-const PlayerCard = ({ user, popoverContent }: PlayerProp) => {
+const PlayerCard = ({
+  user,
+  popoverContent,
+  userScore,
+  side,
+  verdict,
+}: PlayerProp) => {
   const oc = useUserCard();
   const openCard = () => {
     if (!user) {
@@ -69,11 +81,34 @@ const PlayerCard = ({ user, popoverContent }: PlayerProp) => {
       name: <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>,
     };
   })();
+  const color =
+    verdict === 'won'
+      ? 'text-red-400'
+      : verdict === 'lose'
+      ? 'text-blue-400'
+      : '';
+  const flexOrder = side === 'left' ? 'flex-row' : 'flex-row-reverse';
+  const align = side === 'left' ? 'flex-row' : 'flex-row-reverse';
+  const score = isfinite(userScore) ? (
+    <div className={`flex ${align} items-center px-1 text-2xl ${color}`}>
+      {userScore}
+      {verdict === 'won' && (
+        <InlineIcon className="px-1 text-base" i={<Icons.Pong.Won />} />
+      )}
+    </div>
+  ) : (
+    <></>
+  );
   return (
-    <div className="flex w-[150px] shrink-0 grow-0 flex-col items-center overflow-hidden">
+    <div className={`flex w-[180px] shrink-0 grow-0 ${flexOrder}`}>
       {avatar}
-      <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-xl">
-        {name}
+      <div className="flex shrink-0 grow-0 flex-col justify-center">
+        <div
+          className={`w-full overflow-hidden text-ellipsis whitespace-nowrap p-0 ${align} text-xl`}
+        >
+          {name}
+        </div>
+        {score}
       </div>
     </div>
   );
@@ -104,8 +139,9 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   ) {
     return null;
   }
+  const subpayload = props.message.subpayload;
   const command = makeCommand(mySocket, props.room.id);
-  const { status } = props.message.subpayload as SubPayload;
+  const { status, userScore1, userScore2 } = subpayload as SubPayload;
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
   if (!user || isBlocked) {
@@ -114,6 +150,13 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const isYours = props.you?.userId === user.id;
   const isCancelable = isYours && status === 'PR_OPEN';
   const isAppliable = !isYours && status === 'PR_OPEN';
+  const verdict1 =
+    isfinite(userScore1) && isfinite(userScore2)
+      ? userScore1 > userScore2
+        ? 'won'
+        : 'lose'
+      : null;
+  const verdict2 = verdict1 ? (verdict1 === 'won' ? 'lose' : 'won') : null;
   const opponentContent = (() => {
     if (isAppliable) {
       return <ApplyCard matchId={matchId} />;
@@ -129,6 +172,9 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
             />
           )
         }
+        userScore={userScore2}
+        side="right"
+        verdict={verdict2}
       />
     );
   })();
@@ -140,7 +186,6 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
     >
       <div className="flex w-full flex-col items-center">
         <div>
-          <span className="text-2xl font-bold">[{status}]</span>
           {isCancelable && (
             <FTButton
               onClick={async () => {
@@ -165,9 +210,12 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
           <PlayerCard
             user={user}
             popoverContent={<AdminOperationBar {...props} />}
+            userScore={userScore1}
+            side="left"
+            verdict={verdict1}
           />
           <div className="shrink-0 grow-0">
-            <p className="p-1 text-5xl">VS</p>
+            <p className="p-2 text-5xl">VS</p>
           </div>
           <div className="shrink-0 grow-0">{opponentContent}</div>
         </div>
