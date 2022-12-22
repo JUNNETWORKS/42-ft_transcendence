@@ -14,6 +14,31 @@ import { FTButton } from './FTBasicComponents';
 import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
+type ApplyProp = {
+  matchId: string;
+};
+
+const ApplyCard = ({ matchId }: ApplyProp) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [confirm] = useConfirmModal();
+  if (!mySocket) {
+    return null;
+  }
+  const command = makeCommand(mySocket, -1);
+  return (
+    <FTButton
+      onClick={async () => {
+        console.log('CLICK');
+        if (await confirm('このプライベートマッチに参加しますか？')) {
+          command.pong_private_match_join(matchId);
+        }
+      }}
+    >
+      対戦する
+    </FTButton>
+  );
+};
+
 type PlayerProp = {
   user?: TD.User;
   popoverContent: JSX.Element;
@@ -27,26 +52,28 @@ const PlayerCard = ({ user, popoverContent }: PlayerProp) => {
     }
     oc(user, popoverContent);
   };
-  const AvatarContent = () => {
+  const { avatar, name } = (() => {
     if (!user) {
-      return <UserAvatar user={user} />;
+      return {
+        avatar: <UserAvatar user={user} />,
+        name: <>対戦相手募集中</>,
+      };
     }
     const avatarButton = <UserAvatar user={user} onClick={openCard} />;
-    return (
-      <PopoverUserCard button={avatarButton}>{popoverContent}</PopoverUserCard>
-    );
-  };
-  const nameContent = (() => {
-    if (!user) {
-      return <>対戦相手を募集中</>;
-    }
-    return <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>;
+    return {
+      avatar: (
+        <PopoverUserCard button={avatarButton}>
+          {popoverContent}
+        </PopoverUserCard>
+      ),
+      name: <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>,
+    };
   })();
   return (
-    <div className="flex w-[120px] shrink-0 grow-0 flex-col items-center overflow-hidden">
-      <AvatarContent />
+    <div className="flex w-[150px] shrink-0 grow-0 flex-col items-center overflow-hidden">
+      {avatar}
       <div className="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center text-xl">
-        {nameContent}
+        {name}
       </div>
     </div>
   );
@@ -84,6 +111,27 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   if (!user || isBlocked) {
     return null;
   }
+  const isYours = props.you?.userId === user.id;
+  const isCancelable = isYours && status === 'PR_OPEN';
+  const isAppliable = !isYours && status === 'PR_OPEN';
+  const opponentContent = (() => {
+    if (isAppliable) {
+      return <ApplyCard matchId={matchId} />;
+    }
+    return (
+      <PlayerCard
+        user={targetUser}
+        popoverContent={
+          targetUser && (
+            <AdminOperationBar
+              {...props}
+              member={props.members[targetUser.id]}
+            />
+          )
+        }
+      />
+    );
+  })();
   return (
     <div
       className="m-2 flex flex-row items-start overflow-hidden border-2 border-solid px-2 py-1 text-sm hover:bg-gray-800"
@@ -92,8 +140,10 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
     >
       <div className="flex w-full flex-col items-center">
         <div>
-          <span className="text-2xl font-bold">Private Match[{status}]</span>
-          {status === 'PR_OPEN' && (
+          <span className="text-2xl font-bold">
+            [{status}] [{matchId}]
+          </span>
+          {isCancelable && (
             <FTButton
               onClick={async () => {
                 if (
@@ -121,17 +171,7 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
           <div className="shrink-0 grow-0">
             <p className="p-1 text-5xl">VS</p>
           </div>
-          <div className="shrink-0 grow-0">
-            <PlayerCard
-              user={targetUser}
-              popoverContent={
-                <AdminOperationBar
-                  {...props}
-                  member={props.members[targetUser.id]}
-                />
-              }
-            />
-          </div>
+          <div className="shrink-0 grow-0">{opponentContent}</div>
         </div>
       </div>
     </div>
