@@ -17,11 +17,41 @@ import { FTButton } from './FTBasicComponents';
 import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
+type CancelButtonProp = {
+  matchId: string;
+};
+
+const CancelButton = ({ matchId }: CancelButtonProp) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [, confirmModal] = useConfirmModal();
+  if (!mySocket) {
+    return null;
+  }
+  const command = makeCommand(mySocket, -1);
+  return (
+    <FTButton
+      className="text-base"
+      onClick={async () => {
+        if (
+          await confirmModal('プライベートマッチの募集をキャンセルしますか？', {
+            affirm: 'キャンセルする',
+            denial: 'しない',
+          })
+        ) {
+          command.pong_private_match_cancel(matchId);
+        }
+      }}
+    >
+      キャンセル
+    </FTButton>
+  );
+};
+
 type ApplyProp = {
   matchId: string;
 };
 
-const ApplyCard = ({ matchId }: ApplyProp) => {
+const ApplyButton = ({ matchId }: ApplyProp) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [confirm] = useConfirmModal();
   if (!mySocket) {
@@ -30,6 +60,7 @@ const ApplyCard = ({ matchId }: ApplyProp) => {
   const command = makeCommand(mySocket, -1);
   return (
     <FTButton
+      className="text-base"
       onClick={async () => {
         console.log('CLICK');
         if (await confirm('このプライベートマッチに参加しますか？')) {
@@ -48,6 +79,8 @@ type PlayerProp = {
   userScore?: number;
   side: 'left' | 'right';
   verdict: 'won' | 'lose' | null;
+  matchId: string;
+  isYours: boolean;
 };
 
 const PlayerCard = ({
@@ -56,6 +89,8 @@ const PlayerCard = ({
   userScore,
   side,
   verdict,
+  matchId,
+  isYours,
 }: PlayerProp) => {
   const oc = useUserCard();
   const openCard = () => {
@@ -66,9 +101,10 @@ const PlayerCard = ({
   };
   const { avatar, name } = (() => {
     if (!user) {
+      const Button = isYours ? CancelButton : ApplyButton;
       return {
         avatar: <UserAvatar user={user} />,
-        name: <>対戦相手募集中</>,
+        name: <Button matchId={matchId} />,
       };
     }
     const avatarButton = <UserAvatar user={user} onClick={openCard} />;
@@ -128,28 +164,18 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const user = useUserDataReadOnly(props.userId);
   const targetUser = useUserDataReadOnly(props.message.secondaryUserId || -1);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
-  const [, confirmModal] = useConfirmModal();
-  const [mySocket] = useAtom(chatSocketAtom);
   const matchId = props.message.matchId;
-  if (
-    !mySocket ||
-    !matchId ||
-    messageType !== 'PR_STATUS' ||
-    !props.message.subpayload
-  ) {
+  if (!matchId || messageType !== 'PR_STATUS' || !props.message.subpayload) {
     return null;
   }
   const subpayload = props.message.subpayload;
-  const command = makeCommand(mySocket, props.room.id);
-  const { status, userScore1, userScore2 } = subpayload as SubPayload;
+  const { userScore1, userScore2 } = subpayload as SubPayload;
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
   if (!user || isBlocked) {
     return null;
   }
   const isYours = props.you?.userId === user.id;
-  const isCancelable = isYours && status === 'PR_OPEN';
-  const isAppliable = !isYours && status === 'PR_OPEN';
   const verdict1 =
     isfinite(userScore1) && isfinite(userScore2)
       ? userScore1 > userScore2
@@ -158,9 +184,6 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
       : null;
   const verdict2 = verdict1 ? (verdict1 === 'won' ? 'lose' : 'won') : null;
   const opponentContent = (() => {
-    if (isAppliable) {
-      return <ApplyCard matchId={matchId} />;
-    }
     return (
       <PlayerCard
         user={targetUser}
@@ -175,37 +198,18 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
         userScore={userScore2}
         side="right"
         verdict={verdict2}
+        matchId={matchId}
+        isYours={isYours}
       />
     );
   })();
   return (
     <div
-      className="m-2 flex flex-row items-start overflow-hidden border-2 border-solid px-2 py-1 text-sm hover:bg-gray-800"
+      className="m-2 flex flex-row items-start overflow-hidden px-2 py-1 text-sm hover:bg-gray-800"
       key={props.message.id}
       id={props.id}
     >
       <div className="flex w-full flex-col items-center">
-        <div>
-          {isCancelable && (
-            <FTButton
-              onClick={async () => {
-                if (
-                  await confirmModal(
-                    'プライベートマッチの募集をキャンセルしますか？',
-                    {
-                      affirm: 'キャンセルする',
-                      denial: 'しない',
-                    }
-                  )
-                ) {
-                  command.pong_private_match_cancel(matchId);
-                }
-              }}
-            >
-              キャンセル
-            </FTButton>
-          )}
-        </div>
         <div className="flex flex-row items-center justify-center">
           <PlayerCard
             user={user}
@@ -213,6 +217,8 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
             userScore={userScore1}
             side="left"
             verdict={verdict1}
+            matchId={matchId}
+            isYours={isYours}
           />
           <div className="shrink-0 grow-0">
             <p className="p-2 text-5xl">VS</p>
