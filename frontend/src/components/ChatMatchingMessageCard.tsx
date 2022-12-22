@@ -81,8 +81,8 @@ const PlayerCard = ({ user, popoverContent }: PlayerProp) => {
 
 type SubPayload = {
   status: 'PR_OPEN' | 'PR_CANCEL' | 'PR_START' | 'PR_RESULT' | 'PR_ERROR';
-  userScore?: number;
-  secondaryUserScore?: number;
+  userScore1?: number;
+  userScore2?: number;
 };
 
 /**
@@ -140,9 +140,7 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
     >
       <div className="flex w-full flex-col items-center">
         <div>
-          <span className="text-2xl font-bold">
-            [{status}] [{matchId}]
-          </span>
+          <span className="text-2xl font-bold">[{status}]</span>
           {isCancelable && (
             <FTButton
               onClick={async () => {

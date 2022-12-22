@@ -191,18 +191,20 @@ export const useUpdateMessage = () => {
     messageId: number,
     data: TD.ChatRoomMessage
   ) => {
-    const ms = messages[roomId];
-    if (!ms) {
-      return;
-    }
-    const i = ms.findIndex((m) => m.id === messageId);
-    if (i < 0) {
-      return;
-    }
-    const nms = [...ms];
-    nms[i] = data;
-    const newMessages = { ...messages, [roomId]: nms };
-    setMessages(newMessages);
+    setMessages((prev) => {
+      const ms = prev[roomId];
+      if (!ms) {
+        return prev;
+      }
+      const i = ms.findIndex((m) => m.id === messageId);
+      if (i < 0) {
+        return prev;
+      }
+      const nms = [...ms];
+      nms[i] = data;
+      const next = { ...prev, [roomId]: nms };
+      return next;
+    });
   };
   return {
     setOne,
