@@ -334,6 +334,7 @@ export const SocketHolder = () => {
     listeners.push([
       'ft_update_message',
       (data: TD.MessageUpdateResult) => {
+        console.log('catch update_message', data);
         const { roomId, messageId, message } = data;
         messageUpdater.setOne(roomId, messageId, message);
       },

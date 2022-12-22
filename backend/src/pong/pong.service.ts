@@ -253,6 +253,7 @@ export class PongService {
           'PR_RESULT',
           loser
         );
+      await this.wsServer.updateMatchingMessage(match.matchId, 'PR_RESULT');
     }
   }
 
@@ -277,6 +278,7 @@ export class PongService {
           'PR_ERROR',
           user2
         );
+      await this.wsServer.updateMatchingMessage(match.matchId, 'PR_ERROR');
     }
   }
 
@@ -380,8 +382,10 @@ export class PongService {
     ]);
     if (match && match.matchType === 'PRIVATE' && match.relatedRoomId) {
       const user = await this.usersService.findOne(match.userId1);
-      if (user)
+      if (user) {
         await this.wsServer.systemSay(match.relatedRoomId, user, 'PR_CANCEL');
+        await this.wsServer.updateMatchingMessage(matchId, 'PR_CANCEL');
+      }
     }
   }
 
