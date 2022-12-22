@@ -1,15 +1,11 @@
-import * as dayjs from 'dayjs';
 import { useAtom } from 'jotai';
 
 import { makeCommand } from '@/features/Chat/command';
-import { InlineIcon } from '@/hocs/InlineIcon';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
-import { Icons } from '@/icons';
 import { chatSocketAtom } from '@/stores/auth';
 import { useUserDataReadOnly } from '@/stores/store';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
-import { compact } from '@/utils';
 
 import { ChatMessageProp } from './ChatMessageCard';
 import { FTButton } from './FTBasicComponents';
@@ -47,7 +43,6 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const [, confirmModal] = useConfirmModal();
   const [mySocket] = useAtom(chatSocketAtom);
   const matchId = props.message.matchId;
-  console.log('props.message', props.message);
   if (
     !mySocket ||
     !matchId ||

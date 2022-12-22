@@ -7,6 +7,7 @@ import { useUpdateRoom, useUpdateUser, useUpdateDmRoom } from '@/stores/store';
 import {
   structureAtom,
   useUpdateJoiningRooms,
+  useUpdateMessage,
   useUpdateVisibleRooms,
 } from '@/stores/structure';
 import * as TD from '@/typedef';
@@ -30,9 +31,10 @@ export const SocketHolder = () => {
   const [, setMembersInRoom] = useAtom(structureAtom.membersInRoomAtom);
   const userId = personalData ? personalData.id : -1;
 
-  const userUpdator = useUpdateUser();
-  const roomUpdator = useUpdateRoom();
-  const dmRoomUpdator = useUpdateDmRoom();
+  const userUpdater = useUpdateUser();
+  const roomUpdater = useUpdateRoom();
+  const dmRoomUpdater = useUpdateDmRoom();
+  const messageUpdater = useUpdateMessage();
   const visibleRoomsUpdater = useUpdateVisibleRooms();
   const joiningRoomsUpdater = useUpdateJoiningRooms();
 
@@ -54,15 +56,15 @@ export const SocketHolder = () => {
         setDmRooms(data.dmRooms);
         setFriends(data.friends);
         setBlockingUsers(data.blockingUsers);
-        userUpdator.addMany(data.friends);
-        userUpdator.addMany(data.blockingUsers);
-        userUpdator.addMany(
+        userUpdater.addMany(data.friends);
+        userUpdater.addMany(data.blockingUsers);
+        userUpdater.addMany(
           Utils.compact(data.visibleRooms.map((r) => r.owner))
         );
-        userUpdator.addMany(
+        userUpdater.addMany(
           Utils.compact(data.joiningRooms.map((r) => r.chatRoom.owner))
         );
-        dmRoomUpdator.addMany(data.dmRooms);
+        dmRoomUpdater.addMany(data.dmRooms);
       },
     ]);
 
@@ -70,7 +72,7 @@ export const SocketHolder = () => {
       'ft_heartbeat',
       (data: TD.HeartbeatResult) => {
         console.log('catch heartbeat', data);
-        userUpdator.updateOne(data.userId, {
+        userUpdater.updateOne(data.userId, {
           ...Utils.datifyObject(
             Utils.pick(data, 'pulseTime', 'ongoingMatchId'),
             'pulseTime'
@@ -83,7 +85,7 @@ export const SocketHolder = () => {
       'ft_offline',
       (data: TD.HeartbeatResult) => {
         console.log('catch offline', data);
-        userUpdator.offlinate(data.userId);
+        userUpdater.offlinate(data.userId);
       },
     ]);
 
@@ -104,9 +106,9 @@ export const SocketHolder = () => {
             createdAt: room.createdAt,
           });
         }
-        roomUpdator.addOne(room);
+        roomUpdater.addOne(room);
         if (room.owner) {
-          userUpdator.addOne(room.owner);
+          userUpdater.addOne(room.owner);
         }
       },
     ]);
@@ -126,7 +128,7 @@ export const SocketHolder = () => {
           next.push(room);
           return next;
         });
-        dmRoomUpdator.addOne(room);
+        dmRoomUpdater.addOne(room);
       },
     ]);
 
@@ -157,7 +159,7 @@ export const SocketHolder = () => {
         } else {
           // 他人に関する通知
           console.log('for other');
-          userUpdator.addOne(data.relation.user);
+          userUpdater.addOne(data.relation.user);
           stateMutater.mergeMembersInRoom(room.id, {
             [user.id]: data.relation,
           });
@@ -227,7 +229,7 @@ export const SocketHolder = () => {
         console.log('catch get_room_messages', data);
         const { id, messages } = data;
         console.log(id, !!messages);
-        userUpdator.addMany(messages.map((m) => m.user));
+        userUpdater.addMany(messages.map((m) => m.user));
         stateMutater.addMessagesToRoom(
           id,
           messages.map(TD.Mapper.chatRoomMessage)
@@ -241,7 +243,7 @@ export const SocketHolder = () => {
         console.log('catch get_room_members');
         const { id, members } = data;
         console.log(id, members);
-        userUpdator.addMany(members.map((m) => m.user));
+        userUpdater.addMany(members.map((m) => m.user));
         stateMutater.mergeMembersInRoom(
           id,
           Utils.keyBy(members, (a) => `${a.userId}`)
@@ -254,7 +256,7 @@ export const SocketHolder = () => {
       (data: TD.FollowResult) => {
         console.log('catch follow');
         if (!friends.find((f) => f.id === data.user.id)) {
-          userUpdator.addOne(data.user);
+          userUpdater.addOne(data.user);
           setFriends((prev) => {
             const next = [...prev, data.user];
             return next;
@@ -308,10 +310,10 @@ export const SocketHolder = () => {
         console.log('catch user', data);
         switch (data.action) {
           case 'update':
-            userUpdator.updateOne(data.id, data.data);
+            userUpdater.updateOne(data.id, data.data);
             break;
           case 'delete':
-            userUpdator.delOne(data.id);
+            userUpdater.delOne(data.id);
             break;
         }
       },
@@ -323,9 +325,17 @@ export const SocketHolder = () => {
         console.log('catch chatroom', data);
         switch (data.action) {
           case 'update':
-            roomUpdator.updateOne(data.id, data.data);
+            roomUpdater.updateOne(data.id, data.data);
             break;
         }
+      },
+    ]);
+
+    listeners.push([
+      'ft_update_message',
+      (data: TD.MessageUpdateResult) => {
+        const { roomId, messageId, message } = data;
+        messageUpdater.setOne(roomId, messageId, message);
       },
     ]);
 

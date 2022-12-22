@@ -183,3 +183,28 @@ export const useUpdateJoiningRooms = () => {
   };
   return updater;
 };
+
+export const useUpdateMessage = () => {
+  const [messages, setMessages] = useAtom(structureAtom.messagesInRoomAtom);
+  const setOne = (
+    roomId: number,
+    messageId: number,
+    data: TD.ChatRoomMessage
+  ) => {
+    const ms = messages[roomId];
+    if (!ms) {
+      return;
+    }
+    const i = ms.findIndex((m) => m.id === messageId);
+    if (i < 0) {
+      return;
+    }
+    const nms = [...ms];
+    nms[i] = data;
+    const newMessages = { ...messages, [roomId]: nms };
+    setMessages(newMessages);
+  };
+  return {
+    setOne,
+  };
+};

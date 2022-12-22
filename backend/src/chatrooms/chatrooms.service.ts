@@ -12,6 +12,7 @@ import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { PostMessageDto } from './dto/post-message.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -388,6 +389,15 @@ export class ChatroomsService {
   postMessage(data: PostMessageDto) {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
+  }
+
+  updateMessageByMatchId(matchId: string, data: UpdateMessageDto) {
+    return this.prisma.chatMessage.update({
+      where: {
+        matchId,
+      },
+      data,
+    });
   }
 
   /**

@@ -37,6 +37,17 @@ export class ChatService {
     });
   }
 
+  async updateMatchingMessage(
+    matchId: string,
+    status: 'PR_START' | 'PR_CANCEL' | 'PR_RESULT' | 'PR_ERROR',
+    secondaryUserId?: number
+  ) {
+    return this.chatRoomService.updateMessageByMatchId(matchId, {
+      secondaryUserId,
+      subpayload: { status },
+    });
+  }
+
   async getDisplayName(userId: number | null) {
     if (!userId) {
       throw new WsException('failed to get displayName');

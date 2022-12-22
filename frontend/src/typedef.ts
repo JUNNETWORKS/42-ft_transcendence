@@ -180,6 +180,12 @@ export type ChatRoomResult = {
   data: Partial<ChatRoom>;
 };
 
+export type MessageUpdateResult = {
+  roomId: number;
+  messageId: number;
+  message: ChatRoomMessage;
+};
+
 export const Mapper = {
   user: (data: any): User => {
     return Utils.pick(data, 'id', 'displayName');

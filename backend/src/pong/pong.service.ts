@@ -225,6 +225,7 @@ export class PongService {
         'PR_START',
         user2
       );
+    await this.wsServer.updateMatchingMessage(matchId, 'PR_START', userId2);
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
