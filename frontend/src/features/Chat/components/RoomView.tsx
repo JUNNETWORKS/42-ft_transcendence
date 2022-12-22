@@ -141,7 +141,6 @@ const MessagesList = (props: {
     }
     return ChatMessageCard;
   };
-  console.log('props.messages', props.messages);
   return (
     <div id={listId} className="h-full overflow-scroll">
       {props.messages.map((data: TD.ChatRoomMessage) => {
