@@ -7,8 +7,17 @@ import * as Utils from 'src/utils';
 import { CreateSayDto } from './dto/create-say.dto';
 import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dto';
 
-import { ChatroomsService } from '../chatrooms/chatrooms.service';
+import {
+  ChatroomsService,
+  RecordSpecifier,
+} from '../chatrooms/chatrooms.service';
 import { UsersService } from '../users/users.service';
+
+export type SubPayload = {
+  status: 'PR_OPEN' | 'PR_CANCEL' | 'PR_START' | 'PR_RESULT' | 'PR_ERROR';
+  userScore1?: number;
+  userScore2?: number;
+};
 
 @Injectable()
 export class ChatService {
@@ -38,13 +47,15 @@ export class ChatService {
   }
 
   async updateMatchingMessage(
-    matchId: string,
-    status: 'PR_START' | 'PR_CANCEL' | 'PR_RESULT' | 'PR_ERROR',
+    specifier: RecordSpecifier,
+    matchId: string | null,
+    subpayload: SubPayload,
     secondaryUserId?: number
   ) {
-    return this.chatRoomService.updateMessageByMatchId(matchId, {
+    return this.chatRoomService.updateMessageByMatchId(specifier, {
+      matchId,
       secondaryUserId,
-      subpayload: { status },
+      subpayload,
     });
   }
 

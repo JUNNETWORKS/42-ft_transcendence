@@ -2,7 +2,8 @@ import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { User } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 
-import { ChatService } from 'src/chat/chat.service';
+import { ChatService, SubPayload } from 'src/chat/chat.service';
+import { RecordSpecifier } from 'src/chatrooms/chatrooms.service';
 import {
   MessageTypeMatching,
   MessageTypeSingle,
@@ -199,13 +200,15 @@ export class WsServerGateway {
   }
 
   async updateMatchingMessage(
-    matchId: string,
-    status: 'PR_START' | 'PR_CANCEL' | 'PR_RESULT' | 'PR_ERROR',
+    specifier: RecordSpecifier,
+    matchId: string | null,
+    subpayload: SubPayload,
     secondaryUserId?: number
   ) {
     const message = await this.chatService.updateMatchingMessage(
+      specifier,
       matchId,
-      status,
+      subpayload,
       secondaryUserId
     );
     console.log('message', message);

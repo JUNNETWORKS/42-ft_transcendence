@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
+import { ChatroomsService } from 'src/chatrooms/chatrooms.service';
 import { UsersService } from 'src/users/users.service';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
@@ -25,7 +26,8 @@ export class PongService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly wsServer: WsServerGateway,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly chatroomService: ChatroomsService
   ) {}
 
   async fetchUserMatchResults(userId: number) {
@@ -218,20 +220,29 @@ export class PongService {
     ]);
     const user1 = await this.usersService.findOne(match.userId1);
     const user2 = await this.usersService.findOne(match.userId2);
-    if (user1 && user2 && match.relatedRoomId)
+    if (user1 && user2 && match.relatedRoomId) {
       await this.wsServer.systemSayWithTarget(
         match.relatedRoomId,
         user1,
         'PR_START',
         user2
       );
-    await this.wsServer.updateMatchingMessage(matchId, 'PR_START', userId2);
+    }
+    await this.wsServer.updateMatchingMessage(
+      { matchId },
+      matchId,
+      { status: 'PR_START' },
+      userId2
+    );
   }
 
   async updateMatchAsDone(match: OnlineMatch) {
+    const matchId = match.matchId;
+    const userScore1 = match.playerScores[0];
+    const userScore2 = match.playerScores[1];
     const result = await this.prisma.match.update({
       where: {
-        id: match.matchId,
+        id: matchId,
       },
       data: {
         matchStatus: MatchStatus.DONE,
@@ -253,14 +264,19 @@ export class PongService {
           'PR_RESULT',
           loser
         );
-      await this.wsServer.updateMatchingMessage(match.matchId, 'PR_RESULT');
+      await this.wsServer.updateMatchingMessage({ matchId }, matchId, {
+        status: 'PR_RESULT',
+        userScore1,
+        userScore2,
+      });
     }
   }
 
   async updateMatchAsError(match: OnlineMatch) {
+    const matchId = match.matchId;
     const result = await this.prisma.match.update({
       where: {
-        id: match.matchId,
+        id: matchId,
       },
       data: {
         matchStatus: MatchStatus.ERROR,
@@ -278,7 +294,9 @@ export class PongService {
           'PR_ERROR',
           user2
         );
-      await this.wsServer.updateMatchingMessage(match.matchId, 'PR_ERROR');
+      await this.wsServer.updateMatchingMessage({ matchId }, matchId, {
+        status: 'PR_ERROR',
+      });
     }
   }
 
@@ -363,6 +381,7 @@ export class PongService {
   }
 
   async deleteMatchByMatchId(matchId: string) {
+    const message = await this.chatroomService.getMessage({ matchId });
     const [, , match] = await this.prisma.$transaction([
       this.prisma.matchUserRelation.deleteMany({
         where: {
@@ -380,11 +399,18 @@ export class PongService {
         },
       }),
     ]);
-    if (match && match.matchType === 'PRIVATE' && match.relatedRoomId) {
+    if (
+      message &&
+      match &&
+      match.matchType === 'PRIVATE' &&
+      match.relatedRoomId
+    ) {
       const user = await this.usersService.findOne(match.userId1);
       if (user) {
         await this.wsServer.systemSay(match.relatedRoomId, user, 'PR_CANCEL');
-        await this.wsServer.updateMatchingMessage(matchId, 'PR_CANCEL');
+        await this.wsServer.updateMatchingMessage({ id: message.id }, null, {
+          status: 'PR_CANCEL',
+        });
       }
     }
   }

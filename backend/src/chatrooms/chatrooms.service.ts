@@ -26,6 +26,8 @@ const selectForUser = {
   isEnabledAvatar: true,
 };
 
+export type RecordSpecifier = { matchId: string } | { id: number };
+
 @Injectable()
 export class ChatroomsService {
   constructor(private prisma: PrismaService) {}
@@ -357,6 +359,10 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
+  async getMessage(specifier: RecordSpecifier) {
+    return this.prisma.chatMessage.findUnique({ where: specifier });
+  }
+
   async getMessages(user: User, getMessageDto: GetMessagesDto) {
     const { roomId, take, cursor } = getMessageDto;
     if (!(await this.checkJoined(user, roomId))) {
@@ -391,11 +397,12 @@ export class ChatroomsService {
     return this.prisma.chatMessage.create({ data });
   }
 
-  updateMessageByMatchId(matchId: string, data: UpdateMessageDto) {
+  async updateMessageByMatchId(
+    specifier: RecordSpecifier,
+    data: UpdateMessageDto
+  ) {
     return this.prisma.chatMessage.update({
-      where: {
-        matchId,
-      },
+      where: specifier,
       data,
     });
   }
