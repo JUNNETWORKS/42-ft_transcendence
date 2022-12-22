@@ -44,18 +44,16 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       }
     });
 
-    // Register websocket event handlers
-    mySocket.on('pong.match.state', (gameState: GameState) => {
-      drawGameOneFrame(gameState);
-    });
-
-    mySocket.on(
-      'pong.match.finish',
-      ({ game, result }: { game: GameState; result: GameResult }) => {
-        drawGameResult(game, result);
-        setIsFinished(true);
-      }
-    );
+    const handleFinished = ({
+      game,
+      result,
+    }: {
+      game: GameState;
+      result: GameResult;
+    }) => {
+      drawGameResult(game, result);
+      setIsFinished(true);
+    };
 
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       mySocket.emit('pong.match.action', {
@@ -71,11 +69,17 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       });
     };
 
+    // Register websocket event handlers
+    mySocket.on('pong.match.state', drawGameOneFrame);
+    mySocket.on('pong.match.finish', handleFinished);
+
     // add event listeners
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
+      mySocket.off('pong.match.state', drawGameOneFrame);
+      mySocket.off('pong.match.finish', handleFinished);
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
