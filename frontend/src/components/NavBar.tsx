@@ -15,7 +15,7 @@ const UserCard = ({ user }: UserCardProp) => {
     <>
       <div className="flex w-72 flex-row items-center bg-secondary">
         <Link
-          to="/auth"
+          to="/me"
           className="flex min-w-0 shrink grow flex-row items-center"
         >
           <div className="shrink-0 grow-0">
