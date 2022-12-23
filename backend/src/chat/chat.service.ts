@@ -7,10 +7,7 @@ import * as Utils from 'src/utils';
 import { CreateSayDto } from './dto/create-say.dto';
 import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dto';
 
-import {
-  ChatroomsService,
-  RecordSpecifier,
-} from '../chatrooms/chatrooms.service';
+import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { UsersService } from '../users/users.service';
 
 export type SubPayload = {
@@ -43,19 +40,6 @@ export class ChatService {
       messageType: data.messageType,
       subpayload: data.subpayload,
       matchId: data.matchId,
-    });
-  }
-
-  async updateMatchingMessage(
-    specifier: RecordSpecifier,
-    matchId: string | null,
-    subpayload: SubPayload,
-    secondaryUserId?: number
-  ) {
-    return this.chatRoomService.updateMessageByMatchId(specifier, {
-      matchId,
-      secondaryUserId,
-      subpayload,
     });
   }
 

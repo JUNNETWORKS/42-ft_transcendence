@@ -3,7 +3,10 @@ import { User } from '@prisma/client';
 import { Server, Socket } from 'socket.io';
 
 import { ChatService, SubPayload } from 'src/chat/chat.service';
-import { RecordSpecifier } from 'src/chatrooms/chatrooms.service';
+import {
+  ChatroomsService,
+  RecordSpecifier,
+} from 'src/chatrooms/chatrooms.service';
 import {
   MessageTypeMatching,
   MessageTypeSingle,
@@ -31,7 +34,10 @@ export class WsServerGateway {
   @WebSocketServer()
   server: Server;
 
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly chatRoomService: ChatroomsService
+  ) {}
 
   /**
    * 指定したユーザーIDのルームにjoinしているclientのsocketを取得する
@@ -205,11 +211,13 @@ export class WsServerGateway {
     subpayload: SubPayload,
     secondaryUserId?: number
   ) {
-    const message = await this.chatService.updateMatchingMessage(
+    const message = await this.chatRoomService.updateMessageByMatchId(
       specifier,
-      matchId,
-      subpayload,
-      secondaryUserId
+      {
+        matchId,
+        subpayload,
+        secondaryUserId,
+      }
     );
     this.sendResults(
       'ft_update_message',

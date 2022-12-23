@@ -164,26 +164,21 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
       : 'none';
   const verdict2 =
     verdict1 !== 'none' ? (verdict1 === 'won' ? 'lose' : 'won') : 'none';
-  const opponentContent = (() => {
-    return (
-      <PlayerCard
-        user={targetUser}
-        popoverContent={
-          targetUser && (
-            <AdminOperationBar
-              {...props}
-              member={props.members[targetUser.id]}
-            />
-          )
-        }
-        userScore={userScore2}
-        side="right"
-        verdict={verdict2}
-        matchId={matchId}
-        isYours={isYours}
-      />
-    );
-  })();
+  const opponentContent = (() => (
+    <PlayerCard
+      user={targetUser}
+      popoverContent={
+        targetUser && (
+          <AdminOperationBar {...props} member={props.members[targetUser.id]} />
+        )
+      }
+      userScore={userScore2}
+      side="right"
+      verdict={verdict2}
+      matchId={matchId}
+      isYours={isYours}
+    />
+  ))();
 
   const isSpectatable = status === 'PR_START';
   const spectateClass = isSpectatable ? 'cursor-pointer' : '';

@@ -231,7 +231,7 @@ export class PongService {
     await this.wsServer.updateMatchingMessage(
       { matchId },
       matchId,
-      { status: 'PR_START' },
+      { status: 'PR_START', userScore1: 0, userScore2: 0 },
       userId2
     );
   }

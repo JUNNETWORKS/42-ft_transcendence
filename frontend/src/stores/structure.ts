@@ -185,7 +185,7 @@ export const useUpdateJoiningRooms = () => {
 };
 
 export const useUpdateMessage = () => {
-  const [messages, setMessages] = useAtom(structureAtom.messagesInRoomAtom);
+  const [, setMessages] = useAtom(structureAtom.messagesInRoomAtom);
   const setOne = (
     roomId: number,
     messageId: number,
@@ -202,8 +202,7 @@ export const useUpdateMessage = () => {
       }
       const nms = [...ms];
       nms[i] = data;
-      const next = { ...prev, [roomId]: nms };
-      return next;
+      return { ...prev, [roomId]: nms };
     });
   };
   return {
