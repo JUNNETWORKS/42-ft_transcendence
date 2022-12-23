@@ -2,7 +2,13 @@ import { Listbox } from '@headlessui/react';
 import { Dispatch, SetStateAction, useState } from 'react';
 import { toast } from 'react-toastify';
 
-import { FTButton, FTH3, FTTextField } from '@/components/FTBasicComponents';
+import {
+  FTBlockedHeader,
+  FTButton,
+  FTH3,
+  FTTextField,
+} from '@/components/FTBasicComponents';
+import { SelectListBox } from '@/components/SelectListBox';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { Icons, RoomTypeIcon } from '@/icons';
@@ -10,47 +16,6 @@ import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
 
 import { roomErrors } from './room.validator';
-
-type RoomTypeListProps = {
-  selected: TD.RoomType;
-  setSelected: (next: TD.RoomType) => void;
-};
-
-const RoomTypeListBox = ({ selected, setSelected }: RoomTypeListProps) => {
-  const roomTypes = TD.RoomTypesSelectable.map((t) => ({
-    roomType: t,
-    icon: RoomTypeIcon[t],
-  }));
-  const SelectedType = roomTypes.find((rt) => rt.roomType === selected)!;
-
-  return (
-    <>
-      <Listbox
-        value={SelectedType}
-        onChange={(next: { roomType: TD.RoomType; icon: any }) =>
-          setSelected(next.roomType)
-        }
-      >
-        <Listbox.Button className="flex w-[9em] flex-row justify-center self-center border-2 pl-2 pr-4 text-center">
-          <InlineIcon i={<SelectedType.icon />} />
-          {SelectedType.roomType}
-        </Listbox.Button>
-        <Listbox.Options className="absolute overflow-auto bg-black">
-          {roomTypes.map((Item) => (
-            <Listbox.Option
-              className="flex cursor-pointer flex-row items-center bg-black p-[2px] hover:bg-teal-800"
-              key={Item.roomType}
-              value={Item}
-            >
-              <InlineIcon i={<Item.icon />} />
-              {Item.roomType}
-            </Listbox.Option>
-          ))}
-        </Listbox.Options>
-      </Listbox>
-    </>
-  );
-};
 
 type UseStateFuncs<S> = {
   (initialState: S | (() => S)): [S, Dispatch<SetStateAction<S>>];
@@ -91,7 +56,12 @@ const CardElement = ({
   return (
     <>
       <div className="flex w-96 flex-col border-2 border-solid border-white bg-black">
-        <FTH3>{title}</FTH3>
+        <FTBlockedHeader>
+          <FTButton onClick={onCancel} className="shrink-0 grow-0">
+            <Icons.Cancel className="block" />
+          </FTButton>
+          <div className="shrink-0 grow-0">{title}</div>
+        </FTBlockedHeader>
         <div className="flex flex-row p-2">
           <div className="basis-[6em] p-2">ROOM NAME</div>
           <div className="shrink grow">
@@ -112,7 +82,20 @@ const CardElement = ({
           {/* https://ics.media/entry/200609/ */}
           <div className="z-10 flex shrink grow items-center">
             <div>
-              <RoomTypeListBox selected={roomType} setSelected={setRoomType} />
+              <SelectListBox<TD.RoomType>
+                selected={roomType}
+                items={[...TD.RoomTypes]}
+                setItem={setRoomType}
+                makeElement={(t) => {
+                  const Icon = RoomTypeIcon[t];
+                  return (
+                    <div className="flex flex-row justify-center">
+                      <InlineIcon i={<Icon />} />
+                      <p className="basis-[4em]">{t}</p>
+                    </div>
+                  );
+                }}
+              />
             </div>
           </div>
         </div>

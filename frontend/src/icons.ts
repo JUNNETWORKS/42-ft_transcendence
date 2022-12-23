@@ -51,6 +51,10 @@ const User = {
   Edit: Fa.FaEdit,
 };
 
+const Pong = {
+  Game: Ri.RiPingPongLine,
+};
+
 export const Icons = {
   Setting: Fa.FaCog,
   Save: Bs.BsCloudUpload,
@@ -64,6 +68,7 @@ export const Icons = {
 
   User,
   Chat,
+  Pong,
 
   Android: Fa.FaAndroid,
   IOS: Fa.FaApple,

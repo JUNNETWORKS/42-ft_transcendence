@@ -348,7 +348,7 @@ export class ChatGateway implements OnGatewayConnection {
     // チャットルームの内容を通知
     await Utils.PromiseMap({
       messages: (async () => {
-        const messages = await this.chatRoomService.getMessages({
+        const messages = await this.chatRoomService.getMessages(user, {
           roomId,
           take: 50,
         });
@@ -364,7 +364,7 @@ export class ChatGateway implements OnGatewayConnection {
         );
       })(),
       members: (async () => {
-        const members = await this.chatRoomService.getMembers(roomId);
+        const members = await this.chatRoomService.getMembers(user, roomId);
         this.wsServer.sendResults(
           'ft_get_room_members',
           {
@@ -439,12 +439,9 @@ export class ChatGateway implements OnGatewayConnection {
     @MessageBody() data: OperationInviteDto,
     @ConnectedSocket() client: Socket
   ) {
-    const caller = await this.authService.trapAuth(client);
-    if (!caller) {
-      return;
-    }
-    this.pulse(caller);
-    const callerId = caller.id;
+    const user = getUserFromClient(client);
+    this.pulse(user);
+    const callerId = user.id;
     const roomId = data.roomId;
     console.log('ft_invite', data);
 
@@ -537,11 +534,11 @@ export class ChatGateway implements OnGatewayConnection {
     );
 
     // チャットルームの内容を通知
-    const messages = await this.chatRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages(user, {
       roomId,
       take: 50,
     });
-    const members = await this.chatRoomService.getMembers(roomId);
+    const members = await this.chatRoomService.getMembers(user, roomId);
 
     await Promise.all(
       targetUsers.map(async (userId) => {
@@ -788,7 +785,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = getUserFromClient(client);
     this.pulse(user);
-    const messages = await this.chatRoomService.getMessages({
+    const messages = await this.chatRoomService.getMessages(user, {
       roomId: data.roomId,
       take: data.take,
       cursor: data.cursor,
@@ -818,7 +815,7 @@ export class ChatGateway implements OnGatewayConnection {
   ) {
     const user = getUserFromClient(client);
     this.pulse(user);
-    const members = await this.chatRoomService.getMembers(data.roomId);
+    const members = await this.chatRoomService.getMembers(user, data.roomId);
     this.wsServer.sendResults(
       'ft_get_room_members',
       {
