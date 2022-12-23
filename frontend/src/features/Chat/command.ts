@@ -103,7 +103,6 @@ export function makeCommand(
       };
       return new Promise<any>((res, rej) => {
         mySocket.emit('pong.private_match.create', data, (result: any) => {
-          console.log('result', result);
           if (result && result.status === 'accepted') {
             res(result);
             return;
@@ -120,7 +119,6 @@ export function makeCommand(
       };
       return new Promise<any>((res, rej) => {
         mySocket.emit('pong.private_match.leave', data, (result: any) => {
-          console.log('result', result);
           if (result && result.status === 'accepted') {
             res(result);
             return;
@@ -137,7 +135,6 @@ export function makeCommand(
       };
       return new Promise<any>((res, rej) => {
         mySocket.emit('pong.private_match.join', data, (result: any) => {
-          console.log('result', result);
           if (result && result.status === 'accepted') {
             res(result);
             return;

@@ -18,68 +18,23 @@ import { FTButton } from './FTBasicComponents';
 import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
-type CancelButtonProp = {
-  matchId: string;
+type ButtonProp = {
+  onClick: () => Promise<void>;
+  text: string;
 };
 
-const CancelButton = ({ matchId }: CancelButtonProp) => {
-  const [mySocket] = useAtom(chatSocketAtom);
-  const [, confirmModal] = useConfirmModal();
-  if (!mySocket) {
-    return null;
-  }
-  const command = makeCommand(mySocket, -1);
-  return (
-    <FTButton
-      className="text-base"
-      onClick={async () => {
-        if (
-          await confirmModal('プライベートマッチの募集をキャンセルしますか？', {
-            affirm: 'キャンセルする',
-            denial: 'しない',
-          })
-        ) {
-          command.pong_private_match_cancel(matchId);
-        }
-      }}
-    >
-      キャンセル
-    </FTButton>
-  );
-};
-
-type ApplyProp = {
-  matchId: string;
-};
-
-const ApplyButton = ({ matchId }: ApplyProp) => {
-  const [mySocket] = useAtom(chatSocketAtom);
-  const [confirm] = useConfirmModal();
-  if (!mySocket) {
-    return null;
-  }
-  const command = makeCommand(mySocket, -1);
-  return (
-    <FTButton
-      className="text-base"
-      onClick={async () => {
-        console.log('CLICK');
-        if (await confirm('このプライベートマッチに参加しますか？')) {
-          command.pong_private_match_join(matchId);
-        }
-      }}
-    >
-      対戦する
-    </FTButton>
-  );
-};
+const CommandButton = ({ onClick, text }: ButtonProp) => (
+  <FTButton className="text-base" onClick={onClick}>
+    {text}
+  </FTButton>
+);
 
 type PlayerProp = {
   user?: TD.User;
   popoverContent: JSX.Element;
   userScore?: number;
   side: 'left' | 'right';
-  verdict: 'won' | 'lose' | null;
+  verdict: 'won' | 'lose' | 'none';
   matchId: string;
   isYours: boolean;
 };
@@ -93,19 +48,43 @@ const PlayerCard = ({
   matchId,
   isYours,
 }: PlayerProp) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [, , confirm, confirmDestructive] = useConfirmModal();
   const oc = useUserCard();
+  if (!mySocket) {
+    return null;
+  }
+  const command = makeCommand(mySocket, -1);
   const openCard = () => {
-    if (!user) {
-      return;
+    if (user) {
+      oc(user, popoverContent);
     }
-    oc(user, popoverContent);
   };
   const { avatar, name } = (() => {
     if (!user) {
-      const Button = isYours ? CancelButton : ApplyButton;
+      const button = isYours ? (
+        <CommandButton
+          text="キャンセル"
+          onClick={confirmDestructive(
+            'プライベートマッチの募集をキャンセルしますか？',
+            () => command.pong_private_match_cancel(matchId),
+            {
+              affirm: 'キャンセルする',
+              denial: 'しない',
+            }
+          )}
+        />
+      ) : (
+        <CommandButton
+          text="対戦する"
+          onClick={confirm('このプライベートマッチに参加しますか？', () =>
+            command.pong_private_match_join(matchId)
+          )}
+        />
+      );
       return {
-        avatar: <UserAvatar user={user} />,
-        name: <Button matchId={matchId} />,
+        avatar: <UserAvatar />,
+        name: button,
       };
     }
     const avatarButton = <UserAvatar user={user} onClick={openCard} />;
@@ -118,25 +97,23 @@ const PlayerCard = ({
       name: <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>,
     };
   })();
-  const color =
-    verdict === 'won'
-      ? 'text-red-400'
-      : verdict === 'lose'
-      ? 'text-blue-400'
-      : '';
+  const color = {
+    won: 'text-red-400',
+    lose: 'text-blue-400',
+    none: '',
+  }[verdict];
   const flexOrder = side === 'right' ? 'flex-row' : 'flex-row-reverse';
-  const align =
-    side === 'right' ? 'flex-row text-left' : 'flex-row-reverse text-right';
+  const align = side === 'right' ? 'text-left' : 'text-right';
   const score = isfinite(userScore) ? (
-    <div className={`flex ${align} items-center px-1 text-2xl ${color}`}>
+    <div
+      className={`flex ${flexOrder} ${align} items-center px-1 text-2xl ${color}`}
+    >
       {userScore}
       {verdict === 'won' && (
         <InlineIcon className="px-1 text-base" i={<Icons.Pong.Won />} />
       )}
     </div>
-  ) : (
-    <></>
-  );
+  ) : null;
   return (
     <div className={`flex w-[180px] shrink-0 grow-0 ${flexOrder}`}>
       <div className="flex shrink-0 grow-0 items-center justify-center">
@@ -154,12 +131,6 @@ const PlayerCard = ({
   );
 };
 
-type SubPayload = {
-  status: 'PR_OPEN' | 'PR_CANCEL' | 'PR_START' | 'PR_RESULT' | 'PR_ERROR';
-  userScore1?: number;
-  userScore2?: number;
-};
-
 /**
  * システムメッセージを表示するコンポーネント
  */
@@ -168,14 +139,17 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const user = useUserDataReadOnly(props.userId);
   const targetUser = useUserDataReadOnly(props.message.secondaryUserId || -1);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
-  const [, confirmModal] = useConfirmModal();
+  const [, , , confirm] = useConfirmModal();
   const navigate = useNavigate();
   const matchId = props.message.matchId;
   if (!matchId || messageType !== 'PR_STATUS' || !props.message.subpayload) {
     return null;
   }
-  const subpayload = props.message.subpayload;
-  const { status, userScore1, userScore2 } = subpayload as SubPayload;
+  const { status, userScore1, userScore2 } = props.message.subpayload as {
+    status: 'PR_OPEN' | 'PR_CANCEL' | 'PR_START' | 'PR_RESULT' | 'PR_ERROR';
+    userScore1?: number;
+    userScore2?: number;
+  };
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
   if (!user || isBlocked) {
@@ -187,8 +161,9 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
       ? userScore1 > userScore2
         ? 'won'
         : 'lose'
-      : null;
-  const verdict2 = verdict1 ? (verdict1 === 'won' ? 'lose' : 'won') : null;
+      : 'none';
+  const verdict2 =
+    verdict1 !== 'none' ? (verdict1 === 'won' ? 'lose' : 'won') : 'none';
   const opponentContent = (() => {
     return (
       <PlayerCard
@@ -214,16 +189,9 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const spectateClass = isSpectatable ? 'cursor-pointer' : '';
   const onClick = !isSpectatable
     ? undefined
-    : async () => {
-        if (
-          await confirmModal('このプライベートマッチを観戦しますか？', {
-            affirm: '観戦する',
-            denial: 'しない',
-          })
-        ) {
-          navigate(`/pong/matches/${matchId}`);
-        }
-      };
+    : confirm('このプライベートマッチを観戦しますか？', () =>
+        navigate(`/pong/matches/${matchId}`)
+      );
   return (
     <div
       className={`m-2 flex flex-row items-start overflow-hidden px-2 py-1 text-sm ${spectateClass} hover:bg-gray-800`}

@@ -59,7 +59,26 @@ export const useConfirmModal = () => {
   ) => {
     return confirm(body, { isDestructive: true, ...arg });
   };
-  return [confirm, confirmDestructive] as const;
+  const confirmAndExec =
+    (body: string, proc: () => any, arg: Omit<ConfirmArg, 'body'> = {}) =>
+    async () => {
+      if (await confirm(body, arg)) {
+        proc();
+      }
+    };
+  const confirmDestructiveAndExec =
+    (body: string, proc: () => any, arg: Omit<ConfirmArg, 'body'> = {}) =>
+    async () => {
+      if (await confirmDestructive(body, arg)) {
+        proc();
+      }
+    };
+  return [
+    confirm,
+    confirmDestructive,
+    confirmAndExec,
+    confirmDestructiveAndExec,
+  ] as const;
 };
 
 /**

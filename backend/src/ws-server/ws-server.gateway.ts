@@ -211,7 +211,6 @@ export class WsServerGateway {
       subpayload,
       secondaryUserId
     );
-    console.log('message', message);
     this.sendResults(
       'ft_update_message',
       {
