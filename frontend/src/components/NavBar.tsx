@@ -55,6 +55,10 @@ export const NavBar = () => {
         return 'AUTH';
       case 'me':
         return 'ME';
+      case 'user':
+        return 'User';
+      default:
+        return '';
     }
   })();
 
