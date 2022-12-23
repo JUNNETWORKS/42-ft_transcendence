@@ -183,7 +183,7 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   }
   const isYours = props.you?.userId === user.id;
   const verdict1 =
-    isfinite(userScore1) && isfinite(userScore2)
+    status === 'PR_RESULT' && isfinite(userScore1) && isfinite(userScore2)
       ? userScore1 > userScore2
         ? 'won'
         : 'lose'

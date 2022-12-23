@@ -236,6 +236,28 @@ export class PongService {
     );
   }
 
+  async updateMatchOnScored(match: OnlineMatch) {
+    const matchId = match.matchId;
+    const userScore1 = match.playerScores[0];
+    const userScore2 = match.playerScores[1];
+    await this.prisma.match.update({
+      where: {
+        id: matchId,
+      },
+      data: {
+        userScore1: match.playerScores[0],
+        userScore2: match.playerScores[1],
+      },
+    });
+    if (match.matchType === 'PRIVATE') {
+      await this.wsServer.updateMatchingMessage({ matchId }, matchId, {
+        status: 'PR_START',
+        userScore1,
+        userScore2,
+      });
+    }
+  }
+
   async updateMatchAsDone(match: OnlineMatch) {
     const matchId = match.matchId;
     const userScore1 = match.playerScores[0];
