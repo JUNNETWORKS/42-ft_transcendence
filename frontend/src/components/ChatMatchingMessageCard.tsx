@@ -1,4 +1,5 @@
 import { useAtom } from 'jotai';
+import { useNavigate } from 'react-router-dom';
 
 import { makeCommand } from '@/features/Chat/command';
 import { InlineIcon } from '@/hocs/InlineIcon';
@@ -123,8 +124,9 @@ const PlayerCard = ({
       : verdict === 'lose'
       ? 'text-blue-400'
       : '';
-  const flexOrder = side === 'left' ? 'flex-row' : 'flex-row-reverse';
-  const align = side === 'left' ? 'flex-row' : 'flex-row-reverse';
+  const flexOrder = side === 'right' ? 'flex-row' : 'flex-row-reverse';
+  const align =
+    side === 'right' ? 'flex-row text-left' : 'flex-row-reverse text-right';
   const score = isfinite(userScore) ? (
     <div className={`flex ${align} items-center px-1 text-2xl ${color}`}>
       {userScore}
@@ -137,7 +139,9 @@ const PlayerCard = ({
   );
   return (
     <div className={`flex w-[180px] shrink-0 grow-0 ${flexOrder}`}>
-      {avatar}
+      <div className="flex shrink-0 grow-0 items-center justify-center">
+        {avatar}
+      </div>
       <div className="flex shrink-0 grow-0 flex-col justify-center">
         <div
           className={`w-full overflow-hidden text-ellipsis whitespace-nowrap p-0 ${align} text-xl`}
@@ -164,12 +168,14 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const user = useUserDataReadOnly(props.userId);
   const targetUser = useUserDataReadOnly(props.message.secondaryUserId || -1);
   const [blockingUsers] = useAtom(dataAtom.blockingUsers);
+  const [, confirmModal] = useConfirmModal();
+  const navigate = useNavigate();
   const matchId = props.message.matchId;
   if (!matchId || messageType !== 'PR_STATUS' || !props.message.subpayload) {
     return null;
   }
   const subpayload = props.message.subpayload;
-  const { userScore1, userScore2 } = subpayload as SubPayload;
+  const { status, userScore1, userScore2 } = subpayload as SubPayload;
   const isBlocked =
     blockingUsers && blockingUsers.find((u) => u.id === props.message.userId);
   if (!user || isBlocked) {
@@ -203,11 +209,27 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
       />
     );
   })();
+
+  const isSpectatable = status === 'PR_START';
+  const spectateClass = isSpectatable ? 'cursor-pointer' : '';
+  const onClick = !isSpectatable
+    ? undefined
+    : async () => {
+        if (
+          await confirmModal('このプライベートマッチを観戦しますか？', {
+            affirm: '観戦する',
+            denial: 'しない',
+          })
+        ) {
+          navigate(`/pong/matches/${matchId}`);
+        }
+      };
   return (
     <div
-      className="m-2 flex flex-row items-start overflow-hidden px-2 py-1 text-sm hover:bg-gray-800"
+      className={`m-2 flex flex-row items-start overflow-hidden px-2 py-1 text-sm ${spectateClass} hover:bg-gray-800`}
       key={props.message.id}
       id={props.id}
+      onClick={onClick}
     >
       <div className="flex w-full flex-col items-center">
         <div className="flex flex-row items-center justify-center">
