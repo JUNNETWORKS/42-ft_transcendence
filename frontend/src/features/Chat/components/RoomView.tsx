@@ -7,8 +7,14 @@ import { ChatMemberCard } from '@/components/ChatMemberCard';
 import { ChatMessageCard } from '@/components/ChatMessageCard';
 import { ChatSystemMessageCard } from '@/components/ChatSystemMessageCard';
 import { SayCard } from '@/components/CommandCard';
-import { FTButton, FTH3 } from '@/components/FTBasicComponents';
+import {
+  FTBarButton,
+  FTBlockedHeader,
+  FTButton,
+  FTH3,
+} from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
+import { PrivateMatchCard } from '@/features/Pong/components/PrivateMatchCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
@@ -189,10 +195,10 @@ const MembersList = (props: {
   };
 
   return (
-    <div className="flex h-full flex-col">
-      <FTH3 className="shrink-0 grow-0">Members</FTH3>
+    <div className="flex h-full flex-col bg-white">
+      <FTH3 className="shrink-0 grow-0 bg-white">Members</FTH3>
       {isPrivate && isOwner && <InvitePrivateButton room={props.room} />}
-      <div className="shrink grow">
+      <div className="shrink grow bg-black">
         {computed.members.map((member) => (
           <div key={member.userId}>
             <ChatMemberCard member={member} {...Utils.omit(props, 'members')} />
@@ -220,7 +226,9 @@ export const RoomView = ({
 }: Prop) => {
   const [isOpen, setIsOpen] = useState(false);
   const closeModal = () => setIsOpen(false);
-  const openModal = () => setIsOpen(true);
+  const [modalType, setModalType] = useState<'setting' | 'privateMatch' | null>(
+    null
+  );
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
@@ -259,38 +267,71 @@ export const RoomView = ({
   const barButtons = domain === 'chat' && (
     <>
       {isOwner && (
-        <FTButton onClick={openModal} className="shrink-0 grow-0">
+        <FTButton
+          onClick={() => {
+            setModalType('setting');
+            setIsOpen(true);
+          }}
+          className="shrink-0 grow-0"
+        >
           <Icons.Setting className="block" />
         </FTButton>
       )}
-      <FTButton
-        onClick={() => command.leave(room.id)}
+      <FTBarButton
+        onClick={() => {
+          // command.pong_private_match_create(room.id)
+          setModalType('privateMatch');
+          setIsOpen(true);
+        }}
+      >
+        <InlineIcon className="p-0" i={<Icons.Pong.Game className="block" />} />
+        プライベートマッチ
+      </FTBarButton>
+      <FTBarButton
+        onClick={() => {
+          command.leave(room.id);
+          navigate('/chat');
+        }}
         className="shrink-0 grow-0"
       >
         Leave
-      </FTButton>
-      <FTButton onClick={() => command.pong_private_match_create(room.id)}>
-        プライベートマッチ
-      </FTButton>
+      </FTBarButton>
     </>
   );
-  return (
-    <>
-      {domain === 'chat' && (
-        <Modal closeModal={closeModal} isOpen={isOpen}>
+  const modalContent = (() => {
+    switch (modalType) {
+      case 'setting':
+        return (
           <ChatRoomUpdateCard
             key={room.id}
             room={room}
             onSucceeded={closeModal}
             onCancel={closeModal}
           />
+        );
+      case 'privateMatch':
+        return (
+          <PrivateMatchCard
+            room={room}
+            onSucceeded={closeModal}
+            onCancel={closeModal}
+          />
+        );
+    }
+    return null;
+  })();
+  return (
+    <>
+      {domain === 'chat' && (
+        <Modal closeModal={closeModal} isOpen={isOpen}>
+          {modalContent}
         </Modal>
       )}
 
       <div className="flex h-full flex-row border-2 border-solid border-white p-2">
         <div className="flex h-full shrink grow flex-col overflow-hidden">
           {/* タイトルバー */}
-          <FTH3 className="flex flex-row items-center">
+          <FTBlockedHeader className="text-xl">
             <FTButton
               onClick={() => navigate(`/${domain}`)}
               className="shrink-0 grow-0"
@@ -303,7 +344,7 @@ export const RoomView = ({
 
             <div className="shrink grow"></div>
             {barButtons}
-          </FTH3>
+          </FTBlockedHeader>
           {/* 今フォーカスしているルームのメッセージ */}
           <div className="shrink grow overflow-hidden border-2 border-solid border-white">
             <MessagesList
@@ -314,15 +355,15 @@ export const RoomView = ({
               memberOperations={memberOperations}
             />
           </div>
-          <div className="shrink-0 grow-0 border-2 border-solid border-white p-2">
+          <div className="shrink-0 grow-0 border-[2px] border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
-            <div className="flex flex-row border-2 border-solid border-white p-2">
+            <div className="flex flex-row border-[2px] border-solid border-white p-2">
               <SayCard sender={command.say} />
             </div>
           </div>
         </div>
         {domain === 'chat' && (
-          <div className="shrink-0 grow-0 basis-[16em]">
+          <div className="ml-2 shrink-0 grow-0 basis-[16em] border-[2px] border-solid border-white bg-white">
             <MembersList
               you={computed.you}
               room={room}

@@ -1,12 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export const MessageTypesSingle = ['OPENED', 'JOINED', 'LEFT'] as const;
+export const MessageTypesSingle = [
+  'OPENED',
+  'JOINED',
+  'LEFT',
+  'PR_OPEN',
+  'PR_CANCEL',
+] as const;
 export const MessageTypesWithPayload = ['UPDATED'] as const;
 export const MessageTypesWithTarget = [
   'NOMMINATED',
   'BANNED',
   'MUTED',
   'KICKED',
+  'PR_START',
+  'PR_RESULT',
+  'PR_ERROR',
 ] as const;
 export const MessageTypes = [
   ...MessageTypesSingle,

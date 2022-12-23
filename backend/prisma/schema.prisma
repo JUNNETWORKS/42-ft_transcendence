@@ -79,6 +79,7 @@ model ChatRoom {
   chatMessage     ChatMessage[]
   roomMember      ChatUserRelation[]
   memberAttribute ChatUserAttribute[]
+  Match           Match[]
 }
 
 enum RoomType {
@@ -150,6 +151,8 @@ enum MatchStatus {
 model Match {
   id                String              @id // UUIDv4; 外部から与える
   matchType         MatchType
+  relatedRoom       ChatRoom?           @relation(fields: [relatedRoomId], references: [id])
+  relatedRoomId     Int?
   matchStatus       MatchStatus
   userId1           Int // User.id
   userScore1        Int                 @default(0) // 点が入るとリアルタイムに更新する。初期スコアは0

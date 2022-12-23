@@ -1,4 +1,10 @@
-import { BadRequestException, HttpException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  Injectable,
+} from '@nestjs/common';
+import { User } from '@prisma/client';
 
 import { CreateChatroomDto } from './dto/create-chatroom.dto';
 import { CreateRoomMemberDto } from './dto/create-room-member.dto';
@@ -107,8 +113,10 @@ export class ChatroomsService {
     });
   }
 
-  getMembers(roomId: number) {
-    // TODO: バンされているユーザーをどう扱うか
+  async getMembers(user: User, roomId: number) {
+    if (!(await this.checkJoined(user, roomId))) {
+      throw new ForbiddenException();
+    }
     return this.prisma.chatUserRelation.findMany({
       where: {
         chatRoomId: roomId,
@@ -348,9 +356,11 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
-  async getMessages(getMessageDto: GetMessagesDto) {
-    // TODO: userとchatroomの関係確認。-> pipe?
+  async getMessages(user: User, getMessageDto: GetMessagesDto) {
     const { roomId, take, cursor } = getMessageDto;
+    if (!(await this.checkJoined(user, roomId))) {
+      throw new ForbiddenException();
+    }
     return await this.prisma.chatMessage.findMany({
       take: -take,
       where: {
@@ -389,5 +399,17 @@ export class ChatroomsService {
       password + chatRoomConstants.pepper,
       1000
     );
+  }
+
+  private async checkJoined(user: User, roomId: number) {
+    const rel = await this.prisma.chatUserRelation.findUnique({
+      where: {
+        userId_chatRoomId: {
+          userId: user.id,
+          chatRoomId: roomId,
+        },
+      },
+    });
+    return !!rel;
   }
 }

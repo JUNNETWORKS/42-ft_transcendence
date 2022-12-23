@@ -1,10 +1,7 @@
+import { Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType } from '@prisma/client';
-import { Server } from 'socket.io';
 
-import {
-  generateFullRoomName,
-  sendResultRoom,
-} from 'src/utils/socket/SocketRoom';
+import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongService } from '../pong.service';
 import { OngoingMatches } from './ongoing-matches';
@@ -12,6 +9,7 @@ import { OnlineMatch } from './online-match';
 import { PostMatchStrategy } from './PostMatchStrategy';
 
 // 募集中のプライベートマッチの集合
+@Injectable()
 export class PendingPrivateMatches {
   // pendingMatches[募集者UserId] = MatchId;
   private pendingMatches: Map<number, string>;
@@ -19,7 +17,7 @@ export class PendingPrivateMatches {
   static readonly UNDEFINED_USER = -1;
 
   constructor(
-    private wsServer: Server,
+    private wsServer: WsServerGateway,
     private ongoingMatches: OngoingMatches,
     private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
@@ -27,28 +25,28 @@ export class PendingPrivateMatches {
     this.pendingMatches = new Map<number, string>();
   }
 
-  async createPrivateMatch(userId: number) {
+  async createPrivateMatch(
+    userId: number,
+    roomId: number,
+    maxScore: number,
+    speed: number
+  ) {
     const { id: matchId } = await this.pongService.createMatch({
       matchType: MatchType.PRIVATE,
       matchStatus: MatchStatus.PREPARING,
       userId1: userId,
       userId2: undefined,
+      relatedRoomId: roomId,
+      maxScore,
+      speed,
     });
     this.pendingMatches.set(userId, matchId);
-    console.log(`createPrivateMatch: matchId(${matchId})`);
-    console.log(
-      `this.pendingMatches: ${JSON.stringify(
-        Object.fromEntries(this.pendingMatches)
-      )}`
-    );
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.created',
-      generateFullRoomName({ userId: userId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId }
     );
+    return matchId;
   }
 
   // 募集中のマッチに2人目のプレイヤーとして参加する
@@ -67,6 +65,8 @@ export class PendingPrivateMatches {
     }
     this.drawOutMatchByMatchId(matchId);
     await this.pongService.setApplicantPlayer(matchId, userId);
+    // TODO: メンバーとしてマッチに紐づくマッチIDを保持する
+    const config = await this.pongService.fetchMatchConfig(matchId);
     const match = OnlineMatch.create({
       wsServer: this.wsServer,
       matchId: matchId,
@@ -75,23 +75,18 @@ export class PendingPrivateMatches {
       matchType: MatchType.PRIVATE,
       removeFn: (matchId: string) => this.ongoingMatches.removeMatch(matchId),
       postMatchStrategy: this.postMatchStrategy,
+      config,
     });
     this.ongoingMatches.appendMatch(match);
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.done',
-      generateFullRoomName({ userId: matchOwnerId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: matchOwnerId }
     );
-    sendResultRoom(
-      this.wsServer,
+    this.wsServer.sendResults(
       'pong.private_match.done',
-      generateFullRoomName({ userId: userId }),
-      {
-        matchId: matchId,
-      }
+      { matchId: matchId },
+      { userId: userId }
     );
     match.start();
     this.pongService.updateMatchStatus(match.matchId, MatchStatus.IN_PROGRESS);
