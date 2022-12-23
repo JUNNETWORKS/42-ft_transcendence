@@ -118,13 +118,6 @@ const CardElement = ({
           </div>
         )}
 
-        {state === 'Failed' && (
-          <div className="flex flex-row p-2">
-            <div className="shrink grow p-2 text-center text-red-400">
-              サーバエラー
-            </div>
-          </div>
-        )}
         <div className="p-2">
           <FTButton className="mr-2" onClick={onCancel}>
             Cancel
@@ -216,6 +209,11 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
         onSucceeded();
       }
       toast('ルーム情報を更新しました');
+    },
+    onFailed(e) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      }
     },
   });
 
