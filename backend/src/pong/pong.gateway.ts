@@ -132,7 +132,7 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.validateUser(user.id) === false) return;
+    if (this.validateUser(user.id) === false) return { status: 'rejected' };
 
     this.pendingPrivateMatches.joinPrivateMatch(data.matchId, user.id);
   }
