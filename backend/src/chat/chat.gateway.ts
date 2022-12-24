@@ -467,12 +467,6 @@ export class ChatGateway implements OnGatewayConnection {
         return { status: 'caller is not joined' };
       }
     }
-    // TODO: オーナーはbanされることがあるか確認
-    // [ 実行者がbanされていないことを確認 ]
-    if (rel.attr && rel.attr.bannedEndAt > new Date()) {
-      console.log('** you are banned **');
-      return { status: 'banned' };
-    }
 
     const usersRel = await Promise.all(
       data.users.map(async (userId) => {
@@ -480,15 +474,20 @@ export class ChatGateway implements OnGatewayConnection {
           user: this.usersService.findOne(userId),
           relation: this.chatRoomService.getRelation(roomId, userId),
           isBlocking: this.usersService.findBlocked(userId, callerId),
+          attr: this.chatRoomService.getAttribute(roomId, userId),
         });
       })
     );
     // 招待されるユーザーが存在していることの確認
     // 招待されるユーザーが既に入室していないことの確認
-    usersRel.forEach((rel) => {
+    // 招待されるユーザーがBANされていないことの確認
+    for (const rel of usersRel) {
       if (!rel.user) return { status: 'user does not exist' };
       if (rel.relation) return { stats: 'user is joined already' };
-    });
+      if (rel.attr && rel.attr.bannedEndAt > new Date()) {
+        return { status: 'user is banned' };
+      }
+    }
     // 招待するユーザーからblockされていた時、除外する（この時、banされているユーザーには通知しないことにする）
     const targetUsers = usersRel
       .filter((rel) => !rel.isBlocking)

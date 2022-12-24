@@ -20,7 +20,8 @@ const validateError = (response: { status: string }) => {
       return '招待するユーザーが存在しません。';
     case 'user is joined already':
       return '招待したユーザーはすでに入室しています。';
-    case 'banned':
+    case 'user is banned':
+      return '招待したユーザーはBANされています。';
     default:
       return 'ユーザーの招待に失敗しました。';
   }
