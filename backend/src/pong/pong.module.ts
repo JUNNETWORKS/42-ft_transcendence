@@ -1,6 +1,7 @@
 import { forwardRef, Module } from '@nestjs/common';
 
 import { AuthModule } from 'src/auth/auth.module';
+import { ChatroomsModule } from 'src/chatrooms/chatrooms.module';
 import { UsersModule } from 'src/users/users.module';
 import { WsServerModule } from 'src/ws-server/ws-server.module';
 
@@ -26,6 +27,7 @@ import { PongService } from './pong.service';
     forwardRef(() => AuthModule),
     WsServerModule,
     forwardRef(() => UsersModule),
+    forwardRef(() => ChatroomsModule),
   ],
   exports: [PongService],
 })

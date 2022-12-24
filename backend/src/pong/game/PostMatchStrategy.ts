@@ -4,12 +4,17 @@ import { MatchType } from '@prisma/client';
 import { PongService } from '../pong.service';
 import { OnlineMatch } from './online-match';
 
+type onScored = (match: OnlineMatch) => void;
 type onDoneType = (match: OnlineMatch) => void;
 type onErrorType = (match: OnlineMatch) => void;
 
 @Injectable()
 export class PostMatchStrategy {
   constructor(private readonly pongService: PongService) {}
+
+  getOnScored(): onScored {
+    return (match: OnlineMatch) => this.onScored(match);
+  }
 
   getOnDone(matchType: MatchType): onDoneType {
     switch (matchType) {
@@ -31,6 +36,12 @@ export class PostMatchStrategy {
       case 'PRIVATE':
         return (match: OnlineMatch) => this.onErrorPrivateMatch(match);
     }
+  }
+
+  // onScored
+
+  private onScored(match: OnlineMatch): void {
+    this.pongService.updateMatchOnScored(match);
   }
 
   // onDone

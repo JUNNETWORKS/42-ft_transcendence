@@ -73,7 +73,7 @@ export class OnlineMatch {
 
   start() {
     this.gameStateSyncTimer = setInterval(async () => {
-      this.match.update();
+      const result = this.match.update();
 
       if (this.wsServer) {
         this.wsServer.sendResults('pong.match.state', this.match.getState(), {
@@ -98,6 +98,8 @@ export class OnlineMatch {
           this.removeFromOngoingMatches(this.Id);
           this.wsServer.leaveAllSocket({ matchId: this.Id });
           this.postMatchStrategy.getOnDone(this.matchType)(this);
+        } else if (result.scoreHasChanged) {
+          this.postMatchStrategy.getOnScored()(this);
         }
       }
     }, 16.66); // 60fps
@@ -125,34 +127,6 @@ export class OnlineMatch {
   // ゲームを終了
   close() {
     clearInterval(this.gameStateSyncTimer);
-  }
-
-  // ゲームの状態更新し､Roomに送信
-  syncGameState() {
-    if (this.match === undefined) {
-      // インスタンスが作られる前に gameStateSyncTimer が呼ばれることがあるのでガードを入れておく｡
-      return;
-    }
-
-    this.match.update();
-
-    if (this.wsServer) {
-      this.wsServer.sendResults('pong.match.state', this.match.getState(), {
-        matchId: this.Id,
-      });
-
-      if (this.match.winner !== 'none') {
-        const loserSide = this.match.winner === 'right' ? 'left' : 'right';
-        const result: MatchResult = {
-          winner: this.match.players[Match.sideIndex[this.match.winner]],
-          loser: this.match.players[Match.sideIndex[loserSide]],
-        };
-        this.wsServer.sendResults('pong.match.finish', result, {
-          matchId: this.Id,
-        });
-        this.close();
-      }
-    }
   }
 
   get matchId() {

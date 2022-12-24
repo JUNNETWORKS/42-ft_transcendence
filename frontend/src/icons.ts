@@ -53,6 +53,7 @@ const User = {
 
 const Pong = {
   Game: Ri.RiPingPongLine,
+  Won: Fa.FaMedal,
 };
 
 export const Icons = {

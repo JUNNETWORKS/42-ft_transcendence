@@ -44,4 +44,8 @@ export class PostMessageDto {
   @IsOptional()
   @IsObject()
   subpayload?: any;
+
+  @IsOptional()
+  @IsString()
+  matchId?: any;
 }
