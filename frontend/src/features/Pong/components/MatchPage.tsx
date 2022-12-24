@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
@@ -9,23 +9,20 @@ import { usePongGame } from '../hooks/usePongGame';
 import { GameState } from '../types';
 import { GameResult } from '../types';
 
-export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
-  props
-) => {
-  const { mySocket } = props;
-  const [isFinished, setIsFinished] = useState<boolean>(false);
-  const [error, setError] = useState('');
+const MatchRoomJoiner = ({
+  isFetched,
+  setIsFetched,
+  setError,
+}: {
+  isFetched: boolean;
+  setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
+  setError: React.Dispatch<React.SetStateAction<string>>;
+}) => {
   const location = useLocation();
-  const navigate = useNavigate();
   const fetcher = useAPICallerWithCredential();
 
-  const { renderGame, drawGameOneFrame, drawGameResult } =
-    usePongGame(isFinished);
-
-  useEffect(() => {
-    // join webSocketRoom by matchId
-    if (error !== '') return;
-    fetcher('GET', location.pathname).then((response) => {
+  if (!isFetched)
+    throw fetcher('GET', location.pathname).then((response) => {
       if (!response.ok) {
         console.log(response.status);
         switch (response.status) {
@@ -42,7 +39,27 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       } else {
         console.log('success join');
       }
+      setIsFetched(true);
     });
+
+  return <></>;
+};
+
+export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
+  props
+) => {
+  const { mySocket } = props;
+  const [isFetched, setIsFetched] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+  const [error, setError] = useState('');
+  const navigate = useNavigate();
+  const fetcher = useAPICallerWithCredential();
+
+  const { renderGame, drawGameOneFrame, drawGameResult } =
+    usePongGame(isFinished);
+
+  useEffect(() => {
+    if (!isFetched && error !== '') return;
 
     const fetchUserName = async (id: string) => {
       try {
@@ -101,27 +118,27 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [
-    drawGameOneFrame,
-    drawGameResult,
-    mySocket,
-    error,
-    fetcher,
-    location.pathname,
-  ]);
+  }, [isFetched, drawGameOneFrame, drawGameResult, mySocket, error, fetcher]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      {!isFinished && error !== '' ? (
-        <div className="flex-col">
-          <div className="text-red-400">{error}</div>
-          <div className="m-1 text-center">
-            <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
+      <Suspense fallback={<p>Loading...</p>}>
+        <MatchRoomJoiner
+          isFetched={isFetched}
+          setIsFetched={setIsFetched}
+          setError={setError}
+        />
+        {!isFinished && error !== '' ? (
+          <div className="flex-col">
+            <div className="text-red-400">{error}</div>
+            <div className="m-1 text-center">
+              <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
+            </div>
           </div>
-        </div>
-      ) : (
-        renderGame()
-      )}
+        ) : (
+          renderGame()
+        )}
+      </Suspense>
     </div>
   );
 };
