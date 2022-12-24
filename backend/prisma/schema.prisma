@@ -129,6 +129,8 @@ model ChatMessage {
   content         String
   messageType     String?
   subpayload      Json?
+  match           Match?   @relation(name: "matchingMessage", fields: [matchId], references: [id])
+  matchId         String?  @unique
 }
 
 // ユーザーのランクポイント
@@ -162,6 +164,8 @@ model Match {
   endAt             DateTime? // 試合終了日時
   matchUserRelation MatchUserRelation[]
   config            MatchConfig?
+  message           ChatMessage?        @relation(name: "matchingMessage")
+  messageId         Int?                @unique
 }
 
 enum MatchType {

@@ -12,6 +12,7 @@ import { GetChatroomsDto } from './dto/get-chatrooms.dto';
 import { GetMessagesDto } from './dto/get-messages.dto';
 import { PostMessageDto } from './dto/post-message.dto';
 import { RoomMemberDto } from './dto/room-member.dto';
+import { UpdateMessageDto } from './dto/update-message.dto';
 import { UpdateRoomDto } from './dto/update-room.dto';
 
 import { PrismaService } from '../prisma/prisma.service';
@@ -24,6 +25,8 @@ const selectForUser = {
   displayName: true,
   isEnabledAvatar: true,
 };
+
+export type RecordSpecifier = { matchId: string } | { id: number };
 
 @Injectable()
 export class ChatroomsService {
@@ -356,6 +359,10 @@ export class ChatroomsService {
     return new ChatroomEntity(res);
   }
 
+  async getMessage(specifier: RecordSpecifier) {
+    return this.prisma.chatMessage.findUnique({ where: specifier });
+  }
+
   async getMessages(user: User, getMessageDto: GetMessagesDto) {
     const { roomId, take, cursor } = getMessageDto;
     if (!(await this.checkJoined(user, roomId))) {
@@ -388,6 +395,16 @@ export class ChatroomsService {
   postMessage(data: PostMessageDto) {
     // TODO: userがmemberか確認する。
     return this.prisma.chatMessage.create({ data });
+  }
+
+  async updateMessageByMatchId(
+    specifier: RecordSpecifier,
+    data: UpdateMessageDto
+  ) {
+    return this.prisma.chatMessage.update({
+      where: specifier,
+      data,
+    });
   }
 
   /**

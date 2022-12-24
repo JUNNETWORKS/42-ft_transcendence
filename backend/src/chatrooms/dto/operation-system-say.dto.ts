@@ -34,4 +34,8 @@ export class OperationSystemSayDto {
   @IsOptional()
   @IsObject()
   subpayload?: any;
+
+  @IsOptional()
+  @IsString()
+  matchId?: string;
 }

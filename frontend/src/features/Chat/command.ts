@@ -103,7 +103,38 @@ export function makeCommand(
       };
       return new Promise<any>((res, rej) => {
         mySocket.emit('pong.private_match.create', data, (result: any) => {
-          console.log('result', result);
+          if (result && result.status === 'accepted') {
+            res(result);
+            return;
+          }
+          rej(result);
+        });
+      });
+    },
+
+    pong_private_match_cancel: (matchId: string) => {
+      console.log('[pong.private_match.leave]', matchId);
+      const data = {
+        matchId,
+      };
+      return new Promise<any>((res, rej) => {
+        mySocket.emit('pong.private_match.leave', data, (result: any) => {
+          if (result && result.status === 'accepted') {
+            res(result);
+            return;
+          }
+          rej(result);
+        });
+      });
+    },
+
+    pong_private_match_join: (matchId: string) => {
+      console.log('[pong.private_match.join]', matchId);
+      const data = {
+        matchId,
+      };
+      return new Promise<any>((res, rej) => {
+        mySocket.emit('pong.private_match.join', data, (result: any) => {
           if (result && result.status === 'accepted') {
             res(result);
             return;

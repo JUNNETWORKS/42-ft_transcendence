@@ -10,6 +10,12 @@ import { OperationSystemSayDto } from 'src/chatrooms/dto/operation-system-say.dt
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { UsersService } from '../users/users.service';
 
+export type SubPayload = {
+  status: 'PR_OPEN' | 'PR_CANCEL' | 'PR_START' | 'PR_RESULT' | 'PR_ERROR';
+  userScore1?: number;
+  userScore2?: number;
+};
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -33,6 +39,7 @@ export class ChatService {
       secondaryUserId: data.secondaryId,
       messageType: data.messageType,
       subpayload: data.subpayload,
+      matchId: data.matchId,
     });
   }
 

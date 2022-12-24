@@ -17,15 +17,18 @@ export const MessageTypesWithTarget = [
   'PR_RESULT',
   'PR_ERROR',
 ] as const;
+export const MessageTypesMatching = ['PR_STATUS'] as const;
 export const MessageTypes = [
   ...MessageTypesSingle,
   ...MessageTypesWithPayload,
   ...MessageTypesWithTarget,
+  ...MessageTypesMatching,
 ] as const;
 
 export type MessageTypeSingle = typeof MessageTypesSingle[number];
 export type MessageTypeWithPayload = typeof MessageTypesWithPayload[number];
 export type MessageTypeWithTarget = typeof MessageTypesWithTarget[number];
+export type MessageTypeMatching = typeof MessageTypesMatching[number];
 export type MessageType = typeof MessageTypes[number];
 
 export class ChatMessageEntity {

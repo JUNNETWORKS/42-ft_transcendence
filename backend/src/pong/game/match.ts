@@ -108,15 +108,20 @@ export class Match {
   };
 
   // ballとバーの位置を更新する
-  update = (): void => {
+  update = () => {
+    let scoreHasChanged = false;
+    let hasEnded = false;
     const roundWinner = this.roundWinnerExists();
     if (roundWinner === 'none') {
       this.updateBall();
     } else {
       this.updateScore(roundWinner);
+      hasEnded = this.winner !== 'none';
       this.ball = this.regenerateBall();
+      scoreHasChanged = true;
     }
     this.updateBar();
+    return { hasEnded, scoreHasChanged };
   };
 
   roundWinnerExists = (): PongWinner => {
