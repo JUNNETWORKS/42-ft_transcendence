@@ -32,13 +32,10 @@ export const authAtom = {
   personalData: atom(
     (get) => get(actualPersonalDataAtom),
     (get, set, newValue: UserPersonalData | null) => {
-      // console.trace();
       if (newValue) {
         const d = { ...newValue, avatarTime: Date.now() };
-        // console.log("SET", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", JSON.stringify(d, null, 2));
         set(actualPersonalDataAtom, d);
       } else {
-        // console.log("SET", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", null);
         set(actualPersonalDataAtom, null);
       }
     }
@@ -51,14 +48,10 @@ export const authAtom = {
       (Object.keys(newValue) as (keyof UserPersonalData)[]).forEach((k) => {
         const v = newValue[k];
         if (typeof v === 'undefined') {
-          // console.log("rejected:", k, v);
           return;
         }
-        // console.log("accepted:", k, v);
         d[k] = v;
       });
-      // console.log("PATCH", JSON.stringify(get(actualPersonalDataAtom), null, 2), "=>", JSON.stringify(newValue, null, 2), "=>", JSON.stringify(d, null, 2));
-      // console.trace();
       set(actualPersonalDataAtom, d);
     }
   ),

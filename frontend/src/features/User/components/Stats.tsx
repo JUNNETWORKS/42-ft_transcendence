@@ -58,9 +58,6 @@ export const UserStats = ({ id }: { id: number }) => {
 
   return (
     <>
-      <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-        Stats
-      </FTH3>
       <ErrorBoundary>
         <Suspense fallback={<p>Loading...</p>}>
           <RenderStats

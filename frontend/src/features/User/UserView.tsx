@@ -19,6 +19,7 @@ import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
 import { MatchHistory } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
+import { UserStats } from './components/Stats';
 
 type ActualViewProps = {
   user: TD.User;
@@ -57,10 +58,14 @@ const ActualView = ({ user }: ActualViewProps) => {
           <FollowButton userId={user.id} isFriend={isFriend} />
           <BlockButton userId={user.id} isBlocking={isBlocking} />
         </div>
-        <FTH4>MatchHistory</FTH4>
-        <div className="px-2 py-4">
-          <MatchHistory id={user.id} />
-        </div>
+      </div>
+      <FTH4>Stats</FTH4>
+      <div className="px-2 py-4">
+        <UserStats id={user.id} />
+      </div>
+      <FTH4>MatchHistory</FTH4>
+      <div className="px-2 py-4">
+        <MatchHistory id={user.id} />
       </div>
     </>
   );

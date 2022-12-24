@@ -1,21 +1,26 @@
 import { useAtom } from 'jotai';
+import { useCallback } from 'react';
 
 import { storedCredentialAtom } from '@/stores/auth';
 
-export function useAPICallerWithCredential() {
+export const useAPICallerWithCredential = () => {
   const [credential] = useAtom(storedCredentialAtom);
-  return function (
-    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
-    endpoint: string,
-    option: {
-      credential?: any;
-      payloadFunc?: () => any;
-      payload?: any;
-    } = {}
-  ) {
-    return callAPI(method, endpoint, { ...option, credential });
-  };
-}
+
+  const callApiWithCredential = useCallback(
+    (
+      method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+      endpoint: string,
+      option: {
+        credential?: any;
+        payloadFunc?: () => any;
+        payload?: any;
+      } = {}
+    ) => callAPI(method, endpoint, { ...option, credential }),
+    [credential]
+  );
+
+  return callApiWithCredential;
+};
 
 export async function callAPI(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
