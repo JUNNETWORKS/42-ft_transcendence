@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 import { FTH3 } from '@/components/FTBasicComponents';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
@@ -37,7 +38,6 @@ export const InvitePrivateCard = (props: {
   const members = membersInRoom[props.room.id];
   const isDisabled = (user: displayUser) => !!members && !!members[user.id];
   const [error, setError] = useState('');
-  // TODO: ft_inviteのレスポンスを表示する（トースト通知の方がよい？）
 
   if (!personalData || !mySocket) return null;
 
@@ -50,7 +50,10 @@ export const InvitePrivateCard = (props: {
     setError('');
     mySocket.emit('ft_invite', data, (response: { status: string }) => {
       if (response.status !== 'success') setError(validateError(response));
-      else props.closeModal();
+      else {
+        props.closeModal();
+        toast('ユーザーの招待に成功しました。');
+      }
     });
   };
 
