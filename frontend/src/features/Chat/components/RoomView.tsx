@@ -355,9 +355,9 @@ export const RoomView = ({
               memberOperations={memberOperations}
             />
           </div>
-          <div className="shrink-0 grow-0 border-[2px] border-solid border-white p-2">
+          <div className="shrink-0 grow-0 border-[2px] border-t-0 border-solid border-white p-2">
             {/* 今フォーカスしているルームへの発言 */}
-            <div className="flex flex-row border-[2px] border-solid border-white p-2">
+            <div className="flex flex-row p-2">
               <SayCard sender={command.say} />
             </div>
           </div>

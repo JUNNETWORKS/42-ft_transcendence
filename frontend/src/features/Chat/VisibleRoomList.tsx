@@ -110,7 +110,6 @@ export const VisibleRoomList = () => {
 
   return (
     <div className="flex shrink grow flex-col overflow-hidden">
-      <FTH3 className="shrink-0 grow-0">Chatrooms</FTH3>
       <div
         id={listId}
         className="flex shrink grow flex-row flex-wrap content-start items-start justify-start overflow-y-auto overflow-x-hidden p-1"
