@@ -51,6 +51,7 @@ export const PrivateMatchCard = ({ room, onSucceeded, onCancel }: Prop) => {
         speed: gameSpeedFactorStr,
       });
       console.log('result', result);
+      toast('マッチを作成しました');
       onSucceeded();
     } catch (e) {
       if (e instanceof TypeError) {
