@@ -154,8 +154,6 @@ export class PongService {
         userScore2: 0,
         startAt: new Date(),
 
-        // TODO: Configを実装したらベタ書きを辞める
-        // TODO: Configを非Nullableにする
         config: {
           create: {
             maxScore: match.maxScore ?? Match.defaultConfig.maxScore,
