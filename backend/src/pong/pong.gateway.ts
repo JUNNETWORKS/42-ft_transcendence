@@ -85,7 +85,6 @@ export class PongGateway {
   // - 募集中のPrivateMatch
   // - OngoingMatches
   //上記いずれかに参加しているユーザーを弾く
-  //TODO: toastなどでエラーが発生したことをフロントで表示する
   validateUser = (userId: number) => {
     if (this.waitingQueues.getQueueByPlayerId(userId) !== undefined)
       return false;
