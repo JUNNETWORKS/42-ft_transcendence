@@ -177,35 +177,38 @@ export const usePongGame = (isFinished: boolean) => {
     navigate('/');
   }, [isFinished, navigate]);
 
-  const renderGame = () => (
-    <canvas
-      id="pong"
-      ref={canvasRef}
-      width={staticGameSettings.field.width}
-      height={staticGameSettings.field.height}
-      //tailwindは動的にスタイル生成できないので、style属性で対応
-      style={{
-        width: canvasSize.width,
-        height: canvasSize.height,
-      }}
-      onClick={onClickResult}
-    />
+  const renderGame = useCallback(
+    () => (
+      <canvas
+        id="pong"
+        ref={canvasRef}
+        width={staticGameSettings.field.width}
+        height={staticGameSettings.field.height}
+        //tailwindは動的にスタイル生成できないので、style属性で対応
+        style={{
+          width: canvasSize.width,
+          height: canvasSize.height,
+        }}
+        onClick={onClickResult}
+      />
+    ),
+    [canvasSize.height, canvasSize.width, onClickResult]
   );
 
-  const drawGameOneFrame = (game: GameState) => {
+  const drawGameOneFrame = useCallback((game: GameState) => {
     if (canvasRef.current) {
       redrawGame(canvasRef.current, game, staticGameSettings);
     }
-  };
-  const drawGameResult = (
-    game: GameState,
-    result: GameResult,
-    names: string[]
-  ) => {
-    if (canvasRef.current) {
-      drawResult(canvasRef.current, game, result, names);
-    }
-  };
+  }, []);
+
+  const drawGameResult = useCallback(
+    (game: GameState, result: GameResult, names: string[]) => {
+      if (canvasRef.current) {
+        drawResult(canvasRef.current, game, result, names);
+      }
+    },
+    []
+  );
 
   return { renderGame, drawGameOneFrame, drawGameResult };
 };
