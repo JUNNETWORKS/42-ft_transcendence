@@ -80,7 +80,7 @@ export class ChatGateway implements OnGatewayConnection {
       ...joiningRooms.map((r) => r.chatRoom),
       ...dmRooms,
     ].map((r) => generateFullRoomName({ roomId: r.id }));
-    console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
+    // console.log(`user ${userId} is joining to: [${joiningRoomNames}]`);
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     if (joiningRoomNames.length > 0) {

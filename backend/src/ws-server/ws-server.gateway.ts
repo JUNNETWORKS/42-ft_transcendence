@@ -89,8 +89,8 @@ export class WsServerGateway {
    */
   private async sendResultRoom(op: string, payload: any, roomArg: RoomArg) {
     const roomName = generateFullRoomName(roomArg);
-    const socks = await this.server.to(roomName).allSockets();
-    console.log('sending downlink to:', roomName, op, payload, socks);
+    // const socks = await this.server.to(roomName).allSockets();
+    // console.log('sending downlink to:', roomName, op, payload, socks);
     this.server.to(roomName).emit(op, payload);
   }
 
@@ -130,7 +130,7 @@ export class WsServerGateway {
       await this.sendResultRoom(op, payload, { global: target.global });
     }
     if (target.client) {
-      console.log('sending downlink to client:', target.client.id, op, payload);
+      // console.log('sending downlink to client:', target.client.id, op, payload);
       target.client.emit(op, payload);
     }
   }

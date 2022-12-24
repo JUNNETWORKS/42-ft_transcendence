@@ -98,7 +98,7 @@ export class ChatroomsService {
         },
       });
     })();
-    console.log(res);
+    // console.log(res);
     return res;
   }
 

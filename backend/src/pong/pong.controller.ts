@@ -22,6 +22,7 @@ export class PongController {
     @Request() req: any,
     @Param('matchId') matchId: string
   ) {
+    console.log('spectateByMId', req.user.id, matchId);
     return this.pongService.spectateByMatchId(req.user.id, matchId);
   }
 }
