@@ -81,6 +81,21 @@ export class PongGateway {
     }
   }
 
+  // - 待機キュー
+  // - 募集中のPrivateMatch
+  // - OngoingMatches
+  //上記いずれかに参加しているユーザーを弾く
+  //TODO: toastなどでエラーが発生したことをフロントで表示する
+  validateUser = (userId: number) => {
+    if (this.waitingQueues.getQueueByPlayerId(userId) !== undefined)
+      return false;
+    if (this.ongoingMatches.findMatchByPlayer(userId) !== undefined)
+      return false;
+    if (this.pendingPrivateMatches.getMatchIdByUserId(userId) !== undefined)
+      return false;
+    return true;
+  };
+
   // プライベートマッチを作成し､参加者を募集する
   @SubscribeMessage('pong.private_match.create')
   async receivePrivateMatchCreate(
@@ -89,13 +104,8 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
-      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
-      // - 待機キュー
-      // - 募集中のPrivateMatch
-      // - OngoingMatches
+    if (this.validateUser(user.id) === false)
       return { status: 'rejected', reason: 'user error' };
-    }
 
     const speed = gameSpeedFactorToGameSpeed(data.speed);
     if (!isfinite(data.maxScore) || data.maxScore <= 0) {
@@ -122,13 +132,7 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
-      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
-      // - 待機キュー
-      // - 募集中のPrivateMatch
-      // - OngoingMatches
-      return;
-    }
+    if (this.validateUser(user.id) === false) return;
 
     this.pendingPrivateMatches.joinPrivateMatch(data.matchId, user.id);
   }
@@ -148,13 +152,8 @@ export class PongGateway {
   ) {
     const user = getUserFromClient(client);
 
-    if (this.waitingQueues.getQueueByPlayerId(user.id) !== undefined) {
-      // TODO: 既に以下に挙げるものに参加している場合はエラーを返す
-      // - 待機キュー
-      // - 募集中のPrivateMatch
-      // - OngoingMatches
-      return;
-    }
+    if (this.validateUser(user.id) === false) return;
+
     // 待機キューにユーザーを追加する
     const queue = this.waitingQueues.getQueue(data.matchType);
     queue?.append(user.id);
