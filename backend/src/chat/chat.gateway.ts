@@ -448,7 +448,6 @@ export class ChatGateway implements OnGatewayConnection {
     const rel = await Utils.PromiseMap({
       room: this.chatRoomService.findOne(roomId),
       relation: this.chatRoomService.getRelation(roomId, callerId),
-      attr: this.chatRoomService.getAttribute(roomId, callerId),
     });
 
     // [ 入室対象のチャットルームが存在していることを確認 ]
