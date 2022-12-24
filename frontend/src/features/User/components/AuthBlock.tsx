@@ -5,9 +5,11 @@ import { toast } from 'react-toastify';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { APIError } from '@/errors/APIError';
+import { popAuthError } from '@/features/Toaster/toast';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
 import { useConfirmModal } from '@/hooks/useConfirmModal';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { authAtom, useLoginLocal, UserPersonalData } from '@/stores/auth';
 
@@ -75,14 +77,16 @@ const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
  * 二要素認証を無効化するためのコンポーネント
  */
 const Disable2FAButton = () => {
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [personalData, , patchPersonalData] = usePersonalData();
   const [state, submit] = useAPI('PATCH', `/me/twoFa/disable`, {
     onFinished: () => {
-      setPersonalData({ ...personalData!, isEnabled2FA: false });
+      patchPersonalData({ isEnabled2FA: false });
       toast.info('二要素認証が無効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
         });
@@ -128,7 +132,9 @@ const Enable2FAButton = ({ onSucceeded }: Enable2FACardProp) => {
       toast.info('二要素認証が有効化されました', { autoClose: 5000 });
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
         });

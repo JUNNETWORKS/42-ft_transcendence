@@ -2,6 +2,8 @@ import { useState } from 'react';
 
 import { FTButton } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
+import { InlineIcon } from '@/hocs/InlineIcon';
+import { Icons } from '@/icons';
 import { ChatRoom } from '@/typedef';
 
 import { InvitePrivateCard } from './InvitePrivateCard';
@@ -17,8 +19,14 @@ export const InvitePrivateButton = (props: { room: ChatRoom }) => {
           closeModal={() => setIsOpen(false)}
         ></InvitePrivateCard>
       </Modal>
-      <div className="m-1">
-        <FTButton onClick={() => setIsOpen(true)}>invite</FTButton>
+      <div className="bg-black p-2">
+        <FTButton
+          className="flex w-full flex-row justify-center"
+          onClick={() => setIsOpen(true)}
+        >
+          <InlineIcon i={<Icons.Add />} />
+          Invite
+        </FTButton>
       </div>
     </>
   );

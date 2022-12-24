@@ -1,9 +1,11 @@
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
 
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { authAtom, storedCredentialAtom } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
 
+import { popAuthError } from '../Toaster/toast';
 import { verifyCredential } from './auth';
 
 /**
@@ -12,7 +14,7 @@ import { verifyCredential } from './auth';
 export const AuthChecker = () => {
   const [storedCredential, setStoredCredential] = useAtom(storedCredentialAtom);
   const [authState, setAuthState] = useAtom(authAtom.authFlowState);
-  const [, setPersonalData] = useAtom(authAtom.personalData);
+  const [, setPersonalData] = usePersonalData();
   const { addOne } = useUpdateUser();
 
   useEffect(() => {
@@ -31,10 +33,22 @@ export const AuthChecker = () => {
             addOne(user);
             setAuthState('Authenticated');
           },
-          () => {
+          (e?: any) => {
             // 変換できなかった場合の処理
-            setStoredCredential(null);
-            setPersonalData(null);
+            if (e) {
+              if (e instanceof TypeError) {
+                popAuthError(
+                  'ネットワークエラーのため認証状態が確認できませんでした'
+                );
+              } else {
+                // ネットワークエラー**以外**の時だけクレデンシャルを削除する
+                popAuthError(
+                  '認証情報が確認できなかったため、再度認証してください'
+                );
+                setStoredCredential(null);
+                setPersonalData(null);
+              }
+            }
             setAuthState('NotAuthenticated');
           }
         );

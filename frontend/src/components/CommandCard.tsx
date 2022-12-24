@@ -30,7 +30,7 @@ export const SayCard = (props: {
     <>
       <div className="shrink grow">
         <FTTextField
-          className="block h-full w-full p-0"
+          className="block h-full w-full p-0 focus:bg-gray-700"
           autoComplete="off"
           value={content}
           placeholder="発言内容"

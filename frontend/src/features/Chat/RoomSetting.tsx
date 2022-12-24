@@ -15,6 +15,7 @@ import { Icons, RoomTypeIcon } from '@/icons';
 import { useUpdateRoom } from '@/stores/store';
 import * as TD from '@/typedef';
 
+import { popAuthError } from '../Toaster/toast';
 import { roomErrors } from './room.validator';
 
 type UseStateFuncs<S> = {
@@ -117,13 +118,6 @@ const CardElement = ({
           </div>
         )}
 
-        {state === 'Failed' && (
-          <div className="flex flex-row p-2">
-            <div className="shrink grow p-2 text-center text-red-400">
-              サーバエラー
-            </div>
-          </div>
-        )}
         <div className="p-2">
           <FTButton className="mr-2" onClick={onCancel}>
             Cancel
@@ -169,6 +163,11 @@ export const ChatRoomCreateCard = ({ onCancel, onSucceeded }: CreateProps) => {
       }
       toast('チャットルームを作成しました');
     },
+    onFailed(e) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      }
+    },
   });
 
   return (
@@ -210,6 +209,11 @@ export const ChatRoomUpdateCard = ({ room, onCancel, onSucceeded }: Props) => {
         onSucceeded();
       }
       toast('ルーム情報を更新しました');
+    },
+    onFailed(e) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      }
     },
   });
 

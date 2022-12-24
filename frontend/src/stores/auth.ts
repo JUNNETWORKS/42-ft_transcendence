@@ -6,6 +6,7 @@ import {
   AuthenticationFlowState,
   urlChatSocket,
 } from '@/features/DevAuth/auth';
+import { usePersonalData } from '@/hooks/usePersonalData';
 
 import { structureAtom } from './structure';
 
@@ -32,10 +33,26 @@ export const authAtom = {
     (get) => get(actualPersonalDataAtom),
     (get, set, newValue: UserPersonalData | null) => {
       if (newValue) {
-        set(actualPersonalDataAtom, { ...newValue, avatarTime: Date.now() });
+        const d = { ...newValue, avatarTime: Date.now() };
+        set(actualPersonalDataAtom, d);
       } else {
         set(actualPersonalDataAtom, null);
       }
+    }
+  ),
+
+  writeOnlyPersonalData: atom(
+    null,
+    (get, set, newValue: Partial<UserPersonalData>) => {
+      const d: any = { ...get(actualPersonalDataAtom) };
+      (Object.keys(newValue) as (keyof UserPersonalData)[]).forEach((k) => {
+        const v = newValue[k];
+        if (typeof v === 'undefined') {
+          return;
+        }
+        d[k] = v;
+      });
+      set(actualPersonalDataAtom, d);
     }
   ),
 };
@@ -145,7 +162,7 @@ export const useLogout = () => {
 export const useLoginLocal = () => {
   const [, setAuthState] = useAtom(authAtom.authFlowState);
   const [, setStoredCredential] = useAtom(storedCredentialAtom);
-  const [, setPersonalData] = useAtom(authAtom.personalData);
+  const [, setPersonalData] = usePersonalData();
   return (access_token: string, user: any) => {
     setStoredCredential({ token: access_token });
     setPersonalData(user);

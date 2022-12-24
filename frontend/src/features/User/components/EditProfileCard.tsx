@@ -5,8 +5,10 @@ import { toast } from 'react-toastify';
 
 import { FTButton, FTTextField } from '@/components/FTBasicComponents';
 import { APIError } from '@/errors/APIError';
+import { popAuthError } from '@/features/Toaster/toast';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { useUpdateUser } from '@/stores/store';
@@ -42,7 +44,6 @@ type Prop = {
  * あまり重要でないユーザ情報(名前, アバター画像)を変更するためのフォーム
  */
 export const EditProfileCard = ({ user, onClose }: Prop) => {
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
   const [displayName, setDisplayName] = useState(user.displayName);
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
   const [avatarError, setAvatarError] = useState<string | null>(null);
@@ -57,13 +58,14 @@ export const EditProfileCard = ({ user, onClose }: Prop) => {
     onFetched: (json) => {
       const u = json as TD.User;
       updateOne(u.id, u);
-      setPersonalData({ ...personalData!, ...u, avatarTime: Date.now() });
       setNetErrors({});
       toast('ユーザ情報を更新しました');
       onClose();
     },
     onFailed(e) {
-      if (e instanceof APIError) {
+      if (e instanceof TypeError) {
+        popAuthError('ネットワークエラー');
+      } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
           console.log({ json });
           if (typeof json === 'object') {

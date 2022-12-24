@@ -1,10 +1,14 @@
 import { ReactNode, Suspense, useState } from 'react';
 import { Oval } from 'react-loader-spinner';
 
+import { FillerBlock } from '@/components/FillerBlock';
 import { FTButton } from '@/components/FTBasicComponents';
 import { UserAvatar } from '@/components/UserAvater';
+import { Icons } from '@/icons';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { displayUser } from '@/typedef';
+
+type Phase = 'Neutral' | 'Fetched' | 'Failed';
 
 const Params = {
   itemHeight: 60,
@@ -15,6 +19,7 @@ type EnclosureProp = {
   onClick?: () => void;
   disabled?: boolean;
   children?: ReactNode;
+  list?: boolean;
 };
 
 // Enclosure が内包するもの:
@@ -23,10 +28,17 @@ type EnclosureProp = {
 // - 空行
 // - no user メッセージ
 // - spinner
-const Enclosure = ({ height, onClick, disabled, children }: EnclosureProp) => {
-  const baseClassName = 'flex w-full shrink-0 grow-0 items-center bg-black p-1';
+const Enclosure = ({
+  height,
+  onClick,
+  disabled,
+  children,
+  list,
+}: EnclosureProp) => {
+  const baseClassName =
+    'flex w-full shrink-0 grow-0 justify-center items-center bg-black p-1';
   const className = `${baseClassName} ${
-    children && !disabled ? 'hover:bg-gray-800' : ''
+    children && list ? 'hover:bg-gray-800' : ''
   } ${disabled ? ' opacity-50' : ''} ${onClick ? 'cursor-pointer' : ''}`;
   return (
     <div
@@ -70,7 +82,7 @@ const UserSelectListLoading = ({ take }: PlaceholderProp) => {
 const BlankList = ({ take }: PlaceholderProp) => {
   return (
     <Enclosure height={Params.itemHeight * take}>
-      <p className="shrink grow text-center">no more users</p>
+      <FillerBlock icon={Icons.NormalFace} message="No More Users" />
     </Enclosure>
   );
 };
@@ -104,6 +116,7 @@ const ListItem = ({ user, isDisabled, onSelect }: ItemProp) => {
       height={Params.itemHeight}
       disabled={isDisabled}
       onClick={user && !isDisabled ? () => onSelect(user) : undefined}
+      list
     >
       {content()}
     </Enclosure>
@@ -115,8 +128,8 @@ type ActualProp = {
   take: number;
   cursor: number;
   setCursor: React.Dispatch<React.SetStateAction<number>>;
-  isFetched: boolean;
-  setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
+  phase: Phase;
+  setPhase: React.Dispatch<React.SetStateAction<Phase>>;
   users: displayUser[];
   setUsers: React.Dispatch<React.SetStateAction<displayUser[]>>;
   isDisabled?: (targetUser: displayUser) => boolean;
@@ -125,16 +138,29 @@ type ActualProp = {
 
 const ActualUserSelectList = (props: ActualProp) => {
   const userUpdater = useUpdateUser();
-  if (!props.isFetched) {
+  if (props.phase === 'Neutral') {
     const url = props.makeUrl(props.take, props.cursor);
     throw (async () => {
-      const res = await fetch(url);
-      const json = (await res.json()) as displayUser[];
-      console.log('res:', json);
-      props.setIsFetched(true);
-      userUpdater.addMany(json);
-      props.setUsers(json);
+      try {
+        const res = await fetch(url);
+        const json = (await res.json()) as displayUser[];
+        console.log('res:', json);
+        props.setPhase('Fetched');
+        userUpdater.addMany(json);
+        props.setUsers(json);
+      } catch (e) {
+        props.setPhase('Failed');
+      }
     })();
+  }
+  if (props.phase === 'Failed') {
+    return (
+      <Enclosure height={Params.itemHeight * props.take}>
+        <FillerBlock icon={Icons.UnhappyFace} message="Failed">
+          <FTButton onClick={() => props.setPhase('Neutral')}>Retry</FTButton>
+        </FillerBlock>
+      </Enclosure>
+    );
   }
 
   if (props.users.length === 0) {
@@ -171,7 +197,7 @@ type Prop = {
 
 export const UserSelectList = (props: Prop) => {
   const take = props.take;
-  const [isFetched, setIsFetched] = useState(false);
+  const [phase, setPhase] = useState<Phase>('Neutral');
   const [users, setUsers] = useState<displayUser[]>([]);
   const [cursor, setCursor] = useState(0);
   const prevIsDisabled = cursor <= 0;
@@ -186,8 +212,8 @@ export const UserSelectList = (props: Prop) => {
               {...props}
               cursor={cursor}
               setCursor={setCursor}
-              isFetched={isFetched}
-              setIsFetched={setIsFetched}
+              phase={phase}
+              setPhase={setPhase}
               users={users}
               setUsers={setUsers}
             />
@@ -197,7 +223,7 @@ export const UserSelectList = (props: Prop) => {
       <div className="flex flex-row justify-around p-2">
         <FTButton
           onClick={() => {
-            setIsFetched(false);
+            setPhase('Neutral');
             const newCursor = cursor - take >= 0 ? cursor - take : 0;
             setCursor(newCursor);
           }}
@@ -207,7 +233,7 @@ export const UserSelectList = (props: Prop) => {
         </FTButton>
         <FTButton
           onClick={() => {
-            setIsFetched(false);
+            setPhase('Neutral');
             setCursor(cursor + take);
           }}
           disabled={nextIsDisabled}

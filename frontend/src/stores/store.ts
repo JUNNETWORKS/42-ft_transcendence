@@ -1,9 +1,10 @@
 import { atom, useAtom } from 'jotai';
 import { useCallback } from 'react';
 
+import { usePersonalData } from '@/hooks/usePersonalData';
+
 import * as TD from '../typedef';
 import * as Utils from '../utils';
-import { authAtom } from './auth';
 
 // オブジェクトストア
 
@@ -18,7 +19,7 @@ export const storeAtoms = {
  */
 export const useUpdateUser = () => {
   const [usersStore, setUsersStore] = useAtom(storeAtoms.users);
-  const [personalData, setPersonalData] = useAtom(authAtom.personalData);
+  const [personalData, , patchPersonalData] = usePersonalData();
 
   const updater = {
     addOne: useCallback(
@@ -74,11 +75,11 @@ export const useUpdateUser = () => {
         if (personalData?.id === userId) {
           // 自分のデータの更新を受け取った場合は`personalData`の更新も同時に行う
           if (personalData) {
-            setPersonalData({ ...personalData, ...patched });
+            patchPersonalData(patched);
           }
         }
       },
-      [setUsersStore, setPersonalData, personalData?.id]
+      [setUsersStore, personalData, patchPersonalData]
     ),
     offlinate: useCallback(
       (userId: number) => {
