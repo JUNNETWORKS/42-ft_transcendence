@@ -151,12 +151,14 @@ export class PongGateway {
     @MessageBody() data: PongMatchMakingEntryDTO
   ) {
     const user = getUserFromClient(client);
+    const queue = this.waitingQueues.getQueue(data.matchType);
 
-    if (this.validateUser(user.id) === false) return;
+    if (this.validateUser(user.id) === false || !queue)
+      return { status: 'rejected' };
 
     // 待機キューにユーザーを追加する
-    const queue = this.waitingQueues.getQueue(data.matchType);
-    queue?.append(user.id);
+    queue.append(user.id);
+    return { status: 'accepted' };
   }
 
   @SubscribeMessage('pong.match_making.leave')
