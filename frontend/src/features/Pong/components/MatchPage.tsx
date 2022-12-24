@@ -44,14 +44,32 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       }
     });
 
-    const handleFinished = ({
+    const fetchUserName = async (id: string) => {
+      try {
+        const result = await fetcher('GET', `/users/${id}`);
+        if (!result.ok) {
+          throw new Error();
+        }
+        const json = await result.json();
+        return json.displayName;
+      } catch (error) {
+        return 'Error';
+      }
+    };
+
+    const handleFinished = async ({
       game,
       result,
     }: {
       game: GameState;
       result: GameResult;
     }) => {
-      drawGameResult(game, result);
+      const callApiPromises = game.players.map((item) =>
+        fetchUserName(item.id)
+      );
+
+      const playerNames = await Promise.all(callApiPromises);
+      drawGameResult(game, result, playerNames);
       setIsFinished(true);
     };
 

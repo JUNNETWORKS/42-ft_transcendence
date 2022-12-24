@@ -131,7 +131,8 @@ const redrawGame = (
 const drawResult = (
   canvas: HTMLCanvasElement,
   game: GameState,
-  result: GameResult
+  result: GameResult,
+  names: string[]
 ) => {
   const ctx = canvas.getContext('2d');
   const { width, height } = canvas;
@@ -155,7 +156,7 @@ const drawResult = (
     ctx.font = '160px PixelMplus';
     drawCenteringText(ctx, player.score.toString(), x, y);
     ctx.font = '80px PixelMplus';
-    drawCenteringText(ctx, player.id, x, y + 120, 650); //TODO IDを名前に変える
+    drawCenteringText(ctx, names[i], x, y + 120, 650);
     ctx.font = '70px PixelMplus';
     drawCenteringText(ctx, resultText, x, y + 220);
   }
@@ -195,9 +196,13 @@ export const usePongGame = (isFinished: boolean) => {
       redrawGame(canvasRef.current, game, staticGameSettings);
     }
   };
-  const drawGameResult = (game: GameState, result: GameResult) => {
+  const drawGameResult = (
+    game: GameState,
+    result: GameResult,
+    names: string[]
+  ) => {
     if (canvasRef.current) {
-      drawResult(canvasRef.current, game, result);
+      drawResult(canvasRef.current, game, result, names);
     }
   };
 
