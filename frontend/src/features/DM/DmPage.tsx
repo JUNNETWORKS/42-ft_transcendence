@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate, useOutlet } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
+import { FillerBlock } from '@/components/FillerBlock';
 import { FTButton, FTH3 } from '@/components/FTBasicComponents';
 import { Modal } from '@/components/Modal';
 import { InlineIcon } from '@/hocs/InlineIcon';
@@ -103,7 +104,13 @@ export const DmPage = (props: { mySocket: ReturnType<typeof io> }) => {
           </div>
         </div>
 
-        <div className="flex shrink grow flex-col">{outlet}</div>
+        <div className="flex shrink grow flex-col justify-center">
+          {outlet || (
+            <div className="flex flex-col">
+              <FillerBlock icon={Icons.Chat.DM} message="DM" />
+            </div>
+          )}
+        </div>
       </div>
     </>
   );
