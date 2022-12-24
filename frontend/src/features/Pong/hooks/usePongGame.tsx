@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { GameResult, GameSettings, GameState } from '../types';
 import { useCanvasSize } from './useCanvasSize';
@@ -169,12 +170,12 @@ const drawResult = (
 export const usePongGame = (isFinished: boolean) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const canvasSize = useCanvasSize();
+  const navigate = useNavigate();
 
   const onClickResult = useCallback(() => {
     if (isFinished === false) return;
-    //TODO タイトルへ遷移
-    console.log('to title');
-  }, [isFinished]);
+    navigate('/');
+  }, [isFinished, navigate]);
 
   const renderGame = () => (
     <canvas
