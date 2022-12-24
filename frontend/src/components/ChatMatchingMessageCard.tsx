@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 import { makeCommand } from '@/features/Chat/command';
 import { InlineIcon } from '@/hocs/InlineIcon';
@@ -77,8 +78,18 @@ const PlayerCard = ({
       ) : (
         <CommandButton
           text="対戦する"
-          onClick={confirm('このプライベートマッチに参加しますか？', () =>
-            command.pong_private_match_join(matchId)
+          onClick={confirm(
+            'このプライベートマッチに参加しますか？',
+            async () => {
+              try {
+                await command.pong_private_match_join(matchId);
+              } catch (e) {
+                const error = e as any;
+                if (error.status === 'rejected') {
+                  toast('マッチに参加できません');
+                }
+              }
+            }
           )}
         />
       );

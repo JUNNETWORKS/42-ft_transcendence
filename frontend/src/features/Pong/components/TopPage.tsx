@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
 
 import { Modal } from '@/components/Modal';
@@ -21,7 +22,17 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
     if (isWaiting) {
       return;
     }
-    mySocket.emit('pong.match_making.entry', { matchType: matchType });
+    mySocket.emit(
+      'pong.match_making.entry',
+      { matchType: matchType },
+      (result: any) => {
+        if (result && result.status === 'accepted') {
+          setIsWaiting(true);
+          return;
+        }
+        toast('マッチに参加できません');
+      }
+    );
   };
 
   return (
@@ -42,14 +53,12 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
           <CommandCard
             text="カジュアルマッチをプレイ"
             onClick={() => {
-              setIsWaiting(true);
               startMatchMaking('CASUAL');
             }}
           />
           <CommandCard
             text="ランクマッチをプレイ"
             onClick={() => {
-              setIsWaiting(true);
               startMatchMaking('RANK');
             }}
           />

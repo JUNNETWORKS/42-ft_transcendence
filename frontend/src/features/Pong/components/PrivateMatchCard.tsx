@@ -1,5 +1,6 @@
 import { useAtom } from 'jotai';
 import { useState } from 'react';
+import { toast } from 'react-toastify';
 
 import {
   FTBlockedHeader,
@@ -50,14 +51,19 @@ export const PrivateMatchCard = ({ room, onSucceeded, onCancel }: Prop) => {
         speed: gameSpeedFactorStr,
       });
       console.log('result', result);
+      toast('マッチを作成しました');
       onSucceeded();
     } catch (e) {
       if (e instanceof TypeError) {
         // ネットワークエラー
       } else {
         const ne = e as any;
-        if (ne.status === 'rejected' && typeof ne.errors === 'object') {
-          setNetErrors(ne.errors);
+        if (ne.status === 'rejected') {
+          if (typeof ne.errors === 'object') {
+            setNetErrors(ne.errors);
+          } else {
+            toast('マッチを作成することができません');
+          }
         }
       }
     }
