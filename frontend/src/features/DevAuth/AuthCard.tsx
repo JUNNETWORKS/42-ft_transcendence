@@ -14,12 +14,12 @@ import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
 import { useAPI } from '@/hooks';
 import { authAtom } from '@/stores/auth';
+import { useUserSignupForm } from '@/stores/control';
 
 import { popAuthError, popAuthInfo } from '../Toaster/toast';
 import { urlLoginFt } from './auth';
 import { passwordErrors, selfErrors } from './auth.validator';
 import { useOtp } from './hooks/useOtp';
-import { SignUpForm } from './SignUpForm';
 
 /**
  * TOTP入力フォーム
@@ -96,6 +96,11 @@ export const TotpAuthForm = (props: {
       </div>
     </div>
   );
+};
+
+const SignUpForm = () => {
+  const [, setOpen] = useUserSignupForm();
+  return <FTButton onClick={() => setOpen(true)}>Sign Up</FTButton>;
 };
 
 /**

@@ -16,8 +16,8 @@ import * as TD from '@/typedef';
 import { omitBy } from '@/utils';
 
 import { popAuthError } from '../Toaster/toast';
-import { AvatarFile, AvatarInput } from './components/AvatarInput';
-import { userErrors } from './user.validator';
+import { AvatarFile, AvatarInput } from '../User/components/AvatarInput';
+import { userErrors } from '../User/user.validator';
 
 type Prop = {
   onClose: (user?: TD.User, access_token?: string) => void;

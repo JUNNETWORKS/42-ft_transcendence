@@ -5,9 +5,9 @@ import { useUserCreatedForm, useUserSignupForm } from '@/stores/control';
 import { useUpdateUser } from '@/stores/store';
 
 import { popAuthImportantInfo } from '../Toaster/toast';
-import { UserForm } from '../User/UserForm';
+import { UserForm } from './UserForm';
 
-export const UserCreatedFormHolder = () => {
+export const UserFormHolder = () => {
   const [personalData] = usePersonalData();
   const loginLocal = useLoginLocal();
   const { updateOne } = useUpdateUser();

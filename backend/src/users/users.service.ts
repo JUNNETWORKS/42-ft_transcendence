@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { authenticator } from 'otplib';
 
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserFindManyDto } from './dto/user-find-many.dto';
 
@@ -16,7 +17,6 @@ import { AuthService } from '../auth/auth.service';
 import { ChatroomsService } from '../chatrooms/chatrooms.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as Utils from '../utils';
-import { CreateUserDto } from './dto/create-user';
 import { UserEntity } from './entities/user.entity';
 
 @Injectable()
