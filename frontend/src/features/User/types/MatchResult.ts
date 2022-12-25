@@ -6,8 +6,8 @@ export type MatchResult = {
   id: string;
   matchStatus: 'PREPARING' | 'IN_PROGRESS' | 'DONE' | 'ERROR';
   matchType: MatchType;
-  userID1: number;
-  userID2: number;
+  userId1: number;
+  userId2: number;
   userScore1: number;
   userScore2: number;
   config: MatchConfig;

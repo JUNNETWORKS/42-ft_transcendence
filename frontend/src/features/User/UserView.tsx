@@ -17,7 +17,7 @@ import * as TD from '@/typedef';
 import { DmCard } from '../DM/DmCard';
 import { BlockButton } from './components/BlockButton';
 import { FollowButton } from './components/FollowButton';
-import { MatchHistory } from './components/MatchHistory';
+import { MatchHistoryList } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { UserStats } from './components/Stats';
 
@@ -65,7 +65,7 @@ const ActualView = ({ user }: ActualViewProps) => {
       </div>
       <FTH4>MatchHistory</FTH4>
       <div className="px-2 py-4">
-        <MatchHistory id={user.id} />
+        <MatchHistoryList id={user.id} />
       </div>
     </>
   );
