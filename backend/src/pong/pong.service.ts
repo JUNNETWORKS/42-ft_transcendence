@@ -178,10 +178,6 @@ export class PongService {
         },
       },
     });
-    this.markGaming(
-      [result.userId1, result.userId2].filter((id) => !!id),
-      result.id
-    );
     if (match.matchType === 'PRIVATE' && relatedRoomId) {
       const user = await this.usersService.findOne(match.userId1);
       if (user) {
@@ -231,6 +227,10 @@ export class PongService {
       matchId,
       { status: 'PR_START', userScore1: 0, userScore2: 0 },
       userId2
+    );
+    await this.markGaming(
+      [match.userId1, match.userId2].filter((id) => !!id),
+      match.id
     );
   }
 
