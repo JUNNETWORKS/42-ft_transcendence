@@ -26,7 +26,7 @@ const LogoutBlock = () => {
   const logout = useLogout();
   const navigate = useNavigate();
   return (
-    <div className="flex flex-col bg-gray-800 p-6">
+    <div className="flex flex-col bg-gray-800 p-4">
       <div className="text-center">
         <FTButton
           onClick={async () => {
@@ -97,86 +97,76 @@ const MyPageContent = () => {
       </Modal>
 
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex gap-8">
-          <div className="flex flex-1 flex-col items-end">
-            <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
-              <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
-                <p
-                  className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
-                  style={{ wordBreak: 'keep-all' }}
+        <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-scroll p-0">
+          <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
+            <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
+              <p
+                className="shrink grow overflow-hidden text-ellipsis whitespace-nowrap"
+                style={{ wordBreak: 'keep-all' }}
+              >
+                {user.displayName}
+              </p>
+              <div className="shrink-0 grow-0 self-end">
+                <FTButton
+                  className="text-2xl"
+                  onClick={() => {
+                    setIsOpen(true);
+                    setModalType('edit');
+                  }}
                 >
-                  {user.displayName}
-                </p>
-                <div className="shrink-0 grow-0 self-end">
-                  <FTButton
-                    className="text-2xl"
+                  <InlineIcon i={<Icons.User.Edit />} />
+                </FTButton>
+              </div>
+            </FTH1>
+
+            <div className="flex flex-col">
+              <ProfileBlock user={user} isYou={true} />
+
+              <div className="flex flex-row items-center justify-center gap-4 p-3">
+                <div className="shrink-0 grow-0">
+                  <NumberButton
+                    title="Friends"
+                    num={friends.length}
                     onClick={() => {
                       setIsOpen(true);
-                      setModalType('edit');
+                      setModalType('friends');
                     }}
-                  >
-                    <InlineIcon i={<Icons.User.Edit />} />
-                  </FTButton>
+                  />
                 </div>
-              </FTH1>
-
-              <div className="flex flex-col">
-                <ProfileBlock user={user} isYou={true} />
-
-                <div className="flex flex-row items-center justify-center gap-4 p-3">
-                  <div className="shrink-0 grow-0">
-                    <NumberButton
-                      title="Friends"
-                      num={friends.length}
-                      onClick={() => {
-                        setIsOpen(true);
-                        setModalType('friends');
-                      }}
-                    />
-                  </div>
-                  <div className="shrink-0 grow-0">
-                    <NumberButton
-                      title="Blockings"
-                      num={blockings.length}
-                      onClick={() => {
-                        setIsOpen(true);
-                        setModalType('blockings');
-                      }}
-                    />
-                  </div>
+                <div className="shrink-0 grow-0">
+                  <NumberButton
+                    title="Blockings"
+                    num={blockings.length}
+                    onClick={() => {
+                      setIsOpen(true);
+                      setModalType('blockings');
+                    }}
+                  />
                 </div>
-
-                <AuthBlock
-                  user={user}
-                  onClickPassword={() => {
-                    setIsOpen(true);
-                    setModalType('password');
-                  }}
-                />
-
-                <LogoutBlock />
               </div>
+
+              <AuthBlock
+                user={user}
+                onClickPassword={() => {
+                  setIsOpen(true);
+                  setModalType('password');
+                }}
+              />
+
+              <LogoutBlock />
             </div>
-          </div>
-          <div className="flex flex-1 flex-col items-start  gap-32 ">
-            <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
-              <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
-                Stats & History
-              </FTH1>
+            <div className="flex flex-col">
+              <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+                Stats
+              </FTH3>
+              <UserStats id={user.id} />
+            </div>
 
-              <div className="flex flex-col">
-                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-                  Stats
-                </FTH3>
-                <UserStats id={user.id} />
-              </div>
-
-              <div className="flex flex-col">
-                <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-                  History
-                </FTH3>
-                <MatchHistory id={user.id} />
-              </div>
+            <div className="flex flex-col">
+              <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+                History
+              </FTH3>
+              <MatchHistory id={user.id} />
             </div>
           </div>
         </div>
