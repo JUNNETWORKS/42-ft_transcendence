@@ -47,7 +47,6 @@ const RenderHistory = ({ id, setter, onError, matchHistory }: Props) => {
           {matchHistory.history.map((match) => (
             <HistoryCard
               key={match.match.id}
-              user={matchHistory.user}
               opponent={match.opponent}
               matchResult={match.match}
             />
@@ -58,7 +57,7 @@ const RenderHistory = ({ id, setter, onError, matchHistory }: Props) => {
   );
 };
 
-export const MatchHistory = ({ id }: { id: number }) => {
+export const MatchHistoryList = ({ id }: { id: number }) => {
   const [history, setHistory] = useState<MatchHistory | null>(null);
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
 
