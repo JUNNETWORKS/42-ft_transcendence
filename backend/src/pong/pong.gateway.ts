@@ -9,6 +9,7 @@ import { Socket } from 'socket.io';
 
 import { AuthService } from 'src/auth/auth.service';
 import { WsAuthGuard } from 'src/auth/ws-auth.guard';
+import { UsersService } from 'src/users/users.service';
 import { isfinite } from 'src/utils';
 import { getUserFromClient } from 'src/utils/socket/ws-auth';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
@@ -39,6 +40,7 @@ export class PongGateway {
 
   constructor(
     private readonly authService: AuthService,
+    private readonly usersService: UsersService,
     private readonly pongService: PongService,
     private readonly wsServer: WsServerGateway,
     private readonly postMatchStrategy: PostMatchStrategy,
@@ -52,6 +54,7 @@ export class PongGateway {
       'RANK',
       this.ongoingMatches,
       this.wsServer,
+      this.usersService,
       this.pongService,
       this.postMatchStrategy
     );
@@ -59,6 +62,7 @@ export class PongGateway {
       'CASUAL',
       this.ongoingMatches,
       this.wsServer,
+      this.usersService,
       this.pongService,
       this.postMatchStrategy
     );
