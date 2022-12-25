@@ -173,7 +173,7 @@ export const shuffle = <T>(src: T[]) => {
   return array;
 };
 
-//n要素ずつの配列にする。n要素以下は含めない
+// 2要素ずつの配列にする。2要素以下は含めない
 // n = 2 -> [1, 2, 3, 4, 5] => [[1, 2], [3, 4]]
 export const splitPairArray = <T>(src: T[]) => {
   return [...src].reduce(
