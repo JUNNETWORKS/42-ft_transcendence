@@ -193,7 +193,7 @@ export const AuthBlock = ({ user, onClickPassword }: Prop) => {
       <Modal closeModal={closeModal} isOpen={!!qrcode}>
         {qrcode && <QrcodeCard qrcode={qrcode} onClose={closeModal} />}
       </Modal>
-      <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+      <FTH3 className="sticky top-0 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
         Authentication & Security
       </FTH3>
       <div className="flex flex-col items-stretch justify-center gap-4 p-4">

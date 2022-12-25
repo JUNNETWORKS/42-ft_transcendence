@@ -156,14 +156,14 @@ const MyPageContent = () => {
               <LogoutBlock />
             </div>
             <div className="flex flex-col">
-              <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+              <FTH3 className="sticky top-0 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
                 Stats
               </FTH3>
               <UserStats id={user.id} />
             </div>
 
             <div className="flex flex-col">
-              <FTH3 className="flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+              <FTH3 className="sticky top-0 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
                 History
               </FTH3>
               <MatchHistory id={user.id} />
