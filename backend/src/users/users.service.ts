@@ -171,6 +171,17 @@ export class UsersService {
     });
   }
 
+  async isBlockedEither(
+    firstUserId: number,
+    secondUserId: number
+  ): Promise<boolean> {
+    const rel = await Utils.PromiseMap({
+      firstToSecond: this.findBlocked(firstUserId, secondUserId),
+      secondToFirst: this.findBlocked(secondUserId, firstUserId),
+    });
+    return !!rel.firstToSecond || !!rel.secondToFirst;
+  }
+
   async block(userId: number, targetUserId: number) {
     return this.prisma.blockRelation.create({
       data: {

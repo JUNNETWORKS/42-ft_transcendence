@@ -16,7 +16,7 @@ import { useLogout } from '@/stores/auth';
 import { AuthBlock } from './components/AuthBlock';
 import { EditPasswordCard } from './components/EditPasswordCard';
 import { EditProfileCard } from './components/EditProfileCard';
-import { MatchHistory } from './components/MatchHistory';
+import { MatchHistoryList } from './components/MatchHistory';
 import { ProfileBlock } from './components/ProfileBlock';
 import { UserStats } from './components/Stats';
 import { FriendList, BlockingList } from './UserListCard';
@@ -163,10 +163,10 @@ const MyPageContent = () => {
             </div>
 
             <div className="flex flex-col">
-              <FTH3 className="sticky top-0 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+              <FTH3 className="sticky top-0 z-10 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
                 History
               </FTH3>
-              <MatchHistory id={user.id} />
+              <MatchHistoryList id={user.id} />
             </div>
           </div>
         </div>

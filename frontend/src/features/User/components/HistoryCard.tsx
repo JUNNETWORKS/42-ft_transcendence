@@ -13,33 +13,44 @@ const MatchTypeLabel = ({ matchType }: { matchType: MatchType }) => {
   );
 };
 
-const OutcomeLabel = ({
-  matchResult,
-  user,
-}: {
-  matchResult: MatchResult;
-  user: User;
-}) => {
-  const isWinner =
-    matchResult.userScore1 > matchResult.userScore2 &&
-    matchResult.userID1 === user.id;
-  const r = isWinner
-    ? { className: 'text-red-400', text: 'WIN' }
-    : { className: 'text-blue-400', text: 'LOSE' };
-  return <div className={r.className}>{r.text}</div>;
+const OutcomeLabel = ({ verdict }: { verdict: 'WIN' | 'LOSE' | null }) => {
+  const color = (() => {
+    switch (verdict) {
+      case 'WIN':
+        return 'text-red-400';
+      case 'LOSE':
+        return 'text-blue-400';
+      default:
+        return '';
+    }
+  })();
+  return <div className={color}>{verdict || ''}</div>;
 };
 
 type Props = {
   matchResult: MatchResult;
   opponent: User;
-  user: User;
 };
 
-export const HistoryCard = ({ matchResult, opponent, user }: Props) => {
+export const HistoryCard = ({ matchResult, opponent }: Props) => {
   const openCard = useUserCard();
   const avatarButton = (
     <UserAvatar user={opponent} onClick={() => openCard(opponent)} />
   );
+  const user1IsOpponent = matchResult.userId1 === opponent.id;
+  const yourScore = user1IsOpponent
+    ? matchResult.userScore2
+    : matchResult.userScore1;
+  const opponentScore = user1IsOpponent
+    ? matchResult.userScore1
+    : matchResult.userScore2;
+  const finished = matchResult.matchStatus === 'DONE';
+  const verdict =
+    finished && yourScore > opponentScore
+      ? 'WIN'
+      : finished && yourScore < opponentScore
+      ? 'LOSE'
+      : null;
   return (
     <li className="flex w-full flex-row items-center">
       <div className="shrink-0 grow-0">
@@ -51,9 +62,11 @@ export const HistoryCard = ({ matchResult, opponent, user }: Props) => {
           <PopoverUserCard user={opponent} />
         </div>
         <div className="flex shrink-0 grow-0">
-          <div className="mx-2 shrink-0 grow-0 basis-16 text-center">{`${matchResult.userScore1} - ${matchResult.userScore2}`}</div>
+          <div className="mx-2 shrink-0 grow-0 basis-16 text-center">
+            {yourScore} - {opponentScore}
+          </div>
           <div className="shrink-0 grow-0 basis-16 text-center">
-            <OutcomeLabel matchResult={matchResult} user={user} />
+            <OutcomeLabel verdict={verdict} />
           </div>
           <div className="shrink-0 grow-0 basis-20 text-center">
             <MatchTypeLabel matchType={matchResult.matchType} />
