@@ -1,5 +1,6 @@
 import { MatchStatus, MatchType } from '@prisma/client';
 
+import { UsersService } from 'src/users/users.service';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongService } from '../pong.service';
@@ -21,6 +22,7 @@ export class WaitingQueue {
     matchType: MatchType,
     ongoingMatches: OngoingMatches,
     wsServer: WsServerGateway,
+    private usersService: UsersService,
     private pongService: PongService,
     private postMatchStrategy: PostMatchStrategy
   ) {
