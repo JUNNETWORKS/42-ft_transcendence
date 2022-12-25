@@ -20,14 +20,14 @@ export const NavDropMenu = () => {
       </Popover.Button>
 
       <Popover.Panel className="absolute z-10">
-        <div className="flex w-40 flex-col bg-black text-3xl">
+        <div className="flex w-28 flex-col bg-black text-3xl">
           {links.map((link, i) => {
             return (
               <Popover.Button
                 key={i}
                 as={Link}
                 to={link.to}
-                className="mx-2 border-2 border-solid border-white p-1"
+                className="border-2 border-solid border-white p-1"
               >
                 {link.cap}
               </Popover.Button>
