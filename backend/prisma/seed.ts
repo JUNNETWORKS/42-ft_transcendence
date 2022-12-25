@@ -5,22 +5,21 @@ const prisma = new PrismaClient();
 
 async function main() {
   const createMany = await [
-    { displayName: 'Bob', email: 'bob@prisma.io', intraId: 0 },
-    { displayName: 'Yewande', email: 'yewande@prisma.io', intraId: 1 },
+    { displayName: 'Bob', email: 'bob@prisma.io' },
+    { displayName: 'Yewande', email: 'yewande@prisma.io' },
     {
       displayName:
         'AngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngeliqueAngelique',
       email:
         'angelique@prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.prisma.io',
-      intraId: 2,
     },
-    { displayName: 'yokawada', email: 'yokawada@prisma.io', intraId: 3 },
-    { displayName: 'Lorem', email: 'Lorem@prisma.io', intraId: 4 },
-    { displayName: 'ipsum', email: 'ipsum@prisma.io', intraId: 5 },
-    { displayName: 'dolor', email: 'dolor@prisma.io', intraId: 6 },
-    { displayName: 'sit', email: 'sit@prisma.io', intraId: 7 },
-    { displayName: 'amet', email: 'amet@prisma.io', intraId: 8 },
-    { displayName: 'consectetur', email: 'badass@prisma.io', intraId: 9 },
+    { displayName: 'yokawada', email: 'yokawada@prisma.io' },
+    { displayName: 'Lorem', email: 'Lorem@prisma.io' },
+    { displayName: 'ipsum', email: 'ipsum@prisma.io' },
+    { displayName: 'dolor', email: 'dolor@prisma.io' },
+    { displayName: 'sit', email: 'sit@prisma.io' },
+    { displayName: 'amet', email: 'amet@prisma.io' },
+    { displayName: 'consectetur', email: 'badass@prisma.io' },
   ].reduce((prev: Promise<User[]>, d, i) => {
     return prev.then((leadings) => {
       return prisma.user

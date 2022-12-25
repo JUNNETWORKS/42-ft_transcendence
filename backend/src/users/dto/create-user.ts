@@ -1,12 +1,15 @@
+// DB用DTO
+
 import { ApiProperty } from '@nestjs/swagger';
 import {
   IsEmail,
-  IsInt,
+  IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
   MaxLength,
   MinLength,
+  IsInt,
 } from 'class-validator';
 
 // https://github.com/nestjs/nest/issues/4178
@@ -26,18 +29,17 @@ export class CreateUserDto {
   @ApiProperty()
   displayName!: string;
 
-  @IsInt()
-  @ApiProperty()
-  intraId!: number;
-
   @IsString()
-  @IsOptional()
   @MinLength(12)
   @MaxLength(60)
   password!: string;
 
-  @IsString()
+  @IsInt()
+  @IsOptional()
+  intraId?: number | null;
+
+  @IsBoolean()
   @IsOptional()
   @ApiProperty()
-  avatar?: string;
+  isEnabledAvatar?: boolean;
 }

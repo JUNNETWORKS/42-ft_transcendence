@@ -7,6 +7,7 @@ import {
   Request,
   UseFilters,
   BadRequestException,
+  Post,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { WebSocketGateway } from '@nestjs/websockets';
@@ -17,6 +18,7 @@ import { PrismaExceptionFilter } from 'src/filters/prisma-exception.filter';
 import * as Utils from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
+import { CreateMeDto } from './dto/create-me.dto';
 import { UpdateMePasswordDto } from './dto/update-me-password.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
@@ -45,6 +47,31 @@ export class MeController {
       throw new BadRequestException('no user');
     }
     return Utils.pick(user, 'id', 'displayName', 'email');
+  }
+
+  // POST /me
+  // ユーザ登録用なのでガードしないこと
+  @Post('')
+  @UseFilters(PrismaExceptionFilter)
+  async post(@Body() createMeDto: CreateMeDto) {
+    // displayName の唯一性チェック
+    // -> unique 制約に任せる
+    // [DB保存]
+    // TODO: こここそトランザクションなんじゃないの
+    const isEnabledAvatar = !!createMeDto.avatar;
+    // 本体
+    const user = await this.usersService.create({
+      ...Utils.pick(createMeDto, 'displayName', 'email', 'password'),
+      isEnabledAvatar,
+    });
+    // アバター
+    await (createMeDto.avatar
+      ? this.usersService.upsertAvatar(user.id, createMeDto.avatar)
+      : Promise.resolve('skipped'));
+    // [後処理]
+    // TODO: パスワードが変更されているなら, このユーザのすべてのJWTを失効させる
+    // TODO: さらに, 新しいアクセストークンを返す
+    return this.authService.issueUser(user, false);
   }
 
   // PATCH /me

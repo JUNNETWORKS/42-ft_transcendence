@@ -96,21 +96,7 @@ export class AuthService {
       };
       return result;
     }
-    const result = {
-      access_token: this.issueAccessToken(user),
-      user: {
-        ...Utils.pick(
-          u!,
-          'id',
-          'displayName',
-          'email',
-          'isEnabled2FA',
-          'isEnabledAvatar'
-        ),
-        created: !!user.created,
-      },
-    };
-    return result;
+    return this.issueUser(u!, !!user.created);
   }
 
   async trapAuth(client: Socket) {
@@ -158,6 +144,23 @@ export class AuthService {
     }
     const isValid = authenticator.check(verifyOtpDto.otp, secret.secret);
     return isValid;
+  }
+
+  issueUser(user: User, untouched: boolean) {
+    return {
+      access_token: this.issueAccessToken(user),
+      user: {
+        ...Utils.pick(
+          user,
+          'id',
+          'displayName',
+          'email',
+          'isEnabled2FA',
+          'isEnabledAvatar'
+        ),
+        created: untouched,
+      },
+    };
   }
 
   issueAccessToken(user: User, payload: any = null) {

@@ -18,7 +18,7 @@ export class UserEntity implements User {
   isEnabledAvatar!: boolean;
 
   @ApiProperty()
-  intraId!: number;
+  intraId!: number | null;
 
   @ApiProperty()
   password!: string;

@@ -19,6 +19,7 @@ import { popAuthError, popAuthInfo } from '../Toaster/toast';
 import { urlLoginFt } from './auth';
 import { passwordErrors, selfErrors } from './auth.validator';
 import { useOtp } from './hooks/useOtp';
+import { SignUpForm } from './SignUpForm';
 
 /**
  * TOTP入力フォーム
@@ -226,7 +227,12 @@ export const DevAuthLoginCard = (props: {
         Login, Please.
       </FTH1>
       <br />
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
+        <FTH3>Sign Up</FTH3>
+        <div className="text-center">
+          <SignUpForm />
+        </div>
+
         <FTH3>By 42Auth</FTH3>
         <div className="text-center">
           <FtAuthForm />
