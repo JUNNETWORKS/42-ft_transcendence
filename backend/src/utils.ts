@@ -163,3 +163,22 @@ export function hash(secret: string, target: string, iteration = 1) {
 export function compact<T>(arr: T[]) {
   return arr.filter((a) => !!a) as Exclude<T, null | undefined>[];
 }
+
+export const shuffle = <T>(src: T[]) => {
+  const array = [...src];
+  for (let i = array.length - 1; i >= 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+//n要素ずつの配列にする。n要素以下は含めない
+// n = 2 -> [1, 2, 3, 4, 5] => [[1, 2], [3, 4]]
+export const splitPairArray = <T>(src: T[]) => {
+  return [...src].reduce(
+    (acc: T[][], _, index, array) =>
+      (index + 1) % 2 ? acc : [...acc, [...array.slice(index - 1, index + 1)]],
+    []
+  );
+};

@@ -1,6 +1,7 @@
 import { MatchStatus, MatchType } from '@prisma/client';
 
 import { UsersService } from 'src/users/users.service';
+import { shuffle, splitPairArray } from 'src/utils';
 import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 
 import { PongService } from '../pong.service';
@@ -58,19 +59,21 @@ export class WaitingQueue {
       return;
     }
 
-    //待ちユーザーを2要素ずつの配列にする。2要素以下は追加は含めない-> [1, 2, 3, 4, 5] => [[1, 2], [3, 4]]
-    const waitingUserPairs = [...this.users].reduce(
-      (acc: number[][], _, index, array) =>
-        (index + 1) % 2
-          ? acc
-          : [...acc, [...array.slice(index - 1, index + 1)]],
-      []
+    const waitingUserPairs = splitPairArray(shuffle([...this.users]));
+
+    const blockFilter = await Promise.all(
+      waitingUserPairs.map((item) =>
+        this.usersService.isBlockedEither(item[0], item[1])
+      )
+    );
+    const filteredUserPair = waitingUserPairs.filter(
+      (_, i) => blockFilter[i] === false
     );
 
     //ペアになったユーザーを削除
-    waitingUserPairs.flat().forEach((item) => this.users.delete(item));
+    filteredUserPair.flat().forEach((item) => this.users.delete(item));
 
-    const promises = waitingUserPairs.map((item) => {
+    const promises = filteredUserPair.map((item) => {
       return this.createMatch(item[0], item[1]);
     });
     await Promise.all(promises);
