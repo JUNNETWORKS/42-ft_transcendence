@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { authAtom } from '@/stores/auth';
 import * as TD from '@/typedef';
 
+import { NavDropMenu } from './NavDropMenu';
 import { UserAvatar } from './UserAvater';
 
 type UserCardProp = {
@@ -66,9 +67,10 @@ export const NavBar = () => {
     <>
       <div className="bg-primary bg-navbar-img">
         <div className="flex h-20 place-content-between">
-          <p className="flex w-72 items-center justify-center text-5xl">
-            {caption}
-          </p>
+          <div className="flex flex-row content-center items-center justify-center">
+            <NavDropMenu />
+            <p className=" text-center text-5xl">{caption}</p>
+          </div>
           {presentator}
         </div>
       </div>

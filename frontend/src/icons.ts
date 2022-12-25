@@ -1,5 +1,6 @@
 import * as Bs from 'react-icons/bs';
 import * as Fa from 'react-icons/fa';
+import { GiHamburgerMenu } from 'react-icons/gi';
 import * as Io from 'react-icons/im';
 import * as Md from 'react-icons/md';
 import * as Ri from 'react-icons/ri';
@@ -80,4 +81,8 @@ export const RoomTypeIcon = {
   PRIVATE: Icons.Chat.Private,
   LOCKED: Icons.Chat.Locked,
   DM: Icons.Chat.DM,
+};
+
+export const MenuIcon = {
+  Hamburger: GiHamburgerMenu,
 };
