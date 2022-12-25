@@ -42,6 +42,20 @@ export function omit<T extends object, U extends keyof T>(
   return d;
 }
 
+export function omitBy<T extends object>(
+  obj: T,
+  predicate: (val: any, key: keyof T) => boolean
+): Partial<T> {
+  const d: any = {};
+  Object.keys(obj).forEach((key) => {
+    const v = (obj as any)[key];
+    if (predicate(v, key as keyof T)) {
+      d[key] = v;
+    }
+  });
+  return d;
+}
+
 export function compact<T>(arr: T[]) {
   return arr.filter((a) => !!a) as Exclude<T, null | undefined>[];
 }

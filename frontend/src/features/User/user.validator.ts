@@ -28,28 +28,18 @@ export const passwordErrors = (password: string) => {
   };
 };
 
-export const userUpdateErrors = (displayName: string, password: string) => {
-  const errors = {
-    displayName: validateDisplayName(displayName),
-    password: validatePassword(password, false),
-  };
-  return {
-    ...errors,
-    some: (Object.keys(errors) as (keyof typeof errors)[]).some(
-      (key) => errors[key]
-    ),
-  };
-};
-
-export const userCreateErrors = (
-  displayName: string,
-  email: string,
-  password: string
+export const userErrors = (
+  mode: 'Create' | 'Update',
+  params: {
+    displayName: string;
+    email?: string;
+    password: string;
+  }
 ) => {
   const errors = {
-    displayName: validateDisplayName(displayName),
-    email: validateEmail(email),
-    password: validatePassword(password, true),
+    displayName: validateDisplayName(params.displayName),
+    email: mode === 'Create' ? validateEmail(params?.email || '') : null,
+    password: validatePassword(params.password, mode === 'Create'),
   };
   return {
     ...errors,

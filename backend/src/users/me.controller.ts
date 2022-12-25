@@ -54,10 +54,9 @@ export class MeController {
   @Post('')
   @UseFilters(PrismaExceptionFilter)
   async post(@Body() createMeDto: CreateMeDto) {
-    // displayName の唯一性チェック
+    // displayName, email の唯一性チェック
     // -> unique 制約に任せる
     // [DB保存]
-    // TODO: こここそトランザクションなんじゃないの
     const isEnabledAvatar = !!createMeDto.avatar;
     // 本体
     const user = await this.usersService.create({
@@ -65,12 +64,9 @@ export class MeController {
       isEnabledAvatar,
     });
     // アバター
-    await (createMeDto.avatar
-      ? this.usersService.upsertAvatar(user.id, createMeDto.avatar)
-      : Promise.resolve('skipped'));
-    // [後処理]
-    // TODO: パスワードが変更されているなら, このユーザのすべてのJWTを失効させる
-    // TODO: さらに, 新しいアクセストークンを返す
+    if (createMeDto.avatar) {
+      await this.usersService.upsertAvatar(user.id, createMeDto.avatar);
+    }
     return this.authService.issueUser(user, false);
   }
 
@@ -115,8 +111,6 @@ export class MeController {
         { global: 'global' }
       );
     }
-    // TODO: パスワードが変更されているなら, このユーザのすべてのJWTを失効させる
-    // TODO: さらに, 新しいアクセストークンを返す
     return {
       user: Utils.pick(
         result.ordinary.user,
