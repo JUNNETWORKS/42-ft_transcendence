@@ -1,18 +1,23 @@
 import { Popover } from '@headlessui/react';
+import { useAtom } from 'jotai';
 import { Link } from 'react-router-dom';
 
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { MenuIcon } from '@/icons';
+import { chatSocketAtom } from '@/stores/auth';
 
 export const NavDropMenu = () => {
-  const links = [
-    { to: '/', cap: 'Top' },
-    { to: '/pong', cap: 'Pong' },
-    { to: '/chat', cap: 'Chat' },
-    { to: '/dm', cap: 'DM' },
-    { to: '/me', cap: 'Me' },
-    { to: '/auth', cap: 'Auth' },
-  ];
+  const [mySocket] = useAtom(chatSocketAtom);
+
+  const links = mySocket
+    ? [
+        { to: '/', cap: 'Top' },
+        { to: '/pong', cap: 'Pong' },
+        { to: '/chat', cap: 'Chat' },
+        { to: '/dm', cap: 'DM' },
+        { to: '/me', cap: 'Me' },
+      ]
+    : [{ to: '/auth', cap: 'LogIn' }];
   return (
     <Popover className="relative">
       <Popover.Button className="outline-none">
