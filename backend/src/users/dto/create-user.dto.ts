@@ -1,43 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsEmail,
-  IsInt,
-  IsNotEmpty,
-  IsOptional,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+// DB用DTO
 
-// https://github.com/nestjs/nest/issues/4178
+import { ApiProperty, PickType } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, IsInt } from 'class-validator';
 
-// swaggerのデコレーターは自動生成可
-// https://docs.nestjs.com/openapi/cli-plugin
+import { CreateMeDto } from './create-me.dto';
 
-export class CreateUserDto {
-  @IsEmail()
-  @IsNotEmpty()
-  @ApiProperty()
-  email!: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(20)
-  @ApiProperty()
-  displayName!: string;
-
+export class CreateUserDto extends PickType(CreateMeDto, [
+  'email',
+  'displayName',
+  'password',
+]) {
   @IsInt()
-  @ApiProperty()
-  intraId!: number;
-
-  @IsString()
   @IsOptional()
-  @MinLength(12)
-  @MaxLength(60)
-  password!: string;
+  intraId?: number | null;
 
-  @IsString()
+  @IsBoolean()
   @IsOptional()
   @ApiProperty()
-  avatar?: string;
+  isEnabledAvatar?: boolean;
 }

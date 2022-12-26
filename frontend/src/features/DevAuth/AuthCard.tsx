@@ -14,6 +14,7 @@ import { APIError } from '@/errors/APIError';
 import { OtpInput } from '@/features/DevAuth/components/OtpInput';
 import { useAPI } from '@/hooks';
 import { authAtom } from '@/stores/auth';
+import { useUserSignupForm } from '@/stores/control';
 
 import { popAuthError, popAuthInfo } from '../Toaster/toast';
 import { urlLoginFt } from './auth';
@@ -95,6 +96,11 @@ export const TotpAuthForm = (props: {
       </div>
     </div>
   );
+};
+
+const SignUpForm = () => {
+  const [, setOpen] = useUserSignupForm();
+  return <FTButton onClick={() => setOpen(true)}>Sign Up</FTButton>;
 };
 
 /**
@@ -226,7 +232,12 @@ export const DevAuthLoginCard = (props: {
         Login, Please.
       </FTH1>
       <br />
-      <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
+        <FTH3>Sign Up</FTH3>
+        <div className="text-center">
+          <SignUpForm />
+        </div>
+
         <FTH3>By 42Auth</FTH3>
         <div className="text-center">
           <FtAuthForm />

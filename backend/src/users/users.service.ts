@@ -29,6 +29,7 @@ export class UsersService {
   ) {}
 
   create(createUserDto: CreateUserDto) {
+    createUserDto.password = UsersService.hash_password(createUserDto.password);
     return this.prisma.user.create({
       data: {
         ...createUserDto,

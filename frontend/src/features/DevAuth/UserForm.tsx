@@ -10,92 +10,71 @@ import {
 import { APIError } from '@/errors/APIError';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useAPI } from '@/hooks';
-import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { UserPersonalData } from '@/stores/auth';
-import { useUpdateUser } from '@/stores/store';
 import * as TD from '@/typedef';
+import { omitBy } from '@/utils';
 
 import { popAuthError } from '../Toaster/toast';
-import { AvatarFile, AvatarInput } from './components/AvatarInput';
-import { userErrors } from './user.validator';
+import { AvatarFile, AvatarInput } from '../User/components/AvatarInput';
+import { userErrors } from '../User/user.validator';
 
 type Prop = {
-  onClose: () => void;
+  onClose: (user?: TD.User, access_token?: string) => void;
 };
 
 type InnerProp = Prop & {
-  userData: UserPersonalData;
-  patchUserData: (partialUserData: Partial<UserPersonalData>) => void;
+  userData?: UserPersonalData;
 };
 
-const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
-  const [displayName, setDisplayName] = useState(userData.displayName);
+export const UserForm = ({ userData, onClose }: InnerProp) => {
+  const mode = userData ? 'Update' : 'Create';
+  const [displayName, setDisplayName] = useState(userData?.displayName || '');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [avatarFile, setAvatarFile] = useState<AvatarFile | null>(null);
   const submitId = useId();
-  const fieldIds = [useId(), useId()];
-  const [nameId, passwordId] = fieldIds;
+  const [nameId, emailId, passwordId] = [useId(), useId(), useId()];
+  const fieldIds: string[] = [];
+  fieldIds.push(nameId);
+  if (mode === 'Create') {
+    fieldIds.push(emailId);
+  }
+  fieldIds.push(passwordId);
 
   const trimmedData = {
     displayName: displayName.trim(),
+    email: email.trim(),
     password: password.trim(),
-    avatarFile,
+    avatar: avatarFile?.dataURL,
   };
 
-  const validationErrors = {
-    ...userErrors(trimmedData.displayName, trimmedData.password),
-  };
+  const validationErrors = userErrors(mode, trimmedData);
   const [netErrors, setNetErrors] = useState<{ [key: string]: string }>({});
-  const { updateOne } = useUpdateUser();
-  const [state, submit] = useAPI('PATCH', `/me`, {
-    payload: () => ({
-      displayName: trimmedData.displayName,
-      ...(trimmedData.password ? { password: trimmedData.password } : {}),
-      avatar: trimmedData.avatarFile?.dataURL,
-    }),
+  const method = mode === 'Create' ? 'POST' : 'PATCH';
+  const [state, submit] = useAPI(method, `/me`, {
+    payload: () => omitBy(trimmedData, (v) => !!v),
     onFetched: (json) => {
-      const { user: u } = json as { user: TD.User };
-      updateOne(u.id, u);
-      patchUserData({ ...u, avatarTime: Date.now() });
+      const { user, access_token } = json as {
+        user: TD.User;
+        access_token: string;
+      };
       setNetErrors({});
-      onClose();
+      onClose(user, access_token);
     },
     onFailed(e) {
       if (e instanceof TypeError) {
         popAuthError('ネットワークエラー');
       } else if (e instanceof APIError) {
         e.response.json().then((json: any) => {
-          console.log({ json });
           if (typeof json === 'object') {
             setNetErrors(json);
           }
         });
+        popAuthError('サーバエラー');
       }
     },
   });
-  const passwordErrorContent = () => {
-    const passwordError = validationErrors.password || netErrors.password;
-    if (passwordError) {
-      return (
-        <span className="text-red-400">
-          <InlineIcon i={<Icons.Bang />} />
-          {passwordError}
-        </span>
-      );
-    }
-    if (trimmedData.password.length > 0) {
-      return (
-        <>
-          <span className="text-green-400">
-            <InlineIcon i={<Icons.Ok />} />
-          </span>
-          {trimmedData.password.length}/60
-        </>
-      );
-    }
-    return <></>;
-  };
   const moveFocus = (e: React.KeyboardEvent<HTMLInputElement>) => {
     let submittable = false;
     let downward: boolean;
@@ -126,12 +105,66 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
       }
     }
   };
-  return (
-    <>
-      <FTH1 className="p-2 text-3xl">Modify Your Data</FTH1>
+  const title = mode === 'Create' ? 'Register Your Data' : 'Modify Your Data';
+  const headerBlock =
+    mode === 'Create' ? null : (
       <div className="p-4 text-center text-sm">
         あなたの現在の登録情報です。必要ならば修正してください。
       </div>
+    );
+  const idBlock = userData ? (
+    <>
+      <FTH4>id</FTH4>
+      <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
+    </>
+  ) : null;
+  const emailBlock = userData ? (
+    <>{userData.email}</>
+  ) : (
+    <>
+      <FTTextField
+        id={emailId}
+        name="email"
+        className="w-full border-0 border-b-2 focus:bg-gray-700"
+        autoComplete="off"
+        placeholder="Email:"
+        value={email}
+        onActualKeyDown={moveFocus}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <div className="text-red-400">
+        {validationErrors.email || netErrors.email || '　'}
+      </div>
+    </>
+  );
+  const passwordErrorContent = () => {
+    const passwordError = validationErrors.password || netErrors.password;
+    if (passwordError) {
+      return (
+        <span className="text-red-400">
+          <InlineIcon i={<Icons.Bang />} />
+          {passwordError}
+        </span>
+      );
+    }
+    if (trimmedData.password.length > 0) {
+      return (
+        <>
+          <span className="text-green-400">
+            <InlineIcon i={<Icons.Ok />} />
+          </span>
+          {trimmedData.password.length}/60
+        </>
+      );
+    }
+    return <></>;
+  };
+  const submitContent =
+    mode === 'Create' ? <>この内容で登録</> : <>修正して保存</>;
+  return (
+    <>
+      <FTH1 className="p-2 text-3xl">{title}</FTH1>
+      {headerBlock}
       <div className="flex">
         <div>
           <FTH4 style={{ paddingLeft: '1em' }}>avatar</FTH4>
@@ -143,11 +176,9 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
             />
           </div>
         </div>
-        {/* <img className="h-24 w-24" src="/Kizaru.png" alt="UserProfileImage" /> */}
 
         <div className="shrink grow overflow-hidden">
-          <FTH4>id</FTH4>
-          <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
+          {idBlock}
 
           <FTH4 className="">name</FTH4>
           <div className="py-1 pb-5">
@@ -167,9 +198,7 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
           </div>
 
           <FTH4>email</FTH4>
-          <div className="overflow-hidden truncate py-1 pr-1">
-            {userData.email}
-          </div>
+          <div className="overflow-hidden truncate py-1 pr-1">{emailBlock}</div>
 
           <FTH4 className="">password</FTH4>
           <div className="py-1">
@@ -189,8 +218,11 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
         </div>
       </div>
       <div className="flex justify-around p-4">
-        <FTButton className="mr-2 disabled:opacity-50" onClick={onClose}>
-          あとにする
+        <FTButton
+          className="mr-2 disabled:opacity-50"
+          onClick={() => onClose()}
+        >
+          キャンセル
         </FTButton>
         <FTButton
           id={submitId}
@@ -199,26 +231,8 @@ const ModifyCard = ({ userData, patchUserData, onClose }: InnerProp) => {
           onClick={submit}
         >
           <InlineIcon i={<Icons.Save />} />
-          修正して保存
+          {submitContent}
         </FTButton>
-      </div>
-    </>
-  );
-};
-
-export const UserCreatedForm = ({ onClose }: Prop) => {
-  const [personalData, , patchUserData] = usePersonalData();
-  if (!personalData) {
-    return null;
-  }
-  return (
-    <>
-      <div className="flex w-[480px] flex-col justify-around border-4 border-white bg-black">
-        <ModifyCard
-          userData={personalData}
-          patchUserData={(u) => patchUserData(u)}
-          onClose={onClose}
-        />
       </div>
     </>
   );

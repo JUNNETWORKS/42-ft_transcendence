@@ -1,8 +1,10 @@
+// API用DTO
+
 import { PickType } from '@nestjs/swagger';
 
-import { CreateUserDto } from './create-user.dto';
+import { CreateMeDto } from './create-me.dto';
 
-export class UpdateMeDto extends PickType(CreateUserDto, [
+export class UpdateMeDto extends PickType(CreateMeDto, [
   'displayName',
   'password',
   'avatar',
