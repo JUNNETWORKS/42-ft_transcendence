@@ -166,15 +166,15 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
       <FTH1 className="p-2 text-3xl">{title}</FTH1>
       {headerBlock}
       <div className="flex">
-        <div>
-          <FTH4 style={{ paddingLeft: '1em' }}>avatar</FTH4>
-          <div className="p-[1em]">
-            <AvatarInput
-              avatarFile={avatarFile}
-              setAvatarFile={setAvatarFile}
-              networkError={netErrors.avatar}
-            />
-          </div>
+        <div className="flex shrink-0 grow-0 flex-col">
+          <FTH4>
+            <span className="pl-4">avatar</span>
+          </FTH4>
+          <AvatarInput
+            avatarFile={avatarFile}
+            setAvatarFile={setAvatarFile}
+            networkError={netErrors.avatar}
+          />
         </div>
 
         <div className="shrink grow overflow-hidden">
