@@ -1,6 +1,7 @@
 import { useAtom } from 'jotai';
 import { useCallback } from 'react';
 
+import { Constants } from '@/constants';
 import { storedCredentialAtom } from '@/stores/auth';
 
 export const useAPICallerWithCredential = () => {
@@ -44,7 +45,7 @@ export async function callAPI(
   if (usedCredential) {
     headers['Authorization'] = `Bearer ${usedCredential.token}`;
   }
-  return fetch(`http://localhost:3000${endpoint}`, {
+  return fetch(`${Constants.backendHost}${endpoint}`, {
     method,
     headers,
     mode: 'cors',

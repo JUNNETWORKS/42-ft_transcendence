@@ -1,10 +1,6 @@
+import { Constants } from '@/constants';
 import { APIError } from '@/errors/APIError';
 import { AppCredential } from '@/stores/auth';
-
-/**
- * バックエンドサーバのドメイン
- */
-const backendHost = `http://localhost:3000`;
 
 /**
  * (全体)認証フロー状態
@@ -26,12 +22,12 @@ export type FtAuthenticationFlowState =
 /**
  * チャットWSのURL
  */
-export const urlChatSocket = `${backendHost}/chat`;
+export const urlChatSocket = `${Constants.backendHost}/chat`;
 
 /**
  * 42認証入口のURL
  */
-export const urlLoginFt = `${backendHost}/auth/login_ft`;
+export const urlLoginFt = `${Constants.backendHost}/auth/login_ft`;
 
 /**
  * クレデンシャルデータを検証し, ユーザ情報に変換する.
@@ -47,7 +43,7 @@ export const verifyCredential = async (
 ) => {
   if (credential && credential.token) {
     try {
-      const result = await fetch(`${backendHost}/auth/session`, {
+      const result = await fetch(`${Constants.backendHost}/auth/session`, {
         method: 'GET',
         mode: 'cors',
         headers: {
@@ -84,7 +80,7 @@ export const verifyOAuth2AuthorizationCode = async (
   onSucceeded: (token: string, user: any, required2fa: boolean) => void,
   onFailed: () => void
 ) => {
-  const url = `${backendHost}/auth/callback_ft?code=${authCode}`;
+  const url = `${Constants.backendHost}/auth/callback_ft?code=${authCode}`;
   const result = await fetch(url, {
     method: 'GET',
     mode: 'cors',
