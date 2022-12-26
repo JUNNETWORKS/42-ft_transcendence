@@ -227,12 +227,12 @@ export const DevAuthLoginCard = (props: {
       </FTH1>
       <br />
       <div className="flex flex-col gap-8">
-        <FTH3>By 42Auth</FTH3>
+        <FTH3 className="sticky top-0 z-10">By 42Auth</FTH3>
         <div className="text-center">
           <FtAuthForm />
         </div>
 
-        <FTH3>By Email / Password</FTH3>
+        <FTH3 className="sticky top-0 z-10">By Email / Password</FTH3>
         <div>
           <PasswordAuthForm
             onSucceeded={props.onSucceeded}
@@ -240,7 +240,7 @@ export const DevAuthLoginCard = (props: {
           />
         </div>
 
-        <FTH3>By Self</FTH3>
+        <FTH3 className="sticky top-0 z-10">By Self</FTH3>
         <div className="text-center">
           <SelfAuthForm
             onSucceeded={props.onSucceeded}
