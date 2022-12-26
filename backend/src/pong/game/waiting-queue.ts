@@ -112,5 +112,9 @@ export class WaitingQueue {
     );
     match.start();
     await this.pongService.updateMatchStatus(matchId, MatchStatus.IN_PROGRESS);
+    await this.pongService.markGaming(
+      [userId1, userId2].filter((id) => !!id),
+      match.matchId
+    );
   }
 }
