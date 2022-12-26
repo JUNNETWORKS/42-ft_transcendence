@@ -14,7 +14,7 @@ model User {
   id                          Int                 @id @default(autoincrement())
   email                       String              @unique
   displayName                 String              @unique
-  intraId                     Int                 @unique
+  intraId                     Int?                @unique
   invalidateTokenIssuedBefore DateTime?
   pulseTime                   DateTime?
   ongoingMatchId              String?

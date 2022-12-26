@@ -1,20 +1,8 @@
-import { keyBy } from '@/utils';
-
-const validateDisplayName = (s: string) => {
-  const trimmed = s.trim();
-  const policy = {
-    min: 1,
-    max: 20,
-  };
-  if (!trimmed) {
-    return 'empty?';
-  }
-  const n = trimmed.length;
-  if (n > policy.max) {
-    return `${n}/${policy.max} too long`;
-  }
-  return null;
-};
+import {
+  validateDisplayName,
+  validateEmail,
+  validatePassword,
+} from '@/validator/user.validator';
 
 export const displayNameErrors = (displayName: string) => {
   const errors = {
@@ -26,36 +14,6 @@ export const displayNameErrors = (displayName: string) => {
       (key) => errors[key]
     ),
   };
-};
-
-const validatePassword = (s: string, required: boolean) => {
-  const trimmed = s.trim();
-  const policy = {
-    min: 12,
-    max: 60,
-    types: 4,
-    usableCharacters: /^[A-Za-z0-9/_-]+$/,
-  };
-  const n = trimmed.length;
-  if (n === 0) {
-    if (!required) {
-      return null;
-    }
-  }
-  if (n < policy.min) {
-    return `${n}/${policy.min} too short`;
-  }
-  if (policy.max < n) {
-    return `${n}/${policy.max} too long`;
-  }
-  const characters = Object.keys(keyBy(trimmed.split(''), (c) => c));
-  if (characters.length < policy.types) {
-    return `too less character types (${characters.length}/${policy.types})`;
-  }
-  if (!trimmed.match(policy.usableCharacters)) {
-    return 'unusable character detected';
-  }
-  return null;
 };
 
 export const passwordErrors = (password: string) => {
@@ -70,10 +28,18 @@ export const passwordErrors = (password: string) => {
   };
 };
 
-export const userErrors = (displayName: string, password: string) => {
+export const userErrors = (
+  mode: 'Create' | 'Update',
+  params: {
+    displayName: string;
+    email?: string;
+    password: string;
+  }
+) => {
   const errors = {
-    displayName: validateDisplayName(displayName),
-    password: validatePassword(password, false),
+    displayName: validateDisplayName(params.displayName),
+    email: mode === 'Create' ? validateEmail(params?.email || '') : null,
+    password: validatePassword(params.password, mode === 'Create'),
   };
   return {
     ...errors,

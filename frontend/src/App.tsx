@@ -3,7 +3,7 @@ import { SocketHolder } from '@/features/Socket/SocketHolder';
 import { AppProvider } from '@/providers/AppProvider';
 import { AppRoutes } from '@/routes/AppRoutes';
 
-import { UserCreatedFormHolder } from './features/DevAuth/UserCreatedFormHolder';
+import { UserFormHolder } from './features/DevAuth/UserFormHolder';
 import { ToastHolder } from './features/Toaster/ToastHolder';
 import { UserCardHolder } from './features/User/UserCardHolder';
 import { useConfirmModalComponent } from './hooks/useConfirmModal';
@@ -19,7 +19,7 @@ export const App = () => {
       <SocketHolder />
       <ToastHolder />
       <ConfirmModal />
-      <UserCreatedFormHolder />
+      <UserFormHolder />
       <UserCardHolder />
     </AppProvider>
   );
