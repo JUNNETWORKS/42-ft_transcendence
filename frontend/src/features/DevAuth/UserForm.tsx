@@ -118,25 +118,6 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
       <p className=" pt-1 pr-1 pb-4">{userData.id}</p>
     </>
   ) : null;
-  const emailBlock = userData ? (
-    <>{userData.email}</>
-  ) : (
-    <>
-      <FTTextField
-        id={emailId}
-        name="email"
-        className="w-full border-0 border-b-2 focus:bg-gray-700"
-        autoComplete="off"
-        placeholder="Email:"
-        value={email}
-        onActualKeyDown={moveFocus}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <div className="text-red-400">
-        {validationErrors.email || netErrors.email || '　'}
-      </div>
-    </>
-  );
   const passwordErrorContent = () => {
     const passwordError = validationErrors.password || netErrors.password;
     if (passwordError) {
@@ -197,24 +178,41 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
             </div>
           </div>
 
-          <FTH4>email</FTH4>
-          <div className="overflow-hidden truncate py-1 pr-1">{emailBlock}</div>
+          <form id="userForm">
+            <FTH4>email</FTH4>
+            <div className="overflow-hidden truncate py-1 pr-1">
+              <FTTextField
+                id={emailId}
+                name="email"
+                className="w-full border-0 border-b-2 focus:bg-gray-700"
+                autoComplete="username"
+                placeholder="Email:"
+                value={userData ? userData.email : email}
+                onActualKeyDown={moveFocus}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={!!userData}
+              />
+              <div className="text-red-400">
+                {validationErrors.email || netErrors.email || '　'}
+              </div>
+            </div>
 
-          <FTH4 className="">password</FTH4>
-          <div className="py-1">
-            <FTTextField
-              id={passwordId}
-              name="password"
-              className="w-full border-0 border-b-2 focus:bg-gray-700"
-              autoComplete="off"
-              placeholder="設定する場合は 12 - 60 文字"
-              value={password}
-              type="password"
-              onActualKeyDown={moveFocus}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-            <div className="h-[2em]">{passwordErrorContent()}</div>
-          </div>
+            <FTH4 className="">password</FTH4>
+            <div className="py-1">
+              <FTTextField
+                id={passwordId}
+                name="password"
+                className="w-full border-0 border-b-2 focus:bg-gray-700"
+                autoComplete="new-password"
+                placeholder="設定する場合は 12 - 60 文字"
+                value={password}
+                type="password"
+                onActualKeyDown={moveFocus}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <div className="h-[2em]">{passwordErrorContent()}</div>
+            </div>
+          </form>
         </div>
       </div>
       <div className="flex justify-around p-4">
