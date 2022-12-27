@@ -1,3 +1,4 @@
+import { Constants } from '@/constants';
 import * as TD from '@/typedef';
 
 type Props = {
@@ -16,7 +17,7 @@ export const UserAvatar = ({ user, className, onClick }: Props) => {
       <img
         src={
           user.isEnabledAvatar
-            ? `http://localhost:3000/users/${user.id}/avatar?${user.avatarTime}`
+            ? `${Constants.backendHost}/users/${user.id}/avatar?${user.avatarTime}`
             : '/Kizaru.png'
         }
         alt="CurrentUserProfileImage"

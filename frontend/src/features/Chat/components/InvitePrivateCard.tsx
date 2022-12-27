@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { toast } from 'react-toastify';
 
 import { FTH3 } from '@/components/FTBasicComponents';
+import { Constants } from '@/constants';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import { displayUser, ChatRoom } from '@/typedef';
@@ -63,7 +64,7 @@ export const InvitePrivateCard = (props: {
       <FTH3>invite to private room</FTH3>
       <UserSelectList
         makeUrl={(take, cursor) =>
-          `http://localhost:3000/users?take=${take}&cursor=${cursor}`
+          `${Constants.backendHost}/users?take=${take}&cursor=${cursor}`
         }
         take={take}
         isDisabled={isDisabled}

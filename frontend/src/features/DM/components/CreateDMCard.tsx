@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 import { FTH3, FTH4 } from '@/components/FTBasicComponents';
 import { UserAvatar } from '@/components/UserAvater';
+import { Constants } from '@/constants';
 import { UserSelectList } from '@/features/Chat/components/UserSelectList';
 import { authAtom, chatSocketAtom } from '@/stores/auth';
 import { displayUser, DmRoom } from '@/typedef';
@@ -40,7 +41,7 @@ export const CreateDMCard = ({ closeModal, dmRooms }: Prop) => {
       <FTH3>Sending DM</FTH3>
       <UserSelectList
         makeUrl={(take, cursor) =>
-          `http://localhost:3000/users?take=${take}&cursor=${cursor}`
+          `${Constants.backendHost}/users?take=${take}&cursor=${cursor}`
         }
         take={take}
         isDisabled={isDisabled}
