@@ -58,7 +58,7 @@ export const TotpAuthForm = (props: {
   });
 
   return (
-    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+    <div className="flex w-[480px] flex-col justify-around gap-5 bg-primary p-8">
       <h3>ワンタイムパスワード入力</h3>
       <ul className="list-disc">
         <li>

@@ -64,13 +64,13 @@ const MyPageContent = () => {
     switch (modalType) {
       case 'edit':
         return (
-          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+          <div className="flex w-[480px] flex-col justify-around gap-5 bg-primary p-8">
             <EditProfileCard user={user} onClose={() => setIsOpen(false)} />
           </div>
         );
       case 'password':
         return (
-          <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+          <div className="flex w-[480px] flex-col justify-around gap-5 bg-primary p-8">
             <EditPasswordCard user={user} onClose={() => setIsOpen(false)} />
           </div>
         );
