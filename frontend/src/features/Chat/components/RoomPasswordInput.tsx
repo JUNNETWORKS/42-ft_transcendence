@@ -23,7 +23,7 @@ export const RoomPasswordInput = ({
       <div className="p-2">
         <FTTextField
           className="w-full border-2"
-          type="password"
+          type="text"
           value={roomPassword}
           placeholder="room password"
           onChange={(e) => setRoomPassword(e.target.value)}
