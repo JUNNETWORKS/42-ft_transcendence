@@ -186,27 +186,29 @@ const PasswordAuthForm = (props: {
 
   return (
     <div className="grid grid-flow-row justify-center">
-      <div>
-        <FTTextField
-          className="border-2"
-          autoComplete="off"
-          placeholder="メールアドレス"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <div>{validationErrors.email || netErrors.email || '　'}</div>
-      </div>
-      <div>
-        <FTTextField
-          className="border-2"
-          autoComplete="off"
-          placeholder="パスワード"
-          value={password}
-          type="password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-        <div>{validationErrors.password || netErrors.password || '　'}</div>
-      </div>
+      <form id="signInForm">
+        <div>
+          <FTTextField
+            className="border-2"
+            autoComplete="username"
+            placeholder="メールアドレス"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          <div>{validationErrors.email || netErrors.email || '　'}</div>
+        </div>
+        <div>
+          <FTTextField
+            className="border-2"
+            autoComplete="current-password"
+            placeholder="パスワード"
+            value={password}
+            type="password"
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <div>{validationErrors.password || netErrors.password || '　'}</div>
+        </div>
+      </form>
       <div>
         <FTButton
           disabled={validationErrors.some || state === 'Fetching'}

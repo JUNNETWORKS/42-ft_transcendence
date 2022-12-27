@@ -178,7 +178,7 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
             </div>
           </div>
 
-          <form id="userForm">
+          <form id="userSignUpForm">
             <FTH4>email</FTH4>
             <div className="overflow-hidden truncate py-1 pr-1">
               <FTTextField
