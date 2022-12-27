@@ -198,10 +198,14 @@ export class PongGateway {
     const matchId = data.matchId;
 
     if (!matchId) {
-      return;
+      return { status: 'dto error' };
     }
 
     const match = this.ongoingMatches.findMatchByMatchId(matchId);
-    match?.joinAsSpectator(user.id);
+    if (!match) {
+      return { status: 'ongoing match is not found' };
+    }
+    match.joinAsSpectator(user.id);
+    return { status: 'success' };
   }
 }
