@@ -85,7 +85,7 @@ const CardElement = ({
             <div>
               <SelectListBox<TD.RoomType>
                 selected={roomType}
-                items={[...TD.RoomTypes]}
+                items={[...TD.RoomTypesSelectable]}
                 setItem={setRoomType}
                 makeElement={(t) => {
                   const Icon = RoomTypeIcon[t];
