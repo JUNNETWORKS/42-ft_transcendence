@@ -144,12 +144,14 @@ export function makeCommand(
       });
     },
 
-    pong_spectate_match: (matchId: string) => {
+    pong_spectate_match: (matchId: string, callback: any) => {
       console.log('[pong.match.spectation]', matchId);
       const data = {
         matchId,
       };
-      mySocket.emit('pong.match.spectation', data);
+      mySocket.emit('pong.match.spectation', data, (response: any) => {
+        callback(response);
+      });
     },
   };
 }
