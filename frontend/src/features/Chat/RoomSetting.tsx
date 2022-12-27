@@ -56,7 +56,7 @@ const CardElement = ({
 }: ElementProps) => {
   return (
     <>
-      <div className="flex w-96 flex-col border-2 border-solid border-white bg-black">
+      <div className="mb-[2em] flex w-96 flex-col border-2 border-solid border-white bg-black">
         <FTBlockedHeader>
           <FTButton onClick={onCancel} className="shrink-0 grow-0">
             <Icons.Cancel className="block" />
@@ -90,7 +90,7 @@ const CardElement = ({
                 makeElement={(t) => {
                   const Icon = RoomTypeIcon[t];
                   return (
-                    <div className="flex flex-row justify-center">
+                    <div className="z-50 flex flex-row justify-center">
                       <InlineIcon i={<Icon />} />
                       <p className="basis-[4em]">{t}</p>
                     </div>

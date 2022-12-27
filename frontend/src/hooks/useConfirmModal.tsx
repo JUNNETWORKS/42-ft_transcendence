@@ -108,7 +108,7 @@ export const useConfirmModalComponent = () => {
     };
     return (
       <Modal isOpen={isOpen} closeModal={denialCloser}>
-        <div className="flex min-w-[180px] flex-col p-4">
+        <div className="flex min-w-[180px] flex-col bg-primary p-4">
           <div className="flex flex-row justify-center p-4">
             <p className="shrink-0 grow-0">{arg.body}</p>
           </div>

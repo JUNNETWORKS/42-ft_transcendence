@@ -70,7 +70,7 @@ export const Modal = ({
           <div className="fixed inset-0 z-50 flex flex-1 flex-col items-center justify-center gap-32">
             <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-scroll p-2">
               <div className="flex items-center justify-center">
-                <Dialog.Panel className="mx-auto rounded bg-primary">
+                <Dialog.Panel className="mx-auto rounded">
                   {children}
                 </Dialog.Panel>
               </div>
