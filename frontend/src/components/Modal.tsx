@@ -64,13 +64,17 @@ export const Modal = ({
     <Transition show={isOpen} as={Fragment}>
       <Dialog onClose={closeModal}>
         <Transition.Child {...effectiveBackdropParams} as={Fragment}>
-          <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+          <div className="fixed inset-0 z-50 bg-black/50" aria-hidden="true" />
         </Transition.Child>
         <Transition.Child {...effectivePanelParams} as={Fragment}>
-          <div className="fixed inset-0 flex items-center justify-center ">
-            <Dialog.Panel className="mx-auto rounded bg-primary">
-              {children}
-            </Dialog.Panel>
+          <div className="fixed inset-0 z-50 flex flex-1 flex-col items-center justify-center gap-32">
+            <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-scroll p-2">
+              <div className="flex items-center justify-center">
+                <Dialog.Panel className="mx-auto rounded bg-primary">
+                  {children}
+                </Dialog.Panel>
+              </div>
+            </div>
           </div>
         </Transition.Child>
       </Dialog>

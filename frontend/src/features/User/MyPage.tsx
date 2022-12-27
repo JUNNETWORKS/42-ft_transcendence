@@ -156,7 +156,7 @@ const MyPageContent = () => {
               <LogoutBlock />
             </div>
             <div className="flex flex-col">
-              <FTH3 className="sticky top-0 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
+              <FTH3 className="sticky top-0 z-10 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
                 Stats
               </FTH3>
               <UserStats id={user.id} />
