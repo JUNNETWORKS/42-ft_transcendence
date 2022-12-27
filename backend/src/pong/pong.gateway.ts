@@ -78,7 +78,6 @@ export class PongGateway {
       return;
     }
 
-    this.ongoingMatches.leave(user.id);
     const queue = this.waitingQueues.getQueueByPlayerId(user.id);
     if (queue) {
       queue.remove(user.id);
@@ -98,6 +97,27 @@ export class PongGateway {
       return false;
     return true;
   };
+
+  // マッチに参加中なら参加中のマッチIDを返す
+  @SubscribeMessage('pong.match.participation_status')
+  async receiveMatchParticipationStatus(@ConnectedSocket() client: Socket) {
+    const user = getUserFromClient(client);
+    let matchId = undefined;
+
+    console.log('SERVER RECEIVE: pong.match.participation_status');
+
+    if (
+      (matchId = this.ongoingMatches.findMatchByPlayer(user.id)?.matchId) !==
+        undefined ||
+      (matchId = this.pendingPrivateMatches.getMatchIdByUserId(user.id)) !==
+        undefined
+    ) {
+      return {
+        matchId: matchId,
+      };
+    }
+    return {};
+  }
 
   // プライベートマッチを作成し､参加者を募集する
   @SubscribeMessage('pong.private_match.create')
