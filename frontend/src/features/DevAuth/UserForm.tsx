@@ -14,6 +14,7 @@ import { Icons } from '@/icons';
 import { UserPersonalData } from '@/stores/auth';
 import * as TD from '@/typedef';
 import { omitBy } from '@/utils';
+import { DisplayNamePolicy, PasswordPolicy } from '@/validator/user.validator';
 
 import { popAuthError } from '../Toaster/toast';
 import { AvatarFile, AvatarInput } from '../User/components/AvatarInput';
@@ -127,7 +128,6 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
         name="email"
         className="w-full border-0 border-b-2 focus:bg-gray-700"
         autoComplete="off"
-        placeholder="Email:"
         value={email}
         onActualKeyDown={moveFocus}
         onChange={(e) => setEmail(e.target.value)}
@@ -161,6 +161,10 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
   };
   const submitContent =
     mode === 'Create' ? <>この内容で登録</> : <>修正して保存</>;
+  const passwordPlaceholder =
+    mode === 'Create'
+      ? `${PasswordPolicy.min} - ${PasswordPolicy.max} 文字`
+      : `設定する場合は ${PasswordPolicy.min} - ${PasswordPolicy.max} 文字`;
   return (
     <>
       <FTH1 className="p-2 text-3xl">{title}</FTH1>
@@ -187,7 +191,7 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
               name="displayName"
               className="w-full border-0 border-b-2 focus:bg-gray-700"
               autoComplete="off"
-              placeholder="Name:"
+              placeholder={`${DisplayNamePolicy.min} - ${DisplayNamePolicy.max} 文字`}
               value={displayName}
               onActualKeyDown={moveFocus}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -207,7 +211,7 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
               name="password"
               className="w-full border-0 border-b-2 focus:bg-gray-700"
               autoComplete="off"
-              placeholder="設定する場合は 12 - 60 文字"
+              placeholder={passwordPlaceholder}
               value={password}
               type="password"
               onActualKeyDown={moveFocus}
