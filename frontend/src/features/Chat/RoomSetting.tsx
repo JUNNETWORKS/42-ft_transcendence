@@ -105,14 +105,16 @@ const CardElement = ({
           <div className="flex flex-row p-2">
             <div className="basis-[6em] p-2">PASSWORD</div>
             <div className="shrink grow">
-              <FTTextField
-                className="w-full border-2"
-                type="password"
-                autoComplete="off"
-                value={roomPassword}
-                placeholder={placeholder.password || '4文字以上 40文字以下'}
-                onChange={(e) => setRoomPassword(e.target.value)}
-              />
+              <form>
+                <FTTextField
+                  className="w-full border-2"
+                  type="password"
+                  autoComplete="off"
+                  value={roomPassword}
+                  placeholder={placeholder.password || '4文字以上 40文字以下'}
+                  onChange={(e) => setRoomPassword(e.target.value)}
+                />
+              </form>
               <div>{errors.roomPassword || '　'}</div>
             </div>
           </div>
