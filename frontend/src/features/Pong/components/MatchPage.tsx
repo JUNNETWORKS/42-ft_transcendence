@@ -1,8 +1,9 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import { FTButton } from '@/components/FTBasicComponents';
+import { makeCommand } from '@/features/Chat/command';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 
 import { usePongGame } from '../hooks/usePongGame';
@@ -49,6 +50,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
   props
 ) => {
   const { mySocket } = props;
+  const { matchId } = useParams();
   const [isFetched, setIsFetched] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
@@ -111,6 +113,11 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
     // add event listeners
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
+
+    const command = makeCommand(mySocket, -1);
+    if (matchId) {
+      command.pong_spectate_match(matchId);
+    }
 
     return () => {
       mySocket.off('pong.match.state', drawGameOneFrame);

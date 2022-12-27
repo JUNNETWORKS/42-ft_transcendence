@@ -143,5 +143,13 @@ export function makeCommand(
         });
       });
     },
+
+    pong_spectate_match: (matchId: string) => {
+      console.log('[pong.match.spectation]', matchId);
+      const data = {
+        matchId,
+      };
+      mySocket.emit('pong.match.spectation', data);
+    },
   };
 }

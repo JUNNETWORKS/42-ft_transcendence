@@ -17,6 +17,7 @@ import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
+import { PongMatchSpectationDTO } from './dto/pong-match-spectation.dto';
 import {
   gameSpeedFactorToGameSpeed,
   PongPrivateMatchCreateDTO,
@@ -185,5 +186,22 @@ export class PongGateway {
     const user = getUserFromClient(client);
 
     this.ongoingMatches.moveBar(user.id, playerAction);
+  }
+
+  // マッチを観戦する
+  @SubscribeMessage('pong.match.spectation')
+  async receiveMatchSpectation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PongMatchSpectationDTO
+  ) {
+    const user = getUserFromClient(client);
+    const matchId = data.matchId;
+
+    if (!matchId) {
+      return;
+    }
+
+    const match = this.ongoingMatches.findMatchByMatchId(matchId);
+    match?.joinAsSpectator(user.id);
   }
 }
