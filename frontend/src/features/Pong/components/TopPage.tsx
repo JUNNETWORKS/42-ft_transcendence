@@ -72,26 +72,6 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
       <div className="grid grid-cols-pongTopPage items-center justify-center gap-20 overflow-scroll px-20 py-12">
         <div className="flex shrink-0 flex-col gap-10">
           <CommandCard
-            text="参加中のマッチに復帰"
-            onClick={() => {
-              mySocket.emit(
-                'pong.match.participation_status',
-                {},
-                (data: { matchId?: string }) => {
-                  console.log(
-                    `CLIENT RECEIVE: pong.match.participation_status: ${JSON.stringify(
-                      data
-                    )}`
-                  );
-                  const matchId = data.matchId;
-                  if (matchId) {
-                    navigate(`/pong/matches/${matchId}`);
-                  }
-                }
-              );
-            }}
-          />
-          <CommandCard
             text="カジュアルマッチをプレイ"
             onClick={() => {
               startMatchMaking('CASUAL');
