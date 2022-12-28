@@ -1,4 +1,4 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { MatchStatus, MatchType, UserSlotNumber } from '@prisma/client';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -433,20 +433,6 @@ export class PongService {
         });
       }
     }
-  }
-
-  async spectateByMatchId(userId: number, matchId: string) {
-    console.log(userId, matchId);
-    const match = await this.prisma.match.findUnique({
-      where: {
-        id: matchId,
-      },
-    });
-    if (!match) throw new HttpException('match is not found', 404);
-    if (match.matchStatus !== 'IN_PROGRESS')
-      throw new HttpException('match is not in-progress', 400);
-    await this.wsServer.usersJoin(userId, { matchId });
-    return { status: 'success' };
   }
 
   async markGaming(usersIds: number[], matchId: string) {
