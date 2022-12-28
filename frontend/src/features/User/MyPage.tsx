@@ -97,7 +97,7 @@ const MyPageContent = () => {
       </Modal>
 
       <div className="flex flex-1 items-center justify-center">
-        <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-scroll p-0">
+        <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-auto p-0">
           <div className="w-[28rem] shrink-0 grow-0 basis-1 border-4 border-white">
             <FTH1 className="flex min-w-0 flex-row items-center p-[4px] text-5xl font-bold">
               <p
