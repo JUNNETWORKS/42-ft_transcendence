@@ -1,3 +1,5 @@
+import { isfinite } from 'src/utils';
+
 import { GameSettings } from './types/game-settings';
 import {
   Ball,
@@ -146,24 +148,29 @@ export class Match {
     }
   };
 
+  makeBallRect(center: Vector2d): Rectangle {
+    return {
+      topLeft: {
+        x: center.x - Match.ballRadius,
+        y: center.y - Match.ballRadius,
+      },
+      bottomRight: {
+        x: center.x + Match.ballRadius,
+        y: center.y + Match.ballRadius,
+      },
+    };
+  }
+
   // ball の位置を更新する
   updateBall = (): void => {
     let newVelocity: Vector2d = JSON.parse(JSON.stringify(this.ball.velocity));
     const newBallPos: Vector2d = JSON.parse(JSON.stringify(this.ball.position));
     newBallPos.x += this.ball.velocity.x * Match.ballDx;
     newBallPos.y += this.ball.velocity.y * Match.ballDy;
+    const ballRect = this.makeBallRect(this.ball.position);
 
     // バーとの判定
-    const newBallRect: Rectangle = {
-      topLeft: {
-        x: newBallPos.x - Match.ballRadius,
-        y: newBallPos.y - Match.ballRadius,
-      },
-      bottomRight: {
-        x: newBallPos.x + Match.ballRadius,
-        y: newBallPos.y + Match.ballRadius,
-      },
-    };
+    const newBallRect = this.makeBallRect(newBallPos);
     const velocityMag = Math.sqrt(
       newVelocity.x * newVelocity.x + newVelocity.y * newVelocity.y
     );
@@ -191,6 +198,9 @@ export class Match {
         bottomLeft: rot(re.bottomLeft),
       };
     };
+    let timeToCollideX = Infinity;
+    let timeToCollideY = Infinity;
+    let barYCenterInCollide = NaN;
     for (let idx = 0; idx < 2; idx++) {
       const player = this.players[idx];
       if (!this.isReactanglesOverlap(newBallRect, player.bar)) {
@@ -204,52 +214,82 @@ export class Match {
       //    衝突判定は "ボールとバーの1辺同士が交差するかどうか" を判定する問題になるので, それを解く.
       const rotatedBall = rotRect(makeFullRectangle(newBallRect));
       const rotatedBar = rotRect(makeFullRectangle(player.bar));
-      if (newVelocity.x >= 0) {
+      if (newVelocity.x > 0) {
         // 右側に進んでいる -> ボール右辺とバー左辺の衝突を判定する
         const ballSide = makeEdge(rotatedBall, 'y', 'right');
         const barSide = makeEdge(rotatedBar, 'y', 'left');
         if (areRangesOverlap(ballSide, barSide)) {
-          newVelocity = {
-            x: this.ball.velocity.x * -1,
-            y: this.ball.velocity.y,
-          };
-          break;
+          const dx = player.bar.topLeft.x - ballRect.bottomRight.x;
+          const vx = newVelocity.x;
+          timeToCollideX = Math.abs(dx / vx);
+          barYCenterInCollide =
+            (player.bar.topLeft.y + player.bar.bottomRight.y) / 2;
         }
-      } else {
+      } else if (newVelocity.x < 0) {
         // 左側に進んでいる -> ボール左辺とバー右辺の衝突を判定する
         const ballSide = makeEdge(rotatedBall, 'y', 'left');
         const barSide = makeEdge(rotatedBar, 'y', 'right');
         if (areRangesOverlap(ballSide, barSide)) {
-          newVelocity = {
-            x: this.ball.velocity.x * -1,
-            y: this.ball.velocity.y,
-          };
-          break;
+          const dx = player.bar.bottomRight.x - ballRect.topLeft.x;
+          const vx = newVelocity.x;
+          timeToCollideX = Math.abs(dx / vx);
+          barYCenterInCollide =
+            (player.bar.topLeft.y + player.bar.bottomRight.y) / 2;
         }
       }
-      if (newVelocity.y <= 0) {
+      if (newVelocity.y < 0) {
         // 上側に進んでいる -> ボール上辺とバー下辺の衝突を判定する
         const ballSide = makeEdge(rotatedBall, 'y', 'top');
         const barSide = makeEdge(rotatedBar, 'y', 'bottom');
         if (areRangesOverlap(ballSide, barSide)) {
-          newVelocity = {
-            x: this.ball.velocity.x,
-            y: this.ball.velocity.y * -1,
-          };
-          break;
+          const dy = player.bar.bottomRight.y - ballRect.topLeft.y;
+          const vy = newVelocity.y;
+          timeToCollideY = Math.abs(dy / vy);
         }
-      } else {
+      } else if (newVelocity.y > 0) {
         // 下側に進んでいる -> ボール下辺とバー上辺の衝突を判定する
         const ballSide = makeEdge(rotatedBall, 'y', 'bottom');
         const barSide = makeEdge(rotatedBar, 'y', 'top');
         if (areRangesOverlap(ballSide, barSide)) {
-          newVelocity = {
-            x: this.ball.velocity.x,
-            y: this.ball.velocity.y * -1,
-          };
-          break;
+          const dy = player.bar.topLeft.y - ballRect.bottomRight.y;
+          const vy = newVelocity.y;
+          timeToCollideY = Math.abs(dy / vy);
         }
       }
+    }
+
+    if (timeToCollideX <= timeToCollideY && isfinite(timeToCollideX)) {
+      // X方向反射 → 角度揺らぎがある
+      newVelocity.x = -newVelocity.x;
+      const isReversed = newVelocity.x > 0 ? +1 : -1;
+      const v = Math.sqrt(newVelocity.x ** 2 + newVelocity.y ** 2);
+      // 衝突時刻`timeToCollideX`におけるボールのY位置(=ボール衝突位置)
+      const ballYCenterInCollide =
+        this.ball.position.y + newVelocity.y * timeToCollideX;
+      // ボール衝突位置に対応するバーの中での相対位置(-1 〜 +1)
+      const relativeCollisionPoint =
+        ((ballYCenterInCollide - barYCenterInCollide) * 2) / Match.barHeight;
+      // 方位角φ(phi)の揺らぎ
+      // 最大範囲は -90度 〜 +90度 だが, 衝突相対位置が0に近づくほど急速に範囲が狭まる.
+      const deltaPhi =
+        (Math.PI / 180) *
+        180 *
+        (Math.random() / 2 - 1) *
+        relativeCollisionPoint ** 4;
+      // 揺らぎ付加前の`newVelocity`の方位角
+      const oldPhi = Math.atan2(newVelocity.y, isReversed * newVelocity.x);
+      // 方位角がX軸から離れすぎないよう, -60度 ~ +60度 の範囲に収めるための調整定数
+      const limitPi = (Math.PI / 180) * 60;
+      // 揺らぎ付加後の`newVelocity`の方位角
+      const newPhi = cramp(-limitPi, oldPhi + deltaPhi, +limitPi);
+      // `newPhi`から速度を計算し直す
+      newVelocity = {
+        x: isReversed * v * Math.cos(newPhi),
+        y: v * Math.sin(newPhi),
+      };
+    } else if (timeToCollideY <= timeToCollideX && isfinite(timeToCollideY)) {
+      // Y方向反射 → 揺らがせない
+      newVelocity.y = -newVelocity.y;
     }
 
     // 上下の壁との判定
@@ -429,6 +469,10 @@ function makeEdge(
     case 'right':
       return sort2array([rect.topRight[xy], rect.bottomRight[xy]]);
   }
+}
+
+function cramp(min: number, x: number, max: number) {
+  return Math.max(min, Math.min(max, x));
 }
 
 /**
