@@ -52,7 +52,7 @@ const UserList = ({
   users,
 }: ListProp & { users: User[] }) => {
   return (
-    <div className="flex h-full w-full flex-col overflow-x-hidden overflow-y-scroll">
+    <div className="flex h-full w-full flex-col overflow-y-auto overflow-x-hidden">
       {users.map((user) => {
         return (
           <ListItem
@@ -99,7 +99,7 @@ const UserListCard = ({ users, title, onClose }: CardProp) => {
           />
         </div>
         {(user && (
-          <div className="relative shrink grow overflow-x-hidden overflow-y-scroll border-l-8 border-white">
+          <div className="relative shrink grow overflow-y-auto overflow-x-hidden border-l-8 border-white">
             <UserCard id={user.id} fixedWidth={false} bordered={false} />
           </div>
         )) ||

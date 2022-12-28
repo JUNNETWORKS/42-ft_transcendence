@@ -102,7 +102,7 @@ export const UserView = () => {
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32">
-      <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-scroll p-0">
+      <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-auto p-0">
         <div className="w-[28rem] basis-1 border-4 border-white">
           <ErrorBoundary
             FallbackComponent={(error) => (
