@@ -24,7 +24,7 @@ export const RoomPasswordInput = ({
         <FTTextField
           className="w-full border-2"
           autoComplete="one-time-code"
-          type="password"
+          type="text"
           value={roomPassword}
           placeholder="room password"
           onChange={(e) => setRoomPassword(e.target.value)}
