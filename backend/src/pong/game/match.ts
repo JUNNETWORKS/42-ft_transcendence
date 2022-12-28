@@ -272,10 +272,11 @@ export class Match {
       // 方位角φ(phi)の揺らぎ
       // 最大範囲は -90度 〜 +90度 だが, 衝突相対位置が0に近づくほど急速に範囲が狭まる.
       const deltaPhi =
-        (Math.PI / 180) *
-        180 *
-        (Math.random() / 2 - 1) *
-        relativeCollisionPoint ** 4;
+        ((Math.PI / 180) *
+          180 *
+          (Math.random() / 2 - 1) *
+          (relativeCollisionPoint ** 4 + 1 / 64)) /
+        (1 + 1 / 64);
       // 揺らぎ付加前の`newVelocity`の方位角
       const oldPhi = Math.atan2(newVelocity.y, isReversed * newVelocity.x);
       // 方位角がX軸から離れすぎないよう, -60度 ~ +60度 の範囲に収めるための調整定数
