@@ -14,6 +14,7 @@ import { Icons } from '@/icons';
 import { UserPersonalData } from '@/stores/auth';
 import * as TD from '@/typedef';
 import { omitBy } from '@/utils';
+import { DisplayNamePolicy, PasswordPolicy } from '@/validator/user.validator';
 
 import { popAuthError } from '../Toaster/toast';
 import { AvatarFile, AvatarInput } from '../User/components/AvatarInput';
@@ -142,20 +143,24 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
   };
   const submitContent =
     mode === 'Create' ? <>この内容で登録</> : <>修正して保存</>;
+  const passwordPlaceholder =
+    mode === 'Create'
+      ? `${PasswordPolicy.min} - ${PasswordPolicy.max} 文字`
+      : `設定する場合は ${PasswordPolicy.min} - ${PasswordPolicy.max} 文字`;
   return (
     <>
       <FTH1 className="p-2 text-3xl">{title}</FTH1>
       {headerBlock}
       <div className="flex">
-        <div>
-          <FTH4 style={{ paddingLeft: '1em' }}>avatar</FTH4>
-          <div className="p-[1em]">
-            <AvatarInput
-              avatarFile={avatarFile}
-              setAvatarFile={setAvatarFile}
-              networkError={netErrors.avatar}
-            />
-          </div>
+        <div className="flex shrink-0 grow-0 flex-col">
+          <FTH4>
+            <span className="pl-4">avatar</span>
+          </FTH4>
+          <AvatarInput
+            avatarFile={avatarFile}
+            setAvatarFile={setAvatarFile}
+            networkError={netErrors.avatar}
+          />
         </div>
 
         <div className="shrink grow overflow-hidden">
@@ -168,7 +173,7 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
               name="displayName"
               className="w-full border-0 border-b-2 focus:bg-gray-700"
               autoComplete="off"
-              placeholder="Name:"
+              placeholder={`${DisplayNamePolicy.min} - ${DisplayNamePolicy.max} 文字`}
               value={displayName}
               onActualKeyDown={moveFocus}
               onChange={(e) => setDisplayName(e.target.value)}
@@ -184,9 +189,8 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
               <FTTextField
                 id={emailId}
                 name="email"
-                className="w-full border-0 border-b-2 focus:bg-gray-700"
+                className="w-full border-0 border-b-2 focus:bg-gray-700 disabled:border-b-0"
                 autoComplete="username"
-                placeholder="Email:"
                 value={userData ? userData.email : email}
                 onActualKeyDown={moveFocus}
                 onChange={(e) => setEmail(e.target.value)}
@@ -204,7 +208,7 @@ export const UserForm = ({ userData, onClose }: InnerProp) => {
                 name="password"
                 className="w-full border-0 border-b-2 focus:bg-gray-700"
                 autoComplete="new-password"
-                placeholder="設定する場合は 12 - 60 文字"
+                placeholder={passwordPlaceholder}
                 value={password}
                 type="password"
                 onActualKeyDown={moveFocus}
