@@ -92,16 +92,23 @@ export const AvatarInput = ({
   })();
   return (
     <>
-      <div>
+      <div className="m-4 flex w-[120px] shrink-0 grow-0 flex-col items-stretch overflow-hidden">
         <div
           {...getRootProps()}
-          className="h-[120px] w-[120px] cursor-pointer border-[1px] border-dotted border-white"
+          className="h-[120px] shrink-0 grow-0 cursor-pointer border-[1px] border-dotted border-white"
         >
           <input {...getInputProps()} />
           {innerDropZone}
         </div>
-        {avatarFile && <div className="text-sm">{avatarFile.name}</div>}
-        <div className="text-sm text-red-400">
+        {avatarFile && (
+          <div
+            className="max-h-[6em] shrink grow overflow-hidden text-ellipsis break-all text-sm"
+            title={avatarFile.name}
+          >
+            {avatarFile.name}
+          </div>
+        )}
+        <div className="shrink-0 grow-0 overflow-hidden text-ellipsis break-all text-sm text-red-400">
           {validationErrors.avatar || networkError || '　'}
         </div>
       </div>
