@@ -108,7 +108,7 @@ const CardElement = ({
               <FTTextField
                 className="w-full border-2"
                 type="password"
-                autoComplete="off"
+                autoComplete="one-time-code"
                 value={roomPassword}
                 placeholder={placeholder.password || '4文字以上 40文字以下'}
                 onChange={(e) => setRoomPassword(e.target.value)}
