@@ -23,7 +23,7 @@ const urlGA = {
  */
 const QrcodeCard = (props: { qrcode: string; onClose: () => void }) => {
   return (
-    <div className="flex w-[480px] flex-col justify-around gap-5 p-8">
+    <div className="flex w-[480px] flex-col justify-around gap-5 bg-primary p-8">
       <h3>二要素認証用QRコード</h3>
       <ul className="list-disc">
         <li>

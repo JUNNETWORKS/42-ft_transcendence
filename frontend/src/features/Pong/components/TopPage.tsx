@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { io } from 'socket.io-client';
@@ -12,6 +12,27 @@ export const PongTopPage = (props: { mySocket: ReturnType<typeof io> }) => {
   const { mySocket } = props;
   const [isWaiting, setIsWaiting] = useState(false);
   const navigate = useNavigate();
+
+  // 参加中のマッチがあればそこに飛ばす
+  useEffect(() => {
+    if (mySocket) {
+      mySocket.emit(
+        'pong.match.participation_status',
+        {},
+        (data: { matchId?: string }) => {
+          console.log(
+            `CLIENT RECEIVE: pong.match.participation_status: ${JSON.stringify(
+              data
+            )}`
+          );
+          const matchId = data.matchId;
+          if (matchId) {
+            navigate(`/pong/matches/${matchId}`);
+          }
+        }
+      );
+    }
+  }, [mySocket]);
 
   const cancelWaiting = () => {
     mySocket.emit('pong.match_making.leave');

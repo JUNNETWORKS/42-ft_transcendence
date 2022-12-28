@@ -1,55 +1,20 @@
-import React, { Suspense, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 
 import { FTButton } from '@/components/FTBasicComponents';
+import { makeCommand } from '@/features/Chat/command';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
 
 import { usePongGame } from '../hooks/usePongGame';
 import { GameState } from '../types';
 import { GameResult } from '../types';
 
-const MatchRoomJoiner = ({
-  isFetched,
-  setIsFetched,
-  setError,
-}: {
-  isFetched: boolean;
-  setIsFetched: React.Dispatch<React.SetStateAction<boolean>>;
-  setError: React.Dispatch<React.SetStateAction<string>>;
-}) => {
-  const location = useLocation();
-  const fetcher = useAPICallerWithCredential();
-
-  if (!isFetched)
-    throw fetcher('GET', location.pathname).then((response) => {
-      if (!response.ok) {
-        console.log(response.status);
-        switch (response.status) {
-          case 404:
-            setError('存在しないマッチです。');
-            break;
-          case 400:
-            setError('進行中でないマッチです。');
-            break;
-          default:
-            setError('エラーが発生しました。');
-            break;
-        }
-      } else {
-        console.log('success join');
-      }
-      setIsFetched(true);
-    });
-
-  return <></>;
-};
-
 export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
   props
 ) => {
   const { mySocket } = props;
-  const [isFetched, setIsFetched] = useState(false);
+  const { matchId } = useParams();
   const [isFinished, setIsFinished] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -59,7 +24,7 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
     usePongGame(isFinished);
 
   useEffect(() => {
-    if (!isFetched && error !== '') return;
+    if (error !== '') return;
 
     const fetchUserName = async (id: string) => {
       try {
@@ -118,27 +83,41 @@ export const PongMatchPage: React.FC<{ mySocket: ReturnType<typeof io> }> = (
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [isFetched, drawGameOneFrame, drawGameResult, mySocket, error, fetcher]);
+  }, [drawGameOneFrame, drawGameResult, mySocket, error, fetcher]);
+
+  useEffect(() => {
+    if (!mySocket) {
+      return;
+    }
+    const command = makeCommand(mySocket, -1);
+    if (matchId) {
+      command.pong_spectate_match(matchId, (response: any) => {
+        if (response.status !== 'success') {
+          switch (response.status) {
+            case 'ongoing match is not found':
+              setError('進行中でないマッチです。');
+              break;
+            default:
+              setError('エラーが発生しました。');
+              break;
+          }
+        }
+      });
+    }
+  }, [mySocket, matchId]);
 
   return (
     <div className="flex flex-1 items-center justify-center">
-      <Suspense fallback={<p>Loading...</p>}>
-        <MatchRoomJoiner
-          isFetched={isFetched}
-          setIsFetched={setIsFetched}
-          setError={setError}
-        />
-        {!isFinished && error !== '' ? (
-          <div className="flex-col">
-            <div className="text-red-400">{error}</div>
-            <div className="m-1 text-center">
-              <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
-            </div>
+      {!isFinished && error !== '' ? (
+        <div className="flex-col">
+          <div className="text-red-400">{error}</div>
+          <div className="m-1 text-center">
+            <FTButton onClick={() => navigate(-1)}>戻る</FTButton>
           </div>
-        ) : (
-          renderGame()
-        )}
-      </Suspense>
+        </div>
+      ) : (
+        renderGame()
+      )}
     </div>
   );
 };

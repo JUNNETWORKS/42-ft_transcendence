@@ -17,6 +17,7 @@ import { WsServerGateway } from 'src/ws-server/ws-server.gateway';
 import { PongMatchActionDTO } from './dto/pong-match-action.dto';
 import { PongMatchMakingEntryDTO } from './dto/pong-match-making-entry.dto';
 import { PongMatchMakingLeaveDTO } from './dto/pong-match-making-leave.dto';
+import { PongMatchSpectationDTO } from './dto/pong-match-spectation.dto';
 import {
   gameSpeedFactorToGameSpeed,
   PongPrivateMatchCreateDTO,
@@ -78,7 +79,6 @@ export class PongGateway {
       return;
     }
 
-    this.ongoingMatches.leave(user.id);
     const queue = this.waitingQueues.getQueueByPlayerId(user.id);
     if (queue) {
       queue.remove(user.id);
@@ -98,6 +98,27 @@ export class PongGateway {
       return false;
     return true;
   };
+
+  // マッチに参加中なら参加中のマッチIDを返す
+  @SubscribeMessage('pong.match.participation_status')
+  async receiveMatchParticipationStatus(@ConnectedSocket() client: Socket) {
+    const user = getUserFromClient(client);
+    let matchId = undefined;
+
+    console.log('SERVER RECEIVE: pong.match.participation_status');
+
+    if (
+      (matchId = this.ongoingMatches.findMatchByPlayer(user.id)?.matchId) !==
+        undefined ||
+      (matchId = this.pendingPrivateMatches.getMatchIdByUserId(user.id)) !==
+        undefined
+    ) {
+      return {
+        matchId: matchId,
+      };
+    }
+    return {};
+  }
 
   // プライベートマッチを作成し､参加者を募集する
   @SubscribeMessage('pong.private_match.create')
@@ -185,5 +206,26 @@ export class PongGateway {
     const user = getUserFromClient(client);
 
     this.ongoingMatches.moveBar(user.id, playerAction);
+  }
+
+  // マッチを観戦する
+  @SubscribeMessage('pong.match.spectation')
+  async receiveMatchSpectation(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PongMatchSpectationDTO
+  ) {
+    const user = getUserFromClient(client);
+    const matchId = data.matchId;
+
+    if (!matchId) {
+      return { status: 'dto error' };
+    }
+
+    const match = this.ongoingMatches.findMatchByMatchId(matchId);
+    if (!match) {
+      return { status: 'ongoing match is not found' };
+    }
+    match.joinAsSpectator(user.id);
+    return { status: 'success' };
   }
 }

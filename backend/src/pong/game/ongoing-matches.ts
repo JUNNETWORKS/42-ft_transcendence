@@ -45,4 +45,8 @@ export class OngoingMatches {
       }
     }
   }
+
+  findMatchByMatchId(matchId: string) {
+    return this.matches.get(matchId);
+  }
 }
