@@ -287,6 +287,8 @@ export class Match {
         x: isReversed * v * Math.cos(newPhi),
         y: v * Math.sin(newPhi),
       };
+      // 少しだけx方向に加速
+      newVelocity.x *= 1.02;
     } else if (timeToCollideY <= timeToCollideX && isfinite(timeToCollideY)) {
       // Y方向反射 → 揺らがせない
       newVelocity.y = -newVelocity.y;
