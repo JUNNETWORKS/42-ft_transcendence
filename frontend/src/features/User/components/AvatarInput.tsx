@@ -102,17 +102,13 @@ export const AvatarInput = ({
         </div>
         {avatarFile && (
           <div
-            className="max-h-[6em] shrink grow overflow-hidden text-ellipsis text-sm"
+            className="max-h-[6em] shrink grow overflow-hidden text-ellipsis break-all text-sm"
             title={avatarFile.name}
-            style={{ wordBreak: 'break-all' }}
           >
             {avatarFile.name}
           </div>
         )}
-        <div
-          className="shrink-0 grow-0 overflow-hidden text-ellipsis text-sm text-red-400"
-          style={{ wordBreak: 'break-all' }}
-        >
+        <div className="shrink-0 grow-0 overflow-hidden text-ellipsis break-all text-sm text-red-400">
           {validationErrors.avatar || networkError || '　'}
         </div>
       </div>
