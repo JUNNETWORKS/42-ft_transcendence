@@ -1,5 +1,7 @@
 version: '3'
-
+volumes:
+  frontend_node_modules:
+  backend_node_modules:
 services:
   postgres:
     container_name: postgres
@@ -23,6 +25,11 @@ services:
       - 5173:5173
     volumes:
       - "./frontend:/frontend"
+      - frontend_node_modules:/frontend/node_modules
+    environment:
+      - ENV="DEV"
+      - LOCAL_UID
+      - LOCAL_GID
 
   backend:
     container_name: backend
@@ -33,6 +40,11 @@ services:
       - "3000:3000"
     volumes:
       - "./backend:/backend"
+      - backend_node_modules:/backend/node_modules
+    environment:
+      - ENV="DEV"
+      - LOCAL_UID
+      - LOCAL_GID
     depends_on:
       - postgres
     healthcheck:
