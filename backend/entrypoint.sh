@@ -17,9 +17,9 @@ if [ "${ENV:-''}" = "DEV" ] ; then
   export HOME=/home/user
 
   chown -R user:user node_modules/
-fi
 
-npm install
+  npm install
+fi
 
 # ブランチのデータスキーマの状態にDBを上書き
 npx prisma db push --force-reset

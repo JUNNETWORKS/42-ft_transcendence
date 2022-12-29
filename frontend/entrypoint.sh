@@ -15,9 +15,10 @@ if [ "${ENV:-''}" = "DEV" ] ; then
   export HOME=/home/user
 
   chown -R user:user node_modules/
+
+  npm install
 fi
 
-npm install
 
 if [ "${ENV:-''}" = "DEV" ] ; then
   exec /usr/sbin/gosu user "$@"

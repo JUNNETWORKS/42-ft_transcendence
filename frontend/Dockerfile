@@ -8,13 +8,10 @@ RUN apt-get install -y nodejs
 # Create app directory
 WORKDIR /frontend
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+COPY ./ ./
 
 # Install app dependencies
 RUN npm install
-
-COPY entrypoint.sh ./
 
 ENTRYPOINT  [ "bash", "./entrypoint.sh" ]
 CMD [ "npm", "run", "dev" ]
