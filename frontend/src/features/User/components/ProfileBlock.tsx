@@ -8,14 +8,16 @@ type Prop =
   | {
       user: UserPersonalData;
       isYou: true;
+      onClose?: () => void;
     }
   | {
       user: User;
       isYou: false;
+      onClose?: () => void;
     };
 
 // Lv2.
-export const ProfileBlock = ({ user, isYou }: Prop) => {
+export const ProfileBlock = ({ user, isYou, onClose }: Prop) => {
   return (
     <div className="flex flex-row">
       <div className="shrink-0 grow-0">
@@ -30,7 +32,7 @@ export const ProfileBlock = ({ user, isYou }: Prop) => {
         <div className="overflow-hidden truncate p-1">{user.id}</div>
         <FTH4 className="">status</FTH4>
         <div className="p-1">
-          <OnlineStatusLabel user={user} />
+          <OnlineStatusLabel user={user} onClose={onClose} />
         </div>
       </div>
     </div>

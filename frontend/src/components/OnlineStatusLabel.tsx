@@ -8,10 +8,11 @@ import { FTButton } from './FTBasicComponents';
 
 type Prop = {
   user: TD.User;
+  onClose?: () => void;
 };
 
 // Lv. 2
-export const OnlineStatusLabel = ({ user }: Prop) => {
+export const OnlineStatusLabel = ({ user, onClose }: Prop) => {
   const [color, setColor] = useState(getOnlineStatusColor(user));
   const [text, setText] = useState(getOnlineStatus(user));
   const navigate = useNavigate();
@@ -29,7 +30,12 @@ export const OnlineStatusLabel = ({ user }: Prop) => {
         {text === 'Playing' && (
           <FTButton
             className="ml-1"
-            onClick={() => navigate(`/pong/matches/${user.ongoingMatchId!}`)}
+            onClick={() => {
+              navigate(`/pong/matches/${user.ongoingMatchId!}`);
+              if (onClose) {
+                onClose();
+              }
+            }}
           >
             観戦
           </FTButton>

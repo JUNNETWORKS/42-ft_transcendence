@@ -54,7 +54,9 @@ const ActualCard = ({ user, onClose, children }: ActualCardProp) => {
       </FTH1>
       <div className="flex flex-col">
         <ProfileBlock
-          {...(isYou ? { user: personalData, isYou } : { user, isYou })}
+          {...(isYou
+            ? { user: personalData, isYou, onClose }
+            : { user, isYou, onClose })}
         />
 
         {children}
