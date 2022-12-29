@@ -72,7 +72,7 @@ export const PrivateMatchCard = ({ room, onSucceeded, onCancel }: Prop) => {
 
   const validationErrors = privateMatchErrors(maxScoreStr);
   return (
-    <div className="flex w-80 flex-col border-2 border-solid border-white bg-black">
+    <div className="mb-[4em] flex w-80 flex-col border-2 border-solid border-white bg-black">
       <FTBlockedHeader>
         <FTButton onClick={onCancel} className="shrink-0 grow-0">
           <Icons.Cancel className="block" />
