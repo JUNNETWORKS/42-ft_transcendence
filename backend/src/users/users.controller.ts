@@ -6,7 +6,6 @@ import {
   UseGuards,
   Res,
   Req,
-  Query,
 } from '@nestjs/common';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import * as express from 'express';
@@ -14,8 +13,6 @@ import * as express from 'express';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { PongService } from 'src/pong/pong.service';
 import { pick } from 'src/utils';
-
-import { UserFindManyDto } from './dto/user-find-many.dto';
 
 import { UserEntity } from './entities/user.entity';
 import { UsersService } from './users.service';
@@ -27,12 +24,6 @@ export class UsersController {
     private readonly usersService: UsersService,
     private readonly pongService: PongService
   ) {}
-
-  @Get()
-  @ApiOkResponse({ type: UserEntity, isArray: true })
-  findMany(@Query() userFindMAnyDto: UserFindManyDto) {
-    return this.usersService.findMany(userFindMAnyDto);
-  }
 
   @Get(':id/avatar')
   async getAvatar(
