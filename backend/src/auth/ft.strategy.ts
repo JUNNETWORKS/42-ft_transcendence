@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
-import * as Fetch from 'node-fetch';
+import axios from 'axios';
 import { Strategy } from 'passport-oauth2';
 
 import { ftConstants } from './auth.constants';
@@ -28,15 +28,10 @@ export class FtStrategy extends PassportStrategy(Strategy, '42') {
       const headers = {
         Authorization: `Bearer ${accessToken}`,
       };
-      const result = await Fetch.default(url, {
-        method: 'GET',
+      const result = await axios.get(url, {
         headers,
       });
-      const {
-        id: intra_id,
-        login: intra_nickname,
-        email,
-      } = await result.json();
+      const { id: intra_id, login: intra_nickname, email } = result.data as any;
       const { user, created } = await this.authService.retrieveUser(
         intra_nickname,
         email,

@@ -38,7 +38,6 @@
     "class-validator": "^0.13.2",
     "dayjs": "^1.11.7",
     "ioredis": "^5.2.4",
-    "node-fetch": "^3.3.0",
     "otplib": "^12.0.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
