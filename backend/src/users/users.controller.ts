@@ -72,7 +72,7 @@ export class UsersController {
     if (!u) {
       return null;
     }
-    return pick(u, 'id', 'displayName');
+    return pick(u, 'id', 'displayName', 'pulseTime', 'ongoingMatchId');
   }
 
   @Get(':id/pong/results')
