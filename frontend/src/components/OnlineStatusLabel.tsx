@@ -29,7 +29,7 @@ export const OnlineStatusLabel = ({ user, onClose }: Prop) => {
         <span className={`${color} font-bold`}>{text}</span>
         {text === 'Playing' && (
           <FTButton
-            className="ml-1"
+            className="ml-1 text-sm"
             onClick={() => {
               navigate(`/pong/matches/${user.ongoingMatchId!}`);
               if (onClose) {
