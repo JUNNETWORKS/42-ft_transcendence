@@ -80,15 +80,6 @@ export class AuthController {
     return this.authService.login(req.user);
   }
 
-  @Get('self/:id')
-  @ApiFoundResponse({})
-  async loginbySelf(@Param('id', ParseIntPipe) id: number) {
-    console.log('id', id);
-    const user = await this.usersService.findOne(id);
-    console.log('user', user);
-    return this.authService.login(user!);
-  }
-
   @UseGuards(JwtTotpAuthGuard)
   @Post('otp')
   async verifyOtp(@Request() req: any, @Body() dto: verifyOtpDto) {

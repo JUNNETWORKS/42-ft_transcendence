@@ -114,45 +114,6 @@ const FtAuthForm = () => (
 );
 
 /**
- * 自己申告認証用のフォーム
- */
-const SelfAuthForm = (props: {
-  onSucceeded: (token: string, user: any, required2fa: boolean) => void;
-  onFailed: () => void;
-}) => {
-  const [userIdStr, setUserIdStr] = useState('');
-  const errors = selfErrors(userIdStr);
-  const [state, submit] = useAPI('GET', `/auth/self/${userIdStr}`, {
-    onFetched(json) {
-      const { access_token: token, user, required2fa } = json as any;
-      props.onSucceeded(token, user, required2fa);
-    },
-    onFailed(error) {
-      props.onFailed();
-    },
-  });
-
-  return (
-    <>
-      <FTTextField
-        className="border-2"
-        autoComplete="off"
-        placeholder="ユーザID"
-        value={userIdStr}
-        onChange={(e) => setUserIdStr(e.target.value)}
-      />
-      <FTButton
-        disabled={!!errors.some || state === 'Fetching'}
-        onClick={submit}
-      >
-        Force Login
-      </FTButton>
-      <div>{errors.userIdStr}</div>
-    </>
-  );
-};
-
-/**
  * メアド+パスワード認証
  */
 const PasswordAuthForm = (props: {
@@ -248,14 +209,6 @@ export const DevAuthLoginCard = (props: {
         <FTH3 className="sticky top-0 z-10">By Email / Password</FTH3>
         <div>
           <PasswordAuthForm
-            onSucceeded={props.onSucceeded}
-            onFailed={props.onFailed}
-          />
-        </div>
-
-        <FTH3 className="sticky top-0 z-10">By Self</FTH3>
-        <div className="text-center">
-          <SelfAuthForm
             onSucceeded={props.onSucceeded}
             onFailed={props.onFailed}
           />
