@@ -261,7 +261,6 @@ export class WsServerGateway {
     r.n += 1;
     r.time = Date.now();
     this.heartbeatDict[user.id] = r;
-    this.sendHeartbeat(user);
   }
 
   pulse(user: User) {

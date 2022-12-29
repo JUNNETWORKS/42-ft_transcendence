@@ -90,6 +90,7 @@ export class ChatGateway implements OnGatewayConnection {
 
     // [オンライン状態の変化を全体に通知]
     this.wsServer.incrementHeartbeat(user);
+    this.pulse(user);
     // [初期表示に必要な情報をユーザ本人に通知]
     this.wsServer.sendResults(
       'ft_connection',
