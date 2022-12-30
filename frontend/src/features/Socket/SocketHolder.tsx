@@ -156,6 +156,7 @@ export const SocketHolder = () => {
           // 自分に関する通知
           console.log('for self');
           joiningRoomsUpdater.addOne({ chatRoom: room, createdAt: new Date() });
+          visibleRoomsUpdater.addOne(room);
         } else {
           // 他人に関する通知
           console.log('for other');
@@ -181,6 +182,10 @@ export const SocketHolder = () => {
           // 自分に関する通知
           console.log('for self');
           joiningRoomsUpdater.delOne(room);
+          if (room.roomType === 'PRIVATE' && room.ownerId !== userId) {
+            console.log('is private');
+            visibleRoomsUpdater.delOne(room);
+          }
         } else {
           // 他人に関する通知
           console.log('for other');
@@ -200,8 +205,12 @@ export const SocketHolder = () => {
         console.log(room, user);
         if (user.id === userId) {
           // 自分に関する通知
-          console.log('for self');
+          console.log('for self', room, userId);
           joiningRoomsUpdater.delOne(room);
+          if (room.roomType === 'PRIVATE' && room.ownerId !== userId) {
+            console.log('is private');
+            visibleRoomsUpdater.delOne(room);
+          }
         } else {
           // 他人に関する通知
           console.log('for other');

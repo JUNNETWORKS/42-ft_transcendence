@@ -123,10 +123,19 @@ export const useUpdateVisibleRooms = () => {
     });
     storeUpdater.addMany(data);
   };
+  const delOne = (data: TD.ChatRoom) => {
+    setRooms((prev) => {
+      if (!prev.find((r) => r.id === data.id)) {
+        return prev;
+      }
+      return prev.filter((r) => r.id !== data.id);
+    });
+  };
   const updater = {
     visibleRooms: rooms,
     addOne,
     addMany,
+    delOne,
   };
   return updater;
 };
