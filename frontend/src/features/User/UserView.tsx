@@ -8,6 +8,7 @@ import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { OnlineStatusDot } from '@/components/OnlineStatusDot';
 import { APIError } from '@/errors/APIError';
 import { useAPICallerWithCredential } from '@/hooks/useAPICaller';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
 import { authAtom } from '@/stores/auth';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
@@ -98,8 +99,12 @@ const Presentator = (props: {
 
 export const UserView = () => {
   const { id } = useParams();
+  const [me] = usePersonalData();
   const userId = parseInt(id || '');
   const [, setError, ErrorBoundary] = useManualErrorBoundary();
+  if (!me) {
+    return null;
+  }
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-32">
       <div className="flex max-h-[100%] w-full flex-col items-center overflow-y-auto p-0">
