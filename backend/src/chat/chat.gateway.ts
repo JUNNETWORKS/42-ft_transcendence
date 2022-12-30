@@ -304,6 +304,18 @@ export class ChatGateway implements OnGatewayConnection {
       console.log('** you are banned **');
       return { status: 'banned' };
     }
+    // [ DMには入れない ]
+    if (room.roomType === 'DM') {
+      console.log('** is DM **');
+      return { status: 'forbidden' };
+    }
+    // [ privateの場合, ownderであることを確認 ]
+    if (room.roomType === 'PRIVATE') {
+      if (room.ownerId !== user.id) {
+        console.log('** is private **');
+        return { status: 'forbidden' };
+      }
+    }
     // lockedの場合、パスワードのチェック
     if (room.roomType === 'LOCKED') {
       if (!data.roomPassword) {
