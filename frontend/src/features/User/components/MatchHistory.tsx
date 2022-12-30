@@ -22,22 +22,20 @@ type MatchHistory = {
 
 const RenderHistory = ({ id, setter, onError, matchHistory }: Props) => {
   const callApi = useAPICallerWithCredential();
-  useEffect(() => {
-    (async () => {
-      if (!matchHistory) {
-        try {
-          const result = await callApi('GET', `/users/${id}/pong/results`);
-          if (!result.ok) {
-            throw new APIError(result.statusText, result);
-          }
-          const json = await result.json();
-          setter(json);
-        } catch (e) {
-          onError(e);
+  if (!matchHistory) {
+    throw (async () => {
+      try {
+        const result = await callApi('GET', `/users/${id}/pong/results`);
+        if (!result.ok) {
+          throw new APIError(result.statusText, result);
         }
+        const json = await result.json();
+        setter(json);
+      } catch (e) {
+        onError(e);
       }
     })();
-  }, [callApi, id, matchHistory, onError, setter]);
+  }
 
   return (
     <>
