@@ -28,6 +28,7 @@ export class UsersController {
     private readonly pongService: PongService
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
   findMany(@Query() userFindMAnyDto: UserFindManyDto) {
@@ -75,11 +76,13 @@ export class UsersController {
     return pick(u, 'id', 'displayName', 'pulseTime', 'ongoingMatchId');
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id/pong/results')
   getUserPongResults(@Param('id', ParseIntPipe) id: number) {
     return this.pongService.fetchUserMatchResults(id);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id/pong/stats')
   getUserPongStats(@Param('id', ParseIntPipe) id: number) {
     return this.pongService.fetchUserStats(id);
