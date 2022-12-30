@@ -28,6 +28,7 @@ export class UsersController {
     private readonly pongService: PongService
   ) {}
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   @ApiOkResponse({ type: UserEntity, isArray: true })
   findMany(@Query() userFindMAnyDto: UserFindManyDto) {
