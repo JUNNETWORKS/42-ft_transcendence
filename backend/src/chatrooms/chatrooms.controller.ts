@@ -124,6 +124,12 @@ export class ChatroomsController {
     return result;
   }
 
+  @Delete(':roomId')
+  @ApiOkResponse({ type: ChatroomEntity })
+  remove(@Param('roomId', ParseIntPipe) roomId: number) {
+    return this.chatroomsService.remove(roomId);
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get()
   getRooms(@Query() query: GetChatroomsDto) {
