@@ -52,7 +52,6 @@ export const verifyCredential = async (
       });
       if (result.ok) {
         const json = await result.json();
-        console.log('json', json);
         if (json) {
           onSucceeded(json);
           return;
