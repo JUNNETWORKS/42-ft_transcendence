@@ -673,7 +673,7 @@ export class ChatGateway implements OnGatewayConnection {
     this.wsServer.sendResults(
       'ft_kick',
       {
-        room: Utils.pick(room, 'id', 'roomName'),
+        room: Utils.pick(room, 'id', 'roomName', 'roomType', 'ownerId'),
         user: Utils.pick(targetUser, 'id', 'displayName'),
       },
       {
