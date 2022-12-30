@@ -4,6 +4,7 @@ import { Oval } from 'react-loader-spinner';
 import { FillerBlock } from '@/components/FillerBlock';
 import { FTButton } from '@/components/FTBasicComponents';
 import { UserAvatar } from '@/components/UserAvater';
+import { useStoredCredential } from '@/features/DevAuth/hooks';
 import { Icons } from '@/icons';
 import { useUpdateUser, useUserDataReadOnly } from '@/stores/store';
 import { displayUser } from '@/typedef';
@@ -138,13 +139,22 @@ type ActualProp = {
 
 const ActualUserSelectList = (props: ActualProp) => {
   const userUpdater = useUpdateUser();
+  const [credential] = useStoredCredential();
+  if (!credential) {
+    return null;
+  }
   if (props.phase === 'Neutral') {
     const url = props.makeUrl(props.take, props.cursor);
     throw (async () => {
       try {
-        const res = await fetch(url);
+        const res = await fetch(url, {
+          method: 'GET',
+          mode: 'cors',
+          headers: {
+            Authorization: `Bearer ${credential.token}`,
+          },
+        });
         const json = (await res.json()) as displayUser[];
-        console.log('res:', json);
         props.setPhase('Fetched');
         userUpdater.addMany(json);
         props.setUsers(json);
