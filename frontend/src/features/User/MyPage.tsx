@@ -159,14 +159,18 @@ const MyPageContent = () => {
               <FTH3 className="sticky top-0 z-10 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
                 Stats
               </FTH3>
-              <UserStats id={user.id} />
+              <div className="px-2 py-4">
+                <UserStats id={user.id} />
+              </div>
             </div>
 
             <div className="flex flex-col">
               <FTH3 className="sticky top-0 z-10 flex min-w-0 flex-row items-center p-[4px] text-xl font-bold">
-                History
+                MatchHistory
               </FTH3>
-              <MatchHistoryList id={user.id} />
+              <div className="px-2 py-4">
+                <MatchHistoryList id={user.id} />
+              </div>
             </div>
           </div>
         </div>
