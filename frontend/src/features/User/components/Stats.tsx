@@ -1,5 +1,5 @@
 import ordinal from 'ordinal';
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useState } from 'react';
 
 import { useManualErrorBoundary } from '@/components/ManualErrorBoundary';
 import { APIError } from '@/errors/APIError';
@@ -17,25 +17,19 @@ type Props = {
 
 const RenderStats = ({ id, stats, setter, onError }: Props) => {
   const callAPI = useAPICallerWithCredential();
-  useEffect(() => {
-    (async () => {
-      if (!stats) {
-        try {
-          console.log(`users/${id}/pong/stats`);
-          const result = await callAPI('GET', `/users/${id}/pong/stats`);
-          if (!result.ok) {
-            throw new APIError(result.statusText, result);
-          }
-          const json = await result.json();
-          setter(json);
-        } catch (e) {
-          onError(e);
+  if (!stats) {
+    throw (async () => {
+      try {
+        const result = await callAPI('GET', `/users/${id}/pong/stats`);
+        if (!result.ok) {
+          throw new APIError(result.statusText, result);
         }
+        const json = await result.json();
+        setter(json);
+      } catch (e) {
+        onError(e);
       }
     })();
-  }, [callAPI, id, onError, setter, stats]);
-  if (!stats) {
-    return null;
   }
   return (
     <>
