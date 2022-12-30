@@ -34,7 +34,7 @@ export const NavDropMenu = () => {
         leaveFrom="transform opacity-100 scale-100"
         leaveTo="transform opacity-0 scale-95"
       >
-        <Menu.Items className="absolute z-10 ml-2 origin-top-left">
+        <Menu.Items className="absolute z-20 ml-2 origin-top-left">
           <div className="flex w-36 flex-col bg-black text-3xl">
             {links.map((link, i) => {
               return (
