@@ -33,6 +33,7 @@ const Chat = {
     Opened: Fa.FaArrowDown,
     Updated: Vsc.VscDebugRestart,
     Joined: Fa.FaArrowRight,
+    Invited: Fa.FaEnvelope,
     Left: Fa.FaArrowLeft,
     private: {
       open: Ri.RiPingPongLine,

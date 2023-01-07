@@ -517,8 +517,8 @@ export class ChatGateway implements OnGatewayConnection {
     );
 
     // 入室したユーザーに対して入室したことを通知
-    await Promise.all(
-      targetUsers.map(async (userId) => {
+    await Promise.all([
+      ...targetUsers.map(async (userId) => {
         const relation = await this.chatRoomService.getRelationWithUser(
           roomId,
           userId
@@ -541,8 +541,9 @@ export class ChatGateway implements OnGatewayConnection {
             roomId,
           }
         );
-      })
-    );
+      }),
+      this.wsServer.systemSay(roomId, user, 'INVITED'),
+    ]);
 
     // チャットルームの内容を通知
     const messages = await this.chatRoomService.getMessages(user, {

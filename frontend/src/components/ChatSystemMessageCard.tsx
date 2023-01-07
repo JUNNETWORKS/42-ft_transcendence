@@ -53,6 +53,13 @@ const Content = ({ message, PrimaryChild, SecondaryChild }: ContentProp) => {
           {nameButton}さんが入室しました -
         </>
       );
+    case 'INVITED':
+      return (
+        <>
+          <InlineIcon i={<Icons.Chat.System.Invited />} />
+          {nameButton}さんが招待されました -
+        </>
+      );
     case 'LEFT':
       return (
         <>

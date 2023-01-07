@@ -4,6 +4,7 @@ export const MessageTypesSingle = [
   'OPENED',
   'JOINED',
   'LEFT',
+  'INVITED',
   'PR_OPEN',
   'PR_CANCEL',
 ] as const;
