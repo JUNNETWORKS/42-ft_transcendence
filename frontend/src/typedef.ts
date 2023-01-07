@@ -57,6 +57,7 @@ const MessageTypes = [
   'OPENED',
   'UPDATED',
   'JOINED',
+  'INVITED',
   'LEFT',
   'PR_OPEN',
   'PR_CANCEL',

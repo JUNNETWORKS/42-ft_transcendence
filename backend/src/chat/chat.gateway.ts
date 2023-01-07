@@ -501,27 +501,30 @@ export class ChatGateway implements OnGatewayConnection {
       }
     }
     // 招待するユーザーからblockされていた時、除外する（この時、banされているユーザーには通知しないことにする）
-    const targetUsers = usersRel
-      .filter((rel) => !rel.isBlocking)
-      .map((rel) => rel.user!.id);
+    const targetUsers = Utils.compact(
+      usersRel.filter((rel) => !rel.isBlocking).map((rel) => rel.user)
+    );
 
     // [ハードリレーション更新]
-    const result = await this.chatRoomService.addMembers(roomId, targetUsers);
+    const result = await this.chatRoomService.addMembers(
+      roomId,
+      targetUsers.map((u) => u.id)
+    );
     console.log('invite result:', result); // { count: 3 } とかになる
 
     // [roomへのjoin状態をハードリレーションに同期させる]
     await Promise.all(
-      targetUsers.map(async (userId) => {
-        await this.wsServer.usersJoin(userId, { roomId });
+      targetUsers.map(async (user) => {
+        await this.wsServer.usersJoin(user.id, { roomId });
       })
     );
 
     // 入室したユーザーに対して入室したことを通知
-    await Promise.all(
-      targetUsers.map(async (userId) => {
+    await Promise.all([
+      ...targetUsers.map(async (user) => {
         const relation = await this.chatRoomService.getRelationWithUser(
           roomId,
-          userId
+          user.id
         );
         this.wsServer.sendResults(
           'ft_join',
@@ -532,17 +535,20 @@ export class ChatGateway implements OnGatewayConnection {
               roomName: room.roomName,
             },
             user: {
-              id: userId,
+              id: user.id,
               displayName: relation?.user.displayName,
             },
           },
           {
-            userId,
+            userId: user.id,
             roomId,
           }
         );
-      })
-    );
+      }),
+      ...targetUsers.map((user) =>
+        this.wsServer.systemSay(roomId, user, 'INVITED')
+      ),
+    ]);
 
     // チャットルームの内容を通知
     const messages = await this.chatRoomService.getMessages(user, {
@@ -552,14 +558,14 @@ export class ChatGateway implements OnGatewayConnection {
     const members = await this.chatRoomService.getMembers(user, roomId);
 
     await Promise.all(
-      targetUsers.map(async (userId) => {
+      targetUsers.map(async (user) => {
         await this.wsServer.sendResults(
           'ft_get_room_messages',
           {
             id: roomId,
             messages,
           },
-          { userId }
+          { userId: user.id }
         );
         await this.wsServer.sendResults(
           'ft_get_room_members',
@@ -567,7 +573,7 @@ export class ChatGateway implements OnGatewayConnection {
             id: roomId,
             members,
           },
-          { userId }
+          { userId: user.id }
         );
       })
     );
