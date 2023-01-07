@@ -109,7 +109,10 @@ const SignUpForm = () => {
  */
 const FtAuthForm = () => (
   <form method="POST" action={urlLoginFt}>
-    <FTSubmit className="hover:bg-white hover:text-black" value="Login" />
+    <FTSubmit
+      className="cursor-pointer hover:bg-white hover:text-black"
+      value="Login"
+    />
   </form>
 );
 
