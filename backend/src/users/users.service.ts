@@ -104,6 +104,9 @@ export class UsersService {
     });
     const name_dict: { [K: string]: boolean } = {};
     users.forEach((u) => (name_dict[u.displayName] = true));
+    if (!name_dict[prefix]) {
+      return prefix;
+    }
     for (let i = 1; ; ++i) {
       const name = `${prefix}_${i}`;
       if (name_dict[name]) {
