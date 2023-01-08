@@ -124,14 +124,6 @@ const MessagesList = (props: {
     get_room_messages(props.room.id, 50, oldestMessage?.id);
   }, [mySocket, scrollData, props.room.id]);
 
-  useEffect(() => {
-    if (!mySocket) {
-      return;
-    }
-    const { get_room_members } = makeCommand(mySocket, props.room.id);
-    get_room_members(props.room.id);
-  }, [mySocket, props.room.id]);
-
   const componentForMessage = (data: TD.ChatRoomMessage) => {
     if (data.messageType === 'PR_STATUS') {
       return ChatMatchingMessageCard;
@@ -229,15 +221,14 @@ export const RoomView = ({
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const computed = {
     you: useMemo(() => {
-      const us = membersInRoom[room.id];
+      const us = members;
       if (!us) {
         return null;
       }
       return us[personalData.id];
-    }, [membersInRoom, personalData, room.id]),
+    }, [members, personalData.id]),
   };
   const store = {
     roomMessages: (roomId: number) => {
@@ -249,7 +240,9 @@ export const RoomView = ({
     },
   };
   const command = makeCommand(mySocket, room.id);
-
+  if (!computed.you || !members) {
+    return null;
+  }
   const isOwner = room.ownerId === computed.you?.userId;
   const memberOperations: TD.MemberOperations | undefined =
     domain === 'chat'

@@ -47,21 +47,6 @@ export const VisibleRoomList = () => {
       return ms;
     },
   };
-
-  const action = {
-    /**
-     * 実態はステート更新関数.
-     * レンダリング後に副作用フックでコマンドが走る.
-     */
-    get_room_members: (roomId: number) => {
-      if (roomId > 0) {
-        const mems = store.roomMembers(roomId);
-        if (!mems) {
-          command.get_room_members(roomId);
-        }
-      }
-    },
-  };
   const predicate = {
     isJoiningTo: (roomId: number) =>
       !!joiningRooms.find((r) => r.chatRoom.id === roomId),
@@ -72,7 +57,6 @@ export const VisibleRoomList = () => {
   const onFocus = (roomId: number) => {
     if (predicate.isJoiningTo(roomId)) {
       navigate(`/chat/${roomId}`);
-      action.get_room_members(roomId);
     }
   };
   useEffect(() => {
