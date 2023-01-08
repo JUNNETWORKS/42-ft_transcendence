@@ -32,7 +32,7 @@ const CommandButton = ({ onClick, text }: ButtonProp) => (
 
 type PlayerProp = {
   user?: TD.User;
-  popoverContent: JSX.Element;
+  popoverContent?: () => JSX.Element;
   userScore?: number;
   side: 'left' | 'right';
   verdict: 'won' | 'lose' | 'none';
@@ -100,12 +100,8 @@ const PlayerCard = ({
     }
     const avatarButton = <UserAvatar user={user} onClick={openCard} />;
     return {
-      avatar: (
-        <PopoverUserCard button={avatarButton}>
-          {popoverContent}
-        </PopoverUserCard>
-      ),
-      name: <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>,
+      avatar: <PopoverUserCard button={avatarButton} inner={popoverContent} />,
+      name: <PopoverUserCard user={user} inner={popoverContent} />,
     };
   })();
   const color = {
@@ -178,11 +174,9 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
   const opponentContent = (() => (
     <PlayerCard
       user={targetUser}
-      popoverContent={
-        targetUser && (
-          <AdminOperationBar {...props} member={props.members[targetUser.id]} />
-        )
-      }
+      popoverContent={() => (
+        <AdminOperationBar {...props} userId={targetUser?.id} />
+      )}
       userScore={userScore2}
       side="right"
       verdict={verdict2}
@@ -209,7 +203,7 @@ export const ChatMatchingMessageCard = (props: ChatMessageProp) => {
         <div className="flex flex-row items-center justify-center">
           <PlayerCard
             user={user}
-            popoverContent={<AdminOperationBar {...props} />}
+            popoverContent={() => <AdminOperationBar {...props} />}
             userScore={userScore1}
             side="left"
             verdict={verdict1}

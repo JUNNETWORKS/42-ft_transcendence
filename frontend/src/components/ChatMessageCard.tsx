@@ -17,7 +17,6 @@ export type ChatMessageProp = {
   userId: number;
   member?: TD.ChatUserRelation;
   members: TD.UserRelationMap;
-  memberOperations?: TD.MemberOperations;
   id: string;
 };
 
@@ -35,14 +34,16 @@ export const ChatMessageCard = (props: ChatMessageProp) => {
   if (!user || isBlocked) {
     return null;
   }
+  const popoverContent = () => (
+    <AdminOperationBar room={props.room} userId={props.member?.userId} />
+  );
   const avatarButton = (
     <UserAvatar
       className="h-12 w-12 border-4 border-solid border-gray-600"
       user={user}
-      onClick={() => openCard(user, popoverContent || null)}
+      onClick={() => openCard(user, popoverContent)}
     />
   );
-  const popoverContent = <AdminOperationBar {...props} />;
   return (
     <div
       className="flex flex-row items-start px-2 py-1 hover:bg-gray-800"
@@ -50,14 +51,12 @@ export const ChatMessageCard = (props: ChatMessageProp) => {
       id={props.id}
     >
       <div className="shrink-0 grow-0">
-        <PopoverUserCard button={avatarButton}>
-          {popoverContent}
-        </PopoverUserCard>
+        <PopoverUserCard button={avatarButton} inner={popoverContent} />
       </div>
       <div className="flex shrink grow flex-col">
         <div className="flex max-w-[12em] shrink-0 grow-0 flex-row">
           <div className="m-[1px] shrink-0 grow-0 px-[2px] py-0">
-            <PopoverUserCard user={user}>{popoverContent}</PopoverUserCard>
+            <PopoverUserCard user={user} inner={popoverContent} />
           </div>
           <div className="shrink-0 grow-0 px-[4px]">
             {dayjs(props.message.createdAt).format('MM/DD HH:mm:ss')}

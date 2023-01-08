@@ -8,7 +8,7 @@ export const modalAtom = {
   userCard: {
     isOpen: atom(false),
     user: atom<User | null>(null),
-    children: atom<JSX.Element | null>(null),
+    inner: atom<{ f: () => JSX.Element } | null>(null),
   },
 };
 
@@ -23,10 +23,10 @@ export function useUserCreatedForm() {
 export function useUserCard() {
   const [, setIsOpen] = useAtom(modalAtom.userCard.isOpen);
   const [, setUser] = useAtom(modalAtom.userCard.user);
-  const [, setChildren] = useAtom(modalAtom.userCard.children);
-  return function (user: User, children?: JSX.Element) {
+  const [, setInner] = useAtom(modalAtom.userCard.inner);
+  return function (user: User, inner?: () => JSX.Element) {
     setUser(user);
-    setChildren(children || null);
+    setInner(inner ? { f: inner } : null);
     setIsOpen(true);
   };
 }

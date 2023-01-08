@@ -7,20 +7,15 @@ type Prop = {
   className?: string;
   user?: User;
   button?: ReactNode;
-  children?: JSX.Element;
+  inner?: () => JSX.Element;
 };
 
-export const PopoverUserCard = ({
-  className,
-  user,
-  button,
-  children,
-}: Prop) => {
+export const PopoverUserCard = ({ className, user, button, inner }: Prop) => {
   const openCard = useUserCard();
   if (!user && !button) {
     return null;
   }
-  const inner = () => {
+  const content = () => {
     if (button) {
       return button;
     }
@@ -28,7 +23,7 @@ export const PopoverUserCard = ({
       return (
         <div
           className="max-w-[20em] overflow-hidden text-ellipsis px-1 align-middle font-bold hover:underline"
-          onClick={() => openCard(user, children || undefined)}
+          onClick={() => openCard(user, inner)}
         >
           {user.displayName}
         </div>
@@ -42,7 +37,7 @@ export const PopoverUserCard = ({
         className || ''
       }`}
     >
-      {inner()}
+      {content()}
     </div>
   );
 };
