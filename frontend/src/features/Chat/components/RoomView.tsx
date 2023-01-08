@@ -19,7 +19,7 @@ import { PrivateMatchCard } from '@/features/Pong/components/PrivateMatchCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
-import { chatSocketAtom, UserPersonalData } from '@/stores/auth';
+import { authAtom, chatSocketAtom, UserPersonalData } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
@@ -198,7 +198,7 @@ const MembersList = (props: {
   );
 };
 
-type Prop = {
+type ActualProp = {
   domain: 'chat' | 'dm';
   room: TD.ChatRoom;
   roomName: string;
@@ -206,13 +206,13 @@ type Prop = {
   personalData: UserPersonalData;
 };
 
-export const RoomView = ({
+const ActualView = ({
   domain,
   room,
   roomName,
   mySocket,
   personalData,
-}: Prop) => {
+}: ActualProp) => {
   const [isOpen, setIsOpen] = useState(false);
   const closeModal = () => setIsOpen(false);
   const [modalType, setModalType] = useState<'setting' | 'privateMatch' | null>(
@@ -364,5 +364,37 @@ export const RoomView = ({
         )}
       </div>
     </>
+  );
+};
+
+type Prop =
+  | { domain: 'chat'; room: TD.ChatRoom }
+  | { domain: 'dm'; room: TD.DmRoom };
+export const RoomView = ({ room, domain }: Prop) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [personalData] = useAtom(authAtom.personalData);
+  const [members] = dataAtom.useMembersInRoom(room?.id || -1);
+  const membersExists = !!members;
+  useEffect(() => {
+    if (!room || !mySocket || !personalData || membersExists) {
+      return;
+    }
+    const command = makeCommand(mySocket, room.id);
+    command.get_room_members(room.id);
+  }, [membersExists, mySocket, personalData, room]);
+  if (!room || !mySocket || !personalData) {
+    return null;
+  }
+  const roomName =
+    domain === 'chat'
+      ? room.roomName
+      : room.roomMember.find((member) => member.userId !== personalData?.id)
+          ?.user.displayName || '';
+  return (
+    <ActualView
+      {...{ room, roomName, domain }}
+      mySocket={mySocket}
+      personalData={personalData}
+    />
   );
 };
