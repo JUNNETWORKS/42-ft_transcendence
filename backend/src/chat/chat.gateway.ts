@@ -801,7 +801,6 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket
   ) {
     const user = getUserFromClient(client);
-    this.pulse(user);
     const messages = await this.chatRoomService.getMessages(user, {
       roomId: data.roomId,
       take: data.take,
@@ -817,6 +816,7 @@ export class ChatGateway implements OnGatewayConnection {
         client,
       }
     );
+    this.pulse(user);
   }
 
   /**
@@ -831,7 +831,6 @@ export class ChatGateway implements OnGatewayConnection {
     @ConnectedSocket() client: Socket
   ) {
     const user = getUserFromClient(client);
-    this.pulse(user);
     const members = await this.chatRoomService.getMembers(user, data.roomId);
     this.wsServer.sendResults(
       'ft_get_room_members',
@@ -843,6 +842,7 @@ export class ChatGateway implements OnGatewayConnection {
         client,
       }
     );
+    this.pulse(user);
   }
 
   @SubscribeMessage('ft_follow')

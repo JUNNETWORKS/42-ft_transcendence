@@ -19,7 +19,7 @@ import { PrivateMatchCard } from '@/features/Pong/components/PrivateMatchCard';
 import { InlineIcon } from '@/hocs/InlineIcon';
 import { useVerticalScrollAttr } from '@/hooks/useVerticalScrollAttr';
 import { Icons, RoomTypeIcon } from '@/icons';
-import { chatSocketAtom, UserPersonalData } from '@/stores/auth';
+import { authAtom, chatSocketAtom, UserPersonalData } from '@/stores/auth';
 import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 import * as Utils from '@/utils';
@@ -124,14 +124,6 @@ const MessagesList = (props: {
     get_room_messages(props.room.id, 50, oldestMessage?.id);
   }, [mySocket, scrollData, props.room.id]);
 
-  useEffect(() => {
-    if (!mySocket) {
-      return;
-    }
-    const { get_room_members } = makeCommand(mySocket, props.room.id);
-    get_room_members(props.room.id);
-  }, [mySocket, props.room.id]);
-
   const componentForMessage = (data: TD.ChatRoomMessage) => {
     if (data.messageType === 'PR_STATUS') {
       return ChatMatchingMessageCard;
@@ -206,7 +198,7 @@ const MembersList = (props: {
   );
 };
 
-type Prop = {
+type ActualProp = {
   domain: 'chat' | 'dm';
   room: TD.ChatRoom;
   roomName: string;
@@ -214,13 +206,13 @@ type Prop = {
   personalData: UserPersonalData;
 };
 
-export const RoomView = ({
+const ActualView = ({
   domain,
   room,
   roomName,
   mySocket,
   personalData,
-}: Prop) => {
+}: ActualProp) => {
   const [isOpen, setIsOpen] = useState(false);
   const closeModal = () => setIsOpen(false);
   const [modalType, setModalType] = useState<'setting' | 'privateMatch' | null>(
@@ -229,15 +221,14 @@ export const RoomView = ({
   const navigate = useNavigate();
   const [members] = dataAtom.useMembersInRoom(room.id);
   const [messagesInRoom] = useAtom(dataAtom.messagesInRoomAtom);
-  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
   const computed = {
     you: useMemo(() => {
-      const us = membersInRoom[room.id];
+      const us = members;
       if (!us) {
         return null;
       }
       return us[personalData.id];
-    }, [membersInRoom, personalData, room.id]),
+    }, [members, personalData.id]),
   };
   const store = {
     roomMessages: (roomId: number) => {
@@ -249,7 +240,9 @@ export const RoomView = ({
     },
   };
   const command = makeCommand(mySocket, room.id);
-
+  if (!computed.you || !members) {
+    return null;
+  }
   const isOwner = room.ownerId === computed.you?.userId;
   const memberOperations: TD.MemberOperations | undefined =
     domain === 'chat'
@@ -371,5 +364,37 @@ export const RoomView = ({
         )}
       </div>
     </>
+  );
+};
+
+type Prop =
+  | { domain: 'chat'; room?: TD.ChatRoom }
+  | { domain: 'dm'; room?: TD.DmRoom };
+export const RoomView = ({ room, domain }: Prop) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [personalData] = useAtom(authAtom.personalData);
+  const [members] = dataAtom.useMembersInRoom(room?.id || -1);
+  const membersExists = !!members;
+  useEffect(() => {
+    if (!room || !mySocket || !personalData || membersExists) {
+      return;
+    }
+    const command = makeCommand(mySocket, room.id);
+    command.get_room_members(room.id);
+  }, [membersExists, mySocket, personalData, room]);
+  if (!room || !mySocket || !personalData) {
+    return null;
+  }
+  const roomName =
+    domain === 'chat'
+      ? room.roomName
+      : room.roomMember.find((member) => member.userId !== personalData.id)
+          ?.user.displayName || '';
+  return (
+    <ActualView
+      {...{ room, roomName, domain }}
+      mySocket={mySocket}
+      personalData={personalData}
+    />
   );
 };
