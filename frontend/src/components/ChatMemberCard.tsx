@@ -1,38 +1,60 @@
+import { useAtom } from 'jotai';
+
 import { FTButton, FTH4 } from '@/components/FTBasicComponents';
+import { makeCommand } from '@/features/Chat/command';
 import { InlineIcon } from '@/hocs/InlineIcon';
+import { usePersonalData } from '@/hooks/usePersonalData';
 import { Icons } from '@/icons';
+import { chatSocketAtom } from '@/stores/auth';
 import { useUserCard } from '@/stores/control';
 import { useUserDataReadOnly } from '@/stores/store';
+import { dataAtom } from '@/stores/structure';
 import * as TD from '@/typedef';
 
 import { PopoverUserCard } from './PopoverUserCard';
 import { UserAvatar } from './UserAvater';
 
-export const AdminOperationBar = (props: {
-  you: TD.ChatUserRelation | null;
+type Prop = {
   room: TD.ChatRoom;
-  member?: TD.ChatUserRelation;
-  memberOperations?: TD.MemberOperations;
-}) => {
-  if (!props.member || !props.memberOperations) {
+  userId?: number;
+};
+
+export const AdminOperationBar = ({ room, userId }: Prop) => {
+  const [mySocket] = useAtom(chatSocketAtom);
+  const [personalData] = usePersonalData();
+  const [members] = dataAtom.useMembersInRoom(room.id);
+  if (room.roomType === 'DM') {
     return null;
   }
-  const member = props.member;
-  const areYouOwner = props.you?.userId === props.room.ownerId;
-  const areYouAdmin = props.you?.memberType === 'ADMIN';
+  if (!mySocket || !personalData || !members) {
+    return null;
+  }
+  const member = members[userId || -1];
+  if (!member) {
+    return null;
+  }
+  const you = members[personalData.id];
+  const areYouOwner = you?.userId === room.ownerId;
+  const areYouAdmin = you?.memberType === 'ADMIN';
   const areYouAdminLike = areYouOwner;
-  const isYou = props.you?.userId === props.member.user.id;
+  const isYou = you?.userId === member.user.id;
   const isAdmin = member.memberType === 'ADMIN';
-  const isOwner = props.room.ownerId === member.user.id;
+  const isOwner = room.ownerId === member.user.id;
   const isAdminableFor = !isYou && (areYouOwner || (areYouAdmin && !isOwner));
   if (!isAdminableFor) {
     return null;
   }
+  const command = makeCommand(mySocket, room.id);
+  const ops: TD.MemberOperations = {
+    onNomminateClick: command.nomminate,
+    onBanClick: command.ban,
+    onKickClick: command.kick,
+    onMuteClick: command.mute,
+  };
   const isNomminatable = !isAdmin && !isOwner && !isYou && areYouAdminLike;
   const isBannable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isKickable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
   const isMutable = (areYouOwner || (areYouAdmin && !isOwner)) && !isYou;
-  const ops = props.memberOperations;
 
   return (
     <>
@@ -77,7 +99,6 @@ export const ChatMemberCard = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   member: TD.ChatUserRelation;
-  memberOperations?: TD.MemberOperations;
 }) => {
   const user = useUserDataReadOnly(props.member.userId);
   const isYou = props.you?.userId === props.member.user.id;
@@ -92,18 +113,18 @@ export const ChatMemberCard = (props: {
     }
     return null;
   };
-  const popoverContent = <AdminOperationBar {...props} />;
+  const popoverContent = () => (
+    <AdminOperationBar room={props.room} userId={props.member.userId} />
+  );
   const oc = useUserCard();
-  const openCard = () => oc(user, popoverContent || null);
+  const openCard = () => oc(user, popoverContent);
   const avatarButton = (
     <UserAvatar className="m-1 h-8 w-8" user={user} onClick={openCard} />
   );
   return (
     <div className="flex w-full cursor-pointer flex-row items-center hover:bg-teal-700">
       <div className="shrink-0 grow-0">
-        <PopoverUserCard button={avatarButton}>
-          {popoverContent}
-        </PopoverUserCard>
+        <PopoverUserCard button={avatarButton} inner={popoverContent} />
       </div>
       <PopoverUserCard
         className="flex shrink grow flex-row items-center"
@@ -124,9 +145,8 @@ export const ChatMemberCard = (props: {
             </div>
           </>
         }
-      >
-        {popoverContent}
-      </PopoverUserCard>
+        inner={popoverContent}
+      />
     </div>
   );
 };
