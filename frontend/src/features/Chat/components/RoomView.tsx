@@ -368,8 +368,8 @@ const ActualView = ({
 };
 
 type Prop =
-  | { domain: 'chat'; room: TD.ChatRoom }
-  | { domain: 'dm'; room: TD.DmRoom };
+  | { domain: 'chat'; room?: TD.ChatRoom }
+  | { domain: 'dm'; room?: TD.DmRoom };
 export const RoomView = ({ room, domain }: Prop) => {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
@@ -388,7 +388,7 @@ export const RoomView = ({ room, domain }: Prop) => {
   const roomName =
     domain === 'chat'
       ? room.roomName
-      : room.roomMember.find((member) => member.userId !== personalData?.id)
+      : room.roomMember.find((member) => member.userId !== personalData.id)
           ?.user.displayName || '';
   return (
     <ActualView

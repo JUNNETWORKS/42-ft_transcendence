@@ -7,8 +7,5 @@ import { RoomView } from './components/RoomView';
 export const ChatRoomView = () => {
   const { id } = useParams();
   const room = useRoomDataReadOnly(parseInt(id || ''));
-  if (!room) {
-    return null;
-  }
   return <RoomView domain="chat" room={room} />;
 };
