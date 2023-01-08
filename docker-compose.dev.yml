@@ -17,7 +17,7 @@ services:
     restart: on-failure
 
   frontend:
-    container_name: frontend
+    container_name: frontend-dev
     build:
       context: ./frontend
       dockerfile: Dockerfile.env
@@ -27,12 +27,12 @@ services:
       - "./frontend:/frontend"
       - frontend_node_modules:/frontend/node_modules
     environment:
-      - ENV="DEV"
+      - ENV=DEV
       - LOCAL_UID
       - LOCAL_GID
 
   backend:
-    container_name: backend
+    container_name: backend-dev
     build:
       context: ./backend
       dockerfile: Dockerfile.env
@@ -42,7 +42,7 @@ services:
       - "./backend:/backend"
       - backend_node_modules:/backend/node_modules
     environment:
-      - ENV="DEV"
+      - ENV=DEV
       - LOCAL_UID
       - LOCAL_GID
     depends_on:
