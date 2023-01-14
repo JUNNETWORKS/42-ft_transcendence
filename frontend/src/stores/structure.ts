@@ -71,16 +71,15 @@ export const dataAtom = {
   useMembersInRoom(id: number) {
     const [dict] = useAtom(derivedAtom.membersInRoomAtom);
     const [users] = useAtom(storeAtoms.users);
-    const members: TD.UserRelationMap = Utils.mapValues(
-      dict[id] || {},
-      (val, userId) => {
-        const user = users[userId] || val.user;
-        return {
-          ...val,
-          user,
-        };
-      }
-    );
+    const members: TD.UserRelationMap | null = dict[id]
+      ? Utils.mapValues(dict[id], (val, userId) => {
+          const user = users[userId] || val.user;
+          return {
+            ...val,
+            user,
+          };
+        })
+      : null;
     return [members] as const;
   },
 };

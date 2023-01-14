@@ -186,10 +186,11 @@ export const SocketHolder = () => {
             console.log('is private');
             visibleRoomsUpdater.delOne(room);
           }
+          stateMutater.clearRoomMembers(room.id);
         } else {
           // 他人に関する通知
           console.log('for other');
-          stateMutater.removeMembersInRoom(room.id, user.id);
+          stateMutater.removeMemberFromRoom(room.id, user.id);
         }
       },
     ]);
@@ -211,10 +212,11 @@ export const SocketHolder = () => {
             console.log('is private');
             visibleRoomsUpdater.delOne(room);
           }
+          stateMutater.clearRoomMembers(room.id);
         } else {
           // 他人に関する通知
           console.log('for other');
-          stateMutater.removeMembersInRoom(room.id, user.id);
+          stateMutater.removeMemberFromRoom(room.id, user.id);
         }
       },
     ]);
@@ -438,7 +440,7 @@ export const SocketHolder = () => {
       });
     },
 
-    removeMembersInRoom: (roomId: number, userId: number) => {
+    removeMemberFromRoom: (roomId: number, userId: number) => {
       setMembersInRoom((prev) => {
         const next: { [roomId: number]: TD.UserRelationMap } = {};
         Utils.keys(prev).forEach((key) => {
@@ -449,6 +451,20 @@ export const SocketHolder = () => {
           return next;
         }
         delete members[userId];
+        return next;
+      });
+    },
+
+    clearRoomMembers: (roomId: number) => {
+      setMembersInRoom((prev) => {
+        const next: { [roomId: number]: TD.UserRelationMap } = {};
+        Utils.keys(prev).forEach((key) => {
+          next[key] = prev[key] ? { ...prev[key] } : {};
+        });
+        if (!next[roomId]) {
+          return next;
+        }
+        delete next[roomId];
         return next;
       });
     },

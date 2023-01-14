@@ -36,8 +36,7 @@ export const InvitePrivateCard = (props: {
   const [mySocket] = useAtom(chatSocketAtom);
   const [personalData] = useAtom(authAtom.personalData);
   const take = 5;
-  const [membersInRoom] = useAtom(dataAtom.membersInRoomAtom);
-  const members = membersInRoom[props.room.id];
+  const [members] = dataAtom.useMembersInRoom(props.room.id);
   const isDisabled = (user: displayUser) => !!members && !!members[user.id];
   const [error, setError] = useState('');
 
