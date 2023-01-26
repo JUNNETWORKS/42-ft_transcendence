@@ -170,18 +170,19 @@ export const ChatSystemMessageCard = (props: ChatMessageProp) => {
             <Content
               message={props.message}
               PrimaryChild={() => (
-                <PopoverUserCard user={user}>
-                  <AdminOperationBar {...props} />
-                </PopoverUserCard>
+                <PopoverUserCard
+                  user={user}
+                  inner={() => <AdminOperationBar {...props} />}
+                />
               )}
               SecondaryChild={() =>
                 targetUser && (
-                  <PopoverUserCard user={targetUser}>
-                    <AdminOperationBar
-                      {...props}
-                      member={props.members[targetUser.id]}
-                    />
-                  </PopoverUserCard>
+                  <PopoverUserCard
+                    user={targetUser}
+                    inner={() => (
+                      <AdminOperationBar {...props} userId={targetUser.id} />
+                    )}
+                  />
                 )
               }
             />

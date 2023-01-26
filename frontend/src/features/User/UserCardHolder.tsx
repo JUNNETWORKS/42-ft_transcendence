@@ -8,14 +8,14 @@ import { UserCard } from './UserCard';
 export const UserCardHolder = () => {
   const [isOpen, setIsOpen] = useAtom(modalAtom.userCard.isOpen);
   const [user] = useAtom(modalAtom.userCard.user);
-  const [children] = useAtom(modalAtom.userCard.children);
+  const [inner] = useAtom(modalAtom.userCard.inner);
   // ここで if (!user) { return null; } としてしまうと,
   // モーダルの初回表示時に出現アニメーションが効かない
   return (
     <Modal closeModal={() => setIsOpen(false)} isOpen={isOpen}>
       {user && (
         <UserCard id={user.id} onClose={() => setIsOpen(false)}>
-          {children}
+          {inner && inner.f()}
         </UserCard>
       )}
     </Modal>

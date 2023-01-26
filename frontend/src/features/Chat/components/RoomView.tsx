@@ -37,7 +37,6 @@ const MessagesList = (props: {
   room: TD.ChatRoom;
   messages: TD.ChatRoomMessage[];
   members: TD.UserRelationMap;
-  memberOperations?: TD.MemberOperations;
 }) => {
   const listId = useId();
   const scrollData = useVerticalScrollAttr(listId);
@@ -148,7 +147,6 @@ const MessagesList = (props: {
             userId={data.userId}
             member={member}
             members={props.members}
-            memberOperations={props.memberOperations}
           />
         );
       })}
@@ -160,7 +158,6 @@ const MembersList = (props: {
   you: TD.ChatUserRelation | null;
   room: TD.ChatRoom;
   members: TD.UserRelationMap;
-  memberOperations?: TD.MemberOperations;
 }) => {
   const isPrivate = props.room.roomType === 'PRIVATE';
   const isOwner = props.room.ownerId === props.you?.userId;
@@ -244,15 +241,6 @@ const ActualView = ({
     return null;
   }
   const isOwner = room.ownerId === computed.you?.userId;
-  const memberOperations: TD.MemberOperations | undefined =
-    domain === 'chat'
-      ? {
-          onNomminateClick: command.nomminate,
-          onBanClick: command.ban,
-          onKickClick: command.kick,
-          onMuteClick: command.mute,
-        }
-      : undefined;
   const TypeIcon = RoomTypeIcon[room.roomType];
   const barButtons = domain === 'chat' && (
     <>
@@ -342,7 +330,6 @@ const ActualView = ({
               room={room}
               members={members}
               messages={store.roomMessages(room.id)}
-              memberOperations={memberOperations}
             />
           </div>
           <div className="shrink-0 grow-0 border-[2px] border-t-0 border-solid border-white p-2">
@@ -354,12 +341,7 @@ const ActualView = ({
         </div>
         {domain === 'chat' && (
           <div className="ml-2 shrink-0 grow-0 basis-[16em] border-[2px] border-solid border-white bg-white">
-            <MembersList
-              you={computed.you}
-              room={room}
-              members={members}
-              memberOperations={memberOperations}
-            />
+            <MembersList you={computed.you} room={room} members={members} />
           </div>
         )}
       </div>
